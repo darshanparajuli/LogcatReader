@@ -1,24 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
 
     <style name="LightTheme" parent="Theme.AppCompat.Light.NoActionBar">
         <item name="colorPrimary">@color/color_primary</item>
         <item name="colorPrimaryDark">@color/color_primary_dark</item>
         <item name="colorAccent">@color/color_accent</item>
+        <item name="android:windowTranslucentStatus">true</item>
 
         <item name="toolbar_shadow">@drawable/toolbar_shadow_light</item>
         <item name="preferenceTheme">@style/MyPreferenceTheme</item>
-    </style>
-
-    <style name="ToolBarTheme" parent="ThemeOverlay.AppCompat.Dark.ActionBar">
-    </style>
-
-    <style name="DarkToolbarPopupTheme" parent="ThemeOverlay.AppCompat.Dark">
-    </style>
-
-    <style name="LightToolbarPopupTheme" parent="ThemeOverlay.AppCompat.Light">
-    </style>
-
-    <style name="MyPreferenceTheme" parent="@style/PreferenceThemeOverlay.v14.Material">
     </style>
 
 </resources>

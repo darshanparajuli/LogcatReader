@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="translucent_status_bar_compensation_padding">0dp</dimen>
+
+    <dimen name="toolbar_shadow_height">8dp</dimen>
+    <dimen name="toolbar_shadow_height_compat">@dimen/toolbar_shadow_height</dimen>
+</resources>
