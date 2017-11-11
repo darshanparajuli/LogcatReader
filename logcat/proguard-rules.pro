@@ -19,3 +19,9 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+-keep public class android.support.v7.preference.Preference { *; }
+-keep public class * extends android.support.v7.preference.Preference { *; }
+-keep class com.android.vending.billing.**
+-renamesourcefileattribute SourceFile
+-keepattributes SourceFile,LineNumberTable
