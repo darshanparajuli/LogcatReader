@@ -5,8 +5,9 @@ apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
 
 android {
+    signingConfigs {
+    }
     compileSdkVersion 26
-    
     defaultConfig {
         applicationId "com.dp.logcatapp"
         minSdkVersion 16
@@ -16,12 +17,10 @@ android {
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
     }
-    
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
-    
     buildTypes {
         release {
             minifyEnabled false
@@ -31,7 +30,7 @@ android {
 }
 
 dependencies {
-    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation project(':logcat')
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"
     implementation "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
@@ -40,8 +39,8 @@ dependencies {
     implementation 'com.android.support:design:26.1.0'
     implementation 'com.android.support:preference-v7:26.1.0'
     implementation 'com.android.support:preference-v14:26.1.0'
-    implementation "android.arch.lifecycle:common-java8:1.0.0"
-    implementation "android.arch.lifecycle:extensions:1.0.0"
+    implementation 'android.arch.lifecycle:common-java8:1.0.0'
+    implementation 'android.arch.lifecycle:extensions:1.0.0'
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'com.android.support.test:runner:1.0.1'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.1'
