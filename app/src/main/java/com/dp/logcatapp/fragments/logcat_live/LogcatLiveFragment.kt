@@ -5,7 +5,6 @@ import android.content.ServiceConnection
 import android.os.Bundle
 import android.os.IBinder
 import android.view.*
-import android.widget.Toast
 import com.dp.logcat.Log
 import com.dp.logcat.LogcatEventListener
 import com.dp.logcatapp.R
@@ -20,18 +19,15 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
     private var logcatService: LogcatService? = null
     private val logcatEventListener = object : LogcatEventListener {
         override fun onStartEvent() {
-            Toast.makeText(activity, "Logcat started", Toast.LENGTH_SHORT).show()
         }
 
         override fun onLogEvent(log: Log) {
         }
 
         override fun onFailEvent() {
-            Toast.makeText(activity, "Logcat failed to start", Toast.LENGTH_SHORT).show()
         }
 
         override fun onStopEvent() {
-            Toast.makeText(activity, "Logcat stopped", Toast.LENGTH_SHORT).show()
         }
     }
 
