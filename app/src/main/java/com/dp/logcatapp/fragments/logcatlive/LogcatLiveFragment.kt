@@ -1,4 +1,4 @@
-package com.dp.logcatapp.fragments.logcat_live
+package com.dp.logcatapp.fragments.logcatlive
 
 import android.content.ComponentName
 import android.content.ServiceConnection

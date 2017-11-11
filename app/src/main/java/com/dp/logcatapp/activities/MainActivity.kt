@@ -4,7 +4,7 @@ import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import com.dp.logcatapp.R
-import com.dp.logcatapp.fragments.logcat_live.LogcatLiveFragment
+import com.dp.logcatapp.fragments.logcatlive.LogcatLiveFragment
 import com.dp.logcatapp.services.logcat.LogcatService
 
 class MainActivity : BaseActivity() {
