@@ -16,7 +16,6 @@ import com.dp.logcatapp.util.ViewUtil
 
 @SuppressLint("Registered")
 open class BaseActivity : AppCompatActivity() {
-
     protected var toolbar: Toolbar? = null
         private set
     protected var sharedPreferences: SharedPreferences? = null
@@ -45,16 +44,14 @@ open class BaseActivity : AppCompatActivity() {
 
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {
         when (item?.itemId) {
-            android.R.id.home -> navigateUp()
+            android.R.id.home -> {
+                val upIntent = NavUtils.getParentActivityIntent(this)
+                upIntent.flags = Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
+                startActivity(upIntent)
+                finish()
+                return true
+            }
         }
         return super.onOptionsItemSelected(item)
-    }
-
-    private fun navigateUp(): Boolean {
-        val upIntent = NavUtils.getParentActivityIntent(this)
-        upIntent.flags = Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
-        startActivity(upIntent)
-        finish()
-        return true
     }
 }

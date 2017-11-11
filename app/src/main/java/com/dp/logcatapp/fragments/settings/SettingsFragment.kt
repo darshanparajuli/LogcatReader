@@ -6,12 +6,12 @@ import com.dp.logcatapp.R
 
 class SettingsFragment : PreferenceFragmentCompat() {
 
-    companion object {
-        val TAG = SettingsFragment::class.qualifiedName
-    }
-    
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         addPreferencesFromResource(R.xml.settings)
+    }
+
+    companion object {
+        val TAG = SettingsFragment::class.qualifiedName
     }
 
 }
