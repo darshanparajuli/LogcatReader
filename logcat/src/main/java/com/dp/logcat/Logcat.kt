@@ -49,7 +49,7 @@ class Logcat : Closeable {
         filters.clear()
         listener = null
     }
-    
+
     private fun runLogcat() {
         val processBuilder = ProcessBuilder("logcat", "-v", "long")
 
