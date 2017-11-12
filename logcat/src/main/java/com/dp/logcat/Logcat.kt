@@ -3,6 +3,7 @@ package com.dp.logcat
 import android.os.Handler
 import android.os.Looper
 import java.io.*
+import kotlin.concurrent.thread
 
 class Logcat : Closeable {
     private var threadLogcat: Thread? = null
@@ -15,12 +16,16 @@ class Logcat : Closeable {
     private val logs = mutableListOf<Log>()
     private val filters = mutableMapOf<String, (Log) -> Boolean>()
 
-    fun start(listener: LogcatEventListener?) {
-        threadLogcat ?: throw IllegalStateException("logcat is already running")
-        this.listener = listener
+    fun start() {
+        if (threadLogcat != null) {
+            throw IllegalStateException("logcat is already running")
+        }
 
-        threadLogcat = Thread({ runLogcat() })
-        threadLogcat?.start()
+        threadLogcat = thread { runLogcat() }
+    }
+
+    fun setEventListener(listener: LogcatEventListener) {
+        this.listener = listener
     }
 
     fun getLogs(): List<Log> {
@@ -50,7 +55,7 @@ class Logcat : Closeable {
         }
     }
 
-    override fun close() {
+    fun stop() {
         logcatProcess?.destroy()
 
         try {
@@ -65,7 +70,10 @@ class Logcat : Closeable {
             logs.clear()
             filters.clear()
         }
+    }
 
+    override fun close() {
+        stop()
         listener = null
     }
 
@@ -81,11 +89,8 @@ class Logcat : Closeable {
 
         handler.post { listener?.onStartEvent() }
 
-        val stderrThread = Thread({ processStderr(logcatProcess?.errorStream) })
-        stderrThread.start()
-
-        val stdoutThread = Thread({ processStdout(logcatProcess?.inputStream) })
-        stdoutThread.start()
+        val stderrThread = thread { processStderr(logcatProcess?.errorStream) }
+        val stdoutThread = thread { processStdout(logcatProcess?.inputStream) }
 
         logcatProcess?.waitFor()
 
@@ -119,15 +124,22 @@ class Logcat : Closeable {
                 val metadata = reader.readLine()?.trim() ?: break
                 if (metadata.startsWith("[")) {
                     val msg = reader.readLine()?.trim() ?: break
-                    val log = LogFactory.createNewLog(metadata, msg)
-                    var passedFilter = false
-                    synchronized(lock) {
-                        logs += log
-                        passedFilter = filters.values.all { it(log) }
-                    }
+                    try {
+                        val log = LogFactory.createNewLog(metadata, msg)
+                        var passedFilter = false
+                        synchronized(lock) {
+                            logs += log
+                            passedFilter = filters.values.all { it(log) }
+                        }
 
-                    if (passedFilter) {
-                        listener?.onLogEvent(log)
+                        if (passedFilter) {
+                            listener?.onLogEvent(log)
+                        }
+
+                        // skip next line since it's empty
+                        reader.readLine() ?: break
+                    } catch (e: Exception) {
+                        android.util.Log.d("LogcatLib", "${e.message}: $metadata")
                     }
                 }
             } catch (e: IOException) {
