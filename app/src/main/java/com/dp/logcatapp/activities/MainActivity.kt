@@ -5,9 +5,16 @@ import android.os.Build
 import android.os.Bundle
 import com.dp.logcatapp.R
 import com.dp.logcatapp.fragments.logcatlive.LogcatLiveFragment
-import com.dp.logcatapp.services.logcat.LogcatService
+import com.dp.logcatapp.services.LogcatService
+import com.dp.logcatapp.util.showToast
 
 class MainActivity : BaseActivity() {
+
+    private var canExit = false
+
+    private val exitRunnable = Runnable {
+        canExit = false
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -28,7 +35,26 @@ class MainActivity : BaseActivity() {
         }
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        if (canExit) {
+            stopService(Intent(this, LogcatService::class.java))
+        }
+    }
+
+    override fun onBackPressed() {
+        if (canExit) {
+            handler.removeCallbacks(exitRunnable)
+            super.onBackPressed()
+        } else {
+            canExit = true
+            showToast(getString(R.string.press_back_again_to_exit))
+            handler.postDelayed(exitRunnable, EXIT_DOUBLE_PRESS_DELAY)
+        }
+    }
+
     companion object {
         val TAG = MainActivity::class.qualifiedName
+        private const val EXIT_DOUBLE_PRESS_DELAY: Long = 2000
     }
 }

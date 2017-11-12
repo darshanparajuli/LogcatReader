@@ -6,16 +6,21 @@
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
-        android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/LightTheme">
-        <activity android:name=".activities.MainActivity">
+        <activity
+            android:theme="@style/SplashScreenTheme"
+            android:name=".activities.SplashActivity"
+            android:launchMode="singleTask">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".activities.MainActivity"
+            android:launchMode="singleTask" />
         <activity
             android:name=".activities.SettingsActivity"
             android:launchMode="singleTask"
@@ -26,7 +31,7 @@
         </activity>
 
         <service
-            android:name=".services.logcat.LogcatService"
+            android:name=".services.LogcatService"
             android:exported="false"
             android:stopWithTask="false" />
     </application>

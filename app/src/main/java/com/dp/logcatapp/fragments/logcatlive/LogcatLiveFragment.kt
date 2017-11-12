@@ -1,27 +1,32 @@
 package com.dp.logcatapp.fragments.logcatlive
 
+import android.arch.lifecycle.ViewModelProviders
 import android.content.ComponentName
 import android.content.ServiceConnection
 import android.os.Bundle
 import android.os.IBinder
 import android.view.*
+import android.widget.TextView
 import com.dp.logcat.Log
 import com.dp.logcat.LogcatEventListener
 import com.dp.logcatapp.R
 import com.dp.logcatapp.activities.SettingsActivity
 import com.dp.logcatapp.fragments.base.BaseFragment
-import com.dp.logcatapp.services.logcat.LogcatService
+import com.dp.logcatapp.services.LogcatService
 import com.dp.logcatapp.util.ServiceBinder
 
 class LogcatLiveFragment : BaseFragment(), ServiceConnection {
-    private var isRecording: Boolean = false
     private var serviceBinder: ServiceBinder? = null
     private var logcatService: LogcatService? = null
+    private var viewModel: LogcatLiveViewModel? = null
     private val logcatEventListener = object : LogcatEventListener {
         override fun onStartEvent() {
         }
 
         override fun onLogEvent(log: Log) {
+            handler.post {
+                viewModel?.logs?.add(log)
+            }
         }
 
         override fun onFailEvent() {
@@ -34,6 +39,8 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setHasOptionsMenu(true)
+        viewModel = ViewModelProviders.of(this)
+                .get(LogcatLiveViewModel::class.java)
     }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
@@ -45,6 +52,8 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
                               savedInstanceState: Bundle?): View? {
         val rootView = LayoutInflater.from(activity)
                 .inflate(R.layout.fragment_logcat_live, null, false)
+
+        val tv = rootView.findViewById<TextView>(R.id.textview)
 
         return rootView
     }
@@ -73,8 +82,8 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
         val startRecording = menu?.findItem(R.id.start_recording)
         val stopRecording = menu?.findItem(R.id.stop_recording)
 
-        startRecording?.isVisible = !isRecording
-        stopRecording?.isVisible = isRecording
+        startRecording?.isVisible = !(viewModel?.isRecording ?: false)
+        stopRecording?.isVisible = viewModel?.isRecording ?: true
 
         super.onPrepareOptionsMenu(menu)
     }
@@ -98,13 +107,13 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
     }
 
     private fun startRecording() {
-        isRecording = true
+        viewModel?.isRecording = true
         activity.invalidateOptionsMenu()
         logcatService?.startLogcat(logcatEventListener)
     }
 
     private fun stopRecording() {
-        isRecording = false
+        viewModel?.isRecording = false
         activity.invalidateOptionsMenu()
         logcatService?.stopLogcat()
     }

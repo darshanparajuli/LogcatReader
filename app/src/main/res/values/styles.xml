@@ -21,4 +21,8 @@
     <style name="MyPreferenceTheme" parent="@style/PreferenceThemeOverlay.v14.Material">
     </style>
 
+    <style name="SplashScreenTheme" parent="Theme.AppCompat.NoActionBar">
+        <item name="android:windowBackground">@drawable/splash_screen</item>
+    </style>
+
 </resources>

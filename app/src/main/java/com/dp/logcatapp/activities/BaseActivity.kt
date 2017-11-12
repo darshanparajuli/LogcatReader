@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Bundle
+import android.os.Handler
 import android.support.annotation.IdRes
 import android.support.annotation.StringRes
 import android.support.v4.app.NavUtils
@@ -20,6 +21,7 @@ open class BaseActivity : AppCompatActivity() {
         private set
     protected var sharedPreferences: SharedPreferences? = null
         private set
+    protected val handler = Handler()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         PreferenceManager.setDefaultValues(this, R.xml.settings, false)
