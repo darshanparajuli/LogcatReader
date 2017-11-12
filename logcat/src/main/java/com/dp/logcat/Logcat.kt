@@ -42,19 +42,10 @@ class Logcat : Closeable {
 
         handler.post { listener?.onStartEvent() }
 
-        val stderrThread = Thread({
-            val reader = BufferedReader(InputStreamReader(logcatProcess?.errorStream))
-            while (true) {
-                try {
-                    reader.readLine() ?: break
-                } catch (e: IOException) {
-                    break
-                }
-            }
-        })
-
-        val stdoutThread = Thread(StdoutHandler(logcatProcess?.inputStream))
+        val stderrThread = Thread({ processStderr(logcatProcess?.errorStream) })
         stderrThread.start()
+        
+        val stdoutThread = Thread({ processStdout(logcatProcess?.inputStream) })
         stdoutThread.start()
 
         logcatProcess?.waitFor()
@@ -91,31 +82,35 @@ class Logcat : Closeable {
         listener = null
     }
 
-    private inner class StdoutHandler(inputStream: InputStream?) : Runnable {
-        val reader: BufferedReader?
-
-        init {
-            reader = BufferedReader(InputStreamReader(inputStream))
+    private fun processStderr(errStream: InputStream?) {
+        val reader = BufferedReader(InputStreamReader(errStream))
+        while (true) {
+            try {
+                reader.readLine() ?: break
+            } catch (e: IOException) {
+                break
+            }
         }
+    }
 
-        override fun run() {
-            while (true) {
-                try {
-                    val metadata = reader?.readLine()?.trim() ?: break
-                    if (metadata.startsWith("[")) {
-                        val msg = reader.readLine()?.trim() ?: break
-                        val log = LogFactory.createNewLog(metadata, msg)
-                        synchronized(logs) {
-                            logs += log
-                        }
-
-                        if (filters.values.all { it(log) }) {
-                            listener?.onLogEvent(log)
-                        }
+    private fun processStdout(inputStream: InputStream?) {
+        val reader = BufferedReader(InputStreamReader(inputStream))
+        while (true) {
+            try {
+                val metadata = reader.readLine()?.trim() ?: break
+                if (metadata.startsWith("[")) {
+                    val msg = reader.readLine()?.trim() ?: break
+                    val log = LogFactory.createNewLog(metadata, msg)
+                    synchronized(logs) {
+                        logs += log
                     }
-                } catch (e: IOException) {
-                    break
+
+                    if (filters.values.all { it(log) }) {
+                        listener?.onLogEvent(log)
+                    }
                 }
+            } catch (e: IOException) {
+                break
             }
         }
     }
