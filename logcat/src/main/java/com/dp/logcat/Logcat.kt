@@ -9,6 +9,9 @@ class Logcat : Closeable {
     private var logcatProcess: Process? = null
     private val handler: Handler = Handler(Looper.getMainLooper())
     private var listener: LogcatEventListener? = null
+
+    // must be synchronized
+    private val lock = Any()
     private val logs = mutableListOf<Log>()
     private val filters = mutableMapOf<String, (Log) -> Boolean>()
 
@@ -22,17 +25,30 @@ class Logcat : Closeable {
 
     fun getLogs(): List<Log> {
         val list = mutableListOf<Log>()
-        synchronized(logs) {
+        synchronized(lock) {
             list += logs.toList()
         }
         return list
     }
 
-    fun getLogsFiltered() = getLogs().filter { log -> filters.values.all { it(log) } }
+    fun getLogsFiltered(): List<Log> {
+        val logs = getLogs()
+        synchronized(lock) {
+            return logs.filter { log -> filters.values.all { it(log) } }
+        }
+    }
 
-    fun addFilter(name: String, filter: (Log) -> Boolean) = filters.put(name, filter)
+    fun addFilter(name: String, filter: (Log) -> Boolean) {
+        synchronized(lock) {
+            filters.put(name, filter)
+        }
+    }
 
-    fun removeFilter(name: String) = filters.remove(name)
+    fun removeFilter(name: String) {
+        synchronized(lock) {
+            filters.remove(name)
+        }
+    }
 
     override fun close() {
         logcatProcess?.destroy()
@@ -45,8 +61,11 @@ class Logcat : Closeable {
         threadLogcat = null
         logcatProcess = null
 
-        logs.clear()
-        filters.clear()
+        synchronized(lock) {
+            logs.clear()
+            filters.clear()
+        }
+
         listener = null
     }
 
@@ -101,11 +120,13 @@ class Logcat : Closeable {
                 if (metadata.startsWith("[")) {
                     val msg = reader.readLine()?.trim() ?: break
                     val log = LogFactory.createNewLog(metadata, msg)
-                    synchronized(logs) {
+                    var passedFilter = false
+                    synchronized(lock) {
                         logs += log
+                        passedFilter = filters.values.all { it(log) }
                     }
 
-                    if (filters.values.all { it(log) }) {
+                    if (passedFilter) {
                         listener?.onLogEvent(log)
                     }
                 }
