@@ -30,38 +30,6 @@ class Logcat : Closeable {
 
     fun getLogsFiltered() = getLogs().filter { log -> filters.values.all { it(log) } }
 
-    private fun runLogcat() {
-        val processBuilder = ProcessBuilder("logcat", "-v", "long")
-
-        try {
-            logcatProcess = processBuilder.start()
-        } catch (e: IOException) {
-            handler.post { listener?.onStartFailedEvent() }
-            return
-        }
-
-        handler.post { listener?.onStartEvent() }
-
-        val stderrThread = Thread({ processStderr(logcatProcess?.errorStream) })
-        stderrThread.start()
-        
-        val stdoutThread = Thread({ processStdout(logcatProcess?.inputStream) })
-        stdoutThread.start()
-
-        logcatProcess?.waitFor()
-
-        try {
-            stderrThread.join(2000)
-        } catch (e: InterruptedException) {
-        }
-        try {
-            stdoutThread.join(2000)
-        } catch (e: InterruptedException) {
-        }
-
-        handler.post { listener?.onStopEvent() }
-    }
-
     fun addFilter(name: String, filter: (Log) -> Boolean) = filters.put(name, filter)
 
     fun removeFilter(name: String) = filters.remove(name)
@@ -80,6 +48,38 @@ class Logcat : Closeable {
         logs.clear()
         filters.clear()
         listener = null
+    }
+    
+    private fun runLogcat() {
+        val processBuilder = ProcessBuilder("logcat", "-v", "long")
+
+        try {
+            logcatProcess = processBuilder.start()
+        } catch (e: IOException) {
+            handler.post { listener?.onStartFailedEvent() }
+            return
+        }
+
+        handler.post { listener?.onStartEvent() }
+
+        val stderrThread = Thread({ processStderr(logcatProcess?.errorStream) })
+        stderrThread.start()
+
+        val stdoutThread = Thread({ processStdout(logcatProcess?.inputStream) })
+        stdoutThread.start()
+
+        logcatProcess?.waitFor()
+
+        try {
+            stderrThread.join(2000)
+        } catch (e: InterruptedException) {
+        }
+        try {
+            stdoutThread.join(2000)
+        } catch (e: InterruptedException) {
+        }
+
+        handler.post { listener?.onStopEvent() }
     }
 
     private fun processStderr(errStream: InputStream?) {
