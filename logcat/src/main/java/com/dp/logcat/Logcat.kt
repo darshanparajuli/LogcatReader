@@ -78,7 +78,7 @@ class Logcat : Closeable {
 
                     if (metadata.startsWith("[")) {
                         val msg = reader.readLine()?.trim() ?: break
-                        listener?.onLogEvent(LogFactory.newLog(metadata.trim(), msg))
+                        listener?.onLogEvent(LogFactory.createNewLog(metadata.trim(), msg))
                     }
                 } catch (e: IOException) {
                     break

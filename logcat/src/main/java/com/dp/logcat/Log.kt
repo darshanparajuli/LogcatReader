@@ -16,7 +16,7 @@ data class Log(val date: String,
 }
 
 object LogFactory {
-    fun newLog(metadata: String, msg: String): Log {
+    fun createNewLog(metadata: String, msg: String): Log {
         val date: String
         val time: String
         val pid: String
