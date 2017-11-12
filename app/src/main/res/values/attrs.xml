@@ -1,4 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <attr name="toolbar_shadow" format="reference"/>
+    <declare-styleable name="CustomTextView">
+        <attr name="useFont" format="string" />
+    </declare-styleable>
+
+    <attr name="list_selected_item" format="reference" />
+    <attr name="divider_color" format="color|reference" />
+    <attr name="primary_text_color" format="color|reference" />
+    <attr name="secondary_text_color" format="color|reference" />
+    <attr name="ripple_mask_color" format="color|reference" />
+    <attr name="toolbar_shadow" format="reference" />
 </resources>

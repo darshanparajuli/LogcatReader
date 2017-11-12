@@ -9,15 +9,23 @@
         android:supportsRtl="true"
         android:theme="@style/LightTheme">
         <activity
-            android:theme="@style/SplashScreenTheme"
             android:name=".activities.SplashActivity"
-            android:launchMode="singleTask">
+            android:launchMode="singleTask"
+            android:theme="@style/SplashScreenTheme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".activities.DarkBgActivity"
+            android:launchMode="singleTask"
+            android:theme="@style/DarkBgTheme" />
+        <activity
+            android:name=".activities.BlackBgActivity"
+            android:launchMode="singleTask"
+            android:theme="@style/BlackBgTheme" />
         <activity
             android:name=".activities.MainActivity"
             android:launchMode="singleTask" />

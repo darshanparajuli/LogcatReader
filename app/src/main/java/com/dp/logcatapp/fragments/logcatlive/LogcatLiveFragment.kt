@@ -20,16 +20,25 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
     private var logcatService: LogcatService? = null
     private var viewModel: LogcatLiveViewModel? = null
     private val logcatEventListener = object : LogcatEventListener {
+
+        val threshold = 16
+        val list = mutableListOf<Log>()
+
         override fun onStartEvent() {
         }
 
         override fun onLogEvent(log: Log) {
-            handler.post {
-                viewModel?.logs?.add(log)
+            list.add(log)
+            if (list.size == threshold) {
+                val dup = list.toList()
+                list.clear()
+                handler.post {
+                    viewModel?.logs?.addAll(dup)
+                }
             }
         }
 
-        override fun onFailEvent() {
+        override fun onStartFailedEvent() {
         }
 
         override fun onStopEvent() {

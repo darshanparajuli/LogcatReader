@@ -6,4 +6,7 @@
     <string name="logcat_service_channel_name">Logcat service</string>
     <string name="logcat_service">Logcat service</string>
     <string name="press_back_again_to_exit">Press back again to exit</string>
+    <string name="pref_cat_appearance">Appearance</string>
+    <string name="pref_theme_title">Theme</string>
+    <string name="pref_theme_black_theme">Use black color for dark theme</string>
 </resources>

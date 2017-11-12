@@ -2,18 +2,55 @@
 <resources>
 
     <style name="LightTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="colorAccent">@color/color_accent</item>
         <item name="colorPrimary">@color/color_primary</item>
         <item name="colorPrimaryDark">@color/color_primary_dark</item>
-        <item name="colorAccent">@color/color_accent</item>
+        <item name="preferenceTheme">@style/MyPreferenceTheme</item>
+        <item name="android:windowBackground">@color/light_window_bg</item>
         <item name="android:windowTranslucentStatus">true</item>
 
         <item name="toolbar_shadow">@drawable/toolbar_shadow_light</item>
-        <item name="preferenceTheme">@style/MyPreferenceTheme</item>
+        <item name="android:textViewStyle">@style/LightTextViewStyle</item>
+        <item name="divider_color">@color/divider_light</item>
+        <item name="list_selected_item">@drawable/list_item_selector_light</item>
+        <item name="primary_text_color">@color/primary_text_color_light</item>
+        <item name="secondary_text_color">@color/secondary_text_color_light</item>
+        <item name="ripple_mask_color">@color/light_window_bg</item>
     </style>
-    
+
+    <style name="DarkTheme" parent="Theme.AppCompat.NoActionBar">
+        <item name="colorAccent">@color/color_accent</item>
+        <item name="colorPrimary">@color/color_primary_dark_mode</item>
+        <item name="colorPrimaryDark">@color/color_primary_dark_mode_dark</item>
+        <item name="preferenceTheme">@style/MyPreferenceTheme</item>
+        <item name="android:windowBackground">@color/dark_window_bg</item>
+        <item name="android:windowTranslucentStatus">true</item>
+
+        <item name="toolbar_shadow">@drawable/toolbar_shadow_dark</item>
+        <item name="android:textViewStyle">@style/DarkTextViewStyle</item>
+        <item name="divider_color">@color/divider_dark</item>
+        <item name="list_selected_item">@drawable/list_item_selector_dark</item>
+        <item name="primary_text_color">@color/primary_text_color_dark</item>
+        <item name="secondary_text_color">@color/secondary_text_color_dark</item>
+        <item name="ripple_mask_color">@color/dark_window_bg</item>
+    </style>
+
+    <style name="BlackTheme" parent="DarkTheme">
+        <item name="android:windowBackground">@color/black_window_bg</item>
+        <item name="ripple_mask_color">@color/black_window_bg</item>
+    </style>
+
     <style name="SplashScreenTheme" parent="Theme.AppCompat.NoActionBar">
         <item name="android:windowBackground">@drawable/splash_screen</item>
         <item name="android:windowTranslucentStatus">true</item>
+    </style>
+
+    <style name="DarkBgTheme" parent="SplashScreenTheme">
+        <item name="android:windowBackground">@color/dark_window_bg</item>
+    </style>
+
+    <style name="BlackBgTheme" parent="SplashScreenTheme">
+        <item name="android:windowBackground">@color/black_window_bg</item>
     </style>
 
 </resources>

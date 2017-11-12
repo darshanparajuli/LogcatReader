@@ -10,7 +10,7 @@
             android:key="pref_key_appearance_theme"
             android:persistent="true"
             android:title="@string/pref_theme_title" />
-        <CheckBoxPreference
+        <SwitchPreference
             android:defaultValue="false"
             android:key="pref_key_appearance_use_black_theme"
             android:persistent="true"

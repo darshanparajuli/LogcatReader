@@ -1,7 +1,10 @@
 package com.dp.logcatapp.services
 
 import android.annotation.TargetApi
-import android.app.*
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
@@ -17,9 +20,12 @@ import com.dp.logcat.LogcatEventListener
 import com.dp.logcatapp.R
 import com.dp.logcatapp.activities.MainActivity
 
-class LogcatService : Service() {
-    private val NOTIFICAION_CHANNEL = "logcat_channel_01"
-    private val NOTIFICAION_ID = 1
+class LogcatService : BaseService() {
+
+    companion object {
+        private const val NOTIFICAION_CHANNEL = "logcat_channel_01"
+        private const val NOTIFICAION_ID = 1
+    }
 
     private val localBinder = LocalBinder()
     private var sharedPreferences: SharedPreferences? = null
@@ -84,7 +90,12 @@ class LogcatService : Service() {
     }
 
     fun startLogcat(listener: LogcatEventListener): Boolean {
-        return logcat.start(listener)
+        return try {
+            logcat.start(listener)
+            true
+        } catch (e: Exception) {
+            false
+        }
     }
 
     fun stopLogcat() {
