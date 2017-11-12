@@ -7,26 +7,56 @@ import java.io.*
 class Logcat : Closeable {
     private var threadLogcat: Thread? = null
     private var logcatProcess: Process? = null
-    private var handler: Handler = Handler(Looper.getMainLooper())
+    private val handler: Handler = Handler(Looper.getMainLooper())
     private var listener: LogcatEventListener? = null
+    private val logs = mutableListOf<Log>()
+    private val filters = mutableMapOf<String, (Log) -> Boolean>()
 
-    private val runnable: Runnable = Runnable {
+    fun start(listener: LogcatEventListener?) {
+        threadLogcat ?: throw IllegalStateException("logcat is already running")
+        this.listener = listener
+
+        threadLogcat = Thread({ runLogcat() })
+        threadLogcat?.start()
+    }
+
+    fun getLogs(): List<Log> {
+        val list = mutableListOf<Log>()
+        synchronized(logs) {
+            list += logs.toList()
+        }
+        return list
+    }
+
+    fun getLogsFiltered() = getLogs().filter { log -> filters.values.all { it(log) } }
+
+    private fun runLogcat() {
         val processBuilder = ProcessBuilder("logcat", "-v", "long")
 
         try {
             logcatProcess = processBuilder.start()
         } catch (e: IOException) {
-            handler.post { listener?.onFailEvent() }
-            return@Runnable
+            handler.post { listener?.onStartFailedEvent() }
+            return
         }
 
         handler.post { listener?.onStartEvent() }
 
-        val stderrThread = Thread(StreamHandler(logcatProcess?.errorStream, null))
-        val stdoutThread = Thread(StreamHandler(logcatProcess?.inputStream, listener))
+        val stderrThread = Thread({
+            val reader = BufferedReader(InputStreamReader(logcatProcess?.errorStream))
+            while (true) {
+                try {
+                    reader.readLine() ?: break
+                } catch (e: IOException) {
+                    break
+                }
+            }
+        })
+
+        val stdoutThread = Thread(StdoutHandler(logcatProcess?.inputStream))
         stderrThread.start()
         stdoutThread.start()
-        
+
         logcatProcess?.waitFor()
 
         try {
@@ -41,15 +71,9 @@ class Logcat : Closeable {
         handler.post { listener?.onStopEvent() }
     }
 
-    fun start(listener: LogcatEventListener?): Boolean {
-        if (threadLogcat != null) {
-            throw IllegalStateException("logcat is already running")
-        }
-        this.listener = listener
-        threadLogcat = Thread(runnable)
-        threadLogcat?.start()
-        return true
-    }
+    fun addFilter(name: String, filter: (Log) -> Boolean) = filters.put(name, filter)
+
+    fun removeFilter(name: String) = filters.remove(name)
 
     override fun close() {
         logcatProcess?.destroy()
@@ -61,10 +85,13 @@ class Logcat : Closeable {
 
         threadLogcat = null
         logcatProcess = null
+
+        logs.clear()
+        filters.clear()
+        listener = null
     }
 
-    private class StreamHandler(inputStream: InputStream?,
-                                val listener: LogcatEventListener?) : Runnable {
+    private inner class StdoutHandler(inputStream: InputStream?) : Runnable {
         val reader: BufferedReader?
 
         init {
@@ -75,10 +102,16 @@ class Logcat : Closeable {
             while (true) {
                 try {
                     val metadata = reader?.readLine()?.trim() ?: break
-
                     if (metadata.startsWith("[")) {
                         val msg = reader.readLine()?.trim() ?: break
-                        listener?.onLogEvent(LogFactory.createNewLog(metadata.trim(), msg))
+                        val log = LogFactory.createNewLog(metadata, msg)
+                        synchronized(logs) {
+                            logs += log
+                        }
+
+                        if (filters.values.all { it(log) }) {
+                            listener?.onLogEvent(log)
+                        }
                     }
                 } catch (e: IOException) {
                     break
@@ -87,3 +120,4 @@ class Logcat : Closeable {
         }
     }
 }
+

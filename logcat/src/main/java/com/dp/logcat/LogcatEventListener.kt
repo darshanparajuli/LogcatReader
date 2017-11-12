@@ -8,12 +8,13 @@ interface LogcatEventListener {
     @MainThread
     fun onStartEvent()
 
+    @MainThread
+    fun onStartFailedEvent()
+
     @WorkerThread
     fun onLogEvent(log: Log)
-    
-    @MainThread
-    fun onFailEvent()
 
     @MainThread
     fun onStopEvent()
+
 }
