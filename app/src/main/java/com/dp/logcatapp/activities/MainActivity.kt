@@ -3,6 +3,7 @@ package com.dp.logcatapp.activities
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
+import android.support.v4.app.ActivityCompat
 import android.view.Menu
 import android.view.MenuItem
 import com.dp.logcatapp.R
@@ -23,6 +24,10 @@ class MainActivity : BaseActivity() {
         setContentView(R.layout.activity_main)
         setToolbar(R.id.toolbar, R.string.app_name)
 
+        if (checkShouldTheAppExit(intent)) {
+            return
+        }
+
         val logcatServiceIntent = Intent(this, LogcatService::class.java)
         if (Build.VERSION.SDK_INT >= 26) {
             startForegroundService(logcatServiceIntent)
@@ -35,6 +40,21 @@ class MainActivity : BaseActivity() {
                     .replace(R.id.content_frame, LogcatLiveFragment(), LogcatLiveFragment.TAG)
                     .commit()
         }
+    }
+
+    private fun checkShouldTheAppExit(intent: Intent?): Boolean =
+            if (intent?.getBooleanExtra(EXIT_EXTRA, false) == true) {
+                canExit = true
+                ActivityCompat.finishAfterTransition(this)
+                true
+            } else {
+                false
+            }
+
+
+    override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+        checkShouldTheAppExit(intent)
     }
 
     override fun onDestroy() {
@@ -72,6 +92,7 @@ class MainActivity : BaseActivity() {
 
     companion object {
         val TAG = MainActivity::class.qualifiedName
+        val EXIT_EXTRA = TAG + "_extra_exit"
         private const val EXIT_DOUBLE_PRESS_DELAY: Long = 2000
     }
 }
