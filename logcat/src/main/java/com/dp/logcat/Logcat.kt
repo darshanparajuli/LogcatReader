@@ -13,6 +13,8 @@ class Logcat : LifecycleObserver, Closeable {
     private var threadLogcat: Thread? = null
     private var logcatProcess: Process? = null
     private val handler: Handler = Handler(Looper.getMainLooper())
+
+    @Volatile
     private var listener: LogcatEventListener? = null
 
     // must be synchronized
@@ -32,14 +34,14 @@ class Logcat : LifecycleObserver, Closeable {
         }
 
     fun start() {
-        if (threadLogcat != null) {
-            throw IllegalStateException("logcat is already running")
+        if (threadLogcat == null) {
+            threadLogcat = thread { runLogcat() }
+        } else {
+            MyLogger.logInfo(Logcat::class, "Logcat is already running!")
         }
-
-        threadLogcat = thread { runLogcat() }
     }
 
-    fun setEventListener(listener: LogcatEventListener) {
+    fun setEventListener(listener: LogcatEventListener?) {
         this.listener = listener
     }
 
