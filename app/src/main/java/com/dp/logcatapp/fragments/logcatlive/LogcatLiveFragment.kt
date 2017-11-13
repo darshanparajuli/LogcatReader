@@ -48,6 +48,14 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
             }
         }
 
+        override fun onLogsEvent(logs: List<Log>) {
+            adapter.addItems(logs)
+            updateToolbarSubtitle(adapter.itemCount)
+            if (viewModel.autoScroll) {
+                recyclerView.scrollToPosition(adapter.itemCount - 1)
+            }
+        }
+
         override fun onStartFailedEvent() {
             activity.showToast("Failed to run logcat")
         }
