@@ -50,16 +50,16 @@ open class BaseActivity : AppCompatActivity() {
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
     }
 
-    override fun onOptionsItemSelected(item: MenuItem?): Boolean {
-        when (item?.itemId) {
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
             android.R.id.home -> {
                 val upIntent = NavUtils.getParentActivityIntent(this)
                 upIntent.flags = Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
                 startActivity(upIntent)
                 finish()
-                return true
+                true
             }
+            else -> super.onOptionsItemSelected(item)
         }
-        return super.onOptionsItemSelected(item)
     }
 }

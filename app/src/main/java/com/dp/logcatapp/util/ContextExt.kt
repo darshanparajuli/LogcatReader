@@ -9,7 +9,7 @@ import java.util.*
 
 private val cache = mutableMapOf<String, Typeface>()
 
-fun Context.showToast(msg: String, length: Int = Toast.LENGTH_SHORT) =
+fun Context.showToast(msg: CharSequence, length: Int = Toast.LENGTH_SHORT) =
         Toast.makeText(this, msg, length).show()
 
 fun Context.getRobotoTypeface(name: String) = getTypeface("Roboto/$name.ttf")

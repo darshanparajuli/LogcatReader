@@ -7,14 +7,13 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import android.content.SharedPreferences
 import android.graphics.BitmapFactory
 import android.os.Binder
 import android.os.Build
 import android.os.IBinder
 import android.support.v4.app.NotificationCompat
 import android.support.v4.content.ContextCompat
-import android.support.v7.preference.PreferenceManager
+import android.support.v7.app.AppCompatActivity
 import com.dp.logcat.Logcat
 import com.dp.logcat.LogcatEventListener
 import com.dp.logcatapp.R
@@ -28,19 +27,17 @@ class LogcatService : BaseService() {
     }
 
     private val localBinder = LocalBinder()
-    private var sharedPreferences: SharedPreferences? = null
     private val logcat: Logcat = Logcat()
 
     override fun onCreate() {
         super.onCreate()
-        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this)
-
         if (Build.VERSION.SDK_INT >= 26) {
             createNotificationChannel()
         }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        logcat.start()
         startForeground(NOTIFICAION_ID, createStartNotification())
         return START_STICKY
     }
@@ -89,18 +86,26 @@ class LogcatService : BaseService() {
         return localBinder
     }
 
-    fun startLogcat(listener: LogcatEventListener): Boolean {
-        return try {
-            logcat.start(listener)
-            true
-        } catch (e: Exception) {
-            false
-        }
+    fun setLogcatEventListener(listener: LogcatEventListener?) {
+        logcat.setEventListener(listener)
     }
 
-    fun stopLogcat() {
-        logcat.close()
+    fun attatchToActivity(activity: AppCompatActivity) {
+        activity.lifecycle.addObserver(logcat)
     }
+
+    fun detachFromActivity(activity: AppCompatActivity) {
+        activity.lifecycle.removeObserver(logcat)
+    }
+
+    fun restartLogcat() {
+        logcat.stop()
+        logcat.start()
+    }
+
+    fun getLogs() = logcat.getLogs()
+
+    fun getLogsFiltered() = logcat.getLogsFiltered()
 
     fun startRecording() {
     }

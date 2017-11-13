@@ -3,6 +3,8 @@ package com.dp.logcatapp.activities
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
+import android.view.Menu
+import android.view.MenuItem
 import com.dp.logcatapp.R
 import com.dp.logcatapp.fragments.logcatlive.LogcatLiveFragment
 import com.dp.logcatapp.services.LogcatService
@@ -50,6 +52,21 @@ class MainActivity : BaseActivity() {
             canExit = true
             showToast(getString(R.string.press_back_again_to_exit))
             handler.postDelayed(exitRunnable, EXIT_DOUBLE_PRESS_DELAY)
+        }
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        menuInflater.inflate(R.menu.main, menu)
+        return super.onCreateOptionsMenu(menu)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            R.id.settings -> {
+                startActivity(Intent(this, SettingsActivity::class.java))
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
         }
     }
 
