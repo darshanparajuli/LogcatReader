@@ -6,7 +6,7 @@
     <color name="color_primary_dark">#00796B</color>
 
     <color name="color_primary_dark_mode">#00796B</color>
-    <color name="color_primary_dark_mode_dark">#00695C</color>
+    <color name="color_primary_dark_mode_dark">#004D40</color>
 
     <color name="toolbar_shadow_start_color_light">#4b000000</color>
     <color name="toolbar_shadow_center_color_light">#1e000000</color>
