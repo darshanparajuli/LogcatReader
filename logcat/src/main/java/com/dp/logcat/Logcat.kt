@@ -1,11 +1,15 @@
 package com.dp.logcat
 
+import android.arch.lifecycle.Lifecycle
+import android.arch.lifecycle.LifecycleObserver
+import android.arch.lifecycle.OnLifecycleEvent
 import android.os.Handler
 import android.os.Looper
+import com.dp.logger.MyLogger
 import java.io.*
 import kotlin.concurrent.thread
 
-class Logcat : Closeable {
+class Logcat : LifecycleObserver, Closeable {
     private var threadLogcat: Thread? = null
     private var logcatProcess: Process? = null
     private val handler: Handler = Handler(Looper.getMainLooper())
@@ -15,6 +19,17 @@ class Logcat : Closeable {
     private val lock = Any()
     private val logs = mutableListOf<Log>()
     private val filters = mutableMapOf<String, (Log) -> Boolean>()
+
+    private var _activityInBackgroundLock = Any()
+    private var activityInBackground: Boolean = false
+        get() = synchronized(_activityInBackgroundLock) {
+            field
+        }
+        set(value) {
+            synchronized(_activityInBackgroundLock) {
+                field = value
+            }
+        }
 
     fun start() {
         if (threadLogcat != null) {
@@ -72,6 +87,18 @@ class Logcat : Closeable {
         }
     }
 
+    @OnLifecycleEvent(Lifecycle.Event.ON_RESUME)
+    private fun onActivityInForeground() {
+        MyLogger.logDebug(Logcat::class, "onActivityInForeground")
+        activityInBackground = false
+    }
+
+    @OnLifecycleEvent(Lifecycle.Event.ON_PAUSE)
+    private fun onActivityInBackground() {
+        MyLogger.logDebug(Logcat::class, "onActivityInBackground")
+        activityInBackground = true
+    }
+
     override fun close() {
         stop()
         listener = null
@@ -118,6 +145,20 @@ class Logcat : Closeable {
     }
 
     private fun processStdout(inputStream: InputStream?) {
+        val tempLogs = mutableListOf<Log>()
+
+        val emitLogEvent = { log: Log ->
+            var passedFilter = false
+            synchronized(lock) {
+                logs += log
+                passedFilter = filters.values.all { it(log) }
+            }
+
+            if (passedFilter) {
+                listener?.onLogEvent(log)
+            }
+        }
+
         val reader = BufferedReader(InputStreamReader(inputStream))
         while (true) {
             try {
@@ -126,20 +167,25 @@ class Logcat : Closeable {
                     val msg = reader.readLine()?.trim() ?: break
                     try {
                         val log = LogFactory.createNewLog(metadata, msg)
-                        var passedFilter = false
-                        synchronized(lock) {
-                            logs += log
-                            passedFilter = filters.values.all { it(log) }
-                        }
 
-                        if (passedFilter) {
-                            listener?.onLogEvent(log)
+                        if (activityInBackground) {
+                            tempLogs.add(log)
+                        } else {
+                            if (tempLogs.isNotEmpty()) {
+                                MyLogger.logDebug(Logcat::class,
+                                        "tempLogs size: ${tempLogs.size}")
+                                for (l in tempLogs) {
+                                    emitLogEvent(l)
+                                }
+                                tempLogs.clear()
+                            }
+                            emitLogEvent(log)
                         }
 
                         // skip next line since it's empty
                         reader.readLine() ?: break
                     } catch (e: Exception) {
-                        android.util.Log.d("LogcatLib", "${e.message}: $metadata")
+                        MyLogger.logDebug(Logcat::class, "${e.message}: $metadata")
                     }
                 }
             } catch (e: IOException) {
@@ -148,4 +194,5 @@ class Logcat : Closeable {
         }
     }
 }
+
 
