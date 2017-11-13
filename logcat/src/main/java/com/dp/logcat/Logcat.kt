@@ -161,6 +161,20 @@ class Logcat : LifecycleObserver, Closeable {
             }
         }
 
+        val emitLogsEvent = { newLogs: List<Log> ->
+            synchronized(lock) {
+                logs += newLogs
+            }
+            val filtered = newLogs.filter { e ->
+                filters.values.all { it(e) }
+            }.toList()
+            if (filtered.isNotEmpty()) {
+                handler.post {
+                    listener?.onLogsEvent(filtered)
+                }
+            }
+        }
+
         val reader = BufferedReader(InputStreamReader(inputStream))
         while (true) {
             try {
@@ -174,11 +188,7 @@ class Logcat : LifecycleObserver, Closeable {
                             tempLogs.add(log)
                         } else {
                             if (tempLogs.isNotEmpty()) {
-                                MyLogger.logDebug(Logcat::class,
-                                        "tempLogs size: ${tempLogs.size}")
-                                for (l in tempLogs) {
-                                    emitLogEvent(l)
-                                }
+                                emitLogsEvent(tempLogs)
                                 tempLogs.clear()
                             }
                             emitLogEvent(log)

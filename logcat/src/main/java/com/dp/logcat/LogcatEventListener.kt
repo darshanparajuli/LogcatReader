@@ -15,6 +15,9 @@ interface LogcatEventListener {
     fun onLogEvent(log: Log)
 
     @MainThread
+    fun onLogsEvent(logs: List<Log>)
+
+    @MainThread
     fun onStopEvent()
 
 }
