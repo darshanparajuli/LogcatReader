@@ -15,7 +15,9 @@ class MyRecyclerViewAdapter(private val context: Context)
 
     override fun onBindViewHolder(holder: MyViewHolder, position: Int) {
         val log = data[position]
-        holder.message.text = "[$position] ${log.msg}"
+        holder.date.text = log.date
+        holder.time.text = log.time
+        holder.message.text = log.msg
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MyViewHolder {
@@ -44,11 +46,10 @@ class MyRecyclerViewAdapter(private val context: Context)
         notifyItemRangeRemoved(0, size)
     }
 
-    class MyViewHolder : RecyclerView.ViewHolder {
-        var message: TextView
+    class MyViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        val date: TextView = itemView.findViewById(R.id.date)
+        val time: TextView = itemView.findViewById(R.id.time)
+        val message: TextView = itemView.findViewById(R.id.message)
 
-        constructor(itemView: View) : super(itemView) {
-            message = itemView.findViewById(R.id.message)
-        }
     }
 }

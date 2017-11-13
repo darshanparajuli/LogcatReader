@@ -58,18 +58,29 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
     }
 
     private val onScrollListener = object : RecyclerView.OnScrollListener() {
+        var lastDy = 0
+
+        override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+            if (dy > 0 && lastDy <= 0) {
+                fab.show()
+            } else if (dy < 0 && lastDy >= 0) {
+                fab.hide()
+            } else if (dy == 0 && lastDy != 0) {
+                fab.show()
+            }
+            lastDy = dy
+        }
+
         override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
-            if (newState == RecyclerView.SCROLL_STATE_IDLE) {
+            if (newState == RecyclerView.SCROLL_STATE_IDLE ||
+                    newState == RecyclerView.SCROLL_STATE_DRAGGING) {
                 val lm = recyclerView.layoutManager as LinearLayoutManager
-                val pos = lm.findLastVisibleItemPosition()
+                val pos = lm.findLastCompletelyVisibleItemPosition()
                 viewModel.scrollPosition = pos
                 viewModel.autoScroll = pos >= adapter.itemCount - 1
                 if (viewModel.autoScroll) {
                     fab.hide()
                 }
-            } else if (newState == RecyclerView.SCROLL_STATE_DRAGGING) {
-                viewModel.autoScroll = false
-                fab.show()
             }
         }
     }
