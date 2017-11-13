@@ -30,6 +30,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
     private lateinit var viewModel: LogcatLiveViewModel
     private lateinit var adapter: MyRecyclerViewAdapter
     private lateinit var fab: FloatingActionButton
+    private var ignoreScrollEvent = false
 
     private val logcatEventListener = object : LogcatEventListener {
 
@@ -73,21 +74,30 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
                 fab.show()
             } else if (dy < 0 && lastDy >= 0) {
                 fab.hide()
-            } else if (dy == 0 && lastDy != 0) {
-                fab.show()
             }
             lastDy = dy
         }
 
         override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
-            if (newState == RecyclerView.SCROLL_STATE_IDLE ||
-                    newState == RecyclerView.SCROLL_STATE_DRAGGING) {
-                val lm = recyclerView.layoutManager as LinearLayoutManager
-                val pos = lm.findLastCompletelyVisibleItemPosition()
-                viewModel.scrollPosition = pos
-                viewModel.autoScroll = pos >= adapter.itemCount - 1
-                if (viewModel.autoScroll) {
-                    fab.hide()
+            val lm = recyclerView.layoutManager as LinearLayoutManager
+            when (newState) {
+                RecyclerView.SCROLL_STATE_DRAGGING -> {
+                    viewModel.autoScroll = false
+                }
+                else -> {
+                    val pos = lm.findLastCompletelyVisibleItemPosition()
+                    if (ignoreScrollEvent) {
+                        if (pos == adapter.itemCount) {
+                            ignoreScrollEvent = false
+                        }
+                        return
+                    }
+
+                    viewModel.scrollPosition = pos
+                    viewModel.autoScroll = pos >= adapter.itemCount - 1
+                    if (viewModel.autoScroll) {
+                        fab.hide()
+                    }
                 }
             }
         }
@@ -122,6 +132,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
         fab = rootView.findViewById(R.id.fab)
         fab.setOnClickListener {
             fab.hide()
+            ignoreScrollEvent = true
             viewModel.autoScroll = true
             recyclerView.scrollToPosition(adapter.itemCount - 1)
         }
