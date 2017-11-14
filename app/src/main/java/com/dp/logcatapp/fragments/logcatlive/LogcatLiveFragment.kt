@@ -101,7 +101,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
         super.onCreate(savedInstanceState)
         viewModel = ViewModelProviders.of(this)
                 .get(LogcatLiveViewModel::class.java)
-        adapter = MyRecyclerViewAdapter(activity)
+        adapter = MyRecyclerViewAdapter()
     }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {

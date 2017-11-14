@@ -1,6 +1,5 @@
 package com.dp.logcatapp.fragments.logcatlive
 
-import android.content.Context
 import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
@@ -9,8 +8,7 @@ import android.widget.TextView
 import com.dp.logcat.Log
 import com.dp.logcatapp.R
 
-class MyRecyclerViewAdapter(private val context: Context)
-    : RecyclerView.Adapter<MyRecyclerViewAdapter.MyViewHolder>() {
+class MyRecyclerViewAdapter : RecyclerView.Adapter<MyRecyclerViewAdapter.MyViewHolder>() {
     val data = mutableListOf<Log>()
 
     override fun onBindViewHolder(holder: MyViewHolder, position: Int) {
