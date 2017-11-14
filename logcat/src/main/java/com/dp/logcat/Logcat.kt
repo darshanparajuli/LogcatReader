@@ -184,14 +184,28 @@ class Logcat : LifecycleObserver, Closeable {
             }
         }
 
+        val msgBuffer = StringBuilder()
+
         val reader = BufferedReader(InputStreamReader(inputStream))
         while (true) {
             try {
                 val metadata = reader.readLine()?.trim() ?: break
                 if (metadata.startsWith("[")) {
-                    val msg = reader.readLine()?.trim() ?: break
+                    var msg: String? = reader.readLine() ?: break
+                    msgBuffer.append(msg)
+
+                    msg = reader.readLine() ?: break
+                    while (msg != null && msg.isNotEmpty()) {
+                        msgBuffer.append("\n")
+                                .append(msg)
+
+                        msg = reader.readLine()
+                    }
+
+                    msg ?: break
+
                     try {
-                        val log = LogFactory.createNewLog(metadata, msg)
+                        val log = LogFactory.createNewLog(metadata, msgBuffer.toString())
 
                         if (activityInBackground) {
                             buffer.add(log)
@@ -202,11 +216,10 @@ class Logcat : LifecycleObserver, Closeable {
                             }
                             emitLogEvent(log)
                         }
-
-                        // skip next line since it's empty
-                        reader.readLine() ?: break
                     } catch (e: Exception) {
                         MyLogger.logDebug(Logcat::class, "${e.message}: $metadata")
+                    } finally {
+                        msgBuffer.setLength(0)
                     }
                 }
             } catch (e: IOException) {
