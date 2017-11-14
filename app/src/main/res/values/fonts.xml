@@ -18,4 +18,14 @@
     <string name="font_RobotoCondensed_Light">RobotoCondensed-Light</string>
     <string name="font_RobotoCondensed_LightItalic">RobotoCondensed-LightItalic</string>
     <string name="font_RobotoCondensed_Regular">RobotoCondensed-Regular</string>
+    <string name="font_RobotoMono_Bold">RobotoMono-Bold</string>
+    <string name="font_RobotoMono_BoldItalic">RobotoMono-BoldItalic</string>
+    <string name="font_RobotoMono_Italic">RobotoMono-Italic</string>
+    <string name="font_RobotoMono_Light">RobotoMono-Light</string>
+    <string name="font_RobotoMono_LightItalic">RobotoMono-LightItalic</string>
+    <string name="font_RobotoMono_Medium">RobotoMono-Medium</string>
+    <string name="font_RobotoMono_MediumItalic">RobotoMono-MediumItalic</string>
+    <string name="font_RobotoMono_Regular">RobotoMono-Regular</string>
+    <string name="font_RobotoMono_Thin">RobotoMono-Thin</string>
+    <string name="font_RobotoMono_ThinItalic">RobotoMono-ThinItalic</string>
 </resources>

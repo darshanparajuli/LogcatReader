@@ -17,6 +17,17 @@ class MyRecyclerViewAdapter(private val context: Context)
         val log = data[position]
         holder.date.text = log.date
         holder.time.text = log.time
+        holder.pid.text = log.pid
+        holder.tid.text = log.tid
+        holder.priority.text = when (log.priority) {
+            "A" -> "[Assert]"
+            "D" -> "[Debug]"
+            "E" -> "[Error]"
+            "I" -> "[Info]"
+            "V" -> "[Verbose]"
+            else -> "[Warning]"
+        }
+        holder.tag.text = log.tag
         holder.message.text = log.msg
     }
 
@@ -49,6 +60,10 @@ class MyRecyclerViewAdapter(private val context: Context)
     class MyViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val date: TextView = itemView.findViewById(R.id.date)
         val time: TextView = itemView.findViewById(R.id.time)
+        val pid: TextView = itemView.findViewById(R.id.pid)
+        val tid: TextView = itemView.findViewById(R.id.tid)
+        val priority: TextView = itemView.findViewById(R.id.priority)
+        val tag: TextView = itemView.findViewById(R.id.tag)
         val message: TextView = itemView.findViewById(R.id.message)
 
     }
