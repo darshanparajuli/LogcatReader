@@ -41,8 +41,8 @@
             android:layout_height="wrap_content"
             android:text="tag"
             android:textColor="?attr/primary_text_color"
-            android:textSize="@dimen/text_size_smaller"
-            app:useFont="@string/font_Roboto_Bold" />
+            android:textSize="@dimen/text_size_small"
+            app:useFont="@string/font_Roboto_Medium" />
     </HorizontalScrollView>
 
 
@@ -53,7 +53,7 @@
         android:layout_below="@+id/tag_container"
         android:text="Message"
         android:textColor="?attr/primary_text_color"
-        android:textSize="@dimen/text_size_small"
+        android:textSize="@dimen/text_size_smaller2"
         app:useFont="@string/font_RobotoCondensed_Regular" />
 
 
