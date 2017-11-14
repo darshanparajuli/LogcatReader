@@ -92,6 +92,12 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
                     viewModel.autoScroll = pos >= adapter.itemCount - 1
                     if (viewModel.autoScroll) {
                         fab.hide()
+                    } else if (lastDy < 0) {
+                        if (newState == RecyclerView.SCROLL_STATE_IDLE) {
+                            fab.show()
+                        } else {
+                            fab.hide()
+                        }
                     }
                 }
             }
