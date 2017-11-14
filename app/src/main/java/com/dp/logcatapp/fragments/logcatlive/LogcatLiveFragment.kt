@@ -35,6 +35,8 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
     private lateinit var fabUp: FloatingActionButton
     private lateinit var fabDown: FloatingActionButton
     private var ignoreScrollEvent = false
+    private var searchViewActive = false
+    private var lastLogId = -1
 
     private val logcatEventListener = object : LogcatEventListener {
 
@@ -101,6 +103,16 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
                     }
                 }
                 else -> {
+                    var firstPos = -1
+                    if (searchViewActive && !viewModel.autoScroll &&
+                            newState == RecyclerView.SCROLL_STATE_IDLE) {
+                        firstPos = linearLayoutManager.findFirstCompletelyVisibleItemPosition()
+                        if (firstPos != -1) {
+                            val log = adapter[firstPos]
+                            lastLogId = log.id
+                        }
+                    }
+
                     val pos = linearLayoutManager.findLastCompletelyVisibleItemPosition()
                     if (ignoreScrollEvent) {
                         if (pos == adapter.itemCount) {
@@ -113,25 +125,16 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
                         hideFabUp()
                     }
 
-                    viewModel.scrollPosition = pos
+                    if (firstPos == -1) {
+                        firstPos = linearLayoutManager.findFirstCompletelyVisibleItemPosition()
+                    }
+
+                    viewModel.scrollPosition = firstPos
                     viewModel.autoScroll = pos >= adapter.itemCount - 1
                     if (viewModel.autoScroll) {
                         hideFabUp()
                         hideFabDown()
                     }
-//                    else if (lastDy < 0) {
-//                        if (newState == RecyclerView.SCROLL_STATE_IDLE) {
-//                            fabDown.show()
-//                        } else {
-//                            fabDown.hide()
-//                        }
-//                    } else if (lastDy > 0) {
-//                        if (newState == RecyclerView.SCROLL_STATE_IDLE) {
-//                            fabUp.show()
-//                        } else {
-//                            fabUp.hide()
-//                        }
-//                    }
                 }
             }
         }
@@ -222,12 +225,13 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
         val searchView = searchItem.actionView as SearchView
 
         var reachedBlank = false
-        var lastLogId = -1
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextChange(newText: String): Boolean {
+                searchViewActive = true
+
                 if (newText.isBlank()) {
                     reachedBlank = true
-                    onSearchViewClose(lastLogId)
+                    onSearchViewClose()
                 } else {
                     reachedBlank = false
                     val logcat = logcatService?.logcat ?: return true
@@ -257,8 +261,9 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
         })
 
         searchView.setOnCloseListener {
+            searchViewActive = false
             if (!reachedBlank) {
-                onSearchViewClose(lastLogId)
+                onSearchViewClose()
             }
             false
         }
@@ -266,7 +271,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
         super.onCreateOptionsMenu(menu, inflater)
     }
 
-    private fun onSearchViewClose(lastLogId: Int) {
+    private fun onSearchViewClose() {
         val logcat = logcatService?.logcat ?: return
         logcat.pause()
         logcat.clearFilters()
@@ -279,8 +284,10 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
             viewModel.autoScroll = linearLayoutManager.findLastCompletelyVisibleItemPosition() ==
                     adapter.itemCount - 1
             if (!viewModel.autoScroll) {
+                viewModel.scrollPosition = lastLogId
                 linearLayoutManager.scrollToPositionWithOffset(lastLogId, 0)
             }
+            lastLogId = -1
         }
 
         resumeLogcat()
@@ -367,7 +374,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
         if (viewModel.autoScroll) {
             linearLayoutManager.scrollToPosition(adapter.itemCount - 1)
         } else {
-            linearLayoutManager.scrollToPosition(viewModel.scrollPosition)
+            linearLayoutManager.scrollToPositionWithOffset(viewModel.scrollPosition, 0)
         }
     }
 

@@ -51,6 +51,8 @@ class MyRecyclerViewAdapter : RecyclerView.Adapter<MyRecyclerViewAdapter.MyViewH
         notifyItemRangeInserted(size, items.size)
     }
 
+    operator fun get(index: Int) = data[index]
+
     internal fun clear() {
         val size = data.size
         data.clear()
