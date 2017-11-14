@@ -6,14 +6,7 @@ data class Log(val date: String,
                val tid: String,
                val priority: String,
                val tag: String,
-               val msg: String) {
-    val isAssert get() = priority == "A"
-    val isDebug get() = priority == "D"
-    val isError get() = priority == "E"
-    val isInfo get() = priority == "I"
-    val isVerbose get() = priority == "V"
-    val isWarning get() = priority == "W"
-}
+               val msg: String)
 
 object LogFactory {
     fun createNewLog(metadata: String, msg: String): Log {
