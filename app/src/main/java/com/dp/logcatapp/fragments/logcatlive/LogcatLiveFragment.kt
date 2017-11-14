@@ -21,6 +21,7 @@ import com.dp.logcatapp.services.LogcatService
 import com.dp.logcatapp.util.ServiceBinder
 import com.dp.logcatapp.util.inflateLayout
 import com.dp.logcatapp.util.showToast
+import com.dp.logger.MyLogger
 import kotlinx.android.synthetic.main.app_bar.*
 
 class LogcatLiveFragment : BaseFragment(), ServiceConnection {
@@ -64,14 +65,24 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
         }
     }
 
+    private val hideFabUpRunnable: Runnable = Runnable {
+        fabUp.hide()
+    }
+
+    private val hideFabDownRunnable: Runnable = Runnable {
+        fabDown.hide()
+    }
+
     private val onScrollListener = object : RecyclerView.OnScrollListener() {
         var lastDy = 0
 
         override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
             if (dy > 0 && lastDy <= 0) {
-                fabDown.show()
+                hideFabUp()
+                showFabDown()
             } else if (dy < 0 && lastDy >= 0) {
-                fabDown.hide()
+                showFabUp()
+                hideFabDown()
             }
             lastDy = dy
         }
@@ -80,6 +91,13 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
             when (newState) {
                 RecyclerView.SCROLL_STATE_DRAGGING -> {
                     viewModel.autoScroll = false
+                    if (lastDy > 0) {
+                        hideFabUp()
+                        showFabDown()
+                    } else if (lastDy < 0) {
+                        showFabUp()
+                        hideFabDown()
+                    }
                 }
                 else -> {
                     val pos = linearLayoutManager.findLastCompletelyVisibleItemPosition()
@@ -90,20 +108,54 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
                         return
                     }
 
+                    if (pos == 0) {
+                        hideFabUp()
+                    }
+
                     viewModel.scrollPosition = pos
                     viewModel.autoScroll = pos >= adapter.itemCount - 1
                     if (viewModel.autoScroll) {
-                        fabDown.hide()
-                    } else if (lastDy < 0) {
-                        if (newState == RecyclerView.SCROLL_STATE_IDLE) {
-                            fabDown.show()
-                        } else {
-                            fabDown.hide()
-                        }
+                        hideFabUp()
+                        hideFabDown()
                     }
+//                    else if (lastDy < 0) {
+//                        if (newState == RecyclerView.SCROLL_STATE_IDLE) {
+//                            fabDown.show()
+//                        } else {
+//                            fabDown.hide()
+//                        }
+//                    } else if (lastDy > 0) {
+//                        if (newState == RecyclerView.SCROLL_STATE_IDLE) {
+//                            fabUp.show()
+//                        } else {
+//                            fabUp.hide()
+//                        }
+//                    }
                 }
             }
         }
+    }
+
+    private fun showFabUp() {
+        handler.removeCallbacks(hideFabUpRunnable)
+        fabUp.show()
+        handler.postDelayed(hideFabUpRunnable, 2000)
+    }
+
+    private fun hideFabUp() {
+        handler.removeCallbacks(hideFabUpRunnable)
+        fabUp.hide()
+    }
+
+    private fun showFabDown() {
+        handler.removeCallbacks(hideFabDownRunnable)
+        fabDown.show()
+        handler.postDelayed(hideFabDownRunnable, 2000)
+    }
+
+    private fun hideFabDown() {
+        handler.removeCallbacks(hideFabDownRunnable)
+        fabDown.hide()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -139,16 +191,24 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
         fabDown = view.findViewById(R.id.fabDown)
         fabDown.setOnClickListener {
             logcatService?.logcat?.pause()
-            fabDown.hide()
+            hideFabDown()
             ignoreScrollEvent = true
             viewModel.autoScroll = true
             linearLayoutManager.scrollToPosition(adapter.itemCount - 1)
-            logcatService?.logcat?.resume()
+            resumeLogcat()
         }
 
-        if (viewModel.autoScroll) {
-            fabDown.hide()
+        fabUp = view.findViewById(R.id.fabUp)
+        fabUp.setOnClickListener {
+            logcatService?.logcat?.pause()
+            hideFabUp()
+            viewModel.autoScroll = false
+            linearLayoutManager.scrollToPositionWithOffset(0, 0)
+            resumeLogcat()
         }
+
+        hideFabUp()
+        hideFabDown()
 
         adapter.setOnClickListener { v ->
             val pos = linearLayoutManager.getPosition(v)
@@ -187,7 +247,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
                     viewModel.autoScroll = false
                     linearLayoutManager.scrollToPositionWithOffset(0, 0)
 
-                    logcat.resume()
+                    resumeLogcat()
                 }
                 return true
             }
@@ -222,17 +282,33 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
             }
         }
 
-        logcat.resume()
+        resumeLogcat()
     }
 
     override fun onPrepareOptionsMenu(menu: Menu) {
         super.onPrepareOptionsMenu(menu)
         // do nothing
+
+        val pauseItem = menu.findItem(R.id.action_pause_logcat)
+        val resumeItem = menu.findItem(R.id.action_resume_logcat)
+
+        pauseItem.isVisible = !viewModel.paused
+        resumeItem.isVisible = viewModel.paused
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.action_search -> {
+                true
+            }
+            R.id.action_pause_logcat -> {
+                viewModel.paused = true
+                logcatService?.logcat?.pause()
+                true
+            }
+            R.id.action_resume_logcat -> {
+                viewModel.paused = false
+                resumeLogcat()
                 true
             }
             else -> return super.onOptionsItemSelected(item)
@@ -261,7 +337,13 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
     }
 
     override fun onServiceConnected(name: ComponentName, service: IBinder) {
+        MyLogger.logDebug(LogcatLiveFragment::class, "onServiceConnected")
         logcatService = (service as LogcatService.LocalBinder).getLogcatService()
+
+        if (adapter.itemCount > 0) {
+            scrollRecyclerView()
+            return
+        }
 
         val logcat = logcatService!!.logcat
         logcat.pause()
@@ -272,7 +354,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
         logcat.setEventListener(logcatEventListener)
         (activity as AppCompatActivity).lifecycle.addObserver(logcat)
 
-        logcat.resume()
+        resumeLogcat()
     }
 
     private fun addAllLogs(logs: List<Log>) {
@@ -296,6 +378,12 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
         }
     }
 
+    private fun resumeLogcat() {
+        if (!viewModel.paused) {
+            logcatService?.logcat?.resume()
+        }
+    }
+
     private fun updateUIOnLogEvent(count: Int) {
         updateToolbarSubtitle(count)
         if (viewModel.autoScroll) {
@@ -304,6 +392,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
     }
 
     override fun onServiceDisconnected(name: ComponentName) {
+        MyLogger.logDebug(LogcatLiveFragment::class, "onServiceDisconnected")
         logcatService = null
     }
 

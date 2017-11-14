@@ -11,4 +11,6 @@
     <string name="pref_theme_black_theme">Use black color for dark theme</string>
     <string name="exit">Exit</string>
     <string name="search">Search</string>
+    <string name="pause">Pause</string>
+    <string name="resume">Resume</string>
 </resources>

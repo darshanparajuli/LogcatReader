@@ -7,4 +7,10 @@
         android:title="@string/search"
         app:actionViewClass="android.support.v7.widget.SearchView"
         app:showAsAction="always|collapseActionView" />
+    <item
+        android:id="@+id/action_pause_logcat"
+        android:title="@string/pause" />
+    <item
+        android:id="@+id/action_resume_logcat"
+        android:title="@string/resume" />
 </menu>
