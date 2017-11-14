@@ -204,6 +204,7 @@ class Logcat : LifecycleObserver, Closeable {
         loop@ while (true) {
             if (paused) {
                 pauseCondition.block()
+                pauseCondition.close()
             }
 
             try {
