@@ -1,6 +1,9 @@
 package com.dp.logcat
 
-data class Log(val date: String,
+private var logCounter = 0
+
+data class Log(val id: Int,
+               val date: String,
                val time: String,
                val pid: String,
                val tid: String,
@@ -52,6 +55,6 @@ internal object LogFactory {
 
         tag = trimmed.substring(startIndex, trimmed.length).trim()
 
-        return Log(date, time, pid, tid, priority, tag, msg)
+        return Log(logCounter++, date, time, pid, tid, priority, tag, msg)
     }
 }

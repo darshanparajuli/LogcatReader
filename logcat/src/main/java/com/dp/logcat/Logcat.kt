@@ -3,6 +3,7 @@ package com.dp.logcat
 import android.arch.lifecycle.Lifecycle
 import android.arch.lifecycle.LifecycleObserver
 import android.arch.lifecycle.OnLifecycleEvent
+import android.os.ConditionVariable
 import android.os.Handler
 import android.os.Looper
 import com.dp.logger.MyLogger
@@ -16,6 +17,10 @@ class Logcat : LifecycleObserver, Closeable {
 
     @Volatile
     private var listener: LogcatEventListener? = null
+
+    @Volatile
+    private var paused = false
+    private val pauseCondition = ConditionVariable()
 
     // must be synchronized
     private val lock = Any()
@@ -76,6 +81,15 @@ class Logcat : LifecycleObserver, Closeable {
         synchronized(lock) {
             filters.clear()
         }
+    }
+
+    fun pause() {
+        paused = true
+    }
+
+    fun resume() {
+        paused = false
+        pauseCondition.open()
     }
 
     fun stop() {
@@ -188,6 +202,10 @@ class Logcat : LifecycleObserver, Closeable {
 
         val reader = BufferedReader(InputStreamReader(inputStream))
         loop@ while (true) {
+            if (paused) {
+                pauseCondition.block()
+            }
+
             try {
                 val metadata = reader.readLine()?.trim() ?: break
                 if (metadata.startsWith("[")) {
