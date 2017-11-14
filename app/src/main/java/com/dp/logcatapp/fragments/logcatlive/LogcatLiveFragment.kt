@@ -19,6 +19,7 @@ import com.dp.logcatapp.activities.BaseActivity
 import com.dp.logcatapp.fragments.base.BaseFragment
 import com.dp.logcatapp.services.LogcatService
 import com.dp.logcatapp.util.ServiceBinder
+import com.dp.logcatapp.util.containsIgnoreCase
 import com.dp.logcatapp.util.inflateLayout
 import com.dp.logcatapp.util.showToast
 import com.dp.logger.MyLogger
@@ -232,7 +233,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
                     val logcat = logcatService?.logcat ?: return true
                     logcat.pause()
                     logcat.addFilter(FILTER_MSG, { log ->
-                        log.tag.contains(newText) || log.msg.contains(newText)
+                        log.tag.containsIgnoreCase(newText) || log.msg.containsIgnoreCase(newText)
                     })
 
                     adapter.clear()
