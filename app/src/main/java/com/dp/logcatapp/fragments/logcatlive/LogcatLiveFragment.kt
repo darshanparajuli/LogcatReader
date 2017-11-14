@@ -37,11 +37,13 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
             adapter.clear()
         }
 
+        override fun onPreLogEvent(log: Log) {
+            // do nothing
+        }
+
         override fun onLogEvent(log: Log) {
-            runOnUIThread {
-                adapter.addItem(log)
-                updateUIOnLogEvent(adapter.itemCount)
-            }
+            adapter.addItem(log)
+            updateUIOnLogEvent(adapter.itemCount)
         }
 
         override fun onLogEvents(logs: List<Log>) {
