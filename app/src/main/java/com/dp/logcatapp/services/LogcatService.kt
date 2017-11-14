@@ -13,9 +13,7 @@ import android.os.Build
 import android.os.IBinder
 import android.support.v4.app.NotificationCompat
 import android.support.v4.content.ContextCompat
-import android.support.v7.app.AppCompatActivity
 import com.dp.logcat.Logcat
-import com.dp.logcat.LogcatEventListener
 import com.dp.logcatapp.R
 import com.dp.logcatapp.activities.MainActivity
 
@@ -27,7 +25,7 @@ class LogcatService : BaseService() {
     }
 
     private val localBinder = LocalBinder()
-    private val logcat: Logcat = Logcat()
+    val logcat: Logcat = Logcat()
 
     override fun onCreate() {
         super.onCreate()
@@ -92,33 +90,6 @@ class LogcatService : BaseService() {
 
     override fun onBind(intent: Intent?): IBinder {
         return localBinder
-    }
-
-    fun setLogcatEventListener(listener: LogcatEventListener?) {
-        logcat.setEventListener(listener)
-    }
-
-    fun attatchToActivity(activity: AppCompatActivity) {
-        activity.lifecycle.addObserver(logcat)
-    }
-
-    fun detachFromActivity(activity: AppCompatActivity) {
-        activity.lifecycle.removeObserver(logcat)
-    }
-
-    fun restartLogcat() {
-        logcat.stop()
-        logcat.start()
-    }
-
-    fun getLogs() = logcat.getLogs()
-
-    fun getLogsFiltered() = logcat.getLogsFiltered()
-
-    fun startRecording() {
-    }
-
-    fun stopRecording() {
     }
 
     override fun onDestroy() {

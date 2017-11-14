@@ -10,6 +10,7 @@ import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.DividerItemDecoration
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
+import android.support.v7.widget.SearchView
 import android.view.*
 import com.dp.logcat.Log
 import com.dp.logcat.LogcatEventListener
@@ -25,6 +26,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
     private lateinit var serviceBinder: ServiceBinder
     private var logcatService: LogcatService? = null
     private lateinit var recyclerView: RecyclerView
+    private lateinit var linearLayoutManager: LinearLayoutManager
     private lateinit var viewModel: LogcatLiveViewModel
     private lateinit var adapter: MyRecyclerViewAdapter
     private lateinit var fab: FloatingActionButton
@@ -73,13 +75,12 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
         }
 
         override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
-            val lm = recyclerView.layoutManager as LinearLayoutManager
             when (newState) {
                 RecyclerView.SCROLL_STATE_DRAGGING -> {
                     viewModel.autoScroll = false
                 }
                 else -> {
-                    val pos = lm.findLastCompletelyVisibleItemPosition()
+                    val pos = linearLayoutManager.findLastCompletelyVisibleItemPosition()
                     if (ignoreScrollEvent) {
                         if (pos == adapter.itemCount) {
                             ignoreScrollEvent = false
@@ -116,7 +117,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
                 .inflate(R.layout.fragment_logcat_live, null, false)
 
         recyclerView = rootView.findViewById(R.id.recycler_view)
-        val linearLayoutManager = LinearLayoutManager(activity)
+        linearLayoutManager = LinearLayoutManager(activity)
         recyclerView.layoutManager = linearLayoutManager
         recyclerView.itemAnimator = null
         recyclerView.addItemDecoration(DividerItemDecoration(activity,
@@ -127,10 +128,12 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
 
         fab = rootView.findViewById(R.id.fab)
         fab.setOnClickListener {
+            logcatService?.logcat?.pause()
             fab.hide()
             ignoreScrollEvent = true
             viewModel.autoScroll = true
-            recyclerView.scrollToPosition(adapter.itemCount - 1)
+            linearLayoutManager.scrollToPosition(adapter.itemCount - 1)
+            logcatService?.logcat?.resume()
         }
 
         if (viewModel.autoScroll) {
@@ -138,7 +141,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
         }
 
         adapter.setOnClickListener { v ->
-            val pos = recyclerView.layoutManager.getPosition(v)
+            val pos = linearLayoutManager.getPosition(v)
         }
 
         return rootView
@@ -146,7 +149,72 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         inflater.inflate(R.menu.logcat_live, menu)
+        val searchItem = menu.findItem(R.id.action_search)
+        val searchView = searchItem.actionView as SearchView
+
+        var reachedBlank = false
+        var lastLogId = -1
+        searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+            override fun onQueryTextChange(newText: String): Boolean {
+                if (newText.isBlank()) {
+                    reachedBlank = true
+                    onSearchViewClose(lastLogId)
+                } else {
+                    reachedBlank = false
+                    val logcat = logcatService?.logcat ?: return true
+                    logcat.pause()
+                    logcat.addFilter(FILTER_MSG, { log ->
+                        log.tag.contains(newText) || log.msg.contains(newText)
+                    })
+
+                    adapter.clear()
+
+                    val logs = logcat.getLogsFiltered()
+                    if (logs.isNotEmpty()) {
+                        lastLogId = logs[0].id
+                    }
+
+                    adapter.addItems(logs)
+
+                    viewModel.autoScroll = false
+                    linearLayoutManager.scrollToPositionWithOffset(0, 0)
+
+                    logcat.resume()
+                }
+                return true
+            }
+
+            override fun onQueryTextSubmit(query: String) = false
+        })
+
+        searchView.setOnCloseListener {
+            if (!reachedBlank) {
+                onSearchViewClose(lastLogId)
+            }
+            false
+        }
+
         super.onCreateOptionsMenu(menu, inflater)
+    }
+
+    private fun onSearchViewClose(lastLogId: Int) {
+        val logcat = logcatService?.logcat ?: return
+        logcat.pause()
+        logcat.clearFilters()
+
+        adapter.clear()
+        addAllLogs(logcat.getLogs())
+        if (lastLogId == -1) {
+            scrollRecyclerView()
+        } else {
+            viewModel.autoScroll = linearLayoutManager.findLastCompletelyVisibleItemPosition() ==
+                    adapter.itemCount - 1
+            if (!viewModel.autoScroll) {
+                linearLayoutManager.scrollToPositionWithOffset(lastLogId, 0)
+            }
+        }
+
+        logcat.resume()
     }
 
     override fun onPrepareOptionsMenu(menu: Menu) {
@@ -156,7 +224,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
-            R.id.search -> {
+            R.id.action_search -> {
                 true
             }
             else -> return super.onOptionsItemSelected(item)
@@ -176,22 +244,40 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
     override fun onDestroy() {
         super.onDestroy()
         recyclerView.removeOnScrollListener(onScrollListener)
-        logcatService?.setLogcatEventListener(null)
-        logcatService?.detachFromActivity(activity as AppCompatActivity)
+        logcatService?.logcat?.setEventListener(null)
+        val logcat = logcatService?.logcat
+        if (logcat != null) {
+            (activity as AppCompatActivity).lifecycle.removeObserver(logcat)
+        }
         serviceBinder.close()
     }
 
     override fun onServiceConnected(name: ComponentName, service: IBinder) {
         logcatService = (service as LogcatService.LocalBinder).getLogcatService()
-        adapter.addItems(logcatService!!.getLogs())
+
+        val logcat = logcatService!!.logcat
+        logcat.pause()
+
+        addAllLogs(logcat.getLogs())
+        scrollRecyclerView()
+
+        logcat.setEventListener(logcatEventListener)
+        (activity as AppCompatActivity).lifecycle.addObserver(logcat)
+
+        logcat.resume()
+    }
+
+    private fun addAllLogs(logs: List<Log>) {
+        adapter.addItems(logs)
         updateToolbarSubtitle(adapter.itemCount)
+    }
+
+    private fun scrollRecyclerView() {
         if (viewModel.autoScroll) {
-            recyclerView.scrollToPosition(adapter.itemCount - 1)
+            linearLayoutManager.scrollToPosition(adapter.itemCount - 1)
         } else {
-            recyclerView.scrollToPosition(viewModel.scrollPosition)
+            linearLayoutManager.scrollToPosition(viewModel.scrollPosition)
         }
-        logcatService?.setLogcatEventListener(logcatEventListener)
-        logcatService?.attatchToActivity(activity as AppCompatActivity)
     }
 
     private fun updateToolbarSubtitle(count: Int) {
@@ -205,7 +291,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
     private fun updateUIOnLogEvent(count: Int) {
         updateToolbarSubtitle(count)
         if (viewModel.autoScroll) {
-            recyclerView.scrollToPosition(count - 1)
+            linearLayoutManager.scrollToPosition(count - 1)
         }
     }
 
@@ -215,5 +301,6 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
 
     companion object {
         val TAG = LogcatLiveFragment::class.qualifiedName
+        private const val FILTER_MSG = "msg"
     }
 }
