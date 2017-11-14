@@ -10,7 +10,6 @@ import android.content.Intent
 import android.graphics.BitmapFactory
 import android.os.Binder
 import android.os.Build
-import android.os.IBinder
 import android.support.v4.app.NotificationCompat
 import android.support.v4.content.ContextCompat
 import com.dp.logcat.Logcat
@@ -88,9 +87,7 @@ class LogcatService : BaseService() {
         nm.deleteNotificationChannel(NOTIFICAION_CHANNEL)
     }
 
-    override fun onBind(intent: Intent?): IBinder {
-        return localBinder
-    }
+    override fun onBind(intent: Intent?) = localBinder
 
     override fun onDestroy() {
         super.onDestroy()
@@ -102,8 +99,6 @@ class LogcatService : BaseService() {
     }
 
     inner class LocalBinder : Binder() {
-        fun getLogcatService(): LogcatService {
-            return this@LogcatService
-        }
+        fun getLogcatService() = this@LogcatService
     }
 }
