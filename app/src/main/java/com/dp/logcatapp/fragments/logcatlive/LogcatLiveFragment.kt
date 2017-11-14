@@ -42,19 +42,13 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
         override fun onLogEvent(log: Log) {
             runOnUIThread {
                 adapter.addItem(log)
-                updateToolbarSubtitle(adapter.itemCount)
-                if (viewModel.autoScroll) {
-                    recyclerView.scrollToPosition(adapter.itemCount - 1)
-                }
+                updateUIOnLogEvent(adapter.itemCount)
             }
         }
 
         override fun onLogsEvent(logs: List<Log>) {
             adapter.addItems(logs)
-            updateToolbarSubtitle(adapter.itemCount)
-            if (viewModel.autoScroll) {
-                recyclerView.scrollToPosition(adapter.itemCount - 1)
-            }
+            updateUIOnLogEvent(adapter.itemCount)
         }
 
         override fun onStartFailedEvent() {
@@ -180,6 +174,13 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
             (activity as BaseActivity).toolbar.subtitle = "$count logs"
         } else {
             (activity as BaseActivity).toolbar.subtitle = null
+        }
+    }
+
+    private fun updateUIOnLogEvent(count: Int) {
+        updateToolbarSubtitle(count)
+        if (viewModel.autoScroll) {
+            recyclerView.scrollToPosition(count - 1)
         }
     }
 
