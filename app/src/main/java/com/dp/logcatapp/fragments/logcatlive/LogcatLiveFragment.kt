@@ -19,6 +19,7 @@ import com.dp.logcatapp.activities.BaseActivity
 import com.dp.logcatapp.fragments.base.BaseFragment
 import com.dp.logcatapp.services.LogcatService
 import com.dp.logcatapp.util.ServiceBinder
+import com.dp.logcatapp.util.inflateLayout
 import com.dp.logcatapp.util.showToast
 import kotlinx.android.synthetic.main.app_bar.*
 
@@ -29,7 +30,8 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
     private lateinit var linearLayoutManager: LinearLayoutManager
     private lateinit var viewModel: LogcatLiveViewModel
     private lateinit var adapter: MyRecyclerViewAdapter
-    private lateinit var fab: FloatingActionButton
+    private lateinit var fabUp: FloatingActionButton
+    private lateinit var fabDown: FloatingActionButton
     private var ignoreScrollEvent = false
 
     private val logcatEventListener = object : LogcatEventListener {
@@ -67,9 +69,9 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
 
         override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
             if (dy > 0 && lastDy <= 0) {
-                fab.show()
+                fabDown.show()
             } else if (dy < 0 && lastDy >= 0) {
-                fab.hide()
+                fabDown.hide()
             }
             lastDy = dy
         }
@@ -91,12 +93,12 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
                     viewModel.scrollPosition = pos
                     viewModel.autoScroll = pos >= adapter.itemCount - 1
                     if (viewModel.autoScroll) {
-                        fab.hide()
+                        fabDown.hide()
                     } else if (lastDy < 0) {
                         if (newState == RecyclerView.SCROLL_STATE_IDLE) {
-                            fab.show()
+                            fabDown.show()
                         } else {
-                            fab.hide()
+                            fabDown.hide()
                         }
                     }
                 }
@@ -118,11 +120,13 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
     }
 
     override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?,
-                              savedInstanceState: Bundle?): View? {
-        val rootView = LayoutInflater.from(activity)
-                .inflate(R.layout.fragment_logcat_live, null, false)
+                              savedInstanceState: Bundle?): View? =
+            inflateLayout(R.layout.fragment_logcat_live)
 
-        recyclerView = rootView.findViewById(R.id.recycler_view)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        recyclerView = view.findViewById(R.id.recyclerView)
         linearLayoutManager = LinearLayoutManager(activity)
         recyclerView.layoutManager = linearLayoutManager
         recyclerView.itemAnimator = null
@@ -132,10 +136,10 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
 
         recyclerView.addOnScrollListener(onScrollListener)
 
-        fab = rootView.findViewById(R.id.fab)
-        fab.setOnClickListener {
+        fabDown = view.findViewById(R.id.fabDown)
+        fabDown.setOnClickListener {
             logcatService?.logcat?.pause()
-            fab.hide()
+            fabDown.hide()
             ignoreScrollEvent = true
             viewModel.autoScroll = true
             linearLayoutManager.scrollToPosition(adapter.itemCount - 1)
@@ -143,14 +147,12 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
         }
 
         if (viewModel.autoScroll) {
-            fab.hide()
+            fabDown.hide()
         }
 
         adapter.setOnClickListener { v ->
             val pos = linearLayoutManager.getPosition(v)
         }
-
-        return rootView
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
