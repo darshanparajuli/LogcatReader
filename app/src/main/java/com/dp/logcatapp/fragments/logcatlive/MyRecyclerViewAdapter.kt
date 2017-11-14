@@ -17,14 +17,7 @@ class MyRecyclerViewAdapter : RecyclerView.Adapter<MyRecyclerViewAdapter.MyViewH
         holder.time.text = log.time
         holder.pid.text = log.pid
         holder.tid.text = log.tid
-        holder.priority.text = when (log.priority) {
-            "A" -> "[Assert]"
-            "D" -> "[Debug]"
-            "E" -> "[Error]"
-            "I" -> "[Info]"
-            "V" -> "[Verbose]"
-            else -> "[Warning]"
-        }
+        holder.priority.text = log.priority
         holder.tag.text = log.tag
         holder.message.text = log.msg
     }

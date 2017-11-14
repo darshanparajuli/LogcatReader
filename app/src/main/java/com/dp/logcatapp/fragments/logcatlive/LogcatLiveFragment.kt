@@ -9,9 +9,7 @@ import android.support.design.widget.FloatingActionButton
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import com.dp.logcat.Log
 import com.dp.logcat.LogcatEventListener
 import com.dp.logcatapp.R
@@ -99,6 +97,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        setHasOptionsMenu(true)
         viewModel = ViewModelProviders.of(this)
                 .get(LogcatLiveViewModel::class.java)
         adapter = MyRecyclerViewAdapter()
@@ -136,6 +135,25 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
         }
 
         return rootView
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        inflater.inflate(R.menu.logcat_live, menu)
+        super.onCreateOptionsMenu(menu, inflater)
+    }
+
+    override fun onPrepareOptionsMenu(menu: Menu) {
+        super.onPrepareOptionsMenu(menu)
+        // do nothing
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            R.id.search -> {
+                true
+            }
+            else -> return super.onOptionsItemSelected(item)
+        }
     }
 
     override fun onStart() {
