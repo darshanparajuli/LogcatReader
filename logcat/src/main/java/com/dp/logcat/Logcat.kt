@@ -72,6 +72,12 @@ class Logcat : LifecycleObserver, Closeable {
         }
     }
 
+    fun clearFilters() {
+        synchronized(lock) {
+            filters.clear()
+        }
+    }
+
     fun stop() {
         logcatProcess?.destroy()
 
