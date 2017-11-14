@@ -7,6 +7,7 @@ import android.os.Bundle
 import android.os.IBinder
 import android.support.design.widget.FloatingActionButton
 import android.support.v7.app.AppCompatActivity
+import android.support.v7.widget.DividerItemDecoration
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.view.*
@@ -17,7 +18,6 @@ import com.dp.logcatapp.activities.BaseActivity
 import com.dp.logcatapp.fragments.base.BaseFragment
 import com.dp.logcatapp.services.LogcatService
 import com.dp.logcatapp.util.ServiceBinder
-import com.dp.logcatapp.util.itemdecorations.ListDividerItemDecoration
 import com.dp.logcatapp.util.showToast
 import kotlinx.android.synthetic.main.app_bar.*
 
@@ -116,10 +116,11 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
                 .inflate(R.layout.fragment_logcat_live, null, false)
 
         recyclerView = rootView.findViewById(R.id.recycler_view)
-        recyclerView.layoutManager = LinearLayoutManager(activity)
+        val linearLayoutManager = LinearLayoutManager(activity)
+        recyclerView.layoutManager = linearLayoutManager
         recyclerView.itemAnimator = null
-        recyclerView.addItemDecoration(ListDividerItemDecoration(activity,
-                ListDividerItemDecoration.VERTICAL_LIST))
+        recyclerView.addItemDecoration(DividerItemDecoration(activity,
+                linearLayoutManager.orientation))
         recyclerView.adapter = adapter
 
         recyclerView.addOnScrollListener(onScrollListener)

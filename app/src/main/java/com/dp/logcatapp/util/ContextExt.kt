@@ -12,9 +12,8 @@ private val cache = mutableMapOf<String, Typeface>()
 fun Context.showToast(msg: CharSequence, length: Int = Toast.LENGTH_SHORT) =
         Toast.makeText(this, msg, length).show()
 
-fun Context.getRobotoTypeface(name: String) = getTypeface("Roboto/$name.ttf")
-
-fun Context.getTypeface(assetPath: String): Typeface? {
+fun Context.getTypeface(name: String): Typeface? {
+    val assetPath = "fonts/$name.ttf"
     var typeface = cache[assetPath]
     if (typeface == null) {
         typeface = Typeface.createFromAsset(assets, assetPath)

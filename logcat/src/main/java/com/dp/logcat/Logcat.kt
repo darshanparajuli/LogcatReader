@@ -187,22 +187,20 @@ class Logcat : LifecycleObserver, Closeable {
         val msgBuffer = StringBuilder()
 
         val reader = BufferedReader(InputStreamReader(inputStream))
-        while (true) {
+        loop@ while (true) {
             try {
                 val metadata = reader.readLine()?.trim() ?: break
                 if (metadata.startsWith("[")) {
-                    var msg: String? = reader.readLine() ?: break
+                    var msg = reader.readLine() ?: break
                     msgBuffer.append(msg)
 
                     msg = reader.readLine() ?: break
-                    while (msg != null && msg.isNotEmpty()) {
+                    while (msg.isNotEmpty()) {
                         msgBuffer.append("\n")
                                 .append(msg)
 
-                        msg = reader.readLine()
+                        msg = reader.readLine() ?: break@loop
                     }
-
-                    msg ?: break
 
                     try {
                         val log = LogFactory.createNewLog(metadata, msgBuffer.toString())

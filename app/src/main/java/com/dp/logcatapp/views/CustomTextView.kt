@@ -5,7 +5,7 @@ import android.graphics.Paint
 import android.support.v7.widget.AppCompatTextView
 import android.util.AttributeSet
 import com.dp.logcatapp.R
-import com.dp.logcatapp.util.getRobotoTypeface
+import com.dp.logcatapp.util.getTypeface
 
 class CustomTextView : AppCompatTextView {
 
@@ -24,7 +24,7 @@ class CustomTextView : AppCompatTextView {
         try {
             val fontName = typedArray.getString(R.styleable.CustomTextView_useFont)
             if (fontName != null) {
-                typeface = context.getRobotoTypeface(fontName)
+                typeface = context.getTypeface(fontName)
                 paintFlags = paintFlags.or(Paint.SUBPIXEL_TEXT_FLAG)
             }
         } finally {
