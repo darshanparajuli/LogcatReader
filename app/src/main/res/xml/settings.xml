@@ -16,4 +16,11 @@
             android:persistent="true"
             android:title="@string/pref_theme_black_theme" />
     </PreferenceCategory>
+
+    <PreferenceCategory android:title="@string/about">
+        <Preference
+            android:key="pref_key_version_name"
+            android:selectable="false"
+            android:title="@string/app_name" />
+    </PreferenceCategory>
 </PreferenceScreen>

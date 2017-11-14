@@ -1,7 +1,7 @@
 package com.dp.logcatapp.util
 
 object PreferenceKeys {
-    
+
     const val MAIN_PREF_SCREEN = "pref_key_main_screen"
 
     object Appearance {
@@ -21,5 +21,9 @@ object PreferenceKeys {
             const val THEME = Theme.AUTO
             const val USE_BLACK_THEME = false
         }
+    }
+
+    object About {
+        const val KEY_VERSION_NAME = "pref_key_version_name"
     }
 }

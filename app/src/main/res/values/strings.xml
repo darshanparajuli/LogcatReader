@@ -13,4 +13,5 @@
     <string name="search">Search</string>
     <string name="pause">Pause</string>
     <string name="resume">Resume</string>
+    <string name="about">About</string>
 </resources>

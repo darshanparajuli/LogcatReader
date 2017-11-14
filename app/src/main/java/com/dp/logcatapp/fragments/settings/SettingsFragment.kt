@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.support.v7.preference.ListPreference
 import android.support.v7.preference.Preference
 import android.support.v7.preference.PreferenceFragmentCompat
+import com.dp.logcatapp.BuildConfig
 import com.dp.logcatapp.R
 import com.dp.logcatapp.util.PreferenceKeys
 import com.dp.logcatapp.util.isDarkThemeOn
@@ -18,6 +19,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         addPreferencesFromResource(R.xml.settings)
         setupAppearanceCategory()
+        setupAboutCategory()
     }
 
     private fun setupAppearanceCategory() {
@@ -53,4 +55,8 @@ class SettingsFragment : PreferenceFragmentCompat() {
                 }
     }
 
+    private fun setupAboutCategory() {
+        val pref = findPreference(PreferenceKeys.About.KEY_VERSION_NAME)
+        pref.summary = "Version ${BuildConfig.VERSION_NAME}"
+    }
 }
