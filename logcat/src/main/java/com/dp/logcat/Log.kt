@@ -8,7 +8,7 @@ data class Log(val date: String,
                val tag: String,
                val msg: String)
 
-object LogFactory {
+internal object LogFactory {
     fun createNewLog(metadata: String, msg: String): Log {
         val date: String
         val time: String
