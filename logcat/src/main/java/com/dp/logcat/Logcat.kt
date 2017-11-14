@@ -153,7 +153,7 @@ class Logcat : LifecycleObserver, Closeable {
     }
 
     private fun processStdout(inputStream: InputStream?) {
-        val tempLogs = mutableListOf<Log>()
+        val buffer = mutableListOf<Log>()
 
         val emitLogEvent = { log: Log ->
             var passedFilter = false
@@ -163,7 +163,10 @@ class Logcat : LifecycleObserver, Closeable {
             }
 
             if (passedFilter) {
-                listener?.onLogEvent(log)
+                listener?.onPreLogEvent(log)
+                handler.post {
+                    listener?.onLogEvent(log)
+                }
             }
         }
 
@@ -191,11 +194,11 @@ class Logcat : LifecycleObserver, Closeable {
                         val log = LogFactory.createNewLog(metadata, msg)
 
                         if (activityInBackground) {
-                            tempLogs.add(log)
+                            buffer.add(log)
                         } else {
-                            if (tempLogs.isNotEmpty()) {
-                                emitLogsEvent(tempLogs)
-                                tempLogs.clear()
+                            if (buffer.isNotEmpty()) {
+                                emitLogsEvent(buffer)
+                                buffer.clear()
                             }
                             emitLogEvent(log)
                         }
