@@ -4,7 +4,7 @@ data class Log(val date: String,
                val time: String,
                val pid: String,
                val tid: String,
-               private val priority: String,
+               val priority: String,
                val tag: String,
                val msg: String) {
     val isAssert get() = priority == "A"
