@@ -134,6 +134,10 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
             fab.hide()
         }
 
+        adapter.setOnClickListener { v ->
+            val pos = recyclerView.layoutManager.getPosition(v)
+        }
+
         return rootView
     }
 

@@ -12,7 +12,7 @@
         <item name="toolbar_shadow">@drawable/toolbar_shadow_light</item>
         <item name="android:textViewStyle">@style/LightTextViewStyle</item>
         <item name="divider_color">@color/divider_light</item>
-        <item name="list_selected_item">@drawable/list_item_selector_light</item>
+        <item name="list_item_selector">@drawable/list_item_selector_light</item>
         <item name="primary_text_color">@color/primary_text_color_light</item>
         <item name="secondary_text_color">@color/secondary_text_color_light</item>
         <item name="ripple_mask_color">@color/light_window_bg</item>
@@ -29,7 +29,7 @@
         <item name="toolbar_shadow">@drawable/toolbar_shadow_dark</item>
         <item name="android:textViewStyle">@style/DarkTextViewStyle</item>
         <item name="divider_color">@color/divider_dark</item>
-        <item name="list_selected_item">@drawable/list_item_selector_dark</item>
+        <item name="list_item_selector">@drawable/list_item_selector_dark</item>
         <item name="primary_text_color">@color/primary_text_color_dark</item>
         <item name="secondary_text_color">@color/secondary_text_color_dark</item>
         <item name="ripple_mask_color">@color/dark_window_bg</item>

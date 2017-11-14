@@ -8,8 +8,10 @@ import android.widget.TextView
 import com.dp.logcat.Log
 import com.dp.logcatapp.R
 
-class MyRecyclerViewAdapter : RecyclerView.Adapter<MyRecyclerViewAdapter.MyViewHolder>() {
-    val data = mutableListOf<Log>()
+class MyRecyclerViewAdapter : RecyclerView.Adapter<MyRecyclerViewAdapter.MyViewHolder>(),
+        View.OnClickListener {
+    private val data = mutableListOf<Log>()
+    private var onClickListener: ((View) -> Unit)? = null
 
     override fun onBindViewHolder(holder: MyViewHolder, position: Int) {
         val log = data[position]
@@ -25,7 +27,14 @@ class MyRecyclerViewAdapter : RecyclerView.Adapter<MyRecyclerViewAdapter.MyViewH
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MyViewHolder {
         val view = LayoutInflater.from(parent.context)
                 .inflate(R.layout.fragment_logcat_live_list_item, parent, false)
+        view.setOnClickListener(this)
         return MyViewHolder(view)
+    }
+
+    override fun onClick(v: View) {
+        when (v.id) {
+            R.id.logcat_list_item_root -> onClickListener?.invoke(v)
+        }
     }
 
     override fun getItemCount() = data.size
@@ -48,6 +57,10 @@ class MyRecyclerViewAdapter : RecyclerView.Adapter<MyRecyclerViewAdapter.MyViewH
         notifyItemRangeRemoved(0, size)
     }
 
+    internal fun setOnClickListener(onClickListener: (View) -> Unit) {
+        this.onClickListener = onClickListener
+    }
+
     class MyViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val date: TextView = itemView.findViewById(R.id.date)
         val time: TextView = itemView.findViewById(R.id.time)
@@ -56,6 +69,5 @@ class MyRecyclerViewAdapter : RecyclerView.Adapter<MyRecyclerViewAdapter.MyViewH
         val priority: TextView = itemView.findViewById(R.id.priority)
         val tag: TextView = itemView.findViewById(R.id.tag)
         val message: TextView = itemView.findViewById(R.id.message)
-
     }
 }
