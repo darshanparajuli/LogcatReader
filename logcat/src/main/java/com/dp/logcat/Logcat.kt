@@ -176,7 +176,7 @@ class Logcat : LifecycleObserver, Closeable {
             }.toList()
             if (filtered.isNotEmpty()) {
                 handler.post {
-                    listener?.onLogsEvent(filtered)
+                    listener?.onLogEvents(filtered)
                 }
             }
         }
