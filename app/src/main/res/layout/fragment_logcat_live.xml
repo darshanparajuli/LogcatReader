@@ -19,7 +19,7 @@
         android:layout_marginTop="16dp"
         android:rotation="180"
         android:src="@drawable/ic_keyboard_arrow_down_white_24dp"
-        app:fabSize="normal" />
+        app:fabSize="mini" />
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/fabDown"
@@ -30,6 +30,6 @@
         android:layout_marginEnd="16dp"
         android:layout_marginRight="16dp"
         android:src="@drawable/ic_keyboard_arrow_down_white_24dp"
-        app:fabSize="normal" />
+        app:fabSize="mini" />
 
 </FrameLayout>
