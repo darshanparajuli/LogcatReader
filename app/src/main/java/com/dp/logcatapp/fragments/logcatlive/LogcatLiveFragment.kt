@@ -354,7 +354,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
                         "Documents/Logcat")
                 File(documentsFolder, fileName)
             }
-            if (logcatDir.mkdirs()) {
+            if (logcatDir.exists() || logcatDir.mkdirs()) {
                 return Logcat.writeToFile(logs, File(logcatDir, fileName))
             }
         } else {
