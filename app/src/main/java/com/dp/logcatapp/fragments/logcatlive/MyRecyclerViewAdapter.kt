@@ -15,12 +15,25 @@ class MyRecyclerViewAdapter(context: Context) : RecyclerView.Adapter<MyRecyclerV
     private val data = mutableListOf<Log>()
     private var onClickListener: ((View) -> Unit)? = null
 
-    private val assertColor = ContextCompat.getColor(context, R.color.priority_assert)
-    private val debugColor = ContextCompat.getColor(context, R.color.priority_debug)
-    private val errorColor = ContextCompat.getColor(context, R.color.priority_error)
-    private val infoColor = ContextCompat.getColor(context, R.color.priority_info)
-    private val verboseColor = ContextCompat.getColor(context, R.color.priority_verbose)
-    private val warningColor = ContextCompat.getColor(context, R.color.priority_warning)
+    private val priorityColorAssert = ContextCompat.getColor(context, R.color.priority_assert)
+    private val priorityColorDebug = ContextCompat.getColor(context, R.color.priority_debug)
+    private val priorityColorError = ContextCompat.getColor(context, R.color.priority_error)
+    private val priorityColorInfo = ContextCompat.getColor(context, R.color.priority_info)
+    private val priorityColorVerbose = ContextCompat.getColor(context, R.color.priority_verbose)
+    private val priorityColorWarning = ContextCompat.getColor(context, R.color.priority_warning)
+    private val priorityColorFatal = ContextCompat.getColor(context, R.color.priority_fatal)
+    private val priorityColorSilent = ContextCompat.getColor(context, R.color.priority_silent)
+
+    private fun getPriorityColor(priority: String) = when (priority) {
+        "A" -> priorityColorAssert
+        "D" -> priorityColorDebug
+        "E" -> priorityColorError
+        "F" -> priorityColorFatal
+        "I" -> priorityColorInfo
+        "V" -> priorityColorVerbose
+        "W" -> priorityColorWarning
+        else -> priorityColorSilent
+    }
 
     override fun onBindViewHolder(holder: MyViewHolder, position: Int) {
         val log = data[position]
@@ -32,15 +45,7 @@ class MyRecyclerViewAdapter(context: Context) : RecyclerView.Adapter<MyRecyclerV
         holder.tag.text = log.tag
         holder.message.text = log.msg
 
-        val priorityColor = when (log.priority) {
-            "A" -> assertColor
-            "D" -> debugColor
-            "E" -> errorColor
-            "I" -> infoColor
-            "W" -> warningColor
-            else -> verboseColor
-        }
-        holder.priority.setBackgroundColor(priorityColor)
+        holder.priority.setBackgroundColor(getPriorityColor(log.priority))
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MyViewHolder {

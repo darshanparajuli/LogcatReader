@@ -28,9 +28,11 @@
     <color name="black_window_bg">#000000</color>
 
     <color name="priority_assert">#512DA8</color>
-    <color name="priority_debug">#0288D1</color>
+    <color name="priority_debug">#1976D2</color>
     <color name="priority_error">#D32F2F</color>
+    <color name="priority_fatal">#C2185B</color>
     <color name="priority_info">#388E3C</color>
+    <color name="priority_silent">#616161</color>
     <color name="priority_warning">#E65100</color>
     <color name="priority_verbose">#546E7A</color>
 </resources>
