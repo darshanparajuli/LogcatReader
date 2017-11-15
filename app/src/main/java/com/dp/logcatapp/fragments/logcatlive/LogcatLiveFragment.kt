@@ -1,11 +1,16 @@
 package com.dp.logcatapp.fragments.logcatlive
 
+import android.Manifest
 import android.arch.lifecycle.ViewModelProviders
 import android.content.ComponentName
 import android.content.ServiceConnection
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
+import android.os.Environment
 import android.os.IBinder
 import android.support.design.widget.FloatingActionButton
+import android.support.v4.content.ContextCompat
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.DividerItemDecoration
 import android.support.v7.widget.LinearLayoutManager
@@ -26,6 +31,9 @@ import com.dp.logcatapp.util.inflateLayout
 import com.dp.logcatapp.util.showToast
 import com.dp.logger.MyLogger
 import kotlinx.android.synthetic.main.app_bar.*
+import java.io.File
+import java.text.SimpleDateFormat
+import java.util.*
 
 class LogcatLiveFragment : BaseFragment(), ServiceConnection {
     private lateinit var serviceBinder: ServiceBinder
@@ -39,6 +47,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
     private var ignoreScrollEvent = false
     private var searchViewActive = false
     private var lastLogId = -1
+    private var pendingLogsToSave: List<Log>? = null
 
     private val logcatEventListener = object : LogcatEventListener {
 
@@ -320,9 +329,86 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
                 logcatService?.logcat?.resume()
                 true
             }
+            R.id.action_save -> {
+                trySaveToFile()
+                true
+            }
             else -> return super.onOptionsItemSelected(item)
         }
     }
+
+    private fun actuallySaveToFile(logs: List<Log>, fileName: String): Boolean {
+        if (logs.isEmpty()) {
+            MyLogger.logDebug(LogcatLiveFragment::class, "Nothing to save")
+            activity.showToast("Nothing to save")
+            return true
+        }
+
+        if (isExternalStorageWritable()) {
+            val logcatDir = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                File(Environment.getExternalStoragePublicDirectory(
+                        Environment.DIRECTORY_DOCUMENTS
+                ), "Logcat")
+            } else {
+                val documentsFolder = File(Environment.getExternalStorageDirectory(),
+                        "Documents/Logcat")
+                File(documentsFolder, fileName)
+            }
+            if (logcatDir.mkdirs()) {
+                return Logcat.writeToFile(logs, File(logcatDir, fileName))
+            }
+        } else {
+            MyLogger.logDebug(LogcatLiveFragment::class, "External storage is not writable")
+        }
+
+        return false
+    }
+
+    private fun saveToFile(logs: List<Log>) {
+        val timeStamp = SimpleDateFormat("MM-dd-yyyy_HH-mm-ss", Locale.getDefault())
+                .format(Date())
+        val fileName = "logcat_$timeStamp.txt"
+        if (actuallySaveToFile(logs, fileName)) {
+            activity.showToast("Saved as $fileName")
+        } else {
+            activity.showToast("Failed")
+        }
+    }
+
+    private fun isExternalStorageWritable(): Boolean {
+        val state = Environment.getExternalStorageState()
+        return Environment.MEDIA_MOUNTED == state
+    }
+
+    private fun trySaveToFile() {
+        if (checkWriteExternalStoragePermission()) {
+            val logcat = logcatService?.logcat
+            if (logcat != null) {
+                saveToFile(logcat.getLogsFiltered())
+            }
+        } else {
+            pendingLogsToSave = logcatService?.logcat?.getLogsFiltered()
+            requestPermissions(arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
+                    MY_PERMISSION_REQ_WRITE_EXTERNAL_STORAGE)
+        }
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>,
+                                            grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        when (requestCode) {
+            MY_PERMISSION_REQ_WRITE_EXTERNAL_STORAGE -> {
+                if (grantResults.isNotEmpty() &&
+                        grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    saveToFile(pendingLogsToSave ?: emptyList())
+                }
+            }
+        }
+    }
+
+    private fun checkWriteExternalStoragePermission() =
+            ContextCompat.checkSelfPermission(activity,
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
 
     override fun onStart() {
         super.onStart()
@@ -403,6 +489,8 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
 
     companion object {
         val TAG = LogcatLiveFragment::class.qualifiedName
+
         private const val FILTER_MSG = "msg"
+        private const val MY_PERMISSION_REQ_WRITE_EXTERNAL_STORAGE = 1
     }
 }

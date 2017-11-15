@@ -2,6 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.dp.logcatapp">
 
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+
     <!-- adb shell pm grant com.dp.logcatapp android.permission.READ_LOGS -->
     <uses-permission android:name="android.permission.READ_LOGS" />
 

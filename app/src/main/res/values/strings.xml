@@ -16,4 +16,7 @@
     <string name="about">About</string>
     <string name="copy_to_clipboard">Copy to clipboard</string>
     <string name="copied_to_clipboard">Copied</string>
+    <string name="share">Share</string>
+    <string name="share_logs_with">Share logs with</string>
+    <string name="save_to_file">Save</string>
 </resources>
