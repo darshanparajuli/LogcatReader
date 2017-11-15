@@ -27,6 +27,8 @@ data class Log(val id: Int,
 
     override fun describeContents() = 0
 
+    override fun toString(): String = "[$date $time $pid:$tid $priority/$tag]\n" +
+            "$msg\n" + "\n"
 
     companion object {
         @JvmField
