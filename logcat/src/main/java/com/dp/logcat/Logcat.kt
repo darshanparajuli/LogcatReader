@@ -96,7 +96,7 @@ class Logcat : Closeable {
     }
 
     fun getLogs(): List<Log> {
-        val list = mutableListOf<Log>()
+        var list = listOf<Log>()
         synchronized(logsLock) {
             list += logs.toList()
         }
@@ -217,20 +217,8 @@ class Logcat : Closeable {
     }
 
     fun writeToFile(file: File): Boolean {
-        var writer: BufferedWriter? = null
-        try {
-            writer = BufferedWriter(FileWriter(file))
-            synchronized(logsLock) {
-                for (log in logs) {
-                    writer?.write(log.toString())
-                }
-            }
-            writer.flush()
-            return true
-        } catch (e: IOException) {
-            return false
-        } finally {
-            writer?.close()
+        synchronized(logsLock) {
+            return writeToFile(logs, file)
         }
     }
 
@@ -313,6 +301,24 @@ class Logcat : Closeable {
                 }
             } catch (e: IOException) {
                 break
+            }
+        }
+    }
+
+    companion object {
+        fun writeToFile(logs: List<Log>, file: File): Boolean {
+            var writer: BufferedWriter? = null
+            return try {
+                writer = BufferedWriter(FileWriter(file))
+                for (log in logs) {
+                    writer.write(log.toString())
+                }
+                writer.flush()
+                true
+            } catch (e: IOException) {
+                false
+            } finally {
+                writer?.close()
             }
         }
     }
