@@ -208,6 +208,14 @@ class Logcat : Closeable {
         handler.post { listener?.onStopEvent() }
     }
 
+    override fun toString(): String {
+        val stringBuilder = StringBuilder()
+        synchronized(logsLock) {
+            logs.forEach { log -> stringBuilder.append(log) }
+        }
+        return stringBuilder.toString()
+    }
+
     private fun processStderr(errStream: InputStream?) {
         val reader = BufferedReader(InputStreamReader(errStream))
         while (isProcessAlive) {
