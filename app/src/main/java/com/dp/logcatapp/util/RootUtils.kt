@@ -1,7 +1,7 @@
 package com.dp.logcatapp.util
 
 import android.Manifest
-import com.dp.logcatapp.BuildConfig
+import android.content.Context
 import java.io.IOException
 
 object RootUtils {
@@ -19,7 +19,13 @@ object RootUtils {
         }
     }
 
-    fun grantReadLogsPermission() = runCmdAsRoot("pm", "grant", BuildConfig.APPLICATION_ID,
-            Manifest.permission.READ_LOGS)
-
+    fun grantReadLogsPermission(context: Context): Boolean {
+        return if (runCmdAsRoot("pm", "grant", context.packageName,
+                Manifest.permission.READ_LOGS)) {
+            android.os.Process.killProcess(android.os.Process.myPid())
+            true
+        } else {
+            false
+        }
+    }
 }
