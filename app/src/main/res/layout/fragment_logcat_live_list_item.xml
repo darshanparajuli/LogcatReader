@@ -64,21 +64,6 @@
             android:textSize="@dimen/text_size_smaller"
             app:useFont="@string/font_InputMonoCompressed_Regular" />
 
-
-        <!--<com.dp.logcatapp.views.CustomTextView-->
-        <!--android:id="@+id/priority"-->
-        <!--android:layout_width="wrap_content"-->
-        <!--android:layout_height="wrap_content"-->
-        <!--android:layout_alignParentLeft="true"-->
-        <!--android:layout_alignParentStart="true"-->
-        <!--android:layout_below="@+id/message"-->
-        <!--android:layout_marginEnd="10dp"-->
-        <!--android:layout_marginRight="10dp"-->
-        <!--android:text="P"-->
-        <!--android:textColor="?attr/secondary_text_color"-->
-        <!--android:textSize="@dimen/text_size_smaller"-->
-        <!--app:useFont="@string/font_RobotoMono_Bold" />-->
-
         <com.dp.logcatapp.views.CustomTextView
             android:id="@+id/date"
             android:layout_width="wrap_content"
