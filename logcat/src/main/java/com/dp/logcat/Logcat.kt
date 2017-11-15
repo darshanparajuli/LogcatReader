@@ -6,11 +6,12 @@ import android.arch.lifecycle.OnLifecycleEvent
 import android.os.ConditionVariable
 import android.os.Handler
 import android.os.Looper
+import android.support.v7.app.AppCompatActivity
 import com.dp.logger.MyLogger
 import java.io.*
 import kotlin.concurrent.thread
 
-class Logcat : LifecycleObserver, Closeable {
+class Logcat : Closeable {
     private var threadLogcat: Thread? = null
     private var logcatProcess: Process? = null
     private val handler: Handler = Handler(Looper.getMainLooper())
@@ -37,6 +38,20 @@ class Logcat : LifecycleObserver, Closeable {
                 field = value
             }
         }
+
+    private val lifeCycleObserver = object : LifecycleObserver {
+        @OnLifecycleEvent(Lifecycle.Event.ON_RESUME)
+        private fun onActivityInForeground() {
+            MyLogger.logDebug(Logcat::class, "onActivityInForeground")
+            activityInBackground = false
+        }
+
+        @OnLifecycleEvent(Lifecycle.Event.ON_PAUSE)
+        private fun onActivityInBackground() {
+            MyLogger.logDebug(Logcat::class, "onActivityInBackground")
+            activityInBackground = true
+        }
+    }
 
     fun start() {
         if (threadLogcat == null) {
@@ -92,6 +107,14 @@ class Logcat : LifecycleObserver, Closeable {
         pauseCondition.open()
     }
 
+    fun bind(activity: AppCompatActivity?) {
+        activity?.lifecycle?.addObserver(lifeCycleObserver)
+    }
+
+    fun unbind(activity: AppCompatActivity?) {
+        activity?.lifecycle?.removeObserver(lifeCycleObserver)
+    }
+
     fun stop() {
         logcatProcess?.destroy()
 
@@ -107,18 +130,6 @@ class Logcat : LifecycleObserver, Closeable {
             logs.clear()
             filters.clear()
         }
-    }
-
-    @OnLifecycleEvent(Lifecycle.Event.ON_RESUME)
-    private fun onActivityInForeground() {
-        MyLogger.logDebug(Logcat::class, "onActivityInForeground")
-        activityInBackground = false
-    }
-
-    @OnLifecycleEvent(Lifecycle.Event.ON_PAUSE)
-    private fun onActivityInBackground() {
-        MyLogger.logDebug(Logcat::class, "onActivityInBackground")
-        activityInBackground = true
     }
 
     override fun close() {

@@ -337,10 +337,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
         super.onDestroy()
         recyclerView.removeOnScrollListener(onScrollListener)
         logcatService?.logcat?.setEventListener(null)
-        val logcat = logcatService?.logcat
-        if (logcat != null) {
-            (activity as AppCompatActivity).lifecycle.removeObserver(logcat)
-        }
+        logcatService?.logcat?.unbind(activity as AppCompatActivity)
         serviceBinder.close()
     }
 
@@ -360,7 +357,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
         scrollRecyclerView()
 
         logcat.setEventListener(logcatEventListener)
-        (activity as AppCompatActivity).lifecycle.addObserver(logcat)
+        logcat.bind(activity as AppCompatActivity)
 
         resumeLogcat()
     }
