@@ -1,5 +1,7 @@
 package com.dp.logcatapp.fragments.logcatlive
 
+import android.content.Context
+import android.support.v4.content.ContextCompat
 import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
@@ -8,10 +10,17 @@ import android.widget.TextView
 import com.dp.logcat.Log
 import com.dp.logcatapp.R
 
-class MyRecyclerViewAdapter : RecyclerView.Adapter<MyRecyclerViewAdapter.MyViewHolder>(),
+class MyRecyclerViewAdapter(context: Context) : RecyclerView.Adapter<MyRecyclerViewAdapter.MyViewHolder>(),
         View.OnClickListener {
     private val data = mutableListOf<Log>()
     private var onClickListener: ((View) -> Unit)? = null
+
+    private val assertColor = ContextCompat.getColor(context, R.color.priority_assert)
+    private val debugColor = ContextCompat.getColor(context, R.color.priority_debug)
+    private val errorColor = ContextCompat.getColor(context, R.color.priority_error)
+    private val infoColor = ContextCompat.getColor(context, R.color.priority_info)
+    private val verboseColor = ContextCompat.getColor(context, R.color.priority_verbose)
+    private val warningColor = ContextCompat.getColor(context, R.color.priority_warning)
 
     override fun onBindViewHolder(holder: MyViewHolder, position: Int) {
         val log = data[position]
@@ -22,6 +31,16 @@ class MyRecyclerViewAdapter : RecyclerView.Adapter<MyRecyclerViewAdapter.MyViewH
         holder.priority.text = log.priority
         holder.tag.text = log.tag
         holder.message.text = log.msg
+
+        val priorityColor = when (log.priority) {
+            "A" -> assertColor
+            "D" -> debugColor
+            "E" -> errorColor
+            "I" -> infoColor
+            "W" -> warningColor
+            else -> verboseColor
+        }
+        holder.priority.setBackgroundColor(priorityColor)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MyViewHolder {

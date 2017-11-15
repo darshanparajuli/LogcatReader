@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/logcat_list_item_root"
     android:layout_width="match_parent"
@@ -8,110 +8,129 @@
     android:layout_centerVertical="true"
     android:background="?attr/list_item_selector"
     android:descendantFocusability="blocksDescendants"
-    android:paddingBottom="@dimen/activity_vertical_margin"
-    android:paddingLeft="@dimen/activity_horizontal_margin"
-    android:paddingRight="@dimen/activity_horizontal_margin"
-    android:paddingTop="@dimen/activity_vertical_margin">
-
-    <HorizontalScrollView
-        android:id="@+id/tag_container"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentTop="true"
-        android:scrollbars="none">
-
-        <com.dp.logcatapp.views.CustomTextView
-            android:id="@+id/tag"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="tag"
-            android:textColor="?attr/primary_text_color"
-            android:textSize="@dimen/text_size_smaller2"
-            app:useFont="@string/font_RobotoMono_Medium" />
-    </HorizontalScrollView>
-
-
-    <com.dp.logcatapp.views.CustomTextView
-        android:id="@+id/message"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/tag_container"
-        android:text="Message"
-        android:textColor="?attr/primary_text_color"
-        android:textSize="@dimen/text_size_smaller"
-        app:useFont="@string/font_InputMonoCompressed_Regular" />
-
+    android:gravity="center_vertical"
+    android:orientation="horizontal">
 
     <com.dp.logcatapp.views.CustomTextView
         android:id="@+id/priority"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:layout_below="@+id/message"
-        android:layout_marginEnd="10dp"
-        android:layout_marginRight="10dp"
+        android:layout_height="match_parent"
+        android:background="@color/priority_debug"
+        android:gravity="center"
+        android:paddingBottom="5dp"
+        android:paddingLeft="6dp"
+        android:paddingRight="6dp"
+        android:paddingTop="5dp"
         android:text="P"
-        android:textColor="?attr/secondary_text_color"
+        android:textColor="@android:color/white"
         android:textSize="@dimen/text_size_smaller"
         app:useFont="@string/font_RobotoMono_Bold" />
 
-    <com.dp.logcatapp.views.CustomTextView
-        android:id="@+id/date"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignBaseline="@+id/priority"
-        android:layout_below="@+id/message"
-        android:layout_marginEnd="10dp"
-        android:layout_marginRight="10dp"
-        android:layout_toEndOf="@+id/priority"
-        android:layout_toRightOf="@+id/priority"
-        android:text="date"
-        android:textColor="?attr/secondary_text_color"
-        android:textSize="@dimen/text_size_smaller"
-        app:useFont="@string/font_RobotoMono_Bold" />
+    <RelativeLayout
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:padding="5dp">
 
-    <com.dp.logcatapp.views.CustomTextView
-        android:id="@+id/time"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignBaseline="@+id/priority"
-        android:layout_marginEnd="10dp"
-        android:layout_marginRight="10dp"
-        android:layout_toEndOf="@+id/date"
-        android:layout_toRightOf="@+id/date"
-        android:text="time"
-        android:textColor="?attr/secondary_text_color"
-        android:textSize="@dimen/text_size_smaller"
-        app:useFont="@string/font_RobotoMono_Bold" />
+        <HorizontalScrollView
+            android:id="@+id/tag_container"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentTop="true"
+            android:scrollbars="none">
 
-    <com.dp.logcatapp.views.CustomTextView
-        android:id="@+id/pid"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignBaseline="@+id/date"
-        android:layout_marginEnd="10dp"
-        android:layout_marginRight="10dp"
-        android:layout_toEndOf="@+id/time"
-        android:layout_toRightOf="@+id/time"
-        android:text="pid"
-        android:textColor="?attr/secondary_text_color"
-        android:textSize="@dimen/text_size_smaller"
-        app:useFont="@string/font_RobotoMono_Bold" />
-
-    <com.dp.logcatapp.views.CustomTextView
-        android:id="@+id/tid"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignBaseline="@+id/date"
-        android:layout_toEndOf="@+id/pid"
-        android:layout_toRightOf="@+id/pid"
-        android:text="tid"
-        android:textColor="?attr/secondary_text_color"
-        android:textSize="@dimen/text_size_smaller"
-        app:useFont="@string/font_RobotoMono_Bold" />
+            <com.dp.logcatapp.views.CustomTextView
+                android:id="@+id/tag"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="tag"
+                android:textColor="?attr/primary_text_color"
+                android:textSize="@dimen/text_size_smaller2"
+                app:useFont="@string/font_RobotoMono_Medium" />
+        </HorizontalScrollView>
 
 
-</RelativeLayout>
+        <com.dp.logcatapp.views.CustomTextView
+            android:id="@+id/message"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:layout_below="@+id/tag_container"
+            android:text="Message"
+            android:textColor="?attr/primary_text_color"
+            android:textSize="@dimen/text_size_smaller"
+            app:useFont="@string/font_InputMonoCompressed_Regular" />
+
+
+        <!--<com.dp.logcatapp.views.CustomTextView-->
+        <!--android:id="@+id/priority"-->
+        <!--android:layout_width="wrap_content"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:layout_alignParentLeft="true"-->
+        <!--android:layout_alignParentStart="true"-->
+        <!--android:layout_below="@+id/message"-->
+        <!--android:layout_marginEnd="10dp"-->
+        <!--android:layout_marginRight="10dp"-->
+        <!--android:text="P"-->
+        <!--android:textColor="?attr/secondary_text_color"-->
+        <!--android:textSize="@dimen/text_size_smaller"-->
+        <!--app:useFont="@string/font_RobotoMono_Bold" />-->
+
+        <com.dp.logcatapp.views.CustomTextView
+            android:id="@+id/date"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:layout_below="@+id/message"
+            android:layout_marginEnd="10dp"
+            android:layout_marginRight="10dp"
+            android:text="date"
+            android:textColor="?attr/secondary_text_color"
+            android:textSize="@dimen/text_size_smaller"
+            app:useFont="@string/font_RobotoMono_Bold" />
+
+        <com.dp.logcatapp.views.CustomTextView
+            android:id="@+id/time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignBaseline="@+id/date"
+            android:layout_marginEnd="10dp"
+            android:layout_marginRight="10dp"
+            android:layout_toEndOf="@+id/date"
+            android:layout_toRightOf="@+id/date"
+            android:text="time"
+            android:textColor="?attr/secondary_text_color"
+            android:textSize="@dimen/text_size_smaller"
+            app:useFont="@string/font_RobotoMono_Bold" />
+
+        <com.dp.logcatapp.views.CustomTextView
+            android:id="@+id/pid"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignBaseline="@+id/date"
+            android:layout_marginEnd="10dp"
+            android:layout_marginRight="10dp"
+            android:layout_toEndOf="@+id/time"
+            android:layout_toRightOf="@+id/time"
+            android:text="pid"
+            android:textColor="?attr/secondary_text_color"
+            android:textSize="@dimen/text_size_smaller"
+            app:useFont="@string/font_RobotoMono_Bold" />
+
+        <com.dp.logcatapp.views.CustomTextView
+            android:id="@+id/tid"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignBaseline="@+id/date"
+            android:layout_toEndOf="@+id/pid"
+            android:layout_toRightOf="@+id/pid"
+            android:text="tid"
+            android:textColor="?attr/secondary_text_color"
+            android:textSize="@dimen/text_size_smaller"
+            app:useFont="@string/font_RobotoMono_Bold" />
+    </RelativeLayout>
+</LinearLayout>
