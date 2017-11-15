@@ -12,15 +12,12 @@ import java.io.*
 import kotlin.concurrent.thread
 
 class Logcat : Closeable {
-    companion object {
-        private val DEFAULT_CMD: Array<String> = arrayOf("logcat", "-v", "long")
-    }
-
     var pollInterval: Long = 250L // in ms
         set(value) {
             field = Math.max(100L, value)
         }
 
+    var logcatCmd = arrayOf("logcat", "-v", "long")
     private var threadLogcat: Thread? = null
     private var logcatProcess: Process? = null
     private val handler: Handler = Handler(Looper.getMainLooper())
@@ -86,9 +83,9 @@ class Logcat : Closeable {
         }
     }
 
-    fun start(vararg cmd: String = DEFAULT_CMD) {
+    fun start() {
         if (threadLogcat == null) {
-            threadLogcat = thread { runLogcat(*cmd) }
+            threadLogcat = thread { runLogcat() }
         } else {
             MyLogger.logInfo(Logcat::class, "Logcat is already running!")
         }
@@ -171,8 +168,8 @@ class Logcat : Closeable {
         listener = null
     }
 
-    private fun runLogcat(vararg cmd: String) {
-        val processBuilder = ProcessBuilder(*cmd)
+    private fun runLogcat() {
+        val processBuilder = ProcessBuilder(*logcatCmd)
 
         try {
             logcatProcess = processBuilder.start()
