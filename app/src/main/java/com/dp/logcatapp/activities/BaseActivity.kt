@@ -25,7 +25,7 @@ open class BaseActivity : AppCompatActivity() {
         }
     }
 
-    protected var toolbar: Toolbar? = null
+    protected lateinit var toolbar: Toolbar
         private set
     protected val handler = Handler()
 
@@ -38,9 +38,9 @@ open class BaseActivity : AppCompatActivity() {
     protected fun setToolbar(@IdRes id: Int, @StringRes title: Int) {
         toolbar = findViewById(id)
         if (isDarkThemeOn()) {
-            toolbar?.popupTheme = R.style.DarkToolbarPopupTheme
+            toolbar.popupTheme = R.style.DarkToolbarPopupTheme
         } else {
-            toolbar?.popupTheme = R.style.LightToolbarPopupTheme
+            toolbar.popupTheme = R.style.LightToolbarPopupTheme
         }
         setSupportActionBar(toolbar)
         supportActionBar?.setTitle(title)

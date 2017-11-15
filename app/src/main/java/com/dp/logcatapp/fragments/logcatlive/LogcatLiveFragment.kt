@@ -118,6 +118,11 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
                     }
 
                     val pos = linearLayoutManager.findLastCompletelyVisibleItemPosition()
+                    if (pos == -1) {
+                        viewModel.autoScroll = false
+                        return
+                    }
+
                     if (ignoreScrollEvent) {
                         if (pos == adapter.itemCount) {
                             ignoreScrollEvent = false
@@ -134,7 +139,8 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
                     }
 
                     viewModel.scrollPosition = firstPos
-                    viewModel.autoScroll = pos >= adapter.itemCount - 1
+                    viewModel.autoScroll = pos == adapter.itemCount - 1
+
                     if (viewModel.autoScroll) {
                         hideFabUp()
                         hideFabDown()
@@ -230,6 +236,8 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        super.onCreateOptionsMenu(menu, inflater)
+
         inflater.inflate(R.menu.logcat_live, menu)
         val searchItem = menu.findItem(R.id.action_search)
         val searchView = searchItem.actionView as SearchView
@@ -270,15 +278,20 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
             override fun onQueryTextSubmit(query: String) = false
         })
 
+        val playPauseItem = menu.findItem(R.id.action_play_pause)
+
+        searchView.setOnQueryTextFocusChangeListener { _, hasFocus ->
+            playPauseItem.isVisible = !hasFocus
+        }
+
         searchView.setOnCloseListener {
             searchViewActive = false
             if (!reachedBlank) {
                 onSearchViewClose()
             }
+            playPauseItem.isVisible = true
             false
         }
-
-        super.onCreateOptionsMenu(menu, inflater)
     }
 
     private fun onSearchViewClose() {
@@ -307,11 +320,14 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
         super.onPrepareOptionsMenu(menu)
         // do nothing
 
-        val pauseItem = menu.findItem(R.id.action_pause_logcat)
-        val resumeItem = menu.findItem(R.id.action_resume_logcat)
-
-        pauseItem.isVisible = !viewModel.paused
-        resumeItem.isVisible = viewModel.paused
+        val playPauseItem = menu.findItem(R.id.action_play_pause)
+        if (viewModel.paused) {
+            playPauseItem.icon = ContextCompat.getDrawable(activity,
+                    R.drawable.ic_play_arrow_white_24dp)
+        } else {
+            playPauseItem.icon = ContextCompat.getDrawable(activity,
+                    R.drawable.ic_pause_white_24dp)
+        }
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -319,14 +335,16 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
             R.id.action_search -> {
                 true
             }
-            R.id.action_pause_logcat -> {
-                viewModel.paused = true
-                logcatService?.logcat?.pause()
-                true
-            }
-            R.id.action_resume_logcat -> {
-                viewModel.paused = false
-                logcatService?.logcat?.resume()
+            R.id.action_play_pause -> {
+                viewModel.paused = !viewModel.paused
+                if (viewModel.paused) {
+                    logcatService?.logcat?.pause()
+                } else {
+                    logcatService?.logcat?.resume()
+                }
+                handler.post {
+                    activity.invalidateOptionsMenu()
+                }
                 true
             }
             R.id.action_save -> {
@@ -463,7 +481,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
 
     private fun updateToolbarSubtitle(count: Int) {
         if (count > 1) {
-            (activity as BaseActivity).toolbar.subtitle = "$count logs"
+            (activity as BaseActivity).toolbar.subtitle = "$count"
         } else {
             (activity as BaseActivity).toolbar.subtitle = null
         }
