@@ -92,7 +92,14 @@ class Logcat : Closeable {
     }
 
     fun setEventListener(listener: LogcatEventListener?) {
+        val pausedOld = paused
+        pause()
+
         this.listener = listener
+
+        if (!pausedOld) {
+            resume()
+        }
     }
 
     fun getLogs(): List<Log> {
