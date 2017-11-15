@@ -191,9 +191,6 @@ class Logcat : Closeable {
         pauseProcessStdoutCondition.open()
         activityInBackgroundCondition.open()
 
-        pauseProcessStdoutCondition.close()
-        activityInBackgroundCondition.close()
-
         try {
             stderrThread.join(2000)
         } catch (e: InterruptedException) {
