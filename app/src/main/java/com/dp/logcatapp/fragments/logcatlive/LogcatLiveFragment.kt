@@ -18,6 +18,7 @@ import com.dp.logcat.LogcatEventListener
 import com.dp.logcatapp.R
 import com.dp.logcatapp.activities.BaseActivity
 import com.dp.logcatapp.fragments.base.BaseFragment
+import com.dp.logcatapp.fragments.logcatlive.dialogs.CopyToClipboardDialogFragment
 import com.dp.logcatapp.services.LogcatService
 import com.dp.logcatapp.util.ServiceBinder
 import com.dp.logcatapp.util.containsIgnoreCase
@@ -211,8 +212,10 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
         adapter.setOnClickListener { v ->
             val pos = linearLayoutManager.getPosition(v)
             if (pos >= 0) {
-//                logcatService?.logcat?.pause()
-
+                viewModel.autoScroll = false
+                val log = adapter[pos]
+                CopyToClipboardDialogFragment.newInstance(log)
+                        .show(fragmentManager, CopyToClipboardDialogFragment.TAG)
             }
         }
     }

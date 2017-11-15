@@ -1,11 +1,44 @@
 package com.dp.logcatapp.util
 
+import android.app.Activity
+import android.app.TaskStackBuilder
 import android.content.Context
+import android.content.Intent
 import android.graphics.Typeface
+import android.support.annotation.LayoutRes
+import android.support.v4.app.Fragment
 import android.support.v7.preference.PreferenceManager
+import android.view.LayoutInflater
+import android.view.View
 import android.widget.Toast
 import com.dp.logcatapp.R
+import com.dp.logcatapp.activities.MainActivity
+import com.dp.logcatapp.activities.SettingsActivity
 import java.util.*
+
+//// BEGIN Activity
+
+fun Activity.restartApp() {
+    val taskBuilder = TaskStackBuilder.create(this)
+            .addNextIntent(Intent(this, MainActivity::class.java))
+            .addNextIntent(Intent(this, SettingsActivity::class.java))
+    finish()
+    overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
+    taskBuilder.startActivities()
+}
+
+//// END Activity
+
+
+//// BEGIN Fragment
+
+fun Fragment.inflateLayout(@LayoutRes layoutResId: Int): View = LayoutInflater.from(activity)
+        .inflate(layoutResId, null, false)
+
+//// END Fragment
+
+
+//// BEGIN Context
 
 private val cache = mutableMapOf<String, Typeface>()
 
@@ -66,3 +99,12 @@ fun Context.setTheme() {
         PreferenceKeys.Appearance.Theme.LIGHT -> setThemeLight()
     }
 }
+
+//// END Context
+
+
+//// BEGIN String
+
+fun String.containsIgnoreCase(other: String) = toLowerCase().contains(other.toLowerCase())
+
+//// END String
