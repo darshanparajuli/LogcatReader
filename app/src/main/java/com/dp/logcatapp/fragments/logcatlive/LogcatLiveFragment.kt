@@ -210,6 +210,10 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
 
         adapter.setOnClickListener { v ->
             val pos = linearLayoutManager.getPosition(v)
+            if (pos >= 0) {
+//                logcatService?.logcat?.pause()
+
+            }
         }
     }
 
@@ -341,17 +345,16 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
 
         if (adapter.itemCount > 0) {
             scrollRecyclerView()
-            return
+        } else {
+            val logcat = logcatService!!.logcat
+            logcat.pause()
+
+            addAllLogs(logcat.getLogs())
+            scrollRecyclerView()
+
+            logcat.setEventListener(logcatEventListener)
+            logcat.bind(activity as AppCompatActivity)
         }
-
-        val logcat = logcatService!!.logcat
-        logcat.pause()
-
-        addAllLogs(logcat.getLogs())
-        scrollRecyclerView()
-
-        logcat.setEventListener(logcatEventListener)
-        logcat.bind(activity as AppCompatActivity)
 
         resumeLogcat()
     }
