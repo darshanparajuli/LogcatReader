@@ -17,7 +17,7 @@
         <item>Message</item>
         <item>Date</item>
         <item>Time</item>
-        <item>Process Id</item>
-        <item>Thread Id</item>
+        <item>Process id</item>
+        <item>Thread id</item>
     </string-array>
 </resources>
