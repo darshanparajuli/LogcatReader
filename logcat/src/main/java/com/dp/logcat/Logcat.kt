@@ -216,6 +216,24 @@ class Logcat : Closeable {
         return stringBuilder.toString()
     }
 
+    fun writeToFile(file: File): Boolean {
+        var writer: BufferedWriter? = null
+        try {
+            writer = BufferedWriter(FileWriter(file))
+            synchronized(logsLock) {
+                for (log in logs) {
+                    writer?.write(log.toString())
+                }
+            }
+            writer.flush()
+            return true
+        } catch (e: IOException) {
+            return false
+        } finally {
+            writer?.close()
+        }
+    }
+
     private fun processStderr(errStream: InputStream?) {
         val reader = BufferedReader(InputStreamReader(errStream))
         while (isProcessAlive) {
