@@ -48,6 +48,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
     private var searchViewActive = false
     private var lastLogId = -1
     private var pendingLogsToSave: List<Log>? = null
+    private var lastSearchRunnable: Runnable? = null
 
     private val logcatEventListener = object : LogcatEventListener {
 
@@ -249,28 +250,23 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
 
                 if (newText.isBlank()) {
                     reachedBlank = true
+                    if (lastSearchRunnable != null) {
+                        handler.removeCallbacks(lastSearchRunnable)
+                    }
                     onSearchViewClose()
                 } else {
                     reachedBlank = false
                     val logcat = logcatService?.logcat ?: return true
-                    logcat.pause()
-                    logcat.addFilter(FILTER_MSG, { log ->
-                        log.tag.containsIgnoreCase(newText) || log.msg.containsIgnoreCase(newText)
-                    })
 
-                    adapter.clear()
-
-                    val logs = logcat.getLogsFiltered()
-                    if (logs.isNotEmpty()) {
-                        lastLogId = logs[0].id
+                    if (lastSearchRunnable != null) {
+                        handler.removeCallbacks(lastSearchRunnable)
                     }
 
-                    adapter.addItems(logs)
+                    lastSearchRunnable = Runnable {
+                        onSearchAction(logcat, newText)
+                    }
 
-                    viewModel.autoScroll = false
-                    linearLayoutManager.scrollToPositionWithOffset(0, 0)
-
-                    resumeLogcat()
+                    handler.postDelayed(lastSearchRunnable, 300)
                 }
                 return true
             }
@@ -292,6 +288,29 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
             playPauseItem.isVisible = true
             false
         }
+    }
+
+    private fun onSearchAction(logcat: Logcat, newText: String) {
+        MyLogger.logDebug(LogcatLiveFragment::class, "onSearchAction: $newText")
+
+        logcat.pause()
+        logcat.addFilter(FILTER_MSG, { log ->
+            log.tag.containsIgnoreCase(newText) || log.msg.containsIgnoreCase(newText)
+        })
+
+        adapter.clear()
+
+        val logs = logcat.getLogsFiltered()
+        if (logs.isNotEmpty()) {
+            lastLogId = logs[0].id
+        }
+
+        adapter.addItems(logs)
+
+        viewModel.autoScroll = false
+        linearLayoutManager.scrollToPositionWithOffset(0, 0)
+
+        resumeLogcat()
     }
 
     private fun onSearchViewClose() {
