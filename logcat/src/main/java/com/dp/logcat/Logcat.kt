@@ -12,6 +12,11 @@ import java.io.*
 import kotlin.concurrent.thread
 
 class Logcat : Closeable {
+    var pollInterval: Long = 250L // in ms
+        set(value) {
+            field = Math.max(100L, value)
+        }
+
     private var threadLogcat: Thread? = null
     private var logcatProcess: Process? = null
     private val handler: Handler = Handler(Looper.getMainLooper())
@@ -21,12 +26,14 @@ class Logcat : Closeable {
 
     @Volatile
     private var paused = false
-    private val pauseCondition = ConditionVariable()
+    private val pauseProcessStdoutCondition = ConditionVariable()
+    private val pausePostLogsCondition = ConditionVariable()
 
     // must be synchronized
-    private val lock = Any()
+    private val logsLock = Any()
     private val logs = mutableListOf<Log>()
     private val filters = mutableMapOf<String, (Log) -> Boolean>()
+    private val pendingLogs = mutableListOf<Log>()
 
     private var _activityInBackgroundLock = Any()
     private var activityInBackground: Boolean = false
@@ -38,18 +45,40 @@ class Logcat : Closeable {
                 field = value
             }
         }
+    private var activityInBackgroundCondition = ConditionVariable()
 
     private val lifeCycleObserver = object : LifecycleObserver {
         @OnLifecycleEvent(Lifecycle.Event.ON_RESUME)
         private fun onActivityInForeground() {
             MyLogger.logDebug(Logcat::class, "onActivityInForeground")
+            postPendingLogs()
             activityInBackground = false
+            activityInBackgroundCondition.open()
         }
 
         @OnLifecycleEvent(Lifecycle.Event.ON_PAUSE)
         private fun onActivityInBackground() {
             MyLogger.logDebug(Logcat::class, "onActivityInBackground")
             activityInBackground = true
+        }
+    }
+
+    @Volatile
+    private var isProcessAlive = false
+
+    private fun postPendingLogs() {
+        synchronized(logsLock) {
+            if (pendingLogs.isNotEmpty()) {
+                val dup = pendingLogs.filter { e ->
+                    filters.values.all { it(e) }
+                }.toList()
+
+                pendingLogs.clear()
+
+                if (dup.isNotEmpty()) {
+                    handler.post { listener?.onLogEvents(dup) }
+                }
+            }
         }
     }
 
@@ -67,7 +96,7 @@ class Logcat : Closeable {
 
     fun getLogs(): List<Log> {
         val list = mutableListOf<Log>()
-        synchronized(lock) {
+        synchronized(logsLock) {
             list += logs.toList()
         }
         return list
@@ -75,25 +104,25 @@ class Logcat : Closeable {
 
     fun getLogsFiltered(): List<Log> {
         val logs = getLogs()
-        synchronized(lock) {
+        synchronized(logsLock) {
             return logs.filter { log -> filters.values.all { it(log) } }
         }
     }
 
     fun addFilter(name: String, filter: (Log) -> Boolean) {
-        synchronized(lock) {
+        synchronized(logsLock) {
             filters.put(name, filter)
         }
     }
 
     fun removeFilter(name: String) {
-        synchronized(lock) {
+        synchronized(logsLock) {
             filters.remove(name)
         }
     }
 
     fun clearFilters() {
-        synchronized(lock) {
+        synchronized(logsLock) {
             filters.clear()
         }
     }
@@ -104,7 +133,8 @@ class Logcat : Closeable {
 
     fun resume() {
         paused = false
-        pauseCondition.open()
+        pauseProcessStdoutCondition.open()
+        pausePostLogsCondition.open()
     }
 
     fun bind(activity: AppCompatActivity?) {
@@ -126,7 +156,7 @@ class Logcat : Closeable {
         threadLogcat = null
         logcatProcess = null
 
-        synchronized(lock) {
+        synchronized(logsLock) {
             logs.clear()
             filters.clear()
         }
@@ -142,6 +172,7 @@ class Logcat : Closeable {
 
         try {
             logcatProcess = processBuilder.start()
+            isProcessAlive = true
         } catch (e: IOException) {
             handler.post { listener?.onStartFailedEvent() }
             return
@@ -149,10 +180,19 @@ class Logcat : Closeable {
 
         handler.post { listener?.onStartEvent() }
 
+        val postThread = thread { postLogsPeriodically() }
         val stderrThread = thread { processStderr(logcatProcess?.errorStream) }
         val stdoutThread = thread { processStdout(logcatProcess?.inputStream) }
 
         logcatProcess?.waitFor()
+
+        isProcessAlive = false
+
+        pauseProcessStdoutCondition.open()
+        activityInBackgroundCondition.open()
+
+        pauseProcessStdoutCondition.close()
+        activityInBackgroundCondition.close()
 
         try {
             stderrThread.join(2000)
@@ -162,13 +202,17 @@ class Logcat : Closeable {
             stdoutThread.join(2000)
         } catch (e: InterruptedException) {
         }
+        try {
+            postThread.join(2000)
+        } catch (e: InterruptedException) {
+        }
 
         handler.post { listener?.onStopEvent() }
     }
 
     private fun processStderr(errStream: InputStream?) {
         val reader = BufferedReader(InputStreamReader(errStream))
-        while (true) {
+        while (isProcessAlive) {
             try {
                 reader.readLine() ?: break
             } catch (e: IOException) {
@@ -177,45 +221,44 @@ class Logcat : Closeable {
         }
     }
 
+    private fun postLogsPeriodically() {
+        while (isProcessAlive) {
+            if (paused) {
+                pausePostLogsCondition.block()
+                pausePostLogsCondition.close()
+                if (!isProcessAlive) {
+                    break
+                }
+            }
+
+            if (activityInBackground) {
+                activityInBackgroundCondition.block()
+                activityInBackgroundCondition.close()
+                if (!isProcessAlive) {
+                    break
+                }
+            }
+
+            postPendingLogs()
+
+            try {
+                Thread.sleep(pollInterval)
+            } catch (e: InterruptedException) {
+            }
+        }
+    }
+
     private fun processStdout(inputStream: InputStream?) {
-        val buffer = mutableListOf<Log>()
-
-        val emitLogEvent = { log: Log ->
-            var passedFilter = false
-            synchronized(lock) {
-                logs += log
-                passedFilter = filters.values.all { it(log) }
-            }
-
-            if (passedFilter) {
-                listener?.onPreLogEvent(log)
-                handler.post {
-                    listener?.onLogEvent(log)
-                }
-            }
-        }
-
-        val emitLogsEvent = { newLogs: List<Log> ->
-            synchronized(lock) {
-                logs += newLogs
-            }
-            val filtered = newLogs.filter { e ->
-                filters.values.all { it(e) }
-            }.toList()
-            if (filtered.isNotEmpty()) {
-                handler.post {
-                    listener?.onLogEvents(filtered)
-                }
-            }
-        }
-
         val msgBuffer = StringBuilder()
 
         val reader = BufferedReader(InputStreamReader(inputStream))
-        loop@ while (true) {
+        loop@ while (isProcessAlive) {
             if (paused) {
-                pauseCondition.block()
-                pauseCondition.close()
+                pauseProcessStdoutCondition.block()
+                pauseProcessStdoutCondition.close()
+                if (!isProcessAlive) {
+                    break
+                }
             }
 
             try {
@@ -234,15 +277,9 @@ class Logcat : Closeable {
 
                     try {
                         val log = LogFactory.createNewLog(metadata, msgBuffer.toString())
-
-                        if (activityInBackground) {
-                            buffer.add(log)
-                        } else {
-                            if (buffer.isNotEmpty()) {
-                                emitLogsEvent(buffer)
-                                buffer.clear()
-                            }
-                            emitLogEvent(log)
+                        synchronized(logsLock) {
+                            logs += log
+                            pendingLogs += log
                         }
                     } catch (e: Exception) {
                         MyLogger.logDebug(Logcat::class, "${e.message}: $metadata")

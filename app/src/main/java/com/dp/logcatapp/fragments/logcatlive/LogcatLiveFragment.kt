@@ -13,6 +13,7 @@ import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.SearchView
 import android.view.*
 import com.dp.logcat.Log
+import com.dp.logcat.Logcat
 import com.dp.logcat.LogcatEventListener
 import com.dp.logcatapp.R
 import com.dp.logcatapp.activities.BaseActivity
@@ -41,17 +42,9 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
     private val logcatEventListener = object : LogcatEventListener {
 
         override fun onStartEvent() {
+            MyLogger.logDebug(Logcat::class, "onStartEvent")
             activity.showToast("Logcat started")
             adapter.clear()
-        }
-
-        override fun onPreLogEvent(log: Log) {
-            // do nothing
-        }
-
-        override fun onLogEvent(log: Log) {
-            adapter.addItem(log)
-            updateUIOnLogEvent(adapter.itemCount)
         }
 
         override fun onLogEvents(logs: List<Log>) {
@@ -60,11 +53,12 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
         }
 
         override fun onStartFailedEvent() {
+            MyLogger.logDebug(Logcat::class, "onStartFailedEvent")
             activity.showToast("Failed to run logcat")
         }
 
         override fun onStopEvent() {
-            activity.showToast("Logcat stopped")
+            MyLogger.logDebug(Logcat::class, "onStopEvent")
         }
     }
 
@@ -316,7 +310,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
             }
             R.id.action_resume_logcat -> {
                 viewModel.paused = false
-                resumeLogcat()
+                logcatService?.logcat?.resume()
                 true
             }
             else -> return super.onOptionsItemSelected(item)
