@@ -5,10 +5,7 @@ import android.arch.lifecycle.ViewModelProviders
 import android.content.ComponentName
 import android.content.ServiceConnection
 import android.content.pm.PackageManager
-import android.os.Build
-import android.os.Bundle
-import android.os.Environment
-import android.os.IBinder
+import android.os.*
 import android.support.design.widget.FloatingActionButton
 import android.support.v4.content.ContextCompat
 import android.support.v7.app.AppCompatActivity
@@ -32,6 +29,7 @@ import com.dp.logcatapp.util.showToast
 import com.dp.logger.MyLogger
 import kotlinx.android.synthetic.main.app_bar.*
 import java.io.File
+import java.lang.ref.WeakReference
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -49,6 +47,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
     private var lastLogId = -1
     private var pendingLogsToSave: List<Log>? = null
     private var lastSearchRunnable: Runnable? = null
+    private var searchTask: SearchTask? = null
 
     private val logcatEventListener = object : LogcatEventListener {
 
@@ -247,20 +246,14 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextChange(newText: String): Boolean {
                 searchViewActive = true
+                removeLastSearchRunnableCallback()
 
                 if (newText.isBlank()) {
                     reachedBlank = true
-                    if (lastSearchRunnable != null) {
-                        handler.removeCallbacks(lastSearchRunnable)
-                    }
                     onSearchViewClose()
                 } else {
                     reachedBlank = false
                     val logcat = logcatService?.logcat ?: return true
-
-                    if (lastSearchRunnable != null) {
-                        handler.removeCallbacks(lastSearchRunnable)
-                    }
 
                     lastSearchRunnable = Runnable {
                         onSearchAction(logcat, newText)
@@ -281,6 +274,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
         }
 
         searchView.setOnCloseListener {
+            removeLastSearchRunnableCallback()
             searchViewActive = false
             if (!reachedBlank) {
                 onSearchViewClose()
@@ -292,25 +286,39 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
 
     private fun onSearchAction(logcat: Logcat, newText: String) {
         MyLogger.logDebug(LogcatLiveFragment::class, "onSearchAction: $newText")
+        searchTask?.cancel(true)
+        searchTask = SearchTask(this, logcat, newText)
+        searchTask!!.execute()
+    }
 
-        logcat.pause()
-        logcat.addFilter(FILTER_MSG, { log ->
-            log.tag.containsIgnoreCase(newText) || log.msg.containsIgnoreCase(newText)
-        })
+    private class SearchTask(fragment: LogcatLiveFragment,
+                             val logcat: Logcat, val searchText: String) :
+            AsyncTask<String, Void, List<Log>>() {
 
-        adapter.clear()
+        private var fragRef: WeakReference<LogcatLiveFragment> = WeakReference(fragment)
 
-        val logs = logcat.getLogsFiltered()
-        if (logs.isNotEmpty()) {
-            lastLogId = logs[0].id
+        override fun onPreExecute() {
+            logcat.pause()
+            logcat.addFilter(FILTER_MSG, { log ->
+                log.tag.containsIgnoreCase(searchText) || log.msg.containsIgnoreCase(searchText)
+            })
         }
 
-        adapter.addItems(logs)
+        override fun doInBackground(vararg params: String?): List<Log> = logcat.getLogsFiltered()
 
-        viewModel.autoScroll = false
-        linearLayoutManager.scrollToPositionWithOffset(0, 0)
+        override fun onCancelled(result: List<Log>?) {
+            fragRef.get()?.resumeLogcat()
+        }
 
-        resumeLogcat()
+        override fun onPostExecute(result: List<Log>?) {
+            val frag = fragRef.get() ?: return
+            if (result != null && result.isNotEmpty()) {
+                frag.adapter.clear()
+                frag.adapter.addItems(result)
+                frag.viewModel.autoScroll = false
+                frag.linearLayoutManager.scrollToPositionWithOffset(0, 0)
+            }
+        }
     }
 
     private fun onSearchViewClose() {
@@ -457,8 +465,18 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
         serviceBinder.unbind(activity)
     }
 
+    private fun removeLastSearchRunnableCallback() {
+        if (lastSearchRunnable != null) {
+            handler.removeCallbacks(lastSearchRunnable)
+            lastSearchRunnable = null
+        }
+    }
+
     override fun onDestroy() {
         super.onDestroy()
+        removeLastSearchRunnableCallback()
+        searchTask?.cancel(true)
+
         recyclerView.removeOnScrollListener(onScrollListener)
         logcatService?.logcat?.setEventListener(null)
         logcatService?.logcat?.unbind(activity as AppCompatActivity)
