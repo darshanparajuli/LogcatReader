@@ -47,7 +47,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
                 }
 
         useBlackThemePref.onPreferenceChangeListener = Preference
-                .OnPreferenceChangeListener { preference, newValue ->
+                .OnPreferenceChangeListener { _, _ ->
                     if (activity.isDarkThemeOn()) {
                         activity.restartApp()
                     }
