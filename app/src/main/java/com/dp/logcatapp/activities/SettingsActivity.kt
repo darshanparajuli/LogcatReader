@@ -1,7 +1,5 @@
 package com.dp.logcatapp.activities
 
-import android.content.Context
-import android.content.Intent
 import android.os.Bundle
 import com.dp.logcatapp.R
 import com.dp.logcatapp.fragments.settings.SettingsFragment
@@ -23,10 +21,6 @@ class SettingsActivity : BaseActivity() {
 
     companion object {
         val TAG = SettingsActivity::class.qualifiedName
-
-        fun newIntent(context: Context): Intent {
-            return Intent(context, SettingsActivity::class.java)
-        }
     }
 
 }
