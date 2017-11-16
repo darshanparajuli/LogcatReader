@@ -9,6 +9,7 @@ import com.dp.logcatapp.R
 import com.dp.logcatapp.util.PreferenceKeys
 import com.dp.logcatapp.util.isDarkThemeOn
 import com.dp.logcatapp.util.restartApp
+import com.dp.logcatapp.util.showToast
 
 class SettingsFragment : PreferenceFragmentCompat() {
 
@@ -19,6 +20,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         addPreferencesFromResource(R.xml.settings)
         setupAppearanceCategory()
+        setupLogcatCategory()
         setupAboutCategory()
     }
 
@@ -53,6 +55,30 @@ class SettingsFragment : PreferenceFragmentCompat() {
                     }
                     true
                 }
+    }
+
+    private fun setupLogcatCategory() {
+        val pref = findPreference(PreferenceKeys.Logcat.KEY_POLL_INTERVAL)
+        pref.summary = preferenceScreen.sharedPreferences
+                .getString(PreferenceKeys.Logcat.KEY_POLL_INTERVAL,
+                        PreferenceKeys.Logcat.Default.POLL_INTERVAL) + " ms"
+
+        pref.onPreferenceChangeListener = Preference.OnPreferenceChangeListener { _, newValue ->
+            try {
+                val v = newValue.toString().trim()
+                val num = v.toLong()
+                if (num <= 0) {
+                    activity.showToast("Value must be greater than 0")
+                    false
+                } else {
+                    pref.summary = "$v ms"
+                    true
+                }
+            } catch (e: NumberFormatException) {
+                activity.showToast("Value must be a postive integer")
+                false
+            }
+        }
     }
 
     private fun setupAboutCategory() {

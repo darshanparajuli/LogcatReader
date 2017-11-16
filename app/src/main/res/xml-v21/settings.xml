@@ -17,6 +17,15 @@
             android:title="@string/pref_theme_black_theme" />
     </PreferenceCategory>
 
+    <PreferenceCategory android:title="@string/logcat">
+        <EditTextPreference
+            android:defaultValue="250"
+            android:dialogTitle="@string/pref_poll_interval_title"
+            android:key="pref_key_logcat_poll_interval"
+            android:persistent="true"
+            android:title="@string/pref_poll_interval_title" />
+    </PreferenceCategory>
+
     <PreferenceCategory android:title="@string/about">
         <Preference
             android:key="pref_key_version_name"

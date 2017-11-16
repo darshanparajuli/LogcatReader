@@ -19,4 +19,6 @@
     <string name="share">Share</string>
     <string name="share_logs_with">Share logs with</string>
     <string name="save_to_file">Save</string>
+    <string name="logcat">Logcat</string>
+    <string name="pref_poll_interval_title">Poll Interval</string>
 </resources>

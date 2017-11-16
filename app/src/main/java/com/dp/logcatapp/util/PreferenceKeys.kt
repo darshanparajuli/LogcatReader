@@ -23,6 +23,14 @@ object PreferenceKeys {
         }
     }
 
+    object Logcat {
+        const val KEY_POLL_INTERVAL = "pref_key_logcat_poll_interval"
+
+        object Default {
+            const val POLL_INTERVAL = "250"
+        }
+    }
+
     object About {
         const val KEY_VERSION_NAME = "pref_key_version_name"
     }

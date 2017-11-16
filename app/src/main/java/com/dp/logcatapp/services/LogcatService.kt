@@ -7,6 +7,7 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.graphics.BitmapFactory
 import android.os.Binder
 import android.os.Build
@@ -15,6 +16,8 @@ import android.support.v4.content.ContextCompat
 import com.dp.logcat.Logcat
 import com.dp.logcatapp.R
 import com.dp.logcatapp.activities.MainActivity
+import com.dp.logcatapp.util.PreferenceKeys
+import com.dp.logcatapp.util.getDefaultSharedPreferences
 
 class LogcatService : BaseService() {
 
@@ -31,10 +34,14 @@ class LogcatService : BaseService() {
         if (Build.VERSION.SDK_INT >= 26) {
             createNotificationChannel()
         }
+
+        logcat.setPollInterval(getDefaultSharedPreferences()
+                .getString(PreferenceKeys.Logcat.KEY_POLL_INTERVAL,
+                        PreferenceKeys.Logcat.Default.POLL_INTERVAL).toLong())
+        logcat.start()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        logcat.start()
         startForeground(NOTIFICAION_ID, createStartNotification())
         return START_STICKY
     }
@@ -95,6 +102,20 @@ class LogcatService : BaseService() {
 
         if (Build.VERSION.SDK_INT >= 26) {
             deleteNotificationChannel()
+        }
+    }
+
+    override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences, key: String) {
+        super.onSharedPreferenceChanged(sharedPreferences, key)
+        when (key) {
+            PreferenceKeys.Logcat.KEY_POLL_INTERVAL -> {
+                try {
+                    val pollInterval = sharedPreferences.getString(key,
+                            PreferenceKeys.Logcat.Default.POLL_INTERVAL).trim().toLong()
+                    logcat.setPollInterval(pollInterval)
+                } catch (e: NumberFormatException) {
+                }
+            }
         }
     }
 

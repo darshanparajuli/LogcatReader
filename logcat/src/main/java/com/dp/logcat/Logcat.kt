@@ -12,18 +12,16 @@ import java.io.*
 import kotlin.concurrent.thread
 
 class Logcat : Closeable {
-    var pollInterval: Long = 250L // in ms
-        set(value) {
-            field = Math.max(100L, value)
-        }
-
     var logcatCmd = arrayOf("logcat", "-v", "long")
+    private var pollInterval: Long = 250L // in ms
     private var threadLogcat: Thread? = null
     private var logcatProcess: Process? = null
     private val handler: Handler = Handler(Looper.getMainLooper())
 
     @Volatile
     private var listener: LogcatEventListener? = null
+
+    private var pollCondition = ConditionVariable()
 
     @Volatile
     private var paused = false
@@ -182,6 +180,11 @@ class Logcat : Closeable {
         listener = null
     }
 
+    fun setPollInterval(interval: Long) {
+        this.pollInterval = interval
+        pollCondition.open()
+    }
+
     private fun runLogcat() {
         val processBuilder = ProcessBuilder(*logcatCmd)
 
@@ -203,6 +206,7 @@ class Logcat : Closeable {
 
         isProcessAlive = false
 
+        pollCondition.open()
         pauseProcessStdoutCondition.open()
         activityInBackgroundCondition.open()
 
@@ -265,11 +269,15 @@ class Logcat : Closeable {
                 }
             }
 
+            val t0 = System.currentTimeMillis()
+
             postPendingLogs()
 
-            try {
-                Thread.sleep(pollInterval)
-            } catch (e: InterruptedException) {
+            val diff = System.currentTimeMillis() - t0
+            val sleepTime = pollInterval - diff
+            if (sleepTime > 0) {
+                pollCondition.block(sleepTime)
+                pollCondition.close()
             }
         }
     }
