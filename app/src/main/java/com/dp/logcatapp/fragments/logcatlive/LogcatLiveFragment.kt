@@ -419,7 +419,6 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
         if (actuallySaveToFile(logs, fileName)) {
             activity.window.decorView.newSnackbar("Saved as $fileName", Snackbar.LENGTH_LONG)
                     .setAction(getString(R.string.view_log), {
-//                        activity.showToast("View log")
                     })
                     .show()
         } else {
