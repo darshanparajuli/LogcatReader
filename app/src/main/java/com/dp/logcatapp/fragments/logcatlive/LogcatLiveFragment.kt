@@ -57,7 +57,6 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
 
         override fun onStartEvent() {
             MyLogger.logDebug(Logcat::class, "onStartEvent")
-            activity.showToast("Logcat started")
             crashCounter = 0
             adapter.clear()
             if (crashed) {
@@ -79,20 +78,20 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
 
         override fun onStartFailedEvent() {
             MyLogger.logDebug(Logcat::class, "onStartFailedEvent")
-            activity.showToast("Failed to start logcat")
+            activity.showToast(getString(R.string.failed_to_start_logcat))
         }
 
         override fun onStopEvent(error: Boolean) {
             MyLogger.logDebug(Logcat::class, "onStopEvent: $error")
             if (error) {
                 if (crashCounter++ == 3 || !checkReadLogsPermission()) {
-                    activity.showToast("Failed to start logcat")
+                    activity.showToast(getString(R.string.failed_to_start_logcat))
                 } else {
                     crashed = true
                     viewModel.paused = true
                     activity.invalidateOptionsMenu()
 
-                    activity.showToast("Logcat command exited unexpectedly, restarting...")
+                    activity.showToast(getString(R.string.logcat_exited_unexpectedly))
                     logcatService?.logcat?.start()
                 }
             }
