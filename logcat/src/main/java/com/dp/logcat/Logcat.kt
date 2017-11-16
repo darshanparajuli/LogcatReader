@@ -122,6 +122,12 @@ class Logcat : Closeable {
         }
     }
 
+    fun clearPendingLogs() {
+        synchronized(logsLock) {
+            pendingLogs.clear()
+        }
+    }
+
     fun addFilter(name: String, filter: (Log) -> Boolean) {
         synchronized(logsLock) {
             filters.put(name, filter)

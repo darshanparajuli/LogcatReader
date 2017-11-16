@@ -525,6 +525,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
 
             addAllLogs(logcat.getLogs())
             scrollRecyclerView()
+            logcat.clearPendingLogs()
 
             logcat.setEventListener(logcatEventListener)
             logcat.bind(activity as AppCompatActivity)
