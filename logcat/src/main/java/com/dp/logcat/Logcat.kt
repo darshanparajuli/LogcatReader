@@ -321,8 +321,8 @@ class Logcat : Closeable {
                         val log = LogFactory.createNewLog(metadata, msgBuffer.toString())
                         synchronized(logsLock) {
                             pendingLogs += log
-                            MyLogger.logDebug(Logcat::class, "size: " + logs.size +
-                                    ", pending size: " + pendingLogs.size)
+//                            MyLogger.logDebug(Logcat::class, "size: " + logs.size +
+//                                    ", pending size: " + pendingLogs.size)
                         }
                     } catch (e: Exception) {
                         MyLogger.logDebug(Logcat::class, "${e.message}: $metadata")
