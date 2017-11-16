@@ -26,4 +26,17 @@
     <string name="failed_to_save_logs">Failed to save logs</string>
     <string name="nothing_to_save">Nothing to save</string>
     <string name="open_with">Open with</string>
+    <string name="read_logs_permission_required">READ_LOGS permission required</string>
+    <string name="grant_read_logs_permission_instruction">To view all of the logs, 
+        READ_LOGS permission must be granted. If your device is rooted, please tap "Grant".
+        If that doesn\'t work or your device is not rooted, please connect your device to your
+        computer via usb and run command
+        \'adb shell pm grant com.dp.logcatapp android.permission.READ_LOGS\'. In either case, 
+        you mustexit the app afterwards and swipe it out of Recents (in that order). 
+        It should show all device logs next time you start the app. Please report if it still
+        doesn\'t work, thank you!
+    </string>
+    <string name="grant_read_logs_permission_action_using_root">Grant</string>
+    <string name="success">Success</string>
+    <string name="failed">Failed</string>
 </resources>

@@ -24,6 +24,7 @@ import com.dp.logcatapp.R
 import com.dp.logcatapp.activities.BaseActivity
 import com.dp.logcatapp.fragments.base.BaseFragment
 import com.dp.logcatapp.fragments.logcatlive.dialogs.CopyToClipboardDialogFragment
+import com.dp.logcatapp.fragments.logcatlive.dialogs.InstructionToGrantPermissionDialogFragment
 import com.dp.logcatapp.services.LogcatService
 import com.dp.logcatapp.util.*
 import com.dp.logger.MyLogger
@@ -237,6 +238,11 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
                 CopyToClipboardDialogFragment.newInstance(log)
                         .show(fragmentManager, CopyToClipboardDialogFragment.TAG)
             }
+        }
+
+        if (!checkReadLogsPermission()) {
+            InstructionToGrantPermissionDialogFragment().show(fragmentManager,
+                    InstructionToGrantPermissionDialogFragment.TAG)
         }
     }
 
@@ -471,6 +477,10 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
             }
         }
     }
+
+    private fun checkReadLogsPermission() =
+            ContextCompat.checkSelfPermission(activity,
+                    Manifest.permission.READ_LOGS) == PackageManager.PERMISSION_GRANTED
 
     private fun checkWriteExternalStoragePermission() =
             ContextCompat.checkSelfPermission(activity,

@@ -2,13 +2,9 @@ package com.dp.logcatapp.util
 
 import android.Manifest
 import android.content.Context
-import com.dp.logcatapp.BuildConfig
 import java.io.IOException
 
 object RootUtils {
-
-    const val GRANT_PERMISSION_CMD = "adb shell pm grant ${BuildConfig.APPLICATION_ID} " +
-            Manifest.permission.READ_LOGS
 
     fun runCmdAsRoot(vararg cmd: String): Boolean {
         val processBuilder = ProcessBuilder("su", "-c", *cmd)
