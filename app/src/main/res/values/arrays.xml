@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string-array name="theme_pref_entries">
+    <string-array name="pref_appearance_theme_entries">
         <item>Automatic</item>
         <item>Light Theme</item>
         <item>Dark Theme</item>
     </string-array>
 
-    <string-array name="theme_pref_values">
+    <string-array name="pref_appearance_theme_values">
         <item>0</item>
         <item>1</item>
         <item>2</item>
@@ -19,5 +19,27 @@
         <item>Time</item>
         <item>Process ID</item>
         <item>Thread ID</item>
+    </string-array>
+
+    <string-array name="pref_logcat_log_buffers">
+        <item>Crash</item>
+        <item>Events</item>
+        <item>Main</item>
+        <item>Radio</item>
+        <item>System</item>
+    </string-array>
+    
+    <string-array name="pref_logcat_log_buffers_values">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+        <item>4</item>
+    </string-array>
+
+    <string-array name="pref_logcat_log_buffers_default_values">
+        <item>0</item>
+        <item>2</item>
+        <item>4</item>
     </string-array>
 </resources>

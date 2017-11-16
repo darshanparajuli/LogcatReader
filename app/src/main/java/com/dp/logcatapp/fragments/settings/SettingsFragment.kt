@@ -38,7 +38,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
             else -> useBlackThemePref.isEnabled = false
         }
 
-        val themePrefEntries = resources.getStringArray(R.array.theme_pref_entries)
+        val themePrefEntries = resources.getStringArray(R.array.pref_appearance_theme_entries)
         themePref.summary = themePrefEntries[currTheme.toInt()]
 
         themePref.onPreferenceChangeListener =
