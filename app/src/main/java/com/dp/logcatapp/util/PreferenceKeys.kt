@@ -25,9 +25,19 @@ object PreferenceKeys {
 
     object Logcat {
         const val KEY_POLL_INTERVAL = "pref_key_logcat_poll_interval"
+        const val KEY_BUFFERS = "pref_key_logcat_buffers"
+
+        object Buffers {
+            const val CRASH = "0"
+            const val EVENTS = "1"
+            const val MAIN = "2"
+            const val RADIO = "3"
+            const val SYSTEM = "4"
+        }
 
         object Default {
             const val POLL_INTERVAL = "250"
+            val BUFFERS = arrayOf(Buffers.CRASH, Buffers.MAIN, Buffers.SYSTEM)
         }
     }
 
