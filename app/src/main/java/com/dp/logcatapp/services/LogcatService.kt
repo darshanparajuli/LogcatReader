@@ -61,7 +61,7 @@ class LogcatService : BaseService() {
                 .build()
 
         val builder = NotificationCompat.Builder(this, NOTIFICAION_CHANNEL)
-                .setSmallIcon(R.drawable.ic_android_white_24dp)
+                .setSmallIcon(R.drawable.ic_perm_device_information_white_24dp)
                 .setColor(ContextCompat.getColor(applicationContext, R.color.color_primary))
                 .setContentTitle(getString(R.string.app_name))
                 .setTicker(getString(R.string.app_name))
