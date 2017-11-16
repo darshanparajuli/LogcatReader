@@ -22,4 +22,8 @@
     <string name="logcat">Logcat</string>
     <string name="pref_poll_interval_title">Poll Interval</string>
     <string name="view_log">View</string>
+    <string name="could_not_open_log_file">Could not open the log file</string>
+    <string name="failed_to_save_logs">Failed to save logs</string>
+    <string name="nothing_to_save">Nothing to save</string>
+    <string name="view">View</string>
 </resources>

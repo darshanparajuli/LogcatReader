@@ -3,8 +3,10 @@ package com.dp.logcatapp.fragments.logcatlive
 import android.Manifest
 import android.arch.lifecycle.ViewModelProviders
 import android.content.ComponentName
+import android.content.Intent
 import android.content.ServiceConnection
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.*
 import android.support.design.widget.FloatingActionButton
 import android.support.design.widget.Snackbar
@@ -388,7 +390,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
     private fun actuallySaveToFile(logs: List<Log>, fileName: String): Boolean {
         if (logs.isEmpty()) {
             MyLogger.logDebug(LogcatLiveFragment::class, "Nothing to save")
-            showSnackbar("Nothing to save")
+            showSnackbar(getString(R.string.nothing_to_save))
             return true
         }
 
@@ -420,16 +422,23 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
             newSnackbar("Saved as $fileName", Snackbar.LENGTH_LONG)
                     .setAction(getString(R.string.view_log), {
                         if (!viewSavedLog(fileName)) {
+                            showSnackbar(getString(R.string.could_not_open_log_file))
                         }
                     })
                     .show()
         } else {
-            showSnackbar("Failed")
+            showSnackbar(getString(R.string.failed_to_save_logs))
         }
     }
 
-    private fun viewSavedLog(name: String): Boolean {
-        return false
+    private fun viewSavedLog(fileName: String): Boolean {
+        val intent = Intent(Intent.ACTION_SEND)
+        intent.type = "text/plain"
+        val path = Environment.getExternalStorageDirectory().absolutePath +
+                "/Documents/Logcat/" + fileName
+        intent.putExtra(Intent.EXTRA_STREAM, Uri.parse("file://$path"))
+        startActivity(Intent.createChooser(intent, getString(R.string.view) + " $fileName"))
+        return true
     }
 
     private fun isExternalStorageWritable(): Boolean {
