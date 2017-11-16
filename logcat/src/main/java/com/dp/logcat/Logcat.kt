@@ -93,7 +93,7 @@ class Logcat : Closeable {
     }
 
     fun start() {
-        if (threadLogcat == null) {
+        if (logcatProcess == null) {
             threadLogcat = thread { runLogcat() }
         } else {
             MyLogger.logInfo(Logcat::class, "Logcat is already running!")
@@ -152,6 +152,7 @@ class Logcat : Closeable {
         paused = false
         pauseProcessStdoutCondition.open()
         pausePostLogsCondition.open()
+        pollCondition.open()
     }
 
     fun bind(activity: AppCompatActivity?) {
@@ -207,13 +208,16 @@ class Logcat : Closeable {
         val stderrThread = thread { processStderr(logcatProcess?.errorStream) }
         val stdoutThread = thread { processStdout(logcatProcess?.inputStream) }
 
-        logcatProcess?.waitFor()
+        val error = logcatProcess?.waitFor() != 0
 
         isProcessAlive = false
 
         pollCondition.open()
         pauseProcessStdoutCondition.open()
         activityInBackgroundCondition.open()
+
+        logcatProcess = null
+        handler.post { listener?.onStopEvent(error) }
 
         try {
             stderrThread.join(2000)
@@ -227,8 +231,6 @@ class Logcat : Closeable {
             postThread.join(2000)
         } catch (e: InterruptedException) {
         }
-
-        handler.post { listener?.onStopEvent() }
     }
 
     override fun toString(): String {
@@ -318,6 +320,8 @@ class Logcat : Closeable {
                         val log = LogFactory.createNewLog(metadata, msgBuffer.toString())
                         synchronized(logsLock) {
                             pendingLogs += log
+                            MyLogger.logDebug(Logcat::class, "size: " + logs.size +
+                                    ", pending size: " + pendingLogs.size)
                         }
                     } catch (e: Exception) {
                         MyLogger.logDebug(Logcat::class, "${e.message}: $metadata")

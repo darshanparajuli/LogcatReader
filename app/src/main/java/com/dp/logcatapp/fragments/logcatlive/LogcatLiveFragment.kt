@@ -52,10 +52,17 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
 
     private val logcatEventListener = object : LogcatEventListener {
 
+        private var crashed = false
+
         override fun onStartEvent() {
             MyLogger.logDebug(Logcat::class, "onStartEvent")
             activity.showToast("Logcat started")
             adapter.clear()
+            if (crashed) {
+                viewModel.paused = false
+                logcatService?.logcat?.resume()
+                activity.invalidateOptionsMenu()
+            }
         }
 
         override fun onLogEvent(log: Log) {
@@ -73,8 +80,15 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
             activity.showToast("Failed to run logcat")
         }
 
-        override fun onStopEvent() {
-            MyLogger.logDebug(Logcat::class, "onStopEvent")
+        override fun onStopEvent(error: Boolean) {
+            MyLogger.logDebug(Logcat::class, "onStopEvent: $error")
+            if (error) {
+                crashed = true
+                viewModel.paused = true
+                activity.invalidateOptionsMenu()
+                activity.showToast("Logcat command exited unexpectedly, restarting...")
+                logcatService?.logcat?.start()
+            }
         }
     }
 
@@ -375,15 +389,14 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
                 true
             }
             R.id.action_play_pause -> {
-                viewModel.paused = !viewModel.paused
-                if (viewModel.paused) {
+                val newPausedState = !viewModel.paused
+                if (newPausedState) {
                     logcatService?.logcat?.pause()
                 } else {
                     logcatService?.logcat?.resume()
                 }
-                handler.post {
-                    activity.invalidateOptionsMenu()
-                }
+                viewModel.paused = newPausedState
+                activity.invalidateOptionsMenu()
                 true
             }
             R.id.action_save -> {

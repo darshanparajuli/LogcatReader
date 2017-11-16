@@ -17,6 +17,6 @@ interface LogcatEventListener {
     fun onLogEvents(logs: List<Log>)
 
     @MainThread
-    fun onStopEvent()
+    fun onStopEvent(error: Boolean)
 
 }
