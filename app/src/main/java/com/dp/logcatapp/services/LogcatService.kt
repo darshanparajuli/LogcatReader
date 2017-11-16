@@ -116,10 +116,11 @@ class LogcatService : BaseService() {
     }
 
     private fun handleBufferUpdate(sharedPreferences: SharedPreferences, key: String) {
-        val values = sharedPreferences.getStringSet(key, PreferenceKeys.Logcat.Default.BUFFERS)
-        val args = toBufferArgs(values.toList())
+        val bufferValues = sharedPreferences.getStringSet(key, PreferenceKeys.Logcat.Default.BUFFERS)
+        val buffers = resources.getStringArray(R.array.pref_logcat_log_buffers)
+
         logcat.stop()
-        logcat.logcatBuffers = args
+        logcat.logcatBuffers = bufferValues.map { e -> buffers[e.toInt()].toLowerCase() }.toSet()
         logcat.start()
     }
 
@@ -127,19 +128,13 @@ class LogcatService : BaseService() {
         val sharedPreferences = getDefaultSharedPreferences()
         val bufferValues = sharedPreferences.getStringSet(PreferenceKeys.Logcat.KEY_BUFFERS,
                 PreferenceKeys.Logcat.Default.BUFFERS)
-        val buffers = toBufferArgs(bufferValues.toList())
         val pollInterval = sharedPreferences.getString(PreferenceKeys.Logcat.KEY_POLL_INTERVAL,
                 PreferenceKeys.Logcat.Default.POLL_INTERVAL).trim().toLong()
 
         logcat.setPollInterval(pollInterval)
-        logcat.logcatBuffers = buffers
-    }
 
-    private fun toBufferArgs(values: List<String>): String {
         val buffers = resources.getStringArray(R.array.pref_logcat_log_buffers)
-        return values.map { e -> buffers[e.toInt()].toLowerCase() }
-                .sorted()
-                .joinToString(",")
+        logcat.logcatBuffers = bufferValues.map { e -> buffers[e.toInt()].toLowerCase() }.toSet()
     }
 
     inner class LocalBinder : Binder() {

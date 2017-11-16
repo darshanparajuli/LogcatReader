@@ -12,7 +12,7 @@ import java.io.*
 import kotlin.concurrent.thread
 
 class Logcat : Closeable {
-    var logcatBuffers = "main,crash,system"
+    var logcatBuffers = setOf("main", "crash", "system")
     private val logcatCmd = arrayOf("logcat", "-v", "long")
     private var pollInterval: Long = 250L // in ms
     private var threadLogcat: Thread? = null
@@ -195,7 +195,12 @@ class Logcat : Closeable {
     }
 
     private fun runLogcat() {
-        val processBuilder = ProcessBuilder(*logcatCmd, "-b", logcatBuffers)
+        val buffers = mutableListOf<String>()
+        for (buffer in logcatBuffers) {
+            buffers += "-b"
+            buffers += buffer
+        }
+        val processBuilder = ProcessBuilder(*logcatCmd, *buffers.toTypedArray())
 
         try {
             logcatProcess = processBuilder.start()
@@ -248,13 +253,13 @@ class Logcat : Closeable {
     }
 
     private fun processStderr(errStream: InputStream?) {
-        val reader = BufferedReader(InputStreamReader(errStream))
-        while (isProcessAlive) {
-            try {
+        val reader: BufferedReader
+        try {
+            reader = BufferedReader(InputStreamReader(errStream))
+            while (isProcessAlive) {
                 reader.readLine() ?: break
-            } catch (e: IOException) {
-                break
             }
+        } catch (e: IOException) {
         }
     }
 
@@ -292,9 +297,10 @@ class Logcat : Closeable {
     private fun processStdout(inputStream: InputStream?) {
         val msgBuffer = StringBuilder()
 
-        val reader = BufferedReader(InputStreamReader(inputStream))
-        loop@ while (isProcessAlive) {
-            try {
+        val reader: BufferedReader
+        try {
+            reader = BufferedReader(InputStreamReader(inputStream))
+            loop@ while (isProcessAlive) {
                 val metadata = reader.readLine()?.trim() ?: break
                 if (metadata.startsWith("[")) {
                     var msg = reader.readLine() ?: break
@@ -321,9 +327,8 @@ class Logcat : Closeable {
                         msgBuffer.setLength(0)
                     }
                 }
-            } catch (e: IOException) {
-                break
             }
+        } catch (e: IOException) {
         }
     }
 

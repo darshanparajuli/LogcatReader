@@ -85,7 +85,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
         override fun onStopEvent(error: Boolean) {
             MyLogger.logDebug(Logcat::class, "onStopEvent: $error")
             if (error) {
-                if (crashCounter++ == 3) {
+                if (crashCounter++ == 3 || !checkReadLogsPermission()) {
                     activity.showToast("Failed to start logcat")
                 } else {
                     crashed = true
