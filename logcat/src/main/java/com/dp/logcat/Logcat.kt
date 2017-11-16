@@ -231,9 +231,12 @@ class Logcat : Closeable {
             handler.post { listener?.onStartEvent() }
         }
 
+        val errorStream = logcatProcess?.errorStream
+        val inputStream = logcatProcess?.inputStream
+
         val postThread = thread { postLogsPeriodically() }
-        val stderrThread = thread { processStderr(logcatProcess?.errorStream) }
-        val stdoutThread = thread { processStdout(logcatProcess?.inputStream) }
+        val stderrThread = thread { processStderr(errorStream) }
+        val stdoutThread = thread { processStdout(inputStream) }
 
         var error = logcatProcess?.waitFor() != 0
 
@@ -284,7 +287,7 @@ class Logcat : Closeable {
             while (isProcessAlive) {
                 reader.readLine() ?: break
             }
-        } catch (e: IOException) {
+        } catch (e: Exception) {
         }
     }
 
@@ -353,7 +356,7 @@ class Logcat : Closeable {
                     }
                 }
             }
-        } catch (e: IOException) {
+        } catch (e: Exception) {
         }
     }
 
