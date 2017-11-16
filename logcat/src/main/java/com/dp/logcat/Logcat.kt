@@ -295,13 +295,13 @@ class Logcat : Closeable {
 
         val reader = BufferedReader(InputStreamReader(inputStream))
         loop@ while (isProcessAlive) {
-            if (paused) {
-                pauseProcessStdoutCondition.block()
-                pauseProcessStdoutCondition.close()
-                if (!isProcessAlive) {
-                    break
-                }
-            }
+//            if (paused) {
+//                pauseProcessStdoutCondition.block()
+//                pauseProcessStdoutCondition.close()
+//                if (!isProcessAlive) {
+//                    break
+//                }
+//            }
 
             try {
                 val metadata = reader.readLine()?.trim() ?: break
