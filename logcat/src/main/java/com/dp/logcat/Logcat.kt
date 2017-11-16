@@ -25,7 +25,6 @@ class Logcat : Closeable {
 
     @Volatile
     private var paused = false
-//    private val pauseProcessStdoutCondition = ConditionVariable()
     private val pausePostLogsCondition = ConditionVariable()
 
     // must be synchronized
@@ -150,7 +149,6 @@ class Logcat : Closeable {
 
     fun resume() {
         paused = false
-//        pauseProcessStdoutCondition.open()
         pausePostLogsCondition.open()
         pollCondition.open()
     }
@@ -214,7 +212,6 @@ class Logcat : Closeable {
         isProcessAlive = false
 
         pollCondition.open()
-//        pauseProcessStdoutCondition.open()
         activityInBackgroundCondition.open()
 
         logcatProcess = null
@@ -240,12 +237,6 @@ class Logcat : Closeable {
             logs.forEach { log -> stringBuilder.append(log) }
         }
         return stringBuilder.toString()
-    }
-
-    fun writeToFile(file: File): Boolean {
-        synchronized(logsLock) {
-            return writeToFile(logs, file)
-        }
     }
 
     private fun processStderr(errStream: InputStream?) {
@@ -295,14 +286,6 @@ class Logcat : Closeable {
 
         val reader = BufferedReader(InputStreamReader(inputStream))
         loop@ while (isProcessAlive) {
-//            if (paused) {
-//                pauseProcessStdoutCondition.block()
-//                pauseProcessStdoutCondition.close()
-//                if (!isProcessAlive) {
-//                    break
-//                }
-//            }
-
             try {
                 val metadata = reader.readLine()?.trim() ?: break
                 if (metadata.startsWith("[")) {
