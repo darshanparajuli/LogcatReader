@@ -28,24 +28,25 @@ fun Activity.restartApp() {
     taskBuilder.startActivities()
 }
 
-//// END Activity
+fun Activity.newSnackbar(msg: String, length: Int = Snackbar.LENGTH_SHORT) =
+        Snackbar.make(window.decorView, msg, length)
 
-
-//// BEGIN View
-
-fun View.newSnackbar(msg: String, length: Int = Snackbar.LENGTH_SHORT) =
-        Snackbar.make(this, msg, length)
-
-fun View.showSnackbar(msg: String, length: Int = Snackbar.LENGTH_SHORT) =
+fun Activity.showSnackbar(msg: String, length: Int = Snackbar.LENGTH_SHORT) =
         newSnackbar(msg, length).show()
 
-//// END View
+//// END Activity
 
 
 //// BEGIN Fragment
 
 fun Fragment.inflateLayout(@LayoutRes layoutResId: Int): View = LayoutInflater.from(activity)
         .inflate(layoutResId, null, false)
+
+fun Fragment.newSnackbar(msg: String, length: Int = Snackbar.LENGTH_SHORT) =
+        activity.newSnackbar(msg, length)
+
+fun Fragment.showSnackbar(msg: String, length: Int = Snackbar.LENGTH_SHORT) =
+        newSnackbar(msg, length).show()
 
 //// END Fragment
 
