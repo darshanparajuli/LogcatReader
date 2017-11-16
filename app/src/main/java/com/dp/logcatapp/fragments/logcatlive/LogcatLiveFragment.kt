@@ -86,6 +86,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
                 crashed = true
                 viewModel.paused = true
                 activity.invalidateOptionsMenu()
+                
                 activity.showToast("Logcat command exited unexpectedly, restarting...")
                 logcatService?.logcat?.start()
             }
