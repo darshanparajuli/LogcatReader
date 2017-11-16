@@ -56,6 +56,10 @@ class LogcatService : BaseService() {
         val closePendingIntent = PendingIntent.getActivity(this, 1, exitIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT)
 
+        val exitAction = NotificationCompat.Action.Builder(R.drawable.ic_clear_white_18dp,
+                getString(R.string.exit), closePendingIntent)
+                .build()
+
         val builder = NotificationCompat.Builder(this, NOTIFICAION_CHANNEL)
                 .setSmallIcon(R.drawable.ic_android_white_24dp)
                 .setColor(ContextCompat.getColor(applicationContext, R.color.color_primary))
@@ -67,9 +71,7 @@ class LogcatService : BaseService() {
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .setCategory(NotificationCompat.CATEGORY_SERVICE)
                 .setAutoCancel(false)
-                .addAction(NotificationCompat.Action.Builder(R.drawable.ic_clear_white_18dp,
-                        getString(R.string.exit), closePendingIntent)
-                        .build())
+                .addAction(exitAction)
 
         if (Build.VERSION.SDK_INT < 21) {
             builder.setLargeIcon(BitmapFactory.decodeResource(resources, R.mipmap.ic_launcher))
