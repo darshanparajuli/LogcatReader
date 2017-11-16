@@ -7,6 +7,7 @@ import android.content.ServiceConnection
 import android.content.pm.PackageManager
 import android.os.*
 import android.support.design.widget.FloatingActionButton
+import android.support.design.widget.Snackbar
 import android.support.v4.content.ContextCompat
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.DividerItemDecoration
@@ -22,10 +23,7 @@ import com.dp.logcatapp.activities.BaseActivity
 import com.dp.logcatapp.fragments.base.BaseFragment
 import com.dp.logcatapp.fragments.logcatlive.dialogs.CopyToClipboardDialogFragment
 import com.dp.logcatapp.services.LogcatService
-import com.dp.logcatapp.util.ServiceBinder
-import com.dp.logcatapp.util.containsIgnoreCase
-import com.dp.logcatapp.util.inflateLayout
-import com.dp.logcatapp.util.showToast
+import com.dp.logcatapp.util.*
 import com.dp.logger.MyLogger
 import kotlinx.android.synthetic.main.app_bar.*
 import java.io.File
@@ -390,7 +388,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
     private fun actuallySaveToFile(logs: List<Log>, fileName: String): Boolean {
         if (logs.isEmpty()) {
             MyLogger.logDebug(LogcatLiveFragment::class, "Nothing to save")
-            activity.showToast("Nothing to save")
+            activity.window.decorView.showSnackbar("Nothing to save")
             return true
         }
 
@@ -419,9 +417,13 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
                 .format(Date())
         val fileName = "logcat_$timeStamp.txt"
         if (actuallySaveToFile(logs, fileName)) {
-            activity.showToast("Saved as $fileName")
+            activity.window.decorView.newSnackbar("Saved as $fileName", Snackbar.LENGTH_LONG)
+                    .setAction(getString(R.string.view_log), {
+//                        activity.showToast("View log")
+                    })
+                    .show()
         } else {
-            activity.showToast("Failed")
+            activity.window.decorView.showSnackbar("Failed")
         }
     }
 

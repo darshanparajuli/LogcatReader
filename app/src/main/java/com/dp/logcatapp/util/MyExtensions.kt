@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Typeface
 import android.support.annotation.LayoutRes
+import android.support.design.widget.Snackbar
 import android.support.v4.app.Fragment
 import android.support.v7.preference.PreferenceManager
 import android.view.LayoutInflater
@@ -28,6 +29,17 @@ fun Activity.restartApp() {
 }
 
 //// END Activity
+
+
+//// BEGIN View
+
+fun View.newSnackbar(msg: String, length: Int = Snackbar.LENGTH_SHORT) =
+        Snackbar.make(this, msg, length)
+
+fun View.showSnackbar(msg: String, length: Int = Snackbar.LENGTH_SHORT) =
+        newSnackbar(msg, length).show()
+
+//// END View
 
 
 //// BEGIN Fragment
