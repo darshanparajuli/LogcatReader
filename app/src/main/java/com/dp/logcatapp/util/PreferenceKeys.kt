@@ -37,7 +37,7 @@ object PreferenceKeys {
 
         object Default {
             const val POLL_INTERVAL = "250"
-            val BUFFERS = arrayOf(Buffers.CRASH, Buffers.MAIN, Buffers.SYSTEM)
+            val BUFFERS = setOf(Buffers.CRASH, Buffers.MAIN, Buffers.SYSTEM)
         }
     }
 

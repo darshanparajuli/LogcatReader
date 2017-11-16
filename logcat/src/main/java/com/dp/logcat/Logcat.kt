@@ -12,10 +12,12 @@ import java.io.*
 import kotlin.concurrent.thread
 
 class Logcat : Closeable {
-    var logcatCmd = arrayOf("logcat", "-v", "long")
+    var logcatBuffers = "main,crash,system"
+    private val logcatCmd = arrayOf("logcat", "-v", "long")
     private var pollInterval: Long = 250L // in ms
     private var threadLogcat: Thread? = null
     private var logcatProcess: Process? = null
+    private var intentionalExit = false
     private val handler: Handler = Handler(Looper.getMainLooper())
 
     @Volatile
@@ -93,6 +95,8 @@ class Logcat : Closeable {
 
     fun start() {
         if (logcatProcess == null) {
+            intentionalExit = false
+            paused = false
             threadLogcat = thread { runLogcat() }
         } else {
             MyLogger.logInfo(Logcat::class, "Logcat is already running!")
@@ -162,6 +166,7 @@ class Logcat : Closeable {
     }
 
     fun stop() {
+        intentionalExit = true
         logcatProcess?.destroy()
 
         try {
@@ -190,12 +195,11 @@ class Logcat : Closeable {
     }
 
     private fun runLogcat() {
-        val processBuilder = ProcessBuilder(*logcatCmd)
+        val processBuilder = ProcessBuilder(*logcatCmd, "-b", logcatBuffers)
 
         try {
             logcatProcess = processBuilder.start()
             isProcessAlive = true
-            paused = false
         } catch (e: IOException) {
             handler.post { listener?.onStartFailedEvent() }
             return
@@ -207,7 +211,7 @@ class Logcat : Closeable {
         val stderrThread = thread { processStderr(logcatProcess?.errorStream) }
         val stdoutThread = thread { processStdout(logcatProcess?.inputStream) }
 
-        val error = logcatProcess?.waitFor() != 0
+        var error = logcatProcess?.waitFor() != 0
 
         isProcessAlive = false
 
@@ -215,6 +219,10 @@ class Logcat : Closeable {
         activityInBackgroundCondition.open()
 
         logcatProcess = null
+
+        if (intentionalExit) {
+            error = false
+        }
         handler.post { listener?.onStopEvent(error) }
 
         try {

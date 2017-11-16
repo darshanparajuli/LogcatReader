@@ -1,6 +1,7 @@
 package com.dp.logcatapp.fragments.settings
 
 import android.os.Bundle
+import android.support.v14.preference.MultiSelectListPreference
 import android.support.v7.preference.ListPreference
 import android.support.v7.preference.Preference
 import android.support.v7.preference.PreferenceFragmentCompat
@@ -58,12 +59,14 @@ class SettingsFragment : PreferenceFragmentCompat() {
     }
 
     private fun setupLogcatCategory() {
-        val pref = findPreference(PreferenceKeys.Logcat.KEY_POLL_INTERVAL)
-        pref.summary = preferenceScreen.sharedPreferences
+        val prefPollInterval = findPreference(PreferenceKeys.Logcat.KEY_POLL_INTERVAL)
+        val prefBuffers = findPreference(PreferenceKeys.Logcat.KEY_BUFFERS)
+
+        prefPollInterval.summary = preferenceScreen.sharedPreferences
                 .getString(PreferenceKeys.Logcat.KEY_POLL_INTERVAL,
                         PreferenceKeys.Logcat.Default.POLL_INTERVAL) + " ms"
 
-        pref.onPreferenceChangeListener = Preference.OnPreferenceChangeListener { _, newValue ->
+        prefPollInterval.onPreferenceChangeListener = Preference.OnPreferenceChangeListener { _, newValue ->
             try {
                 val v = newValue.toString().trim()
                 val num = v.toLong()
@@ -71,7 +74,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
                     activity.showToast("Value must be greater than 0")
                     false
                 } else {
-                    pref.summary = "$v ms"
+                    prefPollInterval.summary = "$v ms"
                     true
                 }
             } catch (e: NumberFormatException) {
@@ -79,6 +82,32 @@ class SettingsFragment : PreferenceFragmentCompat() {
                 false
             }
         }
+
+        val bufferValues = preferenceScreen.sharedPreferences
+                .getStringSet(PreferenceKeys.Logcat.KEY_BUFFERS,
+                        PreferenceKeys.Logcat.Default.BUFFERS)
+        val buffers = resources.getStringArray(R.array.pref_logcat_log_buffers)
+
+        val toSummary = { values: Set<String> ->
+            values.map { e -> buffers[e.toInt()] }
+                    .sorted()
+                    .joinToString(", ")
+        }
+
+        prefBuffers.summary = toSummary(bufferValues)
+
+        prefBuffers.onPreferenceChangeListener = Preference
+                .OnPreferenceChangeListener { preference, newValue ->
+                    val mp = preference as MultiSelectListPreference
+                    val values = newValue as Set<String>
+
+                    if (values.isEmpty()) {
+                        false
+                    } else {
+                        mp.summary = toSummary(values)
+                        true
+                    }
+                }
     }
 
     private fun setupAboutCategory() {

@@ -53,10 +53,12 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
     private val logcatEventListener = object : LogcatEventListener {
 
         private var crashed = false
+        private var crashCounter = 0
 
         override fun onStartEvent() {
             MyLogger.logDebug(Logcat::class, "onStartEvent")
             activity.showToast("Logcat started")
+            crashCounter = 0
             adapter.clear()
             if (crashed) {
                 crashed = false
@@ -77,18 +79,22 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
 
         override fun onStartFailedEvent() {
             MyLogger.logDebug(Logcat::class, "onStartFailedEvent")
-            activity.showToast("Failed to run logcat")
+            activity.showToast("Failed to start logcat")
         }
 
         override fun onStopEvent(error: Boolean) {
             MyLogger.logDebug(Logcat::class, "onStopEvent: $error")
             if (error) {
-                crashed = true
-                viewModel.paused = true
-                activity.invalidateOptionsMenu()
-                
-                activity.showToast("Logcat command exited unexpectedly, restarting...")
-                logcatService?.logcat?.start()
+                if (crashCounter++ == 3) {
+                    activity.showToast("Failed to start logcat")
+                } else {
+                    crashed = true
+                    viewModel.paused = true
+                    activity.invalidateOptionsMenu()
+
+                    activity.showToast("Logcat command exited unexpectedly, restarting...")
+                    logcatService?.logcat?.start()
+                }
             }
         }
     }

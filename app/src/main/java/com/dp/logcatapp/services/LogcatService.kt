@@ -35,9 +35,7 @@ class LogcatService : BaseService() {
             createNotificationChannel()
         }
 
-        logcat.setPollInterval(getDefaultSharedPreferences()
-                .getString(PreferenceKeys.Logcat.KEY_POLL_INTERVAL,
-                        PreferenceKeys.Logcat.Default.POLL_INTERVAL).toLong())
+        initLogcatPrefs()
         logcat.start()
     }
 
@@ -109,14 +107,39 @@ class LogcatService : BaseService() {
         super.onSharedPreferenceChanged(sharedPreferences, key)
         when (key) {
             PreferenceKeys.Logcat.KEY_POLL_INTERVAL -> {
-                try {
-                    val pollInterval = sharedPreferences.getString(key,
-                            PreferenceKeys.Logcat.Default.POLL_INTERVAL).trim().toLong()
-                    logcat.setPollInterval(pollInterval)
-                } catch (e: NumberFormatException) {
-                }
+                val pollInterval = sharedPreferences.getString(key,
+                        PreferenceKeys.Logcat.Default.POLL_INTERVAL).trim().toLong()
+                logcat.setPollInterval(pollInterval)
             }
+            PreferenceKeys.Logcat.KEY_BUFFERS -> handleBufferUpdate(sharedPreferences, key)
         }
+    }
+
+    private fun handleBufferUpdate(sharedPreferences: SharedPreferences, key: String) {
+        val values = sharedPreferences.getStringSet(key, PreferenceKeys.Logcat.Default.BUFFERS)
+        val args = toBufferArgs(values.toList())
+        logcat.stop()
+        logcat.logcatBuffers = args
+        logcat.start()
+    }
+
+    private fun initLogcatPrefs() {
+        val sharedPreferences = getDefaultSharedPreferences()
+        val bufferValues = sharedPreferences.getStringSet(PreferenceKeys.Logcat.KEY_BUFFERS,
+                PreferenceKeys.Logcat.Default.BUFFERS)
+        val buffers = toBufferArgs(bufferValues.toList())
+        val pollInterval = sharedPreferences.getString(PreferenceKeys.Logcat.KEY_POLL_INTERVAL,
+                PreferenceKeys.Logcat.Default.POLL_INTERVAL).trim().toLong()
+
+        logcat.setPollInterval(pollInterval)
+        logcat.logcatBuffers = buffers
+    }
+
+    private fun toBufferArgs(values: List<String>): String {
+        val buffers = resources.getStringArray(R.array.pref_logcat_log_buffers)
+        return values.map { e -> buffers[e.toInt()].toLowerCase() }
+                .sorted()
+                .joinToString(",")
     }
 
     inner class LocalBinder : Binder() {
