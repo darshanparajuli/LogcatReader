@@ -22,6 +22,9 @@ class Logcat : Closeable {
 
     @Volatile
     private var listener: LogcatEventListener? = null
+    private var pendingStartEvent = false
+    private var pendingStopEvent = false
+    private var stopEventError = false
 
     private var pollCondition = ConditionVariable()
 
@@ -51,7 +54,18 @@ class Logcat : Closeable {
         @OnLifecycleEvent(Lifecycle.Event.ON_RESUME)
         private fun onActivityInForeground() {
             MyLogger.logDebug(Logcat::class, "onActivityInForeground")
+            if (pendingStartEvent) {
+                pendingStartEvent = false
+                listener?.onStartEvent()
+            }
+
             postPendingLogs()
+
+            if (pendingStopEvent) {
+                pendingStopEvent = false
+                listener?.onStopEvent(stopEventError)
+            }
+            
             activityInBackground = false
             activityInBackgroundCondition.open()
         }
@@ -210,7 +224,12 @@ class Logcat : Closeable {
             return
         }
 
-        handler.post { listener?.onStartEvent() }
+        if (activityInBackground) {
+            pendingStartEvent = true
+            pendingStopEvent = false
+        } else {
+            handler.post { listener?.onStartEvent() }
+        }
 
         val postThread = thread { postLogsPeriodically() }
         val stderrThread = thread { processStderr(logcatProcess?.errorStream) }
@@ -228,7 +247,13 @@ class Logcat : Closeable {
         if (intentionalExit) {
             error = false
         }
-        handler.post { listener?.onStopEvent(error) }
+
+        if (activityInBackground) {
+            pendingStopEvent = true
+            stopEventError = error
+        } else {
+            handler.post { listener?.onStopEvent(error) }
+        }
 
         try {
             stderrThread.join(2000)
