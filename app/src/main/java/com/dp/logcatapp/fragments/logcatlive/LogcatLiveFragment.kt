@@ -388,7 +388,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
     private fun actuallySaveToFile(logs: List<Log>, fileName: String): Boolean {
         if (logs.isEmpty()) {
             MyLogger.logDebug(LogcatLiveFragment::class, "Nothing to save")
-            activity.window.decorView.showSnackbar("Nothing to save")
+            showSnackbar("Nothing to save")
             return true
         }
 
@@ -417,13 +417,19 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
                 .format(Date())
         val fileName = "logcat_$timeStamp.txt"
         if (actuallySaveToFile(logs, fileName)) {
-            activity.window.decorView.newSnackbar("Saved as $fileName", Snackbar.LENGTH_LONG)
+            newSnackbar("Saved as $fileName", Snackbar.LENGTH_LONG)
                     .setAction(getString(R.string.view_log), {
+                        if (!viewSavedLog(fileName)) {
+                        }
                     })
                     .show()
         } else {
-            activity.window.decorView.showSnackbar("Failed")
+            showSnackbar("Failed")
         }
+    }
+
+    private fun viewSavedLog(name: String): Boolean {
+        return false
     }
 
     private fun isExternalStorageWritable(): Boolean {
