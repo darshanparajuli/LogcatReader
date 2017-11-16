@@ -25,7 +25,7 @@ class Logcat : Closeable {
 
     @Volatile
     private var paused = false
-    private val pauseProcessStdoutCondition = ConditionVariable()
+//    private val pauseProcessStdoutCondition = ConditionVariable()
     private val pausePostLogsCondition = ConditionVariable()
 
     // must be synchronized
@@ -150,7 +150,7 @@ class Logcat : Closeable {
 
     fun resume() {
         paused = false
-        pauseProcessStdoutCondition.open()
+//        pauseProcessStdoutCondition.open()
         pausePostLogsCondition.open()
         pollCondition.open()
     }
@@ -214,7 +214,7 @@ class Logcat : Closeable {
         isProcessAlive = false
 
         pollCondition.open()
-        pauseProcessStdoutCondition.open()
+//        pauseProcessStdoutCondition.open()
         activityInBackgroundCondition.open()
 
         logcatProcess = null
