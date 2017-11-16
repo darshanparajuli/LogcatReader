@@ -58,7 +58,9 @@ class Logcat : Closeable {
         @OnLifecycleEvent(Lifecycle.Event.ON_PAUSE)
         private fun onActivityInBackground() {
             MyLogger.logDebug(Logcat::class, "onActivityInBackground")
-            activityInBackground = true
+            synchronized(logsLock) {
+                activityInBackground = true
+            }
         }
     }
 
@@ -117,6 +119,22 @@ class Logcat : Closeable {
 
     fun getLogsFiltered(): List<Log> {
         val logs = getLogs()
+        synchronized(logsLock) {
+            return logs.filter { log -> filters.values.all { it(log) } }
+        }
+    }
+
+    fun getLogsClearPending(): List<Log> {
+        var list = listOf<Log>()
+        synchronized(logsLock) {
+            list += logs.toList()
+            pendingLogs.clear()
+        }
+        return list
+    }
+
+    fun getLogsFilteredClearPending(): List<Log> {
+        val logs = getLogsClearPending()
         synchronized(logsLock) {
             return logs.filter { log -> filters.values.all { it(log) } }
         }
