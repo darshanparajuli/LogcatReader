@@ -19,13 +19,7 @@ object RootUtils {
         }
     }
 
-    fun grantReadLogsPermission(context: Context): Boolean {
-        return if (runCmdAsRoot("pm", "grant", context.packageName,
-                Manifest.permission.READ_LOGS)) {
-            android.os.Process.killProcess(android.os.Process.myPid())
-            true
-        } else {
-            false
-        }
-    }
+    fun grantReadLogsPermission(context: Context) = runCmdAsRoot("pm", "grant",
+            context.packageName, Manifest.permission.READ_LOGS)
+
 }
