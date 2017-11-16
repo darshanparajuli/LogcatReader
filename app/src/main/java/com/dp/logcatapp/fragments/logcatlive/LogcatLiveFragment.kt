@@ -59,6 +59,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
             activity.showToast("Logcat started")
             adapter.clear()
             if (crashed) {
+                crashed = false
                 viewModel.paused = false
                 logcatService?.logcat?.resume()
                 activity.invalidateOptionsMenu()
