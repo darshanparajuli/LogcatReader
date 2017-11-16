@@ -197,6 +197,7 @@ class Logcat : Closeable {
         try {
             logcatProcess = processBuilder.start()
             isProcessAlive = true
+            paused = false
         } catch (e: IOException) {
             handler.post { listener?.onStartFailedEvent() }
             return
