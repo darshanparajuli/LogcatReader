@@ -438,11 +438,10 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
     }
 
     private fun viewSavedLog(fileName: String): Boolean {
-        val intent = Intent(Intent.ACTION_SEND)
-        intent.type = "text/plain"
+        val intent = Intent(Intent.ACTION_VIEW)
         val path = Environment.getExternalStorageDirectory().absolutePath +
                 "/Documents/Logcat/" + fileName
-        intent.putExtra(Intent.EXTRA_STREAM, Uri.parse("file://$path"))
+        intent.setDataAndType(Uri.parse("file://$path"), "text/plain")
         startActivity(Intent.createChooser(intent, getString(R.string.open_with)))
         return true
     }
