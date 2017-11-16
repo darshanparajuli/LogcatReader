@@ -70,6 +70,8 @@ class Logcat : Closeable {
     private fun postPendingLogs() {
         synchronized(logsLock) {
             if (pendingLogs.isNotEmpty()) {
+                logs += pendingLogs
+
                 if (pendingLogs.size == 1) {
                     val log = pendingLogs[0]
                     if (filters.values.all { it(log) }) {
@@ -112,7 +114,7 @@ class Logcat : Closeable {
     fun getLogs(): List<Log> {
         var list = listOf<Log>()
         synchronized(logsLock) {
-            list += logs.toList()
+            list += logs
         }
         return list
     }
@@ -121,28 +123,6 @@ class Logcat : Closeable {
         val logs = getLogs()
         synchronized(logsLock) {
             return logs.filter { log -> filters.values.all { it(log) } }
-        }
-    }
-
-    fun getLogsClearPending(): List<Log> {
-        var list = listOf<Log>()
-        synchronized(logsLock) {
-            list += logs.toList()
-            pendingLogs.clear()
-        }
-        return list
-    }
-
-    fun getLogsFilteredClearPending(): List<Log> {
-        val logs = getLogsClearPending()
-        synchronized(logsLock) {
-            return logs.filter { log -> filters.values.all { it(log) } }
-        }
-    }
-
-    fun clearPendingLogs() {
-        synchronized(logsLock) {
-            pendingLogs.clear()
         }
     }
 
@@ -195,6 +175,7 @@ class Logcat : Closeable {
 
         synchronized(logsLock) {
             logs.clear()
+            pendingLogs.clear()
             filters.clear()
         }
     }
@@ -336,7 +317,6 @@ class Logcat : Closeable {
                     try {
                         val log = LogFactory.createNewLog(metadata, msgBuffer.toString())
                         synchronized(logsLock) {
-                            logs += log
                             pendingLogs += log
                         }
                     } catch (e: Exception) {

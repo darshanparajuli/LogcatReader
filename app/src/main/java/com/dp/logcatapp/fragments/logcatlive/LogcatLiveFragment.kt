@@ -316,7 +316,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
         }
 
         override fun doInBackground(vararg params: String?): List<Log> =
-                logcat.getLogsFilteredClearPending()
+                logcat.getLogsFiltered()
 
         override fun onCancelled(result: List<Log>?) {
             fragRef.get()?.resumeLogcat()
@@ -339,7 +339,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
         logcat.clearFilters()
 
         adapter.clear()
-        addAllLogs(logcat.getLogsClearPending())
+        addAllLogs(logcat.getLogs())
         if (lastLogId == -1) {
             scrollRecyclerView()
         } else {
@@ -524,7 +524,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
             val logcat = logcatService!!.logcat
             logcat.pause()
 
-            addAllLogs(logcat.getLogsClearPending())
+            addAllLogs(logcat.getLogs())
             scrollRecyclerView()
 
             logcat.setEventListener(logcatEventListener)
