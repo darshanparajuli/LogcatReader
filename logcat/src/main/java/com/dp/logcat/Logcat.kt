@@ -70,15 +70,22 @@ class Logcat : Closeable {
     private fun postPendingLogs() {
         synchronized(logsLock) {
             if (pendingLogs.isNotEmpty()) {
-                val dup = pendingLogs.filter { e ->
-                    filters.values.all { it(e) }
-                }.toList()
+                if (pendingLogs.size == 1) {
+                    val log = pendingLogs[0]
+                    if (filters.values.all { it(log) }) {
+                        handler.post { listener?.onLogEvent(log) }
+                    }
+                } else {
+                    val dup = pendingLogs.filter { e ->
+                        filters.values.all { it(e) }
+                    }.toList()
+
+                    if (dup.isNotEmpty()) {
+                        handler.post { listener?.onLogEvents(dup) }
+                    }
+                }
 
                 pendingLogs.clear()
-
-                if (dup.isNotEmpty()) {
-                    handler.post { listener?.onLogEvents(dup) }
-                }
             }
         }
     }
