@@ -65,7 +65,7 @@ class Logcat : Closeable {
                 pendingStopEvent = false
                 listener?.onStopEvent(stopEventError)
             }
-            
+
             activityInBackground = false
             activityInBackgroundCondition.open()
         }
