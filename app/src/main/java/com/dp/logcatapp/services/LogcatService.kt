@@ -121,7 +121,7 @@ class LogcatService : BaseService() {
         val buffers = resources.getStringArray(R.array.pref_logcat_log_buffers)
 
         showToast(getString(R.string.restarting_logcat))
-        
+
         logcat.stop()
         logcat.logcatBuffers = bufferValues.map { e -> buffers[e.toInt()].toLowerCase() }.toSet()
         logcat.start()
