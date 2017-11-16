@@ -35,13 +35,13 @@ import java.util.*
 
 class LogcatLiveFragment : BaseFragment(), ServiceConnection {
     private lateinit var serviceBinder: ServiceBinder
-    private var logcatService: LogcatService? = null
     private lateinit var recyclerView: RecyclerView
     private lateinit var linearLayoutManager: LinearLayoutManager
     private lateinit var viewModel: LogcatLiveViewModel
     private lateinit var adapter: MyRecyclerViewAdapter
     private lateinit var fabUp: FloatingActionButton
     private lateinit var fabDown: FloatingActionButton
+    private var logcatService: LogcatService? = null
     private var ignoreScrollEvent = false
     private var searchViewActive = false
     private var lastLogId = -1
