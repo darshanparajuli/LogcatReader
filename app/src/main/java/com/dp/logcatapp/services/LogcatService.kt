@@ -18,6 +18,7 @@ import com.dp.logcatapp.R
 import com.dp.logcatapp.activities.MainActivity
 import com.dp.logcatapp.util.PreferenceKeys
 import com.dp.logcatapp.util.getDefaultSharedPreferences
+import com.dp.logcatapp.util.showToast
 
 class LogcatService : BaseService() {
 
@@ -119,6 +120,8 @@ class LogcatService : BaseService() {
         val bufferValues = sharedPreferences.getStringSet(key, PreferenceKeys.Logcat.Default.BUFFERS)
         val buffers = resources.getStringArray(R.array.pref_logcat_log_buffers)
 
+        showToast(getString(R.string.restarting_logcat))
+        
         logcat.stop()
         logcat.logcatBuffers = bufferValues.map { e -> buffers[e.toInt()].toLowerCase() }.toSet()
         logcat.start()

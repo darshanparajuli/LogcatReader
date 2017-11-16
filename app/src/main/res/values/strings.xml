@@ -42,4 +42,5 @@
     <string name="pref_logcat_buffer_dialog_title">Buffers</string>
     <string name="failed_to_start_logcat">Failed to start logcat</string>
     <string name="logcat_exited_unexpectedly">Logcat command exited unexpectedly, restarting...</string>
+    <string name="restarting_logcat">Restarting logcat</string>
 </resources>
