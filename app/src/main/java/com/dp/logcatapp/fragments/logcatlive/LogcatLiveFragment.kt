@@ -437,7 +437,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
         val path = Environment.getExternalStorageDirectory().absolutePath +
                 "/Documents/Logcat/" + fileName
         intent.putExtra(Intent.EXTRA_STREAM, Uri.parse("file://$path"))
-        startActivity(Intent.createChooser(intent, getString(R.string.view) + " $fileName"))
+        startActivity(Intent.createChooser(intent, getString(R.string.open_with)))
         return true
     }
 
