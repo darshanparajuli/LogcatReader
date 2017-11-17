@@ -51,19 +51,25 @@ class Logcat : Closeable {
         }
     private var activityInBackgroundCondition = ConditionVariable()
 
+    var isBound = false
+        private set
+
     private val lifeCycleObserver = object : LifecycleObserver {
         @OnLifecycleEvent(Lifecycle.Event.ON_RESUME)
         private fun onActivityInForeground() {
             MyLogger.logDebug(Logcat::class, "onActivityInForeground")
             if (pendingStartEvent) {
                 pendingStartEvent = false
+                MyLogger.logDebug(Logcat::class, "Posting pending onStartEvent")
                 listener?.onStartEvent()
             }
 
+            MyLogger.logDebug(Logcat::class, "Posting pending logs")
             postPendingLogs()
 
             if (pendingStopEvent) {
                 pendingStopEvent = false
+                MyLogger.logDebug(Logcat::class, "Posting pending onStopEvent")
                 listener?.onStopEvent(stopEventError)
             }
 
@@ -118,6 +124,24 @@ class Logcat : Closeable {
         }
     }
 
+    fun stop() {
+        intentionalExit = true
+        logcatProcess?.destroy()
+
+        try {
+            threadLogcat?.join(5000)
+        } catch (e: InterruptedException) {
+        }
+
+        threadLogcat = null
+        logcatProcess = null
+
+        synchronized(logsLock) {
+            logs.clear()
+            pendingLogs.clear()
+        }
+    }
+
     fun setEventListener(listener: LogcatEventListener?) {
         val pausedOld = paused
         pause()
@@ -130,15 +154,12 @@ class Logcat : Closeable {
     }
 
     fun getLogs(): List<Log> {
-        var list = listOf<Log>()
         synchronized(logsLock) {
-            list += logs
+            return logs.toList()
         }
-        return list
     }
 
     fun getLogsFiltered(): List<Log> {
-        val logs = getLogs()
         synchronized(logsLock) {
             return logs.filter { log -> filters.values.all { it(log) } }
         }
@@ -162,6 +183,12 @@ class Logcat : Closeable {
         }
     }
 
+    fun clearPending() {
+        synchronized(logsLock) {
+            pendingLogs.clear()
+        }
+    }
+
     fun pause() {
         paused = true
     }
@@ -174,29 +201,12 @@ class Logcat : Closeable {
 
     fun bind(activity: AppCompatActivity?) {
         activity?.lifecycle?.addObserver(lifeCycleObserver)
+        isBound = true
     }
 
     fun unbind(activity: AppCompatActivity?) {
         activity?.lifecycle?.removeObserver(lifeCycleObserver)
-    }
-
-    fun stop() {
-        intentionalExit = true
-        logcatProcess?.destroy()
-
-        try {
-            threadLogcat?.join(300)
-        } catch (e: InterruptedException) {
-        }
-
-        threadLogcat = null
-        logcatProcess = null
-
-        synchronized(logsLock) {
-            logs.clear()
-            pendingLogs.clear()
-            filters.clear()
-        }
+        isBound = false
     }
 
     override fun close() {
@@ -260,15 +270,15 @@ class Logcat : Closeable {
         }
 
         try {
-            stderrThread.join(2000)
+            stderrThread.join(5000)
         } catch (e: InterruptedException) {
         }
         try {
-            stdoutThread.join(2000)
+            stdoutThread.join(5000)
         } catch (e: InterruptedException) {
         }
         try {
-            postThread.join(2000)
+            postThread.join(5000)
         } catch (e: InterruptedException) {
         }
     }
