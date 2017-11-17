@@ -105,6 +105,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
         prefBuffers.summary = toSummary(bufferValues)
         prefBuffers.values = bufferValues
 
+        @Suppress("unchecked_cast")
         prefBuffers.onPreferenceChangeListener = Preference
                 .OnPreferenceChangeListener { preference, newValue ->
                     val mp = preference as MultiSelectListPreference
