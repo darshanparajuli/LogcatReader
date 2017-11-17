@@ -16,6 +16,7 @@
         <item name="primary_text_color">@color/primary_text_color_light</item>
         <item name="secondary_text_color">@color/secondary_text_color_light</item>
         <item name="ripple_mask_color">@color/light_window_bg</item>
+        <item name="toolbar_popup_theme">@style/LightToolbarPopupTheme</item>
     </style>
 
     <style name="DarkTheme" parent="Theme.AppCompat.NoActionBar">
@@ -33,6 +34,7 @@
         <item name="primary_text_color">@color/primary_text_color_dark</item>
         <item name="secondary_text_color">@color/secondary_text_color_dark</item>
         <item name="ripple_mask_color">@color/dark_window_bg</item>
+        <item name="toolbar_popup_theme">@style/DarkToolbarPopupTheme</item>
     </style>
 
     <style name="BlackTheme" parent="DarkTheme">

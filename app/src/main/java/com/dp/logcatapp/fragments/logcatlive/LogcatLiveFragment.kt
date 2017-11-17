@@ -21,7 +21,7 @@ import com.dp.logcat.Log
 import com.dp.logcat.Logcat
 import com.dp.logcat.LogcatEventListener
 import com.dp.logcatapp.R
-import com.dp.logcatapp.activities.BaseActivity
+import com.dp.logcatapp.activities.BaseActivityWithToolbar
 import com.dp.logcatapp.fragments.base.BaseFragment
 import com.dp.logcatapp.fragments.logcatlive.dialogs.CopyToClipboardDialogFragment
 import com.dp.logcatapp.fragments.logcatlive.dialogs.InstructionToGrantPermissionDialogFragment
@@ -571,9 +571,9 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
 
     private fun updateToolbarSubtitle(count: Int) {
         if (count > 1) {
-            (activity as BaseActivity).toolbar.subtitle = "$count"
+            (activity as BaseActivityWithToolbar).toolbar.subtitle = "$count"
         } else {
-            (activity as BaseActivity).toolbar.subtitle = null
+            (activity as BaseActivityWithToolbar).toolbar.subtitle = null
         }
     }
 

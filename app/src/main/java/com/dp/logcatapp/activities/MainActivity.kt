@@ -11,8 +11,7 @@ import com.dp.logcatapp.fragments.logcatlive.LogcatLiveFragment
 import com.dp.logcatapp.services.LogcatService
 import com.dp.logcatapp.util.showToast
 
-class MainActivity : BaseActivity() {
-
+class MainActivity : BaseActivityWithToolbar() {
     private var canExit = false
 
     private val exitRunnable = Runnable {
@@ -22,7 +21,7 @@ class MainActivity : BaseActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        setToolbar(R.id.toolbar, R.string.app_name)
+        setupToolbar()
 
         if (checkShouldTheAppExit(intent)) {
             return
@@ -41,6 +40,10 @@ class MainActivity : BaseActivity() {
                     .commit()
         }
     }
+
+    override fun getToolbarIdRes(): Int = R.id.toolbar
+
+    override fun getToolbarTitle(): String = getString(R.string.app_name)
 
     private fun checkShouldTheAppExit(intent: Intent?): Boolean =
             if (intent?.getBooleanExtra(EXIT_EXTRA, false) == true) {
