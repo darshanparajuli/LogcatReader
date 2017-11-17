@@ -34,7 +34,7 @@ import java.lang.ref.WeakReference
 import java.text.SimpleDateFormat
 import java.util.*
 
-class LogcatLiveFragment : BaseFragment(), ServiceConnection {
+class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListener {
     private lateinit var serviceBinder: ServiceBinder
     private lateinit var recyclerView: RecyclerView
     private lateinit var linearLayoutManager: LinearLayoutManager
@@ -49,54 +49,6 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
     private var pendingLogsToSave: List<Log>? = null
     private var lastSearchRunnable: Runnable? = null
     private var searchTask: SearchTask? = null
-
-    private val logcatEventListener = object : LogcatEventListener {
-
-        private var crashed = false
-        private var crashCounter = 0
-
-        override fun onStartEvent() {
-            MyLogger.logDebug(Logcat::class, "onStartEvent")
-            crashCounter = 0
-            adapter.clear()
-            if (crashed) {
-                crashed = false
-                viewModel.paused = false
-                activity.invalidateOptionsMenu()
-            }
-        }
-
-        override fun onLogEvent(log: Log) {
-            adapter.addItem(log)
-            updateUIOnLogEvent(adapter.itemCount)
-        }
-
-        override fun onLogEvents(logs: List<Log>) {
-            adapter.addItems(logs)
-            updateUIOnLogEvent(adapter.itemCount)
-        }
-
-        override fun onStartFailedEvent() {
-            MyLogger.logDebug(Logcat::class, "onStartFailedEvent")
-            activity.showToast(getString(R.string.failed_to_start_logcat))
-        }
-
-        override fun onStopEvent(error: Boolean) {
-            MyLogger.logDebug(Logcat::class, "onStopEvent: $error")
-            if (error) {
-                if (crashCounter++ == 3 || !checkReadLogsPermission()) {
-                    activity.showToast(getString(R.string.failed_to_start_logcat))
-                } else {
-                    crashed = true
-                    viewModel.paused = true
-                    activity.invalidateOptionsMenu()
-
-                    activity.showToast(getString(R.string.logcat_exited_unexpectedly))
-                    logcatService?.logcat?.start()
-                }
-            }
-        }
-    }
 
     private val hideFabUpRunnable: Runnable = Runnable {
         fabUp.hide()
@@ -548,12 +500,22 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
                 addAllLogs(logcat.getLogs())
                 scrollRecyclerView()
 
-                logcat.setEventListener(logcatEventListener)
+                logcat.setEventListener(this)
                 logcat.bind(activity as AppCompatActivity)
             }
         }
 
         resumeLogcat()
+    }
+
+    override fun onLogEvent(log: Log) {
+        adapter.addItem(log)
+        updateUIOnLogEvent(adapter.itemCount)
+    }
+
+    override fun onLogEvents(logs: List<Log>) {
+        adapter.addItems(logs)
+        updateUIOnLogEvent(adapter.itemCount)
     }
 
     private fun addAllLogs(logs: List<Log>) {

@@ -18,16 +18,15 @@ class Logcat : Closeable {
     private var pollInterval: Long = 250L // in ms
     private var threadLogcat: Thread? = null
     private var logcatProcess: Process? = null
-    private var intentionalExit = false
     private val handler: Handler = Handler(Looper.getMainLooper())
 
     @Volatile
     private var listener: LogcatEventListener? = null
-    private var pendingStartEvent = false
-    private var pendingStopEvent = false
-    private var stopEventError = false
 
     private var pollCondition = ConditionVariable()
+
+    var exitCode: Int = -1
+        private set
 
     @Volatile
     private var paused = false
@@ -58,21 +57,10 @@ class Logcat : Closeable {
         @OnLifecycleEvent(Lifecycle.Event.ON_RESUME)
         private fun onActivityInForeground() {
             MyLogger.logDebug(Logcat::class, "onActivityInForeground")
-            if (pendingStartEvent) {
-                pendingStartEvent = false
-                MyLogger.logDebug(Logcat::class, "Posting pending onStartEvent")
-                listener?.onStartEvent()
-            }
 
             if (!paused) {
                 MyLogger.logDebug(Logcat::class, "Posting pending logs")
                 postPendingLogs()
-            }
-
-            if (pendingStopEvent) {
-                pendingStopEvent = false
-                MyLogger.logDebug(Logcat::class, "Posting pending onStopEvent")
-                listener?.onStopEvent(stopEventError)
             }
 
             activityInBackground = false
@@ -118,8 +106,8 @@ class Logcat : Closeable {
 
     fun start() {
         if (logcatProcess == null) {
-            intentionalExit = false
             paused = false
+            exitCode = -1
             threadLogcat = thread { runLogcat() }
         } else {
             MyLogger.logInfo(Logcat::class, "Logcat is already running!")
@@ -127,7 +115,6 @@ class Logcat : Closeable {
     }
 
     fun stop() {
-        intentionalExit = true
         logcatProcess?.destroy()
 
         try {
@@ -143,6 +130,13 @@ class Logcat : Closeable {
             pendingLogs.clear()
         }
     }
+
+    fun restart() {
+        stop()
+        start()
+    }
+
+    fun exitSuccess() = exitCode == 0
 
     fun setEventListener(listener: LogcatEventListener?) {
         val pausedOld = paused
@@ -182,12 +176,6 @@ class Logcat : Closeable {
     fun clearFilters() {
         synchronized(logsLock) {
             filters.clear()
-        }
-    }
-
-    fun clearPending() {
-        synchronized(logsLock) {
-            pendingLogs.clear()
         }
     }
 
@@ -233,15 +221,7 @@ class Logcat : Closeable {
             logcatProcess = processBuilder.start()
             isProcessAlive = true
         } catch (e: IOException) {
-            handler.post { listener?.onStartFailedEvent() }
             return
-        }
-
-        if (activityInBackground) {
-            pendingStartEvent = true
-            pendingStopEvent = false
-        } else {
-            handler.post { listener?.onStartEvent() }
         }
 
         val errorStream = logcatProcess?.errorStream
@@ -251,7 +231,7 @@ class Logcat : Closeable {
         val stderrThread = thread { processStderr(errorStream) }
         val stdoutThread = thread { processStdout(inputStream) }
 
-        var error = logcatProcess?.waitFor() != 0
+        exitCode = logcatProcess?.waitFor() ?: -1
 
         isProcessAlive = false
 
@@ -259,17 +239,6 @@ class Logcat : Closeable {
         activityInBackgroundCondition.open()
 
         logcatProcess = null
-
-        if (intentionalExit) {
-            error = false
-        }
-
-        if (activityInBackground) {
-            pendingStopEvent = true
-            stopEventError = error
-        } else {
-            handler.post { listener?.onStopEvent(error) }
-        }
 
         try {
             stderrThread.join(5000)
@@ -359,8 +328,6 @@ class Logcat : Closeable {
                         val log = LogFactory.createNewLog(metadata, msgBuffer.toString())
                         synchronized(logsLock) {
                             pendingLogs += log
-//                            MyLogger.logDebug(Logcat::class, "size: " + logs.size +
-//                                    ", pending size: " + pendingLogs.size)
                         }
                     } catch (e: Exception) {
                         MyLogger.logDebug(Logcat::class, "${e.message}: $metadata")
