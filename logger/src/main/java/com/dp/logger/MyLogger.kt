@@ -4,7 +4,7 @@ import android.util.Log
 import kotlin.reflect.KClass
 
 object MyLogger {
-    private const val TAG = "MyLogger"
+    private const val TAG = "MyDeviceLogs"
     private const val DEBUG = 1
     private const val ERROR = 2
     private const val INFO = 3
