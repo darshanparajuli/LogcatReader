@@ -397,13 +397,12 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
                 .format(Date())
         val fileName = "logcat_$timeStamp.txt"
         if (actuallySaveToFile(logs, fileName)) {
-            newSnackbar("Saved as $fileName", Snackbar.LENGTH_LONG)
-                    .setAction(getString(R.string.view_log), {
-                        if (!viewSavedLog(fileName)) {
-                            showSnackbar(getString(R.string.could_not_open_log_file))
-                        }
-                    })
-                    .show()
+            newSnackbar(getString(R.string.saved_as_filename).format(fileName),
+                    Snackbar.LENGTH_LONG).setAction(getString(R.string.view_log), {
+                if (!viewSavedLog(fileName)) {
+                    showSnackbar(getString(R.string.could_not_open_log_file))
+                }
+            }).show()
         } else {
             showSnackbar(getString(R.string.failed_to_save_logs))
         }
