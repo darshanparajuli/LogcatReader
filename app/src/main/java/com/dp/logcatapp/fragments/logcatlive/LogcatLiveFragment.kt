@@ -540,14 +540,18 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection {
         if (adapter.itemCount > 0) {
             scrollRecyclerView()
         } else {
+            MyLogger.logDebug(LogcatLiveFragment::class, "Added all logs")
             val logcat = logcatService!!.logcat
-            logcat.pause()
 
-            addAllLogs(logcat.getLogs())
-            scrollRecyclerView()
+            if (!logcat.isBound) {
+                logcat.pause()
 
-            logcat.setEventListener(logcatEventListener)
-            logcat.bind(activity as AppCompatActivity)
+                addAllLogs(logcat.getLogs())
+                scrollRecyclerView()
+
+                logcat.setEventListener(logcatEventListener)
+                logcat.bind(activity as AppCompatActivity)
+            }
         }
 
         resumeLogcat()
