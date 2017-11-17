@@ -64,8 +64,10 @@ class Logcat : Closeable {
                 listener?.onStartEvent()
             }
 
-            MyLogger.logDebug(Logcat::class, "Posting pending logs")
-            postPendingLogs()
+            if (!paused) {
+                MyLogger.logDebug(Logcat::class, "Posting pending logs")
+                postPendingLogs()
+            }
 
             if (pendingStopEvent) {
                 pendingStopEvent = false
