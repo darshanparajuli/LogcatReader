@@ -21,7 +21,7 @@ open class BaseActivity : AppCompatActivity() {
 
     companion object {
         init {
-            AppCompatDelegate.setCompatVectorFromResourcesEnabled(true);
+            AppCompatDelegate.setCompatVectorFromResourcesEnabled(true)
         }
     }
 
