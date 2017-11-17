@@ -22,24 +22,10 @@
     </string-array>
 
     <string-array name="pref_logcat_log_buffers">
-        <item>Crash</item>
-        <item>Events</item>
-        <item>Main</item>
-        <item>Radio</item>
-        <item>System</item>
+        <item>Stub</item>
     </string-array>
     
     <string-array name="pref_logcat_log_buffers_values">
         <item>0</item>
-        <item>1</item>
-        <item>2</item>
-        <item>3</item>
-        <item>4</item>
-    </string-array>
-
-    <string-array name="pref_logcat_log_buffers_default_values">
-        <item>0</item>
-        <item>2</item>
-        <item>4</item>
     </string-array>
 </resources>

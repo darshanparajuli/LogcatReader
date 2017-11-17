@@ -5,6 +5,7 @@ import android.support.v14.preference.MultiSelectListPreference
 import android.support.v7.preference.ListPreference
 import android.support.v7.preference.Preference
 import android.support.v7.preference.PreferenceFragmentCompat
+import com.dp.logcat.Logcat
 import com.dp.logcatapp.BuildConfig
 import com.dp.logcatapp.R
 import com.dp.logcatapp.util.PreferenceKeys
@@ -61,6 +62,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
     private fun setupLogcatCategory() {
         val prefPollInterval = findPreference(PreferenceKeys.Logcat.KEY_POLL_INTERVAL)
         val prefBuffers = findPreference(PreferenceKeys.Logcat.KEY_BUFFERS)
+                as MultiSelectListPreference
 
         prefPollInterval.summary = preferenceScreen.sharedPreferences
                 .getString(PreferenceKeys.Logcat.KEY_POLL_INTERVAL,
@@ -86,7 +88,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
         val bufferValues = preferenceScreen.sharedPreferences
                 .getStringSet(PreferenceKeys.Logcat.KEY_BUFFERS,
                         PreferenceKeys.Logcat.Default.BUFFERS)
-        val buffers = resources.getStringArray(R.array.pref_logcat_log_buffers)
+        val buffers = Logcat.AVAILABLE_BUFFERS
 
         val toSummary = { values: Set<String> ->
             values.map { e -> buffers[e.toInt()] }
@@ -94,7 +96,14 @@ class SettingsFragment : PreferenceFragmentCompat() {
                     .joinToString(", ")
         }
 
+        prefBuffers.entries = Logcat.AVAILABLE_BUFFERS.copyOf()
+        val entryValues = mutableListOf<String>()
+        for (i in 0 until Logcat.AVAILABLE_BUFFERS.size) {
+            entryValues += i.toString()
+        }
+        prefBuffers.entryValues = entryValues.toTypedArray()
         prefBuffers.summary = toSummary(bufferValues)
+        prefBuffers.values = bufferValues
 
         prefBuffers.onPreferenceChangeListener = Preference
                 .OnPreferenceChangeListener { preference, newValue ->

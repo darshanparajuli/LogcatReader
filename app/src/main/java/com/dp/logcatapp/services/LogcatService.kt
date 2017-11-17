@@ -119,8 +119,9 @@ class LogcatService : BaseService() {
     }
 
     private fun handleBufferUpdate(sharedPreferences: SharedPreferences, key: String) {
-        val bufferValues = sharedPreferences.getStringSet(key, PreferenceKeys.Logcat.Default.BUFFERS)
-        val buffers = resources.getStringArray(R.array.pref_logcat_log_buffers)
+        val bufferValues = sharedPreferences.getStringSet(key,
+                PreferenceKeys.Logcat.Default.BUFFERS)
+        val buffers = Logcat.AVAILABLE_BUFFERS
 
         showToast(getString(R.string.restarting_logcat))
 
@@ -138,7 +139,7 @@ class LogcatService : BaseService() {
 
         logcat.setPollInterval(pollInterval)
 
-        val buffers = resources.getStringArray(R.array.pref_logcat_log_buffers)
+        val buffers = Logcat.AVAILABLE_BUFFERS
         logcat.logcatBuffers = bufferValues.map { e -> buffers[e.toInt()].toLowerCase() }.toSet()
     }
 

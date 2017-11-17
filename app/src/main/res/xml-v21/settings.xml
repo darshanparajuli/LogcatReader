@@ -27,7 +27,6 @@
             android:title="@string/pref_poll_interval_title" />
 
         <MultiSelectListPreference
-            android:defaultValue="@array/pref_logcat_log_buffers_default_values"
             android:dialogTitle="@string/pref_logcat_buffer_dialog_title"
             android:entries="@array/pref_logcat_log_buffers"
             android:entryValues="@array/pref_logcat_log_buffers_values"

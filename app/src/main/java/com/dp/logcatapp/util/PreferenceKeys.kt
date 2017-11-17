@@ -1,5 +1,7 @@
 package com.dp.logcatapp.util
 
+import com.dp.logger.MyLogger
+
 object PreferenceKeys {
 
     const val MAIN_PREF_SCREEN = "pref_key_main_screen"
@@ -27,17 +29,22 @@ object PreferenceKeys {
         const val KEY_POLL_INTERVAL = "pref_key_logcat_poll_interval"
         const val KEY_BUFFERS = "pref_key_logcat_buffers"
 
-        object Buffers {
-            const val CRASH = "0"
-            const val EVENTS = "1"
-            const val MAIN = "2"
-            const val RADIO = "3"
-            const val SYSTEM = "4"
-        }
-
         object Default {
             const val POLL_INTERVAL = "250"
-            val BUFFERS = setOf(Buffers.CRASH, Buffers.MAIN, Buffers.SYSTEM)
+            val BUFFERS: Set<String> = getDefaultBufferValues()
+
+            private fun getDefaultBufferValues(): Set<String> {
+                val bufferValues = mutableSetOf<String>()
+                for (buffer in com.dp.logcat.Logcat.DEFAULT_BUFFERS) {
+                    val index = com.dp.logcat.Logcat.AVAILABLE_BUFFERS.indexOf(buffer)
+                    if (index != -1) {
+                        bufferValues += index.toString()
+                    }
+                }
+                MyLogger.logDebug(PreferenceKeys::class,
+                        "Default buffer values: $bufferValues")
+                return bufferValues
+            }
         }
     }
 

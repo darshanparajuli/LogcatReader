@@ -9,10 +9,11 @@ import android.os.Looper
 import android.support.v7.app.AppCompatActivity
 import com.dp.logger.MyLogger
 import java.io.*
+import java.util.*
 import kotlin.concurrent.thread
 
 class Logcat : Closeable {
-    var logcatBuffers = setOf("main", "crash", "system")
+    var logcatBuffers = DEFAULT_BUFFERS
     private val logcatCmd = arrayOf("logcat", "-v", "long")
     private var pollInterval: Long = 250L // in ms
     private var threadLogcat: Thread? = null
@@ -361,6 +362,14 @@ class Logcat : Closeable {
     }
 
     companion object {
+        val DEFAULT_BUFFERS: Set<String>
+        val AVAILABLE_BUFFERS: Array<String>
+
+        init {
+            DEFAULT_BUFFERS = getDefaultBuffers()
+            AVAILABLE_BUFFERS = getAvailabeBuffers()
+        }
+
         fun writeToFile(logs: List<Log>, file: File): Boolean {
             var writer: BufferedWriter? = null
             return try {
@@ -375,6 +384,88 @@ class Logcat : Closeable {
             } finally {
                 writer?.close()
             }
+        }
+
+        private fun getDefaultBuffers(): Set<String> {
+            val result = mutableSetOf<String>()
+            val stdoutList = mutableListOf<String>()
+            CommandUtils.runCmd(cmd = *arrayOf("logcat", "-g"), stdoutList = stdoutList)
+            for (s in stdoutList) {
+                val colonIndex = s.indexOf(":")
+                if (colonIndex != -1) {
+                    if (s.startsWith("/")) {
+                        val sub = s.substring(0, colonIndex)
+                        val lastSlashIndex = sub.lastIndexOf("/")
+                        if (lastSlashIndex != -1) {
+                            result += sub.substring(lastSlashIndex + 1)
+                        }
+                    } else {
+                        result += s.substring(0, colonIndex)
+                    }
+                }
+            }
+
+            MyLogger.logDebug(Logcat::class, "Default buffers: $result")
+            return result
+        }
+
+        private fun parseBufferNames(s: String, names: MutableSet<String>): Boolean {
+            var startIndex = s.indexOf("'")
+            if (startIndex == -1) {
+                return true
+            }
+
+            var nextIndex = s.indexOf("'", startIndex + 1)
+            if (nextIndex == -1) {
+                return true
+            }
+
+            val periodIndex = s.indexOf(".")
+            while (periodIndex == -1 || (startIndex < periodIndex && nextIndex < periodIndex)) {
+                val name = s.substring(startIndex + 1, nextIndex)
+                if (name != "all" && name != "default") {
+                    names += name
+                }
+
+                startIndex = s.indexOf("'", nextIndex + 1)
+                if (startIndex == -1) {
+                    break
+                }
+
+                nextIndex = s.indexOf("'", startIndex + 1)
+                if (nextIndex == -1) {
+                    break
+                }
+            }
+
+            return periodIndex != -1
+        }
+
+        private fun getAvailabeBuffers(): Array<String> {
+            val result = mutableSetOf<String>()
+            val stdoutList = mutableListOf<String>()
+            CommandUtils.runCmd(cmd = *arrayOf("logcat", "-h"),
+                    stdoutList = stdoutList, redirectStderr = true)
+
+            var bFound = false
+            for (s in stdoutList) {
+                val trimmed = s.trim()
+                if (bFound) {
+                    if (parseBufferNames(trimmed, result)) {
+                        break
+                    }
+                } else {
+                    if (trimmed.startsWith("-b")) {
+                        bFound = true
+                        if (parseBufferNames(trimmed, result)) {
+                            break
+                        }
+                    }
+                }
+            }
+            val sorted = result.toTypedArray().sortedArray()
+            MyLogger.logDebug(Logcat::class, "Available buffers: ${Arrays.toString(sorted)}")
+            return sorted
         }
     }
 }
