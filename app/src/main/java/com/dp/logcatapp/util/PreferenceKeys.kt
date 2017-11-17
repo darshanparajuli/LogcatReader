@@ -1,7 +1,5 @@
 package com.dp.logcatapp.util
 
-import com.dp.logger.MyLogger
-
 object PreferenceKeys {
 
     const val MAIN_PREF_SCREEN = "pref_key_main_screen"
@@ -35,14 +33,10 @@ object PreferenceKeys {
 
             private fun getDefaultBufferValues(): Set<String> {
                 val bufferValues = mutableSetOf<String>()
-                for (buffer in com.dp.logcat.Logcat.DEFAULT_BUFFERS) {
-                    val index = com.dp.logcat.Logcat.AVAILABLE_BUFFERS.indexOf(buffer)
-                    if (index != -1) {
-                        bufferValues += index.toString()
-                    }
-                }
-                MyLogger.logDebug(PreferenceKeys::class,
-                        "Default buffer values: $bufferValues")
+                com.dp.logcat.Logcat.DEFAULT_BUFFERS
+                        .map { com.dp.logcat.Logcat.AVAILABLE_BUFFERS.indexOf(it) }
+                        .filter { it != -1 }
+                        .forEach { bufferValues += it.toString() }
                 return bufferValues
             }
         }

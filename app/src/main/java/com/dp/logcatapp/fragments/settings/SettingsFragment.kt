@@ -85,39 +85,43 @@ class SettingsFragment : PreferenceFragmentCompat() {
             }
         }
 
-        val bufferValues = preferenceScreen.sharedPreferences
-                .getStringSet(PreferenceKeys.Logcat.KEY_BUFFERS,
-                        PreferenceKeys.Logcat.Default.BUFFERS)
         val buffers = Logcat.AVAILABLE_BUFFERS
+        val defaultBuffers = PreferenceKeys.Logcat.Default.BUFFERS
+        if (buffers.isNotEmpty() && defaultBuffers.isNotEmpty()) {
+            val bufferValues = preferenceScreen.sharedPreferences
+                    .getStringSet(PreferenceKeys.Logcat.KEY_BUFFERS, defaultBuffers)
 
-        val toSummary = { values: Set<String> ->
-            values.map { e -> buffers[e.toInt()] }
-                    .sorted()
-                    .joinToString(", ")
-        }
+            val toSummary = { values: Set<String> ->
+                values.map { e -> buffers[e.toInt()] }
+                        .sorted()
+                        .joinToString(", ")
+            }
 
-        prefBuffers.entries = Logcat.AVAILABLE_BUFFERS.copyOf()
-        val entryValues = mutableListOf<String>()
-        for (i in 0 until Logcat.AVAILABLE_BUFFERS.size) {
-            entryValues += i.toString()
-        }
-        prefBuffers.entryValues = entryValues.toTypedArray()
-        prefBuffers.summary = toSummary(bufferValues)
-        prefBuffers.values = bufferValues
+            prefBuffers.entries = buffers.copyOf()
+            val entryValues = mutableListOf<String>()
+            for (i in 0 until buffers.size) {
+                entryValues += i.toString()
+            }
+            prefBuffers.entryValues = entryValues.toTypedArray()
+            prefBuffers.summary = toSummary(bufferValues)
+            prefBuffers.values = bufferValues
 
-        @Suppress("unchecked_cast")
-        prefBuffers.onPreferenceChangeListener = Preference
-                .OnPreferenceChangeListener { preference, newValue ->
-                    val mp = preference as MultiSelectListPreference
-                    val values = newValue as Set<String>
+            @Suppress("unchecked_cast")
+            prefBuffers.onPreferenceChangeListener = Preference
+                    .OnPreferenceChangeListener { preference, newValue ->
+                        val mp = preference as MultiSelectListPreference
+                        val values = newValue as Set<String>
 
-                    if (values.isEmpty()) {
-                        false
-                    } else {
-                        mp.summary = toSummary(values)
-                        true
+                        if (values.isEmpty()) {
+                            false
+                        } else {
+                            mp.summary = toSummary(values)
+                            true
+                        }
                     }
-                }
+        } else {
+            prefBuffers.isVisible = false
+        }
     }
 
     private fun setupAboutCategory() {

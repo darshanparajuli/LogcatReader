@@ -213,9 +213,11 @@ class Logcat : Closeable {
 
     private fun runLogcat() {
         val buffers = mutableListOf<String>()
-        for (buffer in logcatBuffers) {
-            buffers += "-b"
-            buffers += buffer
+        if (logcatBuffers.isNotEmpty() && AVAILABLE_BUFFERS.isNotEmpty()) {
+            for (buffer in logcatBuffers) {
+                buffers += "-b"
+                buffers += buffer
+            }
         }
         val processBuilder = ProcessBuilder(*logcatCmd, *buffers.toTypedArray())
 
@@ -349,6 +351,10 @@ class Logcat : Closeable {
         init {
             DEFAULT_BUFFERS = getDefaultBuffers()
             AVAILABLE_BUFFERS = getAvailabeBuffers()
+
+            MyLogger.logDebug(Logcat::class, "Available buffers: " +
+                    Arrays.toString(AVAILABLE_BUFFERS))
+            MyLogger.logDebug(Logcat::class, "Default buffers: $DEFAULT_BUFFERS")
         }
 
         fun writeToFile(logs: List<Log>, file: File): Boolean {
@@ -369,8 +375,10 @@ class Logcat : Closeable {
 
         private fun getDefaultBuffers(): Set<String> {
             val result = mutableSetOf<String>()
+
             val stdoutList = mutableListOf<String>()
             CommandUtils.runCmd(cmd = *arrayOf("logcat", "-g"), stdoutList = stdoutList)
+
             for (s in stdoutList) {
                 val colonIndex = s.indexOf(":")
                 if (colonIndex != -1) {
@@ -386,7 +394,6 @@ class Logcat : Closeable {
                 }
             }
 
-            MyLogger.logDebug(Logcat::class, "Default buffers: $result")
             return result
         }
 
@@ -424,6 +431,7 @@ class Logcat : Closeable {
 
         private fun getAvailabeBuffers(): Array<String> {
             val result = mutableSetOf<String>()
+
             val stdoutList = mutableListOf<String>()
             CommandUtils.runCmd(cmd = *arrayOf("logcat", "-h"),
                     stdoutList = stdoutList, redirectStderr = true)
@@ -444,9 +452,8 @@ class Logcat : Closeable {
                     }
                 }
             }
-            val sorted = result.toTypedArray().sortedArray()
-            MyLogger.logDebug(Logcat::class, "Available buffers: ${Arrays.toString(sorted)}")
-            return sorted
+
+            return result.toTypedArray().sortedArray()
         }
     }
 }
