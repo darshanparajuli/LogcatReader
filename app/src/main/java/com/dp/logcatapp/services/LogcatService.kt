@@ -29,6 +29,7 @@ class LogcatService : BaseService() {
 
     private val localBinder = LocalBinder()
     val logcat: Logcat = Logcat()
+    var restartedLogcat = false
 
     override fun onCreate() {
         super.onCreate()
@@ -125,6 +126,7 @@ class LogcatService : BaseService() {
 
         showToast(getString(R.string.restarting_logcat))
 
+        restartedLogcat = true
         logcat.logcatBuffers = bufferValues.map { e -> buffers[e.toInt()].toLowerCase() }.toSet()
         logcat.restart()
     }

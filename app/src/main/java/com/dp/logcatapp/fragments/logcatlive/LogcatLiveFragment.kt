@@ -488,24 +488,26 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
     override fun onServiceConnected(name: ComponentName, service: IBinder) {
         MyLogger.logDebug(LogcatLiveFragment::class, "onServiceConnected")
         logcatService = (service as LogcatService.LocalBinder).getLogcatService()
+        val logcat = logcatService!!.logcat
+        logcat.pause()
 
-        if (adapter.itemCount > 0) {
-            scrollRecyclerView()
-        } else {
-            val logcat = logcatService!!.logcat
-            if (!logcat.isBound) {
-                logcat.pause()
-
-                MyLogger.logDebug(LogcatLiveFragment::class, "Added all logs")
-                addAllLogs(logcat.getLogs())
-                scrollRecyclerView()
-
-                logcat.setEventListener(this)
-                logcat.bind(activity as AppCompatActivity)
-            }
+        if (adapter.itemCount == 0) {
+            MyLogger.logDebug(LogcatLiveFragment::class, "Added all logs")
+            addAllLogs(logcat.getLogs())
+        } else if (logcatService!!.restartedLogcat) {
+            MyLogger.logDebug(LogcatLiveFragment::class, "Logcat restarted")
+            logcatService!!.restartedLogcat = false
+            adapter.clear()
         }
 
+        scrollRecyclerView()
+
+        logcat.setEventListener(this)
         resumeLogcat()
+
+        if (!logcat.isBound) {
+            logcat.bind(activity as AppCompatActivity)
+        }
     }
 
     override fun onLogEvent(log: Log) {

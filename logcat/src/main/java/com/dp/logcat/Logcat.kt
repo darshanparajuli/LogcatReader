@@ -184,9 +184,11 @@ class Logcat : Closeable {
     }
 
     fun resume() {
-        paused = false
-        pausePostLogsCondition.open()
-        pollCondition.open()
+        if (paused) {
+            paused = false
+            pausePostLogsCondition.open()
+            pollCondition.open()
+        }
     }
 
     fun bind(activity: AppCompatActivity?) {
