@@ -47,7 +47,7 @@ fun Fragment.newSnackbar(msg: String, length: Int = Snackbar.LENGTH_SHORT) =
         activity.newSnackbar(msg, length)
 
 fun Fragment.showSnackbar(msg: String, length: Int = Snackbar.LENGTH_SHORT) =
-        newSnackbar(msg, length).show()
+        activity.showSnackbar(msg, length)
 
 //// END Fragment
 
