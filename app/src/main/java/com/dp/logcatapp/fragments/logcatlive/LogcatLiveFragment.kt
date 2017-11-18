@@ -212,7 +212,8 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
             }
         }
 
-        if (!checkReadLogsPermission()) {
+        if (!checkReadLogsPermission() && !viewModel.showedGrantPermissionInstruction) {
+            viewModel.showedGrantPermissionInstruction = true
             InstructionToGrantPermissionDialogFragment().show(fragmentManager,
                     InstructionToGrantPermissionDialogFragment.TAG)
         }
