@@ -89,14 +89,14 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
                     if (searchViewActive && !viewModel.autoScroll &&
                             newState == RecyclerView.SCROLL_STATE_IDLE) {
                         firstPos = linearLayoutManager.findFirstCompletelyVisibleItemPosition()
-                        if (firstPos != -1) {
+                        if (firstPos != RecyclerView.NO_POSITION) {
                             val log = adapter[firstPos]
                             lastLogId = log.id
                         }
                     }
 
                     val pos = linearLayoutManager.findLastCompletelyVisibleItemPosition()
-                    if (pos == -1) {
+                    if (pos == RecyclerView.NO_POSITION) {
                         viewModel.autoScroll = false
                         return
                     }
@@ -112,7 +112,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
                         hideFabUp()
                     }
 
-                    if (firstPos == -1) {
+                    if (firstPos == RecyclerView.NO_POSITION) {
                         firstPos = linearLayoutManager.findFirstCompletelyVisibleItemPosition()
                     }
 
