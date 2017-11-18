@@ -22,6 +22,5 @@
 
 -keep public class android.support.v7.preference.Preference { *; }
 -keep public class * extends android.support.v7.preference.Preference { *; }
--keep class com.android.vending.billing.**
 -renamesourcefileattribute SourceFile
 -keepattributes SourceFile,LineNumberTable
