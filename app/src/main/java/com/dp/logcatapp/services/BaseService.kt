@@ -9,7 +9,11 @@ abstract class BaseService : Service(), SharedPreferences.OnSharedPreferenceChan
     override fun onCreate() {
         setTheme()
         super.onCreate()
+        onBasePostSuperCreate()
         getDefaultSharedPreferences().registerOnSharedPreferenceChangeListener(this)
+    }
+
+    protected open fun onBasePostSuperCreate() {
     }
 
     override fun onDestroy() {

@@ -85,26 +85,25 @@ class SettingsFragment : PreferenceFragmentCompat() {
             }
         }
 
-        val buffers = Logcat.AVAILABLE_BUFFERS
+        val availableBuffers = Logcat.AVAILABLE_BUFFERS
         val defaultBuffers = PreferenceKeys.Logcat.Default.BUFFERS
-        if (buffers.isNotEmpty() && defaultBuffers.isNotEmpty()) {
+        if (availableBuffers.isNotEmpty() && defaultBuffers.isNotEmpty()) {
             val bufferValues = preferenceScreen.sharedPreferences
                     .getStringSet(PreferenceKeys.Logcat.KEY_BUFFERS, defaultBuffers)
 
             val toSummary = { values: Set<String> ->
-                values.map { e -> buffers[e.toInt()] }
+                values.map { e -> availableBuffers[e.toInt()] }
                         .sorted()
                         .joinToString(", ")
             }
 
-            prefBuffers.entries = buffers.copyOf()
+            prefBuffers.entries = availableBuffers.copyOf()
             val entryValues = mutableListOf<String>()
-            for (i in 0 until buffers.size) {
+            for (i in 0 until availableBuffers.size) {
                 entryValues += i.toString()
             }
             prefBuffers.entryValues = entryValues.toTypedArray()
             prefBuffers.summary = toSummary(bufferValues)
-            prefBuffers.values = bufferValues
 
             @Suppress("unchecked_cast")
             prefBuffers.onPreferenceChangeListener = Preference

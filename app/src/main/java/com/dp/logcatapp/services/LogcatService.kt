@@ -41,6 +41,16 @@ class LogcatService : BaseService() {
         logcat.start()
     }
 
+    override fun onBasePostSuperCreate() {
+        val defaultBuffers = PreferenceKeys.Logcat.Default.BUFFERS
+        if (defaultBuffers.isNotEmpty() && Logcat.AVAILABLE_BUFFERS.isNotEmpty()) {
+            getDefaultSharedPreferences()
+                    .edit()
+                    .putStringSet(PreferenceKeys.Logcat.KEY_BUFFERS, defaultBuffers)
+                    .apply()
+        }
+    }
+
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         startForeground(NOTIFICAION_ID, createStartNotification())
         return START_STICKY
