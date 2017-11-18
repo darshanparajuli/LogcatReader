@@ -83,14 +83,12 @@ class MainActivity : BaseActivityWithToolbar() {
         return super.onCreateOptionsMenu(menu)
     }
 
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return when (item.itemId) {
-            R.id.settings -> {
-                startActivity(Intent(this, SettingsActivity::class.java))
-                true
-            }
-            else -> super.onOptionsItemSelected(item)
+    override fun onOptionsItemSelected(item: MenuItem): Boolean = when (item.itemId) {
+        R.id.settings -> {
+            startActivity(Intent(this, SettingsActivity::class.java))
+            true
         }
+        else -> super.onOptionsItemSelected(item)
     }
 
     companion object {
