@@ -36,7 +36,7 @@ class MainActivity : BaseActivityWithToolbar() {
 
         if (savedInstanceState == null) {
             supportFragmentManager.beginTransaction()
-                    .replace(R.id.content_frame, LogcatLiveFragment(), LogcatLiveFragment.TAG)
+                    .add(R.id.content_frame, LogcatLiveFragment(), LogcatLiveFragment.TAG)
                     .commit()
         }
     }
