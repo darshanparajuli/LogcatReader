@@ -138,6 +138,8 @@ class Logcat : Closeable {
 
     fun exitSuccess() = exitCode == 0
 
+    fun isRunning() = isProcessAlive
+
     fun setEventListener(listener: LogcatEventListener?) {
         val pausedOld = paused
         pause()
