@@ -4,6 +4,7 @@ import android.app.Activity
 import android.app.TaskStackBuilder
 import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.graphics.Typeface
 import android.support.annotation.LayoutRes
 import android.support.design.widget.Snackbar
@@ -68,7 +69,7 @@ fun Context.getTypeface(name: String): Typeface? {
     return typeface
 }
 
-fun Context.getDefaultSharedPreferences() =
+fun Context.getDefaultSharedPreferences(): SharedPreferences =
         PreferenceManager.getDefaultSharedPreferences(this)
 
 private fun isDarkThemeTime() = Calendar.getInstance().get(Calendar.HOUR_OF_DAY) !in 7..17
