@@ -84,7 +84,7 @@ class MainActivity : BaseActivityWithToolbar() {
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean = when (item.itemId) {
-        R.id.settings -> {
+        R.id.action_settings -> {
             startActivity(Intent(this, SettingsActivity::class.java))
             true
         }
