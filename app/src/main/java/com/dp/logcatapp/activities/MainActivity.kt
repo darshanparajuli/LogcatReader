@@ -43,7 +43,7 @@ class MainActivity : BaseActivityWithToolbar() {
 
     override fun getToolbarIdRes(): Int = R.id.toolbar
 
-    override fun getToolbarTitle(): String = getString(R.string.app_name)
+    override fun getToolbarTitle(): String = getString(R.string.device_logs)
 
     private fun checkShouldTheAppExit(intent: Intent?): Boolean =
             if (intent?.getBooleanExtra(EXIT_EXTRA, false) == true) {
