@@ -108,7 +108,7 @@ class Logcat : Closeable {
         if (logcatProcess == null) {
             paused = false
             exitCode = -1
-            threadLogcat = thread { runLogcat() }
+            threadLogcat = thread(block = { runLogcat() }, name = "logcat")
         } else {
             MyLogger.logInfo(Logcat::class, "Logcat is already running!")
         }
@@ -231,9 +231,11 @@ class Logcat : Closeable {
         val errorStream = logcatProcess?.errorStream
         val inputStream = logcatProcess?.inputStream
 
-        val postThread = thread { postLogsPeriodically() }
-        val stderrThread = thread { processStderr(errorStream) }
-        val stdoutThread = thread { processStdout(inputStream) }
+        val postThread = thread(block = { postLogsPeriodically() }, name = "logcat-post")
+        val stderrThread = thread(block = { processStderr(errorStream) },
+                name = "logcat-stderr")
+        val stdoutThread = thread(block = { processStdout(inputStream) },
+                name = "logcat-stdout")
 
         exitCode = logcatProcess?.waitFor() ?: -1
 
