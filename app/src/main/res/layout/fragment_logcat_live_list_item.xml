@@ -13,13 +13,11 @@
 
     <com.dp.logcatapp.views.CustomTextView
         android:id="@+id/priority"
-        android:layout_width="wrap_content"
+        android:layout_width="16dp"
         android:layout_height="match_parent"
         android:background="@color/priority_debug"
         android:gravity="center"
         android:paddingBottom="5dp"
-        android:paddingLeft="6dp"
-        android:paddingRight="6dp"
         android:paddingTop="5dp"
         android:text="P"
         android:textColor="@android:color/white"
