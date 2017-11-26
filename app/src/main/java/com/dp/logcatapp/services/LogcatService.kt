@@ -95,8 +95,9 @@ class LogcatService : BaseService() {
     private fun createNotificationChannel() {
         val nm = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         val nc = NotificationChannel(NOTIFICAION_CHANNEL,
-                getString(R.string.logcat_service_channel_name),
-                NotificationManager.IMPORTANCE_DEFAULT)
+                getString(R.string.logcat_service_channel_name), NotificationManager.IMPORTANCE_LOW)
+        nc.enableLights(false)
+        nc.enableVibration(false)
         nm.createNotificationChannel(nc)
     }
 
