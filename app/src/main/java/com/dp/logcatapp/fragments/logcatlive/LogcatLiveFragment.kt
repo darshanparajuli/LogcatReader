@@ -374,13 +374,14 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
         }
 
         if (isExternalStorageWritable()) {
+            val logcatFolderName = "Logcat"
             val logcatDir = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
                 File(Environment.getExternalStoragePublicDirectory(
                         Environment.DIRECTORY_DOCUMENTS
-                ), "Logcat")
+                ), logcatFolderName)
             } else {
                 val documentsFolder = File(Environment.getExternalStorageDirectory(),
-                        "Documents/Logcat")
+                        "Documents/$logcatFolderName")
                 File(documentsFolder, fileName)
             }
             if (logcatDir.exists() || logcatDir.mkdirs()) {
