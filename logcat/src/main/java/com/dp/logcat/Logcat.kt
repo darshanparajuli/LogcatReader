@@ -20,6 +20,8 @@ class Logcat : Closeable {
     private var logcatProcess: Process? = null
     private val handler: Handler = Handler(Looper.getMainLooper())
 
+    private var recordStartIndex = -1
+
     @Volatile
     private var listener: LogcatEventListener? = null
 
@@ -190,6 +192,25 @@ class Logcat : Closeable {
             paused = false
             pausePostLogsCondition.open()
             pollCondition.open()
+        }
+    }
+
+    fun startRecording() {
+        synchronized(logsLock) {
+            recordStartIndex = logs.size - 1
+        }
+    }
+
+    fun stopRecording(): List<Log> {
+        synchronized(logsLock) {
+            val result = mutableListOf<Log>()
+            if (recordStartIndex >= 0) {
+                for (i in recordStartIndex until logs.size) {
+                    result += logs[i]
+                }
+            }
+            recordStartIndex = -1
+            return result
         }
     }
 
