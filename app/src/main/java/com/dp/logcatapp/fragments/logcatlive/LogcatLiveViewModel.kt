@@ -6,5 +6,6 @@ class LogcatLiveViewModel : ViewModel() {
     var autoScroll = true
     var scrollPosition = 0
     var paused = false
+    var recording = false
     var showedGrantPermissionInstruction = false
 }

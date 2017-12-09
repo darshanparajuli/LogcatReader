@@ -252,9 +252,11 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
         })
 
         val playPauseItem = menu.findItem(R.id.action_play_pause)
+        val recordToggleItem = menu.findItem(R.id.action_record_toggle)
 
         searchView.setOnQueryTextFocusChangeListener { _, hasFocus ->
             playPauseItem.isVisible = !hasFocus
+            recordToggleItem.isVisible = !hasFocus
         }
 
         searchView.setOnCloseListener {
@@ -264,6 +266,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
                 onSearchViewClose()
             }
             playPauseItem.isVisible = true
+            recordToggleItem.isVisible = true
             false
         }
     }
@@ -333,12 +336,28 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
         // do nothing
 
         val playPauseItem = menu.findItem(R.id.action_play_pause)
+        val recordToggleItem = menu.findItem(R.id.action_record_toggle)
+
         if (viewModel.paused) {
             playPauseItem.icon = ContextCompat.getDrawable(activity,
                     R.drawable.ic_play_arrow_white_24dp)
+            playPauseItem.title = getString(R.string.resume)
+            recordToggleItem.isVisible = false
         } else {
             playPauseItem.icon = ContextCompat.getDrawable(activity,
                     R.drawable.ic_pause_white_24dp)
+            playPauseItem.title = getString(R.string.pause)
+
+            recordToggleItem.isVisible = true
+            if (viewModel.recording) {
+                recordToggleItem.icon = ContextCompat.getDrawable(activity,
+                        R.drawable.ic_stop_white_24dp)
+                recordToggleItem.title = getString(R.string.stop_recording)
+            } else {
+                recordToggleItem.icon = ContextCompat.getDrawable(activity,
+                        R.drawable.ic_fiber_manual_record_white_24dp)
+                recordToggleItem.title = getString(R.string.start_recording)
+            }
         }
     }
 
@@ -348,14 +367,32 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
                 true
             }
             R.id.action_play_pause -> {
-                val newPausedState = !viewModel.paused
-                if (newPausedState) {
-                    logcatService?.logcat?.pause()
-                } else {
-                    logcatService?.logcat?.resume()
+                val logcat = logcatService?.logcat
+                if (logcat != null) {
+                    val newPausedState = !viewModel.paused
+                    if (newPausedState) {
+                        logcat.pause()
+                    } else {
+                        logcat.resume()
+                    }
+                    viewModel.paused = newPausedState
+                    activity.invalidateOptionsMenu()
                 }
-                viewModel.paused = newPausedState
-                activity.invalidateOptionsMenu()
+                true
+            }
+            R.id.action_record_toggle -> {
+                val logcat = logcatService?.logcat
+                if (logcat != null) {
+                    val recording = !viewModel.recording
+                    if (recording) {
+                        logcat.startRecording()
+                    } else {
+                        val logs = logcat.stopRecording()
+                        trySaveToFile(logs)
+                    }
+                    viewModel.recording = recording
+                    activity.invalidateOptionsMenu()
+                }
                 true
             }
             R.id.action_save -> {
@@ -369,7 +406,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
     private fun actuallySaveToFile(logs: List<Log>, fileName: String): Boolean {
         if (logs.isEmpty()) {
             MyLogger.logDebug(LogcatLiveFragment::class, "Nothing to save")
-            showSnackbar(getString(R.string.nothing_to_save))
+            showSnackbar(view, getString(R.string.nothing_to_save))
             return true
         }
 
@@ -399,14 +436,14 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
                 .format(Date())
         val fileName = "logcat_$timeStamp.txt"
         if (actuallySaveToFile(logs, fileName)) {
-            newSnackbar(getString(R.string.saved_as_filename).format(fileName),
-                    Snackbar.LENGTH_LONG).setAction(getString(R.string.view_log), {
-                if (!viewSavedLog(fileName)) {
-                    showSnackbar(getString(R.string.could_not_open_log_file))
-                }
-            }).show()
+            newSnakcbar(view, getString(R.string.saved_as_filename).format(fileName), Snackbar.LENGTH_LONG)
+                    ?.setAction(getString(R.string.view_log), {
+                        if (!viewSavedLog(fileName)) {
+                            showSnackbar(view, getString(R.string.could_not_open_log_file))
+                        }
+                    })?.show()
         } else {
-            showSnackbar(getString(R.string.failed_to_save_logs))
+            showSnackbar(view, getString(R.string.failed_to_save_logs))
         }
     }
 
@@ -424,16 +461,20 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
         return Environment.MEDIA_MOUNTED == state
     }
 
-    private fun trySaveToFile() {
+    private fun trySaveToFile(logs: List<Log>) {
         if (checkWriteExternalStoragePermission()) {
-            val logcat = logcatService?.logcat
-            if (logcat != null) {
-                saveToFile(logcat.getLogsFiltered())
-            }
+            saveToFile(logs)
         } else {
-            pendingLogsToSave = logcatService?.logcat?.getLogsFiltered()
+            pendingLogsToSave = logs
             requestPermissions(arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
                     MY_PERMISSION_REQ_WRITE_EXTERNAL_STORAGE)
+        }
+    }
+
+    private fun trySaveToFile() {
+        val logcat = logcatService?.logcat
+        if (logcat != null) {
+            trySaveToFile(logcat.getLogsFiltered())
         }
     }
 

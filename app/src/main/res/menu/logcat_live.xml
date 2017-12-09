@@ -13,6 +13,11 @@
         android:title="@string/pause"
         app:showAsAction="always" />
     <item
+        android:id="@+id/action_record_toggle"
+        android:icon="@drawable/ic_fiber_manual_record_white_24dp"
+        android:title="@string/start_recording"
+        app:showAsAction="always" />
+    <item
         android:id="@+id/action_save"
         android:title="@string/save_to_file" />
 </menu>
