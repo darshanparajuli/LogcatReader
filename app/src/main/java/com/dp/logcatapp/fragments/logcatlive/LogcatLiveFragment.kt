@@ -457,8 +457,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
     }
 
     private fun isExternalStorageWritable(): Boolean {
-        val state = Environment.getExternalStorageState()
-        return Environment.MEDIA_MOUNTED == state
+        return Environment.getExternalStorageState() == Environment.MEDIA_MOUNTED
     }
 
     private fun trySaveToFile(logs: List<Log>) {
