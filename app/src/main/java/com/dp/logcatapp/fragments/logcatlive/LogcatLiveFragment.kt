@@ -11,6 +11,7 @@ import android.os.*
 import android.support.design.widget.FloatingActionButton
 import android.support.design.widget.Snackbar
 import android.support.v4.content.ContextCompat
+import android.support.v4.content.FileProvider
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.DividerItemDecoration
 import android.support.v7.widget.LinearLayoutManager
@@ -451,7 +452,13 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
         val intent = Intent(Intent.ACTION_VIEW)
         val path = Environment.getExternalStorageDirectory().absolutePath +
                 "/Documents/Logcat/" + fileName
-        intent.setDataAndType(Uri.parse("file://$path"), "text/plain")
+
+        val uri = FileProvider.getUriForFile(context,
+                context.applicationContext.packageName + ".provider",
+                File(path))
+        intent.setDataAndType(uri, "text/plain")
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+
         startActivity(Intent.createChooser(intent, getString(R.string.open_with)))
         return true
     }
