@@ -7,11 +7,12 @@ import java.io.IOException
 object RootUtils {
 
     fun runCmdAsRoot(vararg cmd: String): Boolean {
-        val processBuilder = ProcessBuilder("su", "-c", *cmd)
+        val cmdStr = arrayOf("su", "-c", cmd.joinToString(separator = " "))
+        val processBuilder = ProcessBuilder(*cmdStr)
         var process: Process? = null
         return try {
             process = processBuilder.start()
-            process.waitFor() != 0
+            process.waitFor() == 0
         } catch (e: IOException) {
             false
         } finally {
