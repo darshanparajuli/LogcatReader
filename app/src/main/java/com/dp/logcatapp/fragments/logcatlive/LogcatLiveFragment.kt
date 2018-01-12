@@ -156,7 +156,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
         setHasOptionsMenu(true)
         viewModel = ViewModelProviders.of(this)
                 .get(LogcatLiveViewModel::class.java)
-        adapter = MyRecyclerViewAdapter(activity)
+        adapter = MyRecyclerViewAdapter(activity!!)
     }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
@@ -164,7 +164,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
         serviceBinder = ServiceBinder(LogcatService::class.java, this)
     }
 
-    override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?,
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? =
             inflateLayout(R.layout.fragment_logcat_live)
 
@@ -340,22 +340,22 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
         val recordToggleItem = menu.findItem(R.id.action_record_toggle)
 
         if (viewModel.paused) {
-            playPauseItem.icon = ContextCompat.getDrawable(activity,
+            playPauseItem.icon = ContextCompat.getDrawable(activity!!,
                     R.drawable.ic_play_arrow_white_24dp)
             playPauseItem.title = getString(R.string.resume)
             recordToggleItem.isVisible = false
         } else {
-            playPauseItem.icon = ContextCompat.getDrawable(activity,
+            playPauseItem.icon = ContextCompat.getDrawable(activity!!,
                     R.drawable.ic_pause_white_24dp)
             playPauseItem.title = getString(R.string.pause)
 
             recordToggleItem.isVisible = true
             if (viewModel.recording) {
-                recordToggleItem.icon = ContextCompat.getDrawable(activity,
+                recordToggleItem.icon = ContextCompat.getDrawable(activity!!,
                         R.drawable.ic_stop_white_24dp)
                 recordToggleItem.title = getString(R.string.stop_recording)
             } else {
-                recordToggleItem.icon = ContextCompat.getDrawable(activity,
+                recordToggleItem.icon = ContextCompat.getDrawable(activity!!,
                         R.drawable.ic_fiber_manual_record_white_24dp)
                 recordToggleItem.title = getString(R.string.start_recording)
             }
@@ -377,7 +377,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
                         logcat.resume()
                     }
                     viewModel.paused = newPausedState
-                    activity.invalidateOptionsMenu()
+                    activity?.invalidateOptionsMenu()
                 }
                 true
             }
@@ -392,7 +392,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
                         trySaveToFile(logs)
                     }
                     viewModel.recording = recording
-                    activity.invalidateOptionsMenu()
+                    activity?.invalidateOptionsMenu()
                 }
                 true
             }
@@ -453,8 +453,8 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
         val path = Environment.getExternalStorageDirectory().absolutePath +
                 "/Documents/Logcat/" + fileName
 
-        val uri = FileProvider.getUriForFile(context,
-                context.applicationContext.packageName + ".provider",
+        val uri = FileProvider.getUriForFile(context!!,
+                context!!.applicationContext.packageName + ".provider",
                 File(path))
         intent.setDataAndType(uri, "text/plain")
         intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
@@ -498,21 +498,21 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
     }
 
     private fun checkReadLogsPermission() =
-            ContextCompat.checkSelfPermission(activity,
+            ContextCompat.checkSelfPermission(activity!!,
                     Manifest.permission.READ_LOGS) == PackageManager.PERMISSION_GRANTED
 
     private fun checkWriteExternalStoragePermission() =
-            ContextCompat.checkSelfPermission(activity,
+            ContextCompat.checkSelfPermission(activity!!,
                     Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
 
     override fun onStart() {
         super.onStart()
-        serviceBinder.bind(activity)
+        serviceBinder.bind(activity!!)
     }
 
     override fun onStop() {
         super.onStop()
-        serviceBinder.unbind(activity)
+        serviceBinder.unbind(activity!!)
     }
 
     private fun removeLastSearchRunnableCallback() {

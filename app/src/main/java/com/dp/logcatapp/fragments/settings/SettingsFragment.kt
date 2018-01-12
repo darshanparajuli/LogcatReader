@@ -46,14 +46,14 @@ class SettingsFragment : PreferenceFragmentCompat() {
         themePref.onPreferenceChangeListener =
                 Preference.OnPreferenceChangeListener { preference, newValue ->
                     preference.summary = themePrefEntries[(newValue as String).toInt()]
-                    activity.restartApp()
+                    activity!!.restartApp()
                     true
                 }
 
         useBlackThemePref.onPreferenceChangeListener = Preference
                 .OnPreferenceChangeListener { _, _ ->
-                    if (activity.isDarkThemeOn()) {
-                        activity.restartApp()
+                    if (activity!!.isDarkThemeOn()) {
+                        activity!!.restartApp()
                     }
                     true
                 }
@@ -73,14 +73,14 @@ class SettingsFragment : PreferenceFragmentCompat() {
                 val v = newValue.toString().trim()
                 val num = v.toLong()
                 if (num <= 0) {
-                    activity.showToast("Value must be greater than 0")
+                    activity!!.showToast("Value must be greater than 0")
                     false
                 } else {
                     prefPollInterval.summary = "$v ms"
                     true
                 }
             } catch (e: NumberFormatException) {
-                activity.showToast("Value must be a postive integer")
+                activity!!.showToast("Value must be a postive integer")
                 false
             }
         }

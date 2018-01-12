@@ -49,7 +49,7 @@ abstract class BaseActivityWithToolbar : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean = when (item.itemId) {
         android.R.id.home -> {
             val upIntent = NavUtils.getParentActivityIntent(this)
-            upIntent.flags = Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
+            upIntent?.flags = Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
             startActivity(upIntent)
             finish()
             true
