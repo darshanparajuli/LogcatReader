@@ -45,4 +45,9 @@
     <string name="logcat_exited_unexpectedly">Logcat command exited unexpectedly, restarting…</string>
     <string name="restarting_logcat">Restarting logcat</string>
     <string name="saved_as_filename">Saved as %s</string>
+    <string name="kill">Kill</string>
+    <string name="app_kill_reason">Permission has been granted. Logcat Reader needs to be killed
+        and has to be opened manually because typical app restart won\'t work in this case.
+        This needs to be done only once.
+    </string>
 </resources>
