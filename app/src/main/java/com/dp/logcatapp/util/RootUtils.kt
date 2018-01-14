@@ -2,25 +2,25 @@ package com.dp.logcatapp.util
 
 import android.Manifest
 import android.content.Context
+import com.dp.jshellsession.Config
+import com.dp.jshellsession.JShellSession
 import java.io.IOException
 
 object RootUtils {
 
-    fun runCmdAsRoot(vararg cmd: String): Boolean {
-        val cmdStr = arrayOf("su", "-c", cmd.joinToString(separator = " "))
-        val processBuilder = ProcessBuilder(*cmdStr)
-        var process: Process? = null
-        return try {
-            process = processBuilder.start()
-            process.waitFor() == 0
+    fun grantReadLogsPermission(context: Context): Boolean {
+        var jshellSession: JShellSession? = null
+        try {
+            val cmd = "pm grant ${context.packageName} ${Manifest.permission.READ_LOGS}"
+            val config = Config.Builder()
+                    .setShellCommand("su")
+                    .build()
+            jshellSession = JShellSession(config)
+            return jshellSession.run(cmd).exitSuccess()
         } catch (e: IOException) {
-            false
+            return false
         } finally {
-            process?.destroy()
+            jshellSession?.close()
         }
     }
-
-    fun grantReadLogsPermission(context: Context) = runCmdAsRoot("pm", "grant",
-            context.packageName, Manifest.permission.READ_LOGS)
-
 }
