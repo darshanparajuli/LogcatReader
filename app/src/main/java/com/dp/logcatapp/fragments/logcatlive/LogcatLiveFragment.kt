@@ -6,7 +6,6 @@ import android.content.ComponentName
 import android.content.Intent
 import android.content.ServiceConnection
 import android.content.pm.PackageManager
-import android.net.Uri
 import android.os.*
 import android.support.design.widget.FloatingActionButton
 import android.support.design.widget.Snackbar
@@ -343,13 +342,11 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
             playPauseItem.icon = ContextCompat.getDrawable(activity!!,
                     R.drawable.ic_play_arrow_white_24dp)
             playPauseItem.title = getString(R.string.resume)
-            recordToggleItem.isVisible = false
         } else {
             playPauseItem.icon = ContextCompat.getDrawable(activity!!,
                     R.drawable.ic_pause_white_24dp)
             playPauseItem.title = getString(R.string.pause)
 
-            recordToggleItem.isVisible = true
             if (viewModel.recording) {
                 recordToggleItem.icon = ContextCompat.getDrawable(activity!!,
                         R.drawable.ic_stop_white_24dp)
@@ -386,6 +383,9 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
                 if (logcat != null) {
                     val recording = !viewModel.recording
                     if (recording) {
+                        Snackbar.make(view!!, getString(R.string.started_recording),
+                                Snackbar.LENGTH_SHORT)
+                                .show()
                         logcat.startRecording()
                     } else {
                         val logs = logcat.stopRecording()

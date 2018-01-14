@@ -50,4 +50,5 @@
         and has to be opened manually because typical app restart won\'t work in this case.
         This needs to be done only once.
     </string>
+    <string name="started_recording">Started recording</string>
 </resources>
