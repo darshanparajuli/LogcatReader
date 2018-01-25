@@ -255,10 +255,8 @@ class Logcat : Closeable {
         val inputStream = logcatProcess?.inputStream
 
         val postThread = thread(block = { postLogsPeriodically() }, name = "logcat-post")
-        val stderrThread = thread(block = { processStderr(errorStream) },
-                name = "logcat-stderr")
-        val stdoutThread = thread(block = { processStdout(inputStream) },
-                name = "logcat-stdout")
+        val stderrThread = thread(block = { processStderr(errorStream) }, name = "logcat-stderr")
+        val stdoutThread = thread(block = { processStdout(inputStream) }, name = "logcat-stdout")
 
         exitCode = logcatProcess?.waitFor() ?: -1
 
