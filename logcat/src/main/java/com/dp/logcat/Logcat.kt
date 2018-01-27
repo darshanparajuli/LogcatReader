@@ -267,16 +267,17 @@ class Logcat : Closeable {
 
         logcatProcess = null
 
+        val waitTime = 1000L
         try {
-            stderrThread.join(5000)
+            stderrThread.join(waitTime)
         } catch (e: InterruptedException) {
         }
         try {
-            stdoutThread.join(5000)
+            stdoutThread.join(waitTime)
         } catch (e: InterruptedException) {
         }
         try {
-            postThread.join(5000)
+            postThread.join(waitTime)
         } catch (e: InterruptedException) {
         }
     }
