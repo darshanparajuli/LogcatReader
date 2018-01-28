@@ -59,7 +59,7 @@ fun Fragment.inflateLayout(@LayoutRes layoutResId: Int): View = LayoutInflater.f
 
 //// BEGIN Context
 
-private val cache = mutableMapOf<String, Typeface>()
+private val typefaceCache = mutableMapOf<String, Typeface>()
 
 // Bug find/workaround credit: https://github.com/drakeet/ToastCompat#why
 fun Context.showToast(msg: CharSequence, length: Int = Toast.LENGTH_SHORT) {
@@ -111,10 +111,10 @@ private class ToastWindowManager(val base: WindowManager) : WindowManager {
 
 fun Context.getTypeface(name: String): Typeface? {
     val assetPath = "fonts/$name.ttf"
-    var typeface = cache[assetPath]
+    var typeface = typefaceCache[assetPath]
     if (typeface == null) {
         typeface = Typeface.createFromAsset(assets, assetPath)
-        cache[assetPath] = typeface
+        typefaceCache[assetPath] = typeface
     }
     return typeface
 }
