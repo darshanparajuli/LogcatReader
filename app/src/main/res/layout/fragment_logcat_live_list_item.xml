@@ -60,7 +60,7 @@
             android:text="Message"
             android:textColor="?attr/primary_text_color"
             android:textSize="@dimen/text_size_smaller"
-            app:useFont="@string/font_InputMonoCompressed_Regular" />
+            app:useFont="@string/font_RobotoMono_Regular" />
 
         <com.dp.logcatapp.views.CustomTextView
             android:id="@+id/date"
