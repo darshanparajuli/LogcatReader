@@ -8,4 +8,5 @@ class LogcatLiveViewModel : ViewModel() {
     var paused = false
     var recording = false
     var showedGrantPermissionInstruction = false
+    var stopRecording = false
 }

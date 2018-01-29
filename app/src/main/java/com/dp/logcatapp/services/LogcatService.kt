@@ -52,23 +52,28 @@ class LogcatService : BaseService() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        startForeground(NOTIFICAION_ID, createStartNotification())
+        startForeground(NOTIFICAION_ID, createNotification(false))
         return START_STICKY
     }
 
-    private fun createStartNotification(): Notification {
+    fun updateNotification(showStopRecording: Boolean) {
+        val nm = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        nm.notify(NOTIFICAION_ID, createNotification(showStopRecording))
+    }
+
+    private fun createNotification(addStopRecordingAction: Boolean): Notification {
         val startIntent = Intent(this, MainActivity::class.java)
         startIntent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
-        val pendingIntent = PendingIntent.getActivity(this, 0, startIntent,
+        val contentIntent = PendingIntent.getActivity(this, 0, startIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT)
 
         val exitIntent = Intent(this, MainActivity::class.java)
         exitIntent.putExtra(MainActivity.EXIT_EXTRA, true)
-        val closePendingIntent = PendingIntent.getActivity(this, 1, exitIntent,
+        val exitPendingIntent = PendingIntent.getActivity(this, 1, exitIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT)
 
         val exitAction = NotificationCompat.Action.Builder(R.drawable.ic_clear_white_18dp,
-                getString(R.string.exit), closePendingIntent)
+                getString(R.string.exit), exitPendingIntent)
                 .build()
 
         val builder = NotificationCompat.Builder(this, NOTIFICAION_CHANNEL)
@@ -78,11 +83,23 @@ class LogcatService : BaseService() {
                 .setTicker(getString(R.string.app_name))
                 .setContentText(getString(R.string.logcat_service))
                 .setWhen(System.currentTimeMillis())
-                .setContentIntent(pendingIntent)
+                .setContentIntent(contentIntent)
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .setCategory(NotificationCompat.CATEGORY_SERVICE)
                 .setAutoCancel(false)
                 .addAction(exitAction)
+
+        if (addStopRecordingAction) {
+            val stopRecordingIntent = Intent(this, MainActivity::class.java)
+            stopRecordingIntent.putExtra(MainActivity.STOP_RECORDING_EXTRA, true)
+            val stopRecordingPendingIntent = PendingIntent.getActivity(this, 2,
+                    stopRecordingIntent, PendingIntent.FLAG_UPDATE_CURRENT)
+            val stopRecordingAction = NotificationCompat.Action.Builder(R.drawable.ic_stop_white_18dp,
+                    getString(R.string.stop_recording), stopRecordingPendingIntent)
+                    .build()
+
+            builder.addAction(stopRecordingAction)
+        }
 
         if (Build.VERSION.SDK_INT < 21) {
             builder.setLargeIcon(BitmapFactory.decodeResource(resources, R.mipmap.ic_launcher))

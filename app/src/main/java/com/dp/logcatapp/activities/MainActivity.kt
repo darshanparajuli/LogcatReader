@@ -27,6 +27,8 @@ class MainActivity : BaseActivityWithToolbar() {
             return
         }
 
+        handleStopRecordingIntent(intent)
+
         val logcatServiceIntent = Intent(this, LogcatService::class.java)
         if (Build.VERSION.SDK_INT >= 26) {
             startForegroundService(logcatServiceIntent)
@@ -54,10 +56,19 @@ class MainActivity : BaseActivityWithToolbar() {
                 false
             }
 
+    private fun handleStopRecordingIntent(intent: Intent?) {
+        if (intent?.getBooleanExtra(STOP_RECORDING_EXTRA, false) == true) {
+            val fragment = supportFragmentManager.findFragmentByTag(LogcatLiveFragment.TAG)
+            if (fragment != null) {
+                (fragment as LogcatLiveFragment).tryStopRecording()
+            }
+        }
+    }
 
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
         checkShouldTheAppExit(intent)
+        handleStopRecordingIntent(intent)
     }
 
     override fun onDestroy() {
@@ -94,6 +105,7 @@ class MainActivity : BaseActivityWithToolbar() {
     companion object {
         val TAG = MainActivity::class.qualifiedName
         val EXIT_EXTRA = TAG + "_extra_exit"
+        val STOP_RECORDING_EXTRA = TAG + "_stop_recording_extra"
         private const val EXIT_DOUBLE_PRESS_DELAY: Long = 2000
     }
 }

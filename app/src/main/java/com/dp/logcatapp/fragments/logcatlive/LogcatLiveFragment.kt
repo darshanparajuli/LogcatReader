@@ -379,9 +379,10 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
                 true
             }
             R.id.action_record_toggle -> {
+                val recording = !viewModel.recording
+                logcatService?.updateNotification(recording)
                 val logcat = logcatService?.logcat
                 if (logcat != null) {
-                    val recording = !viewModel.recording
                     if (recording) {
                         Snackbar.make(view!!, getString(R.string.started_recording),
                                 Snackbar.LENGTH_SHORT)
@@ -389,6 +390,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
                         logcat.startRecording()
                     } else {
                         val logs = logcat.stopRecording()
+
                         trySaveToFile(logs)
                     }
                     viewModel.recording = recording
@@ -402,6 +404,29 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
             }
             else -> return super.onOptionsItemSelected(item)
         }
+    }
+
+    fun tryStopRecording() {
+        viewModel.stopRecording = true
+        if (logcatService != null) {
+            stopRecording()
+        }
+    }
+
+    private fun stopRecording() {
+        if (viewModel.recording) {
+            logcatService?.updateNotification(false)
+
+            val logcat = logcatService?.logcat
+            if (logcat != null) {
+                val logs = logcat.stopRecording()
+                trySaveToFile(logs)
+            }
+
+            viewModel.recording = false
+            activity?.invalidateOptionsMenu()
+        }
+        viewModel.stopRecording = false
     }
 
     private fun actuallySaveToFile(logs: List<Log>, fileName: String): Boolean {
@@ -555,6 +580,10 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
 
         if (!logcat.isBound) {
             logcat.bind(activity as AppCompatActivity)
+        }
+
+        if (viewModel.stopRecording) {
+            stopRecording()
         }
     }
 
