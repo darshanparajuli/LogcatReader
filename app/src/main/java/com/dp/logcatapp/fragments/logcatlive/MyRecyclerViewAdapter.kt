@@ -8,6 +8,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import com.dp.logcat.Log
+import com.dp.logcat.LogPriority
 import com.dp.logcatapp.R
 
 class MyRecyclerViewAdapter(context: Context) : RecyclerView.Adapter<MyRecyclerViewAdapter.MyViewHolder>(),
@@ -25,13 +26,13 @@ class MyRecyclerViewAdapter(context: Context) : RecyclerView.Adapter<MyRecyclerV
     private val priorityColorSilent = ContextCompat.getColor(context, R.color.priority_silent)
 
     private fun getPriorityColor(priority: String) = when (priority) {
-        "A" -> priorityColorAssert
-        "D" -> priorityColorDebug
-        "E" -> priorityColorError
-        "F" -> priorityColorFatal
-        "I" -> priorityColorInfo
-        "V" -> priorityColorVerbose
-        "W" -> priorityColorWarning
+        LogPriority.ASSERT -> priorityColorAssert
+        LogPriority.DEBUG -> priorityColorDebug
+        LogPriority.ERROR -> priorityColorError
+        LogPriority.FATAL -> priorityColorFatal
+        LogPriority.INFO -> priorityColorInfo
+        LogPriority.VERBOSE -> priorityColorVerbose
+        LogPriority.WARNING -> priorityColorWarning
         else -> priorityColorSilent
     }
 
