@@ -31,6 +31,10 @@ class LogcatService : BaseService() {
     val logcat: Logcat = Logcat()
     var restartedLogcat = false
 
+    var paused = false
+    var recording = false
+    val allowedPriorities = mutableSetOf<String>()
+
     override fun onCreate() {
         super.onCreate()
         if (Build.VERSION.SDK_INT >= 26) {
@@ -52,7 +56,7 @@ class LogcatService : BaseService() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        startForeground(NOTIFICAION_ID, createNotification(false))
+        startForeground(NOTIFICAION_ID, createNotification(recording))
         return START_STICKY
     }
 

@@ -306,7 +306,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
         val playPauseItem = menu.findItem(R.id.action_play_pause)
         val recordToggleItem = menu.findItem(R.id.action_record_toggle)
 
-        if (viewModel.paused) {
+        if (logcatService?.paused == true) {
             playPauseItem.icon = ContextCompat.getDrawable(activity!!,
                     R.drawable.ic_play_arrow_white_24dp)
             playPauseItem.title = getString(R.string.resume)
@@ -315,7 +315,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
                     R.drawable.ic_pause_white_24dp)
             playPauseItem.title = getString(R.string.pause)
 
-            if (viewModel.recording) {
+            if (logcatService?.recording == true) {
                 recordToggleItem.icon = ContextCompat.getDrawable(activity!!,
                         R.drawable.ic_stop_white_24dp)
                 recordToggleItem.title = getString(R.string.stop_recording)
@@ -335,19 +335,19 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
             R.id.action_play_pause -> {
                 val logcat = logcatService?.logcat
                 if (logcat != null) {
-                    val newPausedState = !viewModel.paused
+                    val newPausedState = !logcatService!!.paused
                     if (newPausedState) {
                         logcat.pause()
                     } else {
                         logcat.resume()
                     }
-                    viewModel.paused = newPausedState
+                    logcatService!!.paused = newPausedState
                     activity?.invalidateOptionsMenu()
                 }
                 true
             }
             R.id.action_record_toggle -> {
-                val recording = !viewModel.recording
+                val recording = !logcatService!!.recording
                 logcatService?.updateNotification(recording)
                 val logcat = logcatService?.logcat
                 if (logcat != null) {
@@ -361,13 +361,13 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
 
                         trySaveToFile(logs)
                     }
-                    viewModel.recording = recording
+                    logcatService!!.recording = recording
                     activity?.invalidateOptionsMenu()
                 }
                 true
             }
             R.id.action_log_priority -> {
-                val frag = LogPriorityPickerDialogFragment.newInstance(viewModel
+                val frag = LogPriorityPickerDialogFragment.newInstance(logcatService!!
                         .allowedPriorities.toTypedArray())
                 frag.setTargetFragment(this, 0)
                 frag.show(fragmentManager, LogPriorityPickerDialogFragment.TAG)
@@ -386,9 +386,9 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
         if (logcat != null) {
             logcat.pause()
 
-            viewModel.allowedPriorities.clear()
+            logcatService!!.allowedPriorities.clear()
             if (allowed.isNotEmpty()) {
-                viewModel.allowedPriorities.addAll(allowed)
+                logcatService!!.allowedPriorities.addAll(allowed)
                 logcat.addFilter(LOG_PRIORITY_FILTER, LogPriorityFilter(allowed))
             } else {
                 logcat.removeFilter(LOG_PRIORITY_FILTER)
@@ -411,7 +411,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
     }
 
     private fun stopRecording() {
-        if (viewModel.recording) {
+        if (logcatService?.recording == true) {
             logcatService?.updateNotification(false)
 
             val logcat = logcatService?.logcat
@@ -420,7 +420,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
                 trySaveToFile(logs)
             }
 
-            viewModel.recording = false
+            logcatService!!.recording = false
             activity?.invalidateOptionsMenu()
         }
         viewModel.stopRecording = false
@@ -616,7 +616,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
     }
 
     private fun resumeLogcat() {
-        if (!viewModel.paused) {
+        if (logcatService != null && !logcatService!!.paused) {
             logcatService?.logcat?.resume()
         }
     }

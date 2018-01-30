@@ -5,9 +5,6 @@ import android.arch.lifecycle.ViewModel
 class LogcatLiveViewModel : ViewModel() {
     var autoScroll = true
     var scrollPosition = 0
-    var paused = false
-    var recording = false
     var showedGrantPermissionInstruction = false
     var stopRecording = false
-    val allowedPriorities = mutableSetOf<String>()
 }
