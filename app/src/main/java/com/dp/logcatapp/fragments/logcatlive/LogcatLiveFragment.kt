@@ -34,6 +34,23 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListener {
+    companion object {
+        val TAG = LogcatLiveFragment::class.qualifiedName
+
+        private const val FILTER_MSG = "msg"
+        private const val MY_PERMISSION_REQ_WRITE_EXTERNAL_STORAGE = 1
+        private const val LOG_PRIORITY_FILTER = "logLevelFilter"
+        private val STOP_RECORDING = TAG + "_stop_recording"
+
+        fun newInstance(stopRecording: Boolean): LogcatLiveFragment {
+            val bundle = Bundle()
+            bundle.putBoolean(STOP_RECORDING, stopRecording)
+            val frag = LogcatLiveFragment()
+            frag.arguments = bundle
+            return frag
+        }
+    }
+
     private lateinit var serviceBinder: ServiceBinder
     private lateinit var recyclerView: RecyclerView
     private lateinit var linearLayoutManager: LinearLayoutManager
@@ -579,7 +596,8 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
             logcat.bind(activity as AppCompatActivity)
         }
 
-        if (viewModel.stopRecording) {
+        if (viewModel.stopRecording || arguments?.getBoolean(STOP_RECORDING) == true) {
+            arguments?.putBoolean(STOP_RECORDING, false)
             stopRecording()
         }
     }
@@ -672,13 +690,5 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
             return allowed.isEmpty() || allowed.contains(log.priority)
         }
 
-    }
-
-    companion object {
-        val TAG = LogcatLiveFragment::class.qualifiedName
-
-        private const val FILTER_MSG = "msg"
-        private const val MY_PERMISSION_REQ_WRITE_EXTERNAL_STORAGE = 1
-        private const val LOG_PRIORITY_FILTER = "logLevelFilter"
     }
 }

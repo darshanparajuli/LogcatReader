@@ -73,6 +73,7 @@ class LogcatService : BaseService() {
 
         val exitIntent = Intent(this, MainActivity::class.java)
         exitIntent.putExtra(MainActivity.EXIT_EXTRA, true)
+        exitIntent.action = "exit"
         val exitPendingIntent = PendingIntent.getActivity(this, 1, exitIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT)
 
@@ -96,6 +97,7 @@ class LogcatService : BaseService() {
         if (addStopRecordingAction) {
             val stopRecordingIntent = Intent(this, MainActivity::class.java)
             stopRecordingIntent.putExtra(MainActivity.STOP_RECORDING_EXTRA, true)
+            stopRecordingIntent.action = "stop recording"
             val stopRecordingPendingIntent = PendingIntent.getActivity(this, 2,
                     stopRecordingIntent, PendingIntent.FLAG_UPDATE_CURRENT)
             val stopRecordingAction = NotificationCompat.Action.Builder(R.drawable.ic_stop_white_18dp,

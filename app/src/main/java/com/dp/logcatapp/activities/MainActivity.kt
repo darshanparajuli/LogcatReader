@@ -27,8 +27,6 @@ class MainActivity : BaseActivityWithToolbar() {
             return
         }
 
-        handleStopRecordingIntent(intent)
-
         val logcatServiceIntent = Intent(this, LogcatService::class.java)
         if (Build.VERSION.SDK_INT >= 26) {
             startForegroundService(logcatServiceIntent)
@@ -37,8 +35,11 @@ class MainActivity : BaseActivityWithToolbar() {
         }
 
         if (savedInstanceState == null) {
+            val stopRecording = intent?.getBooleanExtra(STOP_RECORDING_EXTRA,
+                    false) == true
             supportFragmentManager.beginTransaction()
-                    .add(R.id.content_frame, LogcatLiveFragment(), LogcatLiveFragment.TAG)
+                    .add(R.id.content_frame, LogcatLiveFragment.newInstance(stopRecording),
+                            LogcatLiveFragment.TAG)
                     .commit()
         }
     }
