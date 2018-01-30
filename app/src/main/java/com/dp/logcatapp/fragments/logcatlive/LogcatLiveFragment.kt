@@ -416,7 +416,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
             updateToolbarSubtitle(adapter.itemCount)
             scrollRecyclerView()
 
-            logcat.resume()
+            resumeLogcat()
         }
     }
 
