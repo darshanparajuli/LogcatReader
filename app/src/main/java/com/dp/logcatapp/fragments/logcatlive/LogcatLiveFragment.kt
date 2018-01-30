@@ -17,14 +17,13 @@ import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.SearchView
 import android.view.*
-import com.dp.logcat.Log
-import com.dp.logcat.Logcat
-import com.dp.logcat.LogcatEventListener
+import com.dp.logcat.*
 import com.dp.logcatapp.R
 import com.dp.logcatapp.activities.BaseActivityWithToolbar
 import com.dp.logcatapp.fragments.base.BaseFragment
 import com.dp.logcatapp.fragments.logcatlive.dialogs.CopyToClipboardDialogFragment
 import com.dp.logcatapp.fragments.logcatlive.dialogs.InstructionToGrantPermissionDialogFragment
+import com.dp.logcatapp.fragments.logcatlive.dialogs.LogPriorityPickerDialogFragment
 import com.dp.logcatapp.services.LogcatService
 import com.dp.logcatapp.util.*
 import com.dp.logger.MyLogger
@@ -286,8 +285,11 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
 
         override fun onPreExecute() {
             logcat.pause()
-            logcat.addFilter(FILTER_MSG, { log ->
-                log.tag.containsIgnoreCase(searchText) || log.msg.containsIgnoreCase(searchText)
+            logcat.addFilter(FILTER_MSG, object : LogcatFilter {
+                override fun filter(log: Log): Boolean {
+                    return log.tag.containsIgnoreCase(searchText) ||
+                            log.msg.containsIgnoreCase(searchText)
+                }
             })
         }
 
@@ -315,7 +317,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
         logcat.clearFilters()
 
         adapter.clear()
-        addAllLogs(logcat.getLogs())
+        addAllLogs(logcat.getLogsFiltered())
         if (lastLogId == -1) {
             scrollRecyclerView()
         } else {
@@ -398,11 +400,40 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
                 }
                 true
             }
+            R.id.action_log_priority -> {
+                val frag = LogPriorityPickerDialogFragment.newInstance(viewModel
+                        .allowedPriorities.toTypedArray())
+                frag.setTargetFragment(this, 0)
+                frag.show(fragmentManager, LogPriorityPickerDialogFragment.TAG)
+                true
+            }
             R.id.action_save -> {
                 trySaveToFile()
                 true
             }
             else -> return super.onOptionsItemSelected(item)
+        }
+    }
+
+    fun addPriorityFilter(allowed: Set<String>) {
+        val logcat = logcatService?.logcat
+        if (logcat != null) {
+            logcat.pause()
+
+            viewModel.allowedPriorities.clear()
+            if (allowed.isNotEmpty()) {
+                viewModel.allowedPriorities.addAll(allowed)
+                logcat.addFilter(LOG_PRIORITY_FILTER, LogPriorityFilter(allowed))
+            } else {
+                logcat.removeFilter(LOG_PRIORITY_FILTER)
+            }
+
+            adapter.clear()
+            adapter.addItems(logcat.getLogsFiltered())
+            updateToolbarSubtitle(adapter.itemCount)
+            scrollRecyclerView()
+
+            logcat.resume()
         }
     }
 
@@ -566,7 +597,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
 
         if (adapter.itemCount == 0) {
             MyLogger.logDebug(LogcatLiveFragment::class, "Added all logs")
-            addAllLogs(logcat.getLogs())
+            addAllLogs(logcat.getLogsFiltered())
         } else if (logcatService!!.restartedLogcat) {
             MyLogger.logDebug(LogcatLiveFragment::class, "Logcat restarted")
             logcatService!!.restartedLogcat = false
@@ -636,10 +667,18 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
         logcatService = null
     }
 
+    private class LogPriorityFilter(val allowed: Set<String>) : LogcatFilter {
+        override fun filter(log: Log): Boolean {
+            return allowed.isEmpty() || allowed.contains(log.priority)
+        }
+
+    }
+
     companion object {
         val TAG = LogcatLiveFragment::class.qualifiedName
 
         private const val FILTER_MSG = "msg"
         private const val MY_PERMISSION_REQ_WRITE_EXTERNAL_STORAGE = 1
+        private const val LOG_PRIORITY_FILTER = "logLevelFilter"
     }
 }

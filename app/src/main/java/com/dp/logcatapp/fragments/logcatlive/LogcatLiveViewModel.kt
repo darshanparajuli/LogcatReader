@@ -9,4 +9,5 @@ class LogcatLiveViewModel : ViewModel() {
     var recording = false
     var showedGrantPermissionInstruction = false
     var stopRecording = false
+    val allowedPriorities = mutableSetOf<String>()
 }

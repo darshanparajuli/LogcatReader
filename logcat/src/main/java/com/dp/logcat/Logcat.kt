@@ -37,7 +37,7 @@ class Logcat : Closeable {
     // must be synchronized
     private val logsLock = Any()
     private val logs = mutableListOf<Log>()
-    private val filters = mutableMapOf<String, (Log) -> Boolean>()
+    private val filters = mutableMapOf<String, LogcatFilter>()
     private val pendingLogs = mutableListOf<Log>()
 
     private var _activityInBackgroundLock = Any()
@@ -88,12 +88,12 @@ class Logcat : Closeable {
 
                 if (pendingLogs.size == 1) {
                     val log = pendingLogs[0]
-                    if (filters.values.all { it(log) }) {
+                    if (filters.values.all { it.filter(log) }) {
                         handler.post { listener?.onLogEvent(log) }
                     }
                 } else {
                     val dup = pendingLogs.filter { e ->
-                        filters.values.all { it(e) }
+                        filters.values.all { it.filter(e) }
                     }.toList()
 
                     if (dup.isNotEmpty()) {
@@ -161,11 +161,11 @@ class Logcat : Closeable {
 
     fun getLogsFiltered(): List<Log> {
         synchronized(logsLock) {
-            return logs.filter { log -> filters.values.all { it(log) } }
+            return logs.filter { log -> filters.values.all { it.filter(log) } }
         }
     }
 
-    fun addFilter(name: String, filter: (Log) -> Boolean) {
+    fun addFilter(name: String, filter: LogcatFilter) {
         synchronized(logsLock) {
             filters.put(name, filter)
         }
