@@ -314,7 +314,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
     private fun onSearchViewClose() {
         val logcat = logcatService?.logcat ?: return
         logcat.pause()
-        logcat.clearFilters()
+        logcat.removeFilter(FILTER_MSG)
 
         adapter.clear()
         addAllLogs(logcat.getLogsFiltered())
