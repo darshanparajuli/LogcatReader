@@ -49,6 +49,16 @@ data class Log(val id: Int,
     }
 }
 
+object LogPriority {
+    const val ASSERT = "A"
+    const val DEBUG = "D"
+    const val ERROR = "E"
+    const val FATAL = "F"
+    const val INFO = "I"
+    const val VERBOSE = "V"
+    const val WARNING = "W"
+}
+
 internal object LogFactory {
     fun createNewLog(metadata: String, msg: String): Log {
         val date: String
