@@ -277,40 +277,6 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
         searchTask!!.execute()
     }
 
-    private class SearchTask(fragment: LogcatLiveFragment,
-                             val logcat: Logcat, val searchText: String) :
-            AsyncTask<String, Void, List<Log>>() {
-
-        private var fragRef: WeakReference<LogcatLiveFragment> = WeakReference(fragment)
-
-        override fun onPreExecute() {
-            logcat.pause()
-            logcat.addFilter(FILTER_MSG, object : LogcatFilter {
-                override fun filter(log: Log): Boolean {
-                    return log.tag.containsIgnoreCase(searchText) ||
-                            log.msg.containsIgnoreCase(searchText)
-                }
-            })
-        }
-
-        override fun doInBackground(vararg params: String?): List<Log> =
-                logcat.getLogsFiltered()
-
-        override fun onCancelled(result: List<Log>?) {
-            fragRef.get()?.resumeLogcat()
-        }
-
-        override fun onPostExecute(result: List<Log>?) {
-            val frag = fragRef.get() ?: return
-            if (result != null && result.isNotEmpty()) {
-                frag.adapter.clear()
-                frag.adapter.addItems(result)
-                frag.viewModel.autoScroll = false
-                frag.linearLayoutManager.scrollToPositionWithOffset(0, 0)
-            }
-        }
-    }
-
     private fun onSearchViewClose() {
         val logcat = logcatService?.logcat ?: return
         logcat.pause()
@@ -665,6 +631,40 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
     override fun onServiceDisconnected(name: ComponentName) {
         MyLogger.logDebug(LogcatLiveFragment::class, "onServiceDisconnected")
         logcatService = null
+    }
+
+    private class SearchTask(fragment: LogcatLiveFragment,
+                             val logcat: Logcat, val searchText: String) :
+            AsyncTask<String, Void, List<Log>>() {
+
+        private var fragRef: WeakReference<LogcatLiveFragment> = WeakReference(fragment)
+
+        override fun onPreExecute() {
+            logcat.pause()
+            logcat.addFilter(FILTER_MSG, object : LogcatFilter {
+                override fun filter(log: Log): Boolean {
+                    return log.tag.containsIgnoreCase(searchText) ||
+                            log.msg.containsIgnoreCase(searchText)
+                }
+            })
+        }
+
+        override fun doInBackground(vararg params: String?): List<Log> =
+                logcat.getLogsFiltered()
+
+        override fun onCancelled(result: List<Log>?) {
+            fragRef.get()?.resumeLogcat()
+        }
+
+        override fun onPostExecute(result: List<Log>?) {
+            val frag = fragRef.get() ?: return
+            if (result != null && result.isNotEmpty()) {
+                frag.adapter.clear()
+                frag.adapter.addItems(result)
+                frag.viewModel.autoScroll = false
+                frag.linearLayoutManager.scrollToPositionWithOffset(0, 0)
+            }
+        }
     }
 
     private class LogPriorityFilter(val allowed: Set<String>) : LogcatFilter {
