@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.v7.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     android:key="pref_key_main_screen">
-    <PreferenceCategory android:title="@string/pref_cat_appearance">
+    <android.support.v7.preference.PreferenceCategory android:title="@string/pref_cat_appearance">
         <ListPreference
             android:defaultValue="0"
             android:dialogTitle="@string/pref_theme_title"
@@ -11,14 +11,14 @@
             android:persistent="true"
             android:title="@string/pref_theme_title" />
 
-        <CheckBoxPreference
+        <android.support.v7.preference.SwitchPreferenceCompat
             android:defaultValue="false"
             android:key="pref_key_appearance_use_black_theme"
             android:persistent="true"
             android:title="@string/pref_theme_black_theme" />
-    </PreferenceCategory>
+    </android.support.v7.preference.PreferenceCategory>
 
-    <PreferenceCategory android:title="@string/logcat">
+    <android.support.v7.preference.PreferenceCategory android:title="@string/logcat">
         <EditTextPreference
             android:defaultValue="250"
             android:dialogTitle="@string/pref_poll_interval_title"
@@ -34,9 +34,9 @@
             android:persistent="true"
             android:summary="Crash, Main, System"
             android:title="@string/pref_logcat_buffer_dialog_title" />
-    </PreferenceCategory>
+    </android.support.v7.preference.PreferenceCategory>
 
-    <PreferenceCategory android:title="@string/about">
+    <android.support.v7.preference.PreferenceCategory android:title="@string/about">
         <Preference
             android:key="pref_key_about_github_repo"
             android:selectable="true"
@@ -46,5 +46,5 @@
             android:key="pref_key_about_version_name"
             android:selectable="false"
             android:title="@string/app_name" />
-    </PreferenceCategory>
-</PreferenceScreen>
+    </android.support.v7.preference.PreferenceCategory>
+</android.support.v7.preference.PreferenceScreen>
