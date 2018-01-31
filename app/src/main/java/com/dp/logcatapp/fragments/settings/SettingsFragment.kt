@@ -1,5 +1,7 @@
 package com.dp.logcatapp.fragments.settings
 
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.support.v14.preference.MultiSelectListPreference
 import android.support.v7.preference.ListPreference
@@ -124,7 +126,20 @@ class SettingsFragment : PreferenceFragmentCompat() {
     }
 
     private fun setupAboutCategory() {
-        val pref = findPreference(PreferenceKeys.About.KEY_VERSION_NAME)
-        pref.summary = "Version ${BuildConfig.VERSION_NAME}"
+        val prefAbout = findPreference(PreferenceKeys.About.KEY_VERSION_NAME)
+        prefAbout.summary = "Version ${BuildConfig.VERSION_NAME}"
+
+        val prefGitHubPage = findPreference(PreferenceKeys.About.KEY_GITHUB_PAGE)
+        prefGitHubPage.setOnPreferenceClickListener { _ ->
+            try {
+                val url = "https://github.com/darshanparajuli/LogcatReader"
+                val intent = Intent(Intent.ACTION_VIEW)
+                intent.data = Uri.parse(url)
+                startActivity(intent)
+                true
+            } catch (e: Exception) {
+                false
+            }
+        }
     }
 }

@@ -38,7 +38,12 @@
 
     <PreferenceCategory android:title="@string/about">
         <Preference
-            android:key="pref_key_version_name"
+            android:key="pref_key_about_github_repo"
+            android:selectable="true"
+            android:summary="@string/pref_key_about_github_repo_summary"
+            android:title="@string/pref_key_about_github_repo_title" />
+        <Preference
+            android:key="pref_key_about_version_name"
             android:selectable="false"
             android:title="@string/app_name" />
     </PreferenceCategory>

@@ -52,4 +52,6 @@
     </string>
     <string name="started_recording">Started recording</string>
     <string name="log_priority">Log priority</string>
+    <string name="pref_key_about_github_repo_title">GitHub Repository</string>
+    <string name="pref_key_about_github_repo_summary">View source, create issues, etc</string>
 </resources>

@@ -43,6 +43,7 @@ object PreferenceKeys {
     }
 
     object About {
-        const val KEY_VERSION_NAME = "pref_key_version_name"
+        const val KEY_VERSION_NAME = "pref_key_about_version_name"
+        const val KEY_GITHUB_PAGE = "pref_key_about_github_repo"
     }
 }
