@@ -8,5 +8,5 @@
         android:centerColor="@color/toolbar_shadow_center_color_dark"
         android:endColor="@android:color/transparent"
         android:startColor="@color/toolbar_shadow_start_color_dark"
-        android:type="linear"/>
+        android:type="linear" />
 </shape>

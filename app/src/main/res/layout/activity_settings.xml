@@ -8,17 +8,17 @@
         layout="@layout/app_bar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"/>
+        android:layout_alignParentTop="true" />
 
     <FrameLayout
         android:id="@+id/content_frame"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_below="@+id/app_bar"/>
+        android:layout_below="@+id/app_bar" />
 
     <View
         android:layout_width="match_parent"
         android:layout_height="@dimen/toolbar_shadow_height_compat"
         android:layout_below="@+id/app_bar"
-        android:background="?attr/toolbar_shadow"/>
+        android:background="?attr/toolbar_shadow" />
 </RelativeLayout>
