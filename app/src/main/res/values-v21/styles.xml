@@ -2,19 +2,19 @@
 <resources>
 
     <style name="LightTheme" parent="LightThemeCommon">
-        <item name="android:windowTranslucentStatus">true</item>
+        <item name="android:statusBarColor">#64000000</item>
     </style>
 
     <style name="DarkTheme" parent="DarkThemeCommon">
-        <item name="android:windowTranslucentStatus">true</item>
+        <item name="android:statusBarColor">#64000000</item>
     </style>
 
     <style name="BlackTheme" parent="BlackThemeCommon">
-        <item name="android:windowTranslucentStatus">true</item>
+        <item name="android:statusBarColor">#64000000</item>
     </style>
 
     <style name="SplashScreenTheme" parent="SplashScreenThemeCommon">
-        <item name="android:windowTranslucentStatus">true</item>
+        <item name="android:statusBarColor">#64000000</item>
     </style>
 
 </resources>

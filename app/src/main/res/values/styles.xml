@@ -1,6 +1,6 @@
 <resources>
 
-    <style name="LightTheme" parent="Theme.AppCompat.Light.NoActionBar">
+    <style name="LightThemeCommon" parent="Theme.AppCompat.Light.NoActionBar">
         <item name="colorAccent">@color/color_accent</item>
         <item name="colorPrimary">@color/color_primary</item>
         <item name="colorPrimaryDark">@color/color_primary_dark</item>
@@ -17,7 +17,7 @@
         <item name="toolbar_popup_theme">@style/LightToolbarPopupTheme</item>
     </style>
 
-    <style name="DarkTheme" parent="Theme.AppCompat.NoActionBar">
+    <style name="DarkThemeCommon" parent="Theme.AppCompat.NoActionBar">
         <item name="colorAccent">@color/color_accent</item>
         <item name="colorPrimary">@color/color_primary_dark_mode</item>
         <item name="colorPrimaryDark">@color/color_primary_dark_mode_dark</item>
@@ -34,10 +34,16 @@
         <item name="toolbar_popup_theme">@style/DarkToolbarPopupTheme</item>
     </style>
 
-    <style name="BlackTheme" parent="DarkTheme">
+    <style name="BlackThemeCommon" parent="DarkThemeCommon">
         <item name="android:windowBackground">@color/black_window_bg</item>
         <item name="ripple_mask_color">@color/black_window_bg</item>
     </style>
+
+    <style name="LightTheme" parent="LightThemeCommon" />
+
+    <style name="DarkTheme" parent="DarkThemeCommon" />
+
+    <style name="BlackTheme" parent="BlackThemeCommon" />
 
     <style name="LightTextViewStyle" parent="android:Widget.TextView">
         <item name="android:textColorPrimary">@color/primary_text_color_light</item>
@@ -59,16 +65,10 @@
 
     <style name="MyPreferenceTheme" parent="@style/PreferenceThemeOverlay.v14.Material" />
 
-    <style name="SplashScreenTheme" parent="Theme.AppCompat.NoActionBar">
+    <style name="SplashScreenThemeCommon" parent="Theme.AppCompat.NoActionBar">
         <item name="android:windowBackground">@drawable/splash_screen</item>
     </style>
 
-    <style name="DarkBgTheme" parent="Theme.AppCompat.NoActionBar">
-        <item name="android:windowBackground">@color/dark_window_bg</item>
-    </style>
-
-    <style name="BlackBgTheme" parent="Theme.AppCompat.NoActionBar">
-        <item name="android:windowBackground">@color/black_window_bg</item>
-    </style>
+    <style name="SplashScreenTheme" parent="SplashScreenThemeCommon" />
 
 </resources>

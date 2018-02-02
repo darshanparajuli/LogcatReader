@@ -14,6 +14,7 @@ import android.support.v7.preference.PreferenceManager
 import android.support.v7.widget.Toolbar
 import android.util.DisplayMetrics
 import android.view.MenuItem
+import android.view.View
 import com.dp.logcatapp.R
 import com.dp.logcatapp.util.setTheme
 
@@ -33,6 +34,10 @@ abstract class BaseActivityWithToolbar : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         PreferenceManager.setDefaultValues(this, R.xml.settings, false)
         setTheme()
+        if (Build.VERSION.SDK_INT >= 21) {
+            window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
+                    View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+        }
         super.onCreate(savedInstanceState)
     }
 
