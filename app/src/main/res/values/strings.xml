@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Logcat Reader</string>
     <string name="device_logs">Device Logs</string>
