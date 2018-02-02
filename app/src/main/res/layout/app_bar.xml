@@ -4,8 +4,7 @@
     android:id="@+id/toolbar_container"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="?attr/colorPrimary"
-    android:paddingTop="@dimen/translucent_status_bar_compensation_padding">
+    android:background="?attr/colorPrimary">
 
     <android.support.v7.widget.Toolbar
         android:id="@+id/toolbar"

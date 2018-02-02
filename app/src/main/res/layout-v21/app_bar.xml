@@ -5,8 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="?attr/colorPrimary"
-    android:elevation="@dimen/toolbar_shadow_height"
-    android:paddingTop="@dimen/translucent_status_bar_compensation_padding">
+    android:elevation="@dimen/toolbar_shadow_height">
 
     <android.support.v7.widget.Toolbar
         android:id="@+id/toolbar"
