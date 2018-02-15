@@ -53,4 +53,5 @@
     <string name="log_priority">Приоритет логов</string>
     <string name="pref_key_about_github_repo_title">GitHub репозиторий</string>
     <string name="pref_key_about_github_repo_summary">Посмотреть код, задать вопрос, и т.д.</string>
+    <string name="filter">Фильтр</string>
 </resources>

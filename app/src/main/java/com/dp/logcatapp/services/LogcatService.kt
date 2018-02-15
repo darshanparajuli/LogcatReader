@@ -33,7 +33,6 @@ class LogcatService : BaseService() {
 
     var paused = false
     var recording = false
-    val allowedPriorities = mutableSetOf<String>()
 
     override fun onCreate() {
         super.onCreate()

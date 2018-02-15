@@ -12,18 +12,23 @@ import android.support.design.widget.Snackbar
 import android.support.v4.content.ContextCompat
 import android.support.v4.content.FileProvider
 import android.support.v7.app.AppCompatActivity
+import android.support.v7.preference.PreferenceManager
 import android.support.v7.widget.DividerItemDecoration
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.SearchView
 import android.view.*
-import com.dp.logcat.*
+import androidx.content.edit
+import com.dp.logcat.Log
+import com.dp.logcat.Logcat
+import com.dp.logcat.LogcatEventListener
+import com.dp.logcat.LogcatFilter
 import com.dp.logcatapp.R
 import com.dp.logcatapp.activities.BaseActivityWithToolbar
 import com.dp.logcatapp.fragments.base.BaseFragment
 import com.dp.logcatapp.fragments.logcatlive.dialogs.CopyToClipboardDialogFragment
+import com.dp.logcatapp.fragments.logcatlive.dialogs.FilterDialogFragment
 import com.dp.logcatapp.fragments.logcatlive.dialogs.InstructionToGrantPermissionDialogFragment
-import com.dp.logcatapp.fragments.logcatlive.dialogs.LogPriorityPickerDialogFragment
 import com.dp.logcatapp.services.LogcatService
 import com.dp.logcatapp.util.*
 import com.dp.logger.MyLogger
@@ -39,8 +44,12 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
 
         private const val FILTER_MSG = "msg"
         private const val MY_PERMISSION_REQ_WRITE_EXTERNAL_STORAGE = 1
-        private const val LOG_PRIORITY_FILTER = "logLevelFilter"
+        private const val LOG_PRIORITY_FILTER = "logPriorityFilter"
+        private const val LOG_KEYWORD_FILTER = "logKeywordFilter"
+
         private val STOP_RECORDING = TAG + "_stop_recording"
+        private val KEY_FILTER_PRIORITES = TAG + "_key_filter_priorites"
+        private val KEY_FILTER_KEYWORD = TAG + "_key_filter_keyword"
 
         fun newInstance(stopRecording: Boolean): LogcatLiveFragment {
             val bundle = Bundle()
@@ -383,11 +392,13 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
                 }
                 true
             }
-            R.id.action_log_priority -> {
-                val frag = LogPriorityPickerDialogFragment.newInstance(logcatService!!
-                        .allowedPriorities.toTypedArray())
+            R.id.filter_action -> {
+                val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(activity)
+                val keyword = sharedPreferences.getString(KEY_FILTER_KEYWORD, "")
+                val logPriorites = sharedPreferences.getStringSet(KEY_FILTER_PRIORITES, setOf())
+                val frag = FilterDialogFragment.newInstance(keyword, logPriorites)
                 frag.setTargetFragment(this, 0)
-                frag.show(fragmentManager, LogPriorityPickerDialogFragment.TAG)
+                frag.show(fragmentManager, FilterDialogFragment.TAG)
                 true
             }
             R.id.action_save -> {
@@ -398,24 +409,33 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
         }
     }
 
-    fun addPriorityFilter(allowed: Set<String>) {
+    fun setFilterAndSave(keyword: String, logPriorities: Set<String>) {
         val logcat = logcatService?.logcat
         if (logcat != null) {
             logcat.pause()
 
-            logcatService!!.allowedPriorities.clear()
-            if (allowed.isNotEmpty()) {
-                logcatService!!.allowedPriorities.addAll(allowed)
-                logcat.addFilter(LOG_PRIORITY_FILTER, LogPriorityFilter(allowed))
+            if (logPriorities.isNotEmpty()) {
+                logcat.addFilter(LOG_PRIORITY_FILTER, LogPriorityFilter(logPriorities))
             } else {
                 logcat.removeFilter(LOG_PRIORITY_FILTER)
+            }
+
+            if (keyword.isNotEmpty()) {
+                logcat.addFilter(LOG_KEYWORD_FILTER, LogKeywordFilter(keyword))
+            } else {
+                logcat.removeFilter(LOG_KEYWORD_FILTER)
+            }
+
+            val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(activity)
+            sharedPreferences.edit {
+                putString(KEY_FILTER_KEYWORD, keyword)
+                putStringSet(KEY_FILTER_PRIORITES, logPriorities)
             }
 
             adapter.clear()
             adapter.addItems(logcat.getLogsFiltered())
             updateToolbarSubtitle(adapter.itemCount)
             scrollRecyclerView()
-
             resumeLogcat()
         }
     }
@@ -578,6 +598,22 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
         val logcat = logcatService!!.logcat
         logcat.pause()
 
+        val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(activity)
+        val keyword = sharedPreferences.getString(KEY_FILTER_KEYWORD, null)
+        val logPriorites = sharedPreferences.getStringSet(KEY_FILTER_PRIORITES, null)
+
+        if (keyword == null) {
+            logcat.removeFilter(LOG_KEYWORD_FILTER)
+        } else {
+            logcat.addFilter(LOG_KEYWORD_FILTER, LogKeywordFilter(keyword))
+        }
+
+        if (logPriorites == null) {
+            logcat.removeFilter(LOG_PRIORITY_FILTER)
+        } else {
+            logcat.addFilter(LOG_PRIORITY_FILTER, LogPriorityFilter(logPriorites))
+        }
+
         if (adapter.itemCount == 0) {
             MyLogger.logDebug(LogcatLiveFragment::class, "Added all logs")
             addAllLogs(logcat.getLogsFiltered())
@@ -685,10 +721,16 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
         }
     }
 
-    private class LogPriorityFilter(val allowed: Set<String>) : LogcatFilter {
+    private class LogPriorityFilter(val priorities: Set<String>) : LogcatFilter {
         override fun filter(log: Log): Boolean {
-            return allowed.isEmpty() || allowed.contains(log.priority)
+            return priorities.isEmpty() || priorities.contains(log.priority)
         }
+    }
 
+    private class LogKeywordFilter(val keyword: String) : LogcatFilter {
+        override fun filter(log: Log): Boolean {
+            return keyword.isEmpty() || log.tag.containsIgnoreCase(keyword) ||
+                    log.msg.containsIgnoreCase(keyword)
+        }
     }
 }

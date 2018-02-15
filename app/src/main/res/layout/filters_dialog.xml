@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center"
+    android:orientation="vertical"
+    android:paddingBottom="24dp"
+    android:paddingLeft="24dp"
+    android:paddingRight="24dp"
+    android:paddingTop="20dp">
+
+    <android.support.v7.widget.AppCompatEditText
+        android:id="@+id/keyword"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <android.support.v7.widget.AppCompatCheckBox
+        android:id="@+id/checkboxAssert"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:text="Assert" />
+
+    <android.support.v7.widget.AppCompatCheckBox
+        android:id="@+id/checkboxDebug"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:text="Debug" />
+
+    <android.support.v7.widget.AppCompatCheckBox
+        android:id="@+id/checkboxError"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:text="Error" />
+
+    <android.support.v7.widget.AppCompatCheckBox
+        android:id="@+id/checkboxFatal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:text="Fatal" />
+
+    <android.support.v7.widget.AppCompatCheckBox
+        android:id="@+id/checkboxInfo"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:text="Info" />
+
+    <android.support.v7.widget.AppCompatCheckBox
+        android:id="@+id/checkboxVerbose"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:text="Verbose" />
+
+    <android.support.v7.widget.AppCompatCheckBox
+        android:id="@+id/checkboxWarning"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:text="Warning" />
+
+</LinearLayout>
