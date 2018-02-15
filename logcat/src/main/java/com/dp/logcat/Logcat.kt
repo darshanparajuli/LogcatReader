@@ -210,7 +210,7 @@ class Logcat : Closeable {
                 }
             }
             recordStartIndex = -1
-            return result
+            return result.filter { log -> filters.values.all { it.filter(log) } }
         }
     }
 
