@@ -2,7 +2,7 @@
 <android.support.v7.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     android:key="pref_key_main_screen">
     <android.support.v7.preference.PreferenceCategory android:title="@string/pref_cat_appearance">
-        <ListPreference
+        <android.support.v7.preference.ListPreference
             android:defaultValue="0"
             android:dialogTitle="@string/pref_theme_title"
             android:entries="@array/pref_appearance_theme_entries"
@@ -19,14 +19,14 @@
     </android.support.v7.preference.PreferenceCategory>
 
     <android.support.v7.preference.PreferenceCategory android:title="@string/logcat">
-        <EditTextPreference
+        <android.support.v7.preference.EditTextPreference
             android:defaultValue="250"
             android:dialogTitle="@string/pref_poll_interval_title"
             android:key="pref_key_logcat_poll_interval"
             android:persistent="true"
             android:title="@string/pref_poll_interval_title" />
 
-        <MultiSelectListPreference
+        <android.support.v14.preference.MultiSelectListPreference
             android:dialogTitle="@string/pref_logcat_buffer_dialog_title"
             android:entries="@array/pref_logcat_log_buffers"
             android:entryValues="@array/pref_logcat_log_buffers_values"
@@ -37,12 +37,12 @@
     </android.support.v7.preference.PreferenceCategory>
 
     <android.support.v7.preference.PreferenceCategory android:title="@string/about">
-        <Preference
+        <android.support.v7.preference.Preference
             android:key="pref_key_about_github_repo"
             android:selectable="true"
             android:summary="@string/pref_key_about_github_repo_summary"
             android:title="@string/pref_key_about_github_repo_title" />
-        <Preference
+        <android.support.v7.preference.Preference
             android:key="pref_key_about_version_name"
             android:selectable="false"
             android:title="@string/app_name" />
