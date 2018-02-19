@@ -131,15 +131,17 @@ fun Context.isDarkThemeOn(): Boolean {
             (theme == PreferenceKeys.Appearance.Theme.AUTO && isDarkThemeTime())
 }
 
-private fun Context.setThemeAuto(useBlackTheme: Boolean) {
+private fun Context.setThemeAuto() {
     if (isDarkThemeTime()) {
-        setThemeDark(useBlackTheme)
+        setThemeDark()
     } else {
         setThemeLight()
     }
 }
 
-private fun Context.setThemeDark(useBlackTheme: Boolean) {
+private fun Context.setThemeDark() {
+    val useBlackTheme = getDefaultSharedPreferences().getBoolean(PreferenceKeys
+            .Appearance.KEY_USE_BLACK_THEME, PreferenceKeys.Appearance.Default.USE_BLACK_THEME)
     if (useBlackTheme) {
         setTheme(R.style.BlackTheme)
     } else {
@@ -155,11 +157,9 @@ fun Context.setTheme() {
     val prefs = getDefaultSharedPreferences()
     val theme = prefs.getString(PreferenceKeys.Appearance.KEY_THEME,
             PreferenceKeys.Appearance.Default.THEME)
-    val useBlackTheme = prefs.getBoolean(PreferenceKeys.Appearance.KEY_USE_BLACK_THEME,
-            PreferenceKeys.Appearance.Default.USE_BLACK_THEME)
     when (theme) {
-        PreferenceKeys.Appearance.Theme.AUTO -> setThemeAuto(useBlackTheme)
-        PreferenceKeys.Appearance.Theme.DARK -> setThemeDark(useBlackTheme)
+        PreferenceKeys.Appearance.Theme.AUTO -> setThemeAuto()
+        PreferenceKeys.Appearance.Theme.DARK -> setThemeDark()
         PreferenceKeys.Appearance.Theme.LIGHT -> setThemeLight()
     }
 }
