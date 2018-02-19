@@ -35,4 +35,7 @@
     <color name="priority_silent">#616161</color>
     <color name="priority_warning">#E65100</color>
     <color name="priority_verbose">#546E7A</color>
+
+    <!--Fix accent color for preference category for API < 21-->
+    <color name="preference_fallback_accent_color">@color/color_accent</color>
 </resources>
