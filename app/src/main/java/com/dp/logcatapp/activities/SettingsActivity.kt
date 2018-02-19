@@ -13,7 +13,7 @@ class SettingsActivity : BaseActivityWithToolbar() {
 
         if (savedInstanceState == null) {
             supportFragmentManager.beginTransaction()
-                    .add(R.id.content_frame, SettingsFragment(), SettingsFragment.TAG)
+                    .replace(R.id.content_frame, SettingsFragment(), SettingsFragment.TAG)
                     .commit()
         }
     }
