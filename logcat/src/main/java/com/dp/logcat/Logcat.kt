@@ -333,9 +333,9 @@ class Logcat : Closeable {
     }
 
     private fun processStdout(inputStream: InputStream?) {
-        var reader: LogcatReader? = null
+        var reader: LogcatStreamReader? = null
         try {
-            reader = LogcatReader(inputStream!!)
+            reader = LogcatStreamReader(inputStream!!)
             for (log in reader) {
                 synchronized(logsLock) {
                     pendingLogs += log

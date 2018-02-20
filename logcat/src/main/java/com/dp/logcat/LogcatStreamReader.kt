@@ -3,7 +3,7 @@ package com.dp.logcat
 import com.dp.logger.MyLogger
 import java.io.*
 
-class LogcatReader(inputStream: InputStream) : Iterator<Log>, Closeable {
+class LogcatStreamReader(inputStream: InputStream) : Iterator<Log>, Closeable {
     private val reader: BufferedReader = BufferedReader(InputStreamReader(inputStream))
     private val msgBuffer = StringBuilder()
     private lateinit var log: Log
