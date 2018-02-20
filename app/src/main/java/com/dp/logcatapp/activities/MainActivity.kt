@@ -38,7 +38,7 @@ class MainActivity : BaseActivityWithToolbar() {
             val stopRecording = intent?.getBooleanExtra(STOP_RECORDING_EXTRA,
                     false) == true
             supportFragmentManager.beginTransaction()
-                    .add(R.id.content_frame, LogcatLiveFragment.newInstance(stopRecording),
+                    .replace(R.id.content_frame, LogcatLiveFragment.newInstance(stopRecording),
                             LogcatLiveFragment.TAG)
                     .commit()
         }

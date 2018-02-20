@@ -5,7 +5,7 @@
     <string name="font_Roboto_Bold">Roboto-Bold</string>
     <string name="font_Roboto_BoldItalic">Roboto-BoldItalic</string>
     <string name="font_Roboto_Italic">Roboto-Italic</string>
-    <!--<string name="font_Roboto_Light">Roboto-Light</string>-->
+    <string name="font_Roboto_Light">Roboto-Light</string>
     <!--<string name="font_Roboto_LightItalic">Roboto-LightItalic</string>-->
     <string name="font_Roboto_Medium">Roboto-Medium</string>
     <string name="font_Roboto_MediumItalic">Roboto-MediumItalic</string>

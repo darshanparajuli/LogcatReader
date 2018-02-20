@@ -7,7 +7,9 @@ import android.content.ContextWrapper
 import android.content.Intent
 import android.content.SharedPreferences
 import android.graphics.Typeface
+import android.net.Uri
 import android.os.Build
+import android.provider.OpenableColumns
 import android.support.annotation.LayoutRes
 import android.support.design.widget.Snackbar
 import android.support.v4.app.Fragment
@@ -162,6 +164,31 @@ fun Context.setTheme() {
         PreferenceKeys.Appearance.Theme.DARK -> setThemeDark()
         PreferenceKeys.Appearance.Theme.LIGHT -> setThemeLight()
     }
+}
+
+
+fun Context.getFileNameFromUri(uri: Uri): String {
+    var name: String? = null
+    if (uri.scheme == "content") {
+        val cursor = contentResolver.query(uri, null, null, null, null)
+        try {
+            if (cursor != null && cursor.moveToFirst()) {
+                name = cursor.getString(cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME))
+            }
+        } finally {
+            cursor?.close()
+        }
+    }
+
+    if (name == null) {
+        name = uri.path!!
+        val lastSlashIndex = name.lastIndexOf('/')
+        if (lastSlashIndex != -1) {
+            name = name.substring(lastSlashIndex + 1)
+        }
+    }
+
+    return name
 }
 
 //// END Context

@@ -5,6 +5,8 @@
 <resources>
     <string name="app_name">Logcat Reader</string>
     <string name="device_logs">Логи устройства</string>
+    <string name="saved_logs">Сохраненные журналы</string>
+    <string name="saved_logs_action">Сохраненные журналы</string>
     <string name="settings">Настройки</string>
     <string name="start_recording">Начать запись</string>
     <string name="stop_recording">Остановить запись</string>
@@ -54,4 +56,5 @@
     <string name="pref_key_about_github_repo_title">GitHub репозиторий</string>
     <string name="pref_key_about_github_repo_summary">Посмотреть код, задать вопрос, и т.д.</string>
     <string name="filter">Фильтр</string>
+    <string name="empty">пустой</string>
 </resources>

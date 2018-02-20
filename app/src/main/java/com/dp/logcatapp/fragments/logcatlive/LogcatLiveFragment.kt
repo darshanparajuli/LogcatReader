@@ -26,10 +26,11 @@ import com.dp.logcat.LogcatFilter
 import com.dp.logcatapp.R
 import com.dp.logcatapp.activities.BaseActivityWithToolbar
 import com.dp.logcatapp.activities.SavedLogsActivity
+import com.dp.logcatapp.activities.SavedLogsViewerActivity
 import com.dp.logcatapp.fragments.base.BaseFragment
-import com.dp.logcatapp.fragments.shared.dialogs.CopyToClipboardDialogFragment
 import com.dp.logcatapp.fragments.logcatlive.dialogs.FilterDialogFragment
 import com.dp.logcatapp.fragments.logcatlive.dialogs.InstructionToGrantPermissionDialogFragment
+import com.dp.logcatapp.fragments.shared.dialogs.CopyToClipboardDialogFragment
 import com.dp.logcatapp.services.LogcatService
 import com.dp.logcatapp.util.*
 import com.dp.logger.MyLogger
@@ -42,7 +43,12 @@ import java.util.*
 class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListener {
     companion object {
         val TAG = LogcatLiveFragment::class.qualifiedName
-        const val LOGCAT_FOLDER_NAME = "Logcat"
+        val LOGCAT_DIR = File(Environment.getExternalStoragePublicDirectory(
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT)
+                    Environment.DIRECTORY_DOCUMENTS
+                else
+                    "Documents"
+        ), "Logcat")
 
         private const val FILTER_MSG = "msg"
         private const val MY_PERMISSION_REQ_WRITE_EXTERNAL_STORAGE = 1
@@ -407,6 +413,10 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
                 trySaveToFile()
                 true
             }
+            R.id.action_view_saved_logs -> {
+                startActivity(Intent(activity, SavedLogsActivity::class.java))
+                true
+            }
             else -> return super.onOptionsItemSelected(item)
         }
     }
@@ -473,17 +483,8 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
         }
 
         if (isExternalStorageWritable()) {
-            val logcatDir = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                File(Environment.getExternalStoragePublicDirectory(
-                        Environment.DIRECTORY_DOCUMENTS
-                ), LOGCAT_FOLDER_NAME)
-            } else {
-                File(Environment.getExternalStoragePublicDirectory(
-                        "Documents"
-                ), LOGCAT_FOLDER_NAME)
-            }
-            if (logcatDir.exists() || logcatDir.mkdirs()) {
-                return Logcat.writeToFile(logs, File(logcatDir, fileName))
+            if (LOGCAT_DIR.exists() || LOGCAT_DIR.mkdirs()) {
+                return Logcat.writeToFile(logs, File(LOGCAT_DIR, fileName))
             }
         } else {
             MyLogger.logDebug(LogcatLiveFragment::class, "External storage is not writable")
@@ -509,17 +510,14 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
     }
 
     private fun viewSavedLog(fileName: String): Boolean {
-        val intent = Intent(Intent.ACTION_VIEW)
-        val path = Environment.getExternalStorageDirectory().absolutePath +
-                "/Documents/Logcat/" + fileName
-
+        val path = File(LOGCAT_DIR, fileName)
         val uri = FileProvider.getUriForFile(context!!,
-                context!!.applicationContext.packageName + ".provider",
-                File(path))
+                context!!.applicationContext.packageName + ".provider", path)
+
+        val intent = Intent(context, SavedLogsViewerActivity::class.java)
         intent.setDataAndType(uri, "text/plain")
         intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-
-        startActivity(Intent.createChooser(intent, getString(R.string.open_with)))
+        startActivity(intent)
         return true
     }
 
@@ -713,7 +711,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
 
         override fun onPostExecute(result: List<Log>?) {
             val frag = fragRef.get() ?: return
-            if (result != null && result.isNotEmpty()) {
+            if (result != null) {
                 frag.adapter.clear()
                 frag.adapter.addItems(result)
                 frag.viewModel.autoScroll = false
