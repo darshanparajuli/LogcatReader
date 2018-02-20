@@ -1,4 +1,4 @@
-package com.dp.logcatapp.fragments.logcatlive.dialogs
+package com.dp.logcatapp.fragments.shared.dialogs
 
 import android.app.Dialog
 import android.content.ClipData

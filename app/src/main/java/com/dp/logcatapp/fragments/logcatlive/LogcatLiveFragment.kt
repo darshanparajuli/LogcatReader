@@ -25,8 +25,9 @@ import com.dp.logcat.LogcatEventListener
 import com.dp.logcat.LogcatFilter
 import com.dp.logcatapp.R
 import com.dp.logcatapp.activities.BaseActivityWithToolbar
+import com.dp.logcatapp.activities.SavedLogsActivity
 import com.dp.logcatapp.fragments.base.BaseFragment
-import com.dp.logcatapp.fragments.logcatlive.dialogs.CopyToClipboardDialogFragment
+import com.dp.logcatapp.fragments.shared.dialogs.CopyToClipboardDialogFragment
 import com.dp.logcatapp.fragments.logcatlive.dialogs.FilterDialogFragment
 import com.dp.logcatapp.fragments.logcatlive.dialogs.InstructionToGrantPermissionDialogFragment
 import com.dp.logcatapp.services.LogcatService
@@ -41,6 +42,7 @@ import java.util.*
 class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListener {
     companion object {
         val TAG = LogcatLiveFragment::class.qualifiedName
+        const val LOGCAT_FOLDER_NAME = "Logcat"
 
         private const val FILTER_MSG = "msg"
         private const val MY_PERMISSION_REQ_WRITE_EXTERNAL_STORAGE = 1
@@ -471,15 +473,14 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
         }
 
         if (isExternalStorageWritable()) {
-            val logcatFolderName = "Logcat"
             val logcatDir = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
                 File(Environment.getExternalStoragePublicDirectory(
                         Environment.DIRECTORY_DOCUMENTS
-                ), logcatFolderName)
+                ), LOGCAT_FOLDER_NAME)
             } else {
-                val documentsFolder = File(Environment.getExternalStorageDirectory(),
-                        "Documents/$logcatFolderName")
-                File(documentsFolder, fileName)
+                File(Environment.getExternalStoragePublicDirectory(
+                        "Documents"
+                ), LOGCAT_FOLDER_NAME)
             }
             if (logcatDir.exists() || logcatDir.mkdirs()) {
                 return Logcat.writeToFile(logs, File(logcatDir, fileName))
