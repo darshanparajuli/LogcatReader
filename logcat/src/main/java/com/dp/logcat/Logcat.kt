@@ -333,38 +333,17 @@ class Logcat : Closeable {
     }
 
     private fun processStdout(inputStream: InputStream?) {
-        val msgBuffer = StringBuilder()
-
-        val reader: BufferedReader
+        var reader: LogcatReader? = null
         try {
-            reader = BufferedReader(InputStreamReader(inputStream))
-            loop@ while (isProcessAlive) {
-                val metadata = reader.readLine()?.trim() ?: break
-                if (metadata.startsWith("[")) {
-                    var msg = reader.readLine() ?: break
-                    msgBuffer.append(msg)
-
-                    msg = reader.readLine() ?: break
-                    while (msg.isNotEmpty()) {
-                        msgBuffer.append("\n")
-                                .append(msg)
-
-                        msg = reader.readLine() ?: break@loop
-                    }
-
-                    try {
-                        val log = LogFactory.createNewLog(metadata, msgBuffer.toString())
-                        synchronized(logsLock) {
-                            pendingLogs += log
-                        }
-                    } catch (e: Exception) {
-                        MyLogger.logDebug(Logcat::class, "${e.message}: $metadata")
-                    } finally {
-                        msgBuffer.setLength(0)
-                    }
+            reader = LogcatReader(inputStream!!)
+            for (log in reader) {
+                synchronized(logsLock) {
+                    pendingLogs += log
                 }
             }
         } catch (e: Exception) {
+        } finally {
+            reader?.close()
         }
     }
 
