@@ -1,6 +1,5 @@
 package com.dp.logcat
 
-import android.os.Looper.loop
 import com.dp.logger.MyLogger
 import java.io.*
 
