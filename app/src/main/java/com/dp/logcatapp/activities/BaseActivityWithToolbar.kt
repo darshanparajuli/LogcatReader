@@ -4,7 +4,6 @@ import android.annotation.SuppressLint
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
-import android.support.design.widget.AppBarLayout
 import android.support.v4.app.NavUtils
 import android.support.v4.app.TaskStackBuilder
 import android.support.v4.view.ViewCompat
@@ -15,6 +14,7 @@ import android.support.v7.widget.Toolbar
 import android.util.DisplayMetrics
 import android.view.MenuItem
 import android.view.View
+import android.view.ViewGroup
 import com.dp.logcatapp.R
 import com.dp.logcatapp.util.setTheme
 
@@ -44,11 +44,11 @@ abstract class BaseActivityWithToolbar : AppCompatActivity() {
     protected fun setupToolbar() {
         toolbar = findViewById(getToolbarIdRes())
         if (Build.VERSION.SDK_INT == 19) {
-            setAppBarPaddingForKitkat(toolbar.parent as AppBarLayout)
+            setAppBarPaddingForKitkat(toolbar.parent as ViewGroup)
         } else if (Build.VERSION.SDK_INT >= 21) {
             ViewCompat.setOnApplyWindowInsetsListener(toolbar) { view, insets ->
-                val appBarLayout = view.parent as AppBarLayout
-                appBarLayout.setPadding(0, insets.systemWindowInsetTop, 0, 0)
+                val viewGroup = view.parent as ViewGroup
+                viewGroup.setPadding(0, insets.systemWindowInsetTop, 0, 0)
                 insets.consumeSystemWindowInsets()
             }
         }
@@ -56,11 +56,11 @@ abstract class BaseActivityWithToolbar : AppCompatActivity() {
         supportActionBar?.title = getToolbarTitle()
     }
 
-    private fun setAppBarPaddingForKitkat(appBarLayout: AppBarLayout) {
+    private fun setAppBarPaddingForKitkat(viewGroup: ViewGroup) {
         val dm = DisplayMetrics()
         windowManager.defaultDisplay.getMetrics(dm)
         val topPadding = (dm.scaledDensity * 25).toInt()
-        appBarLayout.setPadding(0, topPadding, 0, 0)
+        viewGroup.setPadding(0, topPadding, 0, 0)
     }
 
     protected abstract fun getToolbarIdRes(): Int
