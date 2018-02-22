@@ -5,6 +5,7 @@ import android.arch.lifecycle.ViewModelProviders
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.support.v4.content.FileProvider
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.Toolbar
@@ -21,6 +22,7 @@ import com.dp.logcatapp.activities.SavedLogsViewerActivity
 import com.dp.logcatapp.fragments.base.BaseFragment
 import com.dp.logcatapp.fragments.logcatlive.LogcatLiveFragment
 import com.dp.logcatapp.util.inflateLayout
+import com.dp.logcatapp.util.showToast
 import kotlinx.android.synthetic.main.app_bar.*
 import java.io.File
 
@@ -147,6 +149,22 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
     override fun onMenuItemClick(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.action_share -> {
+                val fileName = recyclerViewAdapter.getItem(viewModel.selectedItems.toIntArray()[0])
+                val folder = File(context!!.filesDir, LogcatLiveFragment.LOGCAT_DIR)
+                val file = File(folder, fileName)
+
+                try {
+                    val intent = Intent(Intent.ACTION_SEND)
+                    val uri = FileProvider.getUriForFile(context!!,
+                            context!!.packageName + ".fileprovider", file)
+                    intent.setDataAndType(uri, "text/*")
+                    intent.putExtra(Intent.EXTRA_STREAM, uri)
+                    intent.flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
+
+                    startActivity(Intent.createChooser(intent, getString(R.string.share)))
+                } catch (e: Exception) {
+                    context?.showToast("Unable to share")
+                }
                 true
             }
             R.id.action_delete -> {
