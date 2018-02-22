@@ -75,7 +75,6 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
     private var ignoreScrollEvent = false
     private var searchViewActive = false
     private var lastLogId = -1
-    private var pendingLogsToSave: List<Log>? = null
     private var lastSearchRunnable: Runnable? = null
     private var searchTask: SearchTask? = null
 
@@ -470,32 +469,23 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
         viewModel.stopRecording = false
     }
 
-    private fun actuallySaveToFile(logs: List<Log>, fileName: String): Boolean {
+    private fun actuallySaveToFile(logs: List<Log>, fileName: String) {
         if (logs.isEmpty()) {
             MyLogger.logDebug(LogcatLiveFragment::class, "Nothing to save")
             showSnackbar(view, getString(R.string.nothing_to_save))
-            return true
+            return
         }
 
         val file = File(context!!.filesDir, LOGCAT_DIR)
         file.mkdirs()
-        return Logcat.writeToFile(logs, File(file, fileName))
+        SaveFileTask(this, File(file, fileName), logs).execute()
     }
 
     private fun saveToFile(logs: List<Log>) {
         val timeStamp = SimpleDateFormat("MM-dd-yyyy_HH-mm-ss", Locale.getDefault())
                 .format(Date())
         val fileName = "logcat_$timeStamp.txt"
-        if (actuallySaveToFile(logs, fileName)) {
-            newSnakcbar(view, getString(R.string.saved_as_filename).format(fileName), Snackbar.LENGTH_LONG)
-                    ?.setAction(getString(R.string.view_log), {
-                        if (!viewSavedLog(fileName)) {
-                            showSnackbar(view, getString(R.string.could_not_open_log_file))
-                        }
-                    })?.show()
-        } else {
-            showSnackbar(view, getString(R.string.failed_to_save_logs))
-        }
+        actuallySaveToFile(logs, fileName)
     }
 
     private fun viewSavedLog(fileName: String): Boolean {
@@ -681,6 +671,37 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
         override fun filter(log: Log): Boolean {
             return keyword.isEmpty() || log.tag.containsIgnoreCase(keyword) ||
                     log.msg.containsIgnoreCase(keyword)
+        }
+    }
+
+    class SaveFileTask(frag: LogcatLiveFragment, val file: File, val logs: List<Log>) :
+            AsyncTask<Void, Void, Boolean>() {
+
+        private val ref = WeakReference(frag)
+
+        override fun doInBackground(vararg params: Void?): Boolean {
+            return Logcat.writeToFile(logs, file)
+        }
+
+        override fun onPostExecute(result: Boolean) {
+            val frag = ref.get() ?: return
+            if (frag.activity == null) {
+                return
+            }
+
+            val fileName = file.name
+
+            if (result) {
+                newSnakcbar(frag.view, frag.getString(R.string.saved_as_filename).format(fileName),
+                        Snackbar.LENGTH_LONG)
+                        ?.setAction(frag.getString(R.string.view_log), {
+                            if (!frag.viewSavedLog(fileName)) {
+                                showSnackbar(frag.view, frag.getString(R.string.could_not_open_log_file))
+                            }
+                        })?.show()
+            } else {
+                showSnackbar(frag.view, frag.getString(R.string.failed_to_save_logs))
+            }
         }
     }
 }
