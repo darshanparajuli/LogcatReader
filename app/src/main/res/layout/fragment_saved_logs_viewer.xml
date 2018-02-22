@@ -32,4 +32,14 @@
         android:src="@drawable/ic_keyboard_arrow_down_white_24dp"
         app:fabSize="mini" />
 
+
+    <ProgressBar
+        android:id="@+id/progressBar"
+        style="@style/Base.Widget.AppCompat.ProgressBar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:indeterminate="true"
+        android:visibility="visible" />
+
 </FrameLayout>

@@ -6,11 +6,13 @@ import android.content.ComponentName
 import android.content.Intent
 import android.content.ServiceConnection
 import android.content.pm.PackageManager
-import android.os.*
+import android.net.Uri
+import android.os.AsyncTask
+import android.os.Bundle
+import android.os.IBinder
 import android.support.design.widget.FloatingActionButton
 import android.support.design.widget.Snackbar
 import android.support.v4.content.ContextCompat
-import android.support.v4.content.FileProvider
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.preference.PreferenceManager
 import android.support.v7.widget.DividerItemDecoration
@@ -43,15 +45,9 @@ import java.util.*
 class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListener {
     companion object {
         val TAG = LogcatLiveFragment::class.qualifiedName
-        val LOGCAT_DIR = File(Environment.getExternalStoragePublicDirectory(
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT)
-                    Environment.DIRECTORY_DOCUMENTS
-                else
-                    "Documents"
-        ), "Logcat")
+        const val LOGCAT_DIR = "logcat"
 
         private const val FILTER_MSG = "msg"
-        private const val MY_PERMISSION_REQ_WRITE_EXTERNAL_STORAGE = 1
         private const val LOG_PRIORITY_FILTER = "logPriorityFilter"
         private const val LOG_KEYWORD_FILTER = "logKeywordFilter"
 
@@ -186,14 +182,10 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setHasOptionsMenu(true)
+        serviceBinder = ServiceBinder(LogcatService::class.java, this)
+        adapter = MyRecyclerViewAdapter(activity!!)
         viewModel = ViewModelProviders.of(this)
                 .get(LogcatLiveViewModel::class.java)
-        adapter = MyRecyclerViewAdapter(activity!!)
-    }
-
-    override fun onActivityCreated(savedInstanceState: Bundle?) {
-        super.onActivityCreated(savedInstanceState)
-        serviceBinder = ServiceBinder(LogcatService::class.java, this)
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
@@ -251,6 +243,10 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
                     InstructionToGrantPermissionDialogFragment.TAG)
         }
     }
+
+    private fun checkReadLogsPermission() =
+            ContextCompat.checkSelfPermission(activity!!,
+                    Manifest.permission.READ_LOGS) == PackageManager.PERMISSION_GRANTED
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         super.onCreateOptionsMenu(menu, inflater)
@@ -392,8 +388,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
                         logcat.startRecording()
                     } else {
                         val logs = logcat.stopRecording()
-
-                        trySaveToFile(logs)
+                        saveToFile(logs)
                     }
                     logcatService!!.recording = recording
                     activity?.invalidateOptionsMenu()
@@ -466,7 +461,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
             val logcat = logcatService?.logcat
             if (logcat != null) {
                 val logs = logcat.stopRecording()
-                trySaveToFile(logs)
+                saveToFile(logs)
             }
 
             logcatService!!.recording = false
@@ -482,15 +477,9 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
             return true
         }
 
-        if (isExternalStorageWritable()) {
-            if (LOGCAT_DIR.exists() || LOGCAT_DIR.mkdirs()) {
-                return Logcat.writeToFile(logs, File(LOGCAT_DIR, fileName))
-            }
-        } else {
-            MyLogger.logDebug(LogcatLiveFragment::class, "External storage is not writable")
-        }
-
-        return false
+        val file = File(context!!.filesDir, LOGCAT_DIR)
+        file.mkdirs()
+        return Logcat.writeToFile(logs, File(file, fileName))
     }
 
     private fun saveToFile(logs: List<Log>) {
@@ -510,58 +499,20 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
     }
 
     private fun viewSavedLog(fileName: String): Boolean {
-        val path = File(LOGCAT_DIR, fileName)
-        val uri = FileProvider.getUriForFile(context!!,
-                context!!.applicationContext.packageName + ".provider", path)
-
+        val folder = File(context!!.filesDir, LOGCAT_DIR)
+        val file = File(folder, fileName)
         val intent = Intent(context, SavedLogsViewerActivity::class.java)
-        intent.setDataAndType(uri, "text/plain")
-        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        intent.setDataAndType(Uri.fromFile(file), "text/plain")
         startActivity(intent)
         return true
-    }
-
-    private fun isExternalStorageWritable(): Boolean {
-        return Environment.getExternalStorageState() == Environment.MEDIA_MOUNTED
-    }
-
-    private fun trySaveToFile(logs: List<Log>) {
-        if (checkWriteExternalStoragePermission()) {
-            saveToFile(logs)
-        } else {
-            pendingLogsToSave = logs
-            requestPermissions(arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
-                    MY_PERMISSION_REQ_WRITE_EXTERNAL_STORAGE)
-        }
     }
 
     private fun trySaveToFile() {
         val logcat = logcatService?.logcat
         if (logcat != null) {
-            trySaveToFile(logcat.getLogsFiltered())
+            saveToFile(logcat.getLogsFiltered())
         }
     }
-
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>,
-                                            grantResults: IntArray) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        when (requestCode) {
-            MY_PERMISSION_REQ_WRITE_EXTERNAL_STORAGE -> {
-                if (grantResults.isNotEmpty() &&
-                        grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    saveToFile(pendingLogsToSave ?: emptyList())
-                }
-            }
-        }
-    }
-
-    private fun checkReadLogsPermission() =
-            ContextCompat.checkSelfPermission(activity!!,
-                    Manifest.permission.READ_LOGS) == PackageManager.PERMISSION_GRANTED
-
-    private fun checkWriteExternalStoragePermission() =
-            ContextCompat.checkSelfPermission(activity!!,
-                    Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
 
     override fun onStart() {
         super.onStart()

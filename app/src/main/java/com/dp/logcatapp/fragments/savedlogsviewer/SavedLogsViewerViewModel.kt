@@ -1,9 +1,64 @@
 package com.dp.logcatapp.fragments.savedlogsviewer
 
-import android.arch.lifecycle.ViewModel
+import android.app.Application
+import android.arch.lifecycle.AndroidViewModel
+import android.arch.lifecycle.LiveData
+import android.net.Uri
+import android.os.AsyncTask
+import com.dp.logcat.Log
+import com.dp.logcat.LogcatStreamReader
+import java.io.InputStream
+import java.lang.ref.WeakReference
 
-internal class SavedLogsViewerViewModel : ViewModel() {
+internal class SavedLogsViewerViewModel(application: Application) : AndroidViewModel(application) {
     var autoScroll = true
     var scrollPosition = 0
-    var showedGrantPermissionInstruction = false
+
+    lateinit var logs: LogsLiveData
+
+    private var init = false
+    fun init(uri: Uri) {
+        if (!init) {
+            logs = LogsLiveData(getApplication(), uri)
+            init = true
+        }
+    }
+}
+
+internal class LogsLiveData(application: Application, uri: Uri) : LiveData<List<Log>>() {
+
+    init {
+        load(application, uri)
+    }
+
+    private fun load(application: Application, uri: Uri) {
+        val inputStream = application.contentResolver.openInputStream(uri)
+        Loader(this).execute(inputStream)
+    }
+
+    class Loader(savedLogsLiveData: LogsLiveData) : AsyncTask<InputStream, Void, List<Log>>() {
+
+        private val ref: WeakReference<LogsLiveData> = WeakReference(savedLogsLiveData)
+
+        override fun doInBackground(vararg params: InputStream?): List<Log> {
+            val logs = mutableListOf<Log>()
+
+            val inputStream = params[0]
+            if (inputStream != null) {
+                val reader = LogcatStreamReader(inputStream)
+                for (log in reader) {
+                    logs += log
+                }
+            }
+
+            return logs
+        }
+
+        override fun onPostExecute(result: List<Log>) {
+            val savedLogsLiveData = ref.get()
+            if (savedLogsLiveData != null) {
+                savedLogsLiveData.value = result
+            }
+        }
+    }
 }

@@ -3,8 +3,8 @@ package com.dp.logcatapp.fragments.savedlogs
 import android.arch.lifecycle.Observer
 import android.arch.lifecycle.ViewModelProviders
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
-import android.support.v4.content.FileProvider
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
@@ -12,10 +12,12 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import com.dp.logcatapp.R
+import com.dp.logcatapp.activities.BaseActivityWithToolbar
 import com.dp.logcatapp.activities.SavedLogsViewerActivity
 import com.dp.logcatapp.fragments.base.BaseFragment
 import com.dp.logcatapp.fragments.logcatlive.LogcatLiveFragment
 import com.dp.logcatapp.util.inflateLayout
+import kotlinx.android.synthetic.main.app_bar.*
 import java.io.File
 
 class SavedLogsFragment : BaseFragment(), View.OnClickListener {
@@ -32,18 +34,23 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         recyclerViewAdapter = MyRecyclerViewAdapter(this)
-    }
 
-    override fun onActivityCreated(savedInstanceState: Bundle?) {
-        super.onActivityCreated(savedInstanceState)
         viewModel = ViewModelProviders.of(this)
                 .get(SavedLogsViewModel::class.java)
-        viewModel.fileNames.observe(this, Observer { fileNames ->
-            if (fileNames != null) {
-                if (fileNames.isNotEmpty()) {
+        viewModel.fileNames.observe(this, Observer {
+            if (it != null) {
+                if (it.fileNames.isNotEmpty()) {
                     emptyView.visibility = View.GONE
                     recyclerView.visibility = View.VISIBLE
-                    recyclerViewAdapter.setItems(fileNames)
+                    recyclerViewAdapter.setItems(it.fileNames)
+
+                    if (it.totalSize.isEmpty()) {
+                        (activity as BaseActivityWithToolbar).toolbar.subtitle =
+                                "${it.fileNames.size}"
+                    } else {
+                        (activity as BaseActivityWithToolbar).toolbar.subtitle =
+                                "${it.fileNames.size} (${it.totalSize})"
+                    }
                 }
             }
         })
@@ -70,14 +77,10 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener {
                 val pos = linearLayoutManager.getPosition(v)
                 if (pos != RecyclerView.NO_POSITION) {
                     val fileName = recyclerViewAdapter.getItem(pos)
-
-                    val path = File(LogcatLiveFragment.LOGCAT_DIR, fileName)
-                    val uri = FileProvider.getUriForFile(context!!,
-                            context!!.applicationContext.packageName + ".provider", path)
-
+                    val folder = File(context!!.filesDir, LogcatLiveFragment.LOGCAT_DIR)
+                    val file = File(folder, fileName)
                     val intent = Intent(context, SavedLogsViewerActivity::class.java)
-                    intent.setDataAndType(uri, "text/plain")
-                    intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    intent.setDataAndType(Uri.fromFile(file), "text/plain")
                     startActivity(intent)
                 }
             }

@@ -3,9 +3,6 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="com.dp.logcatapp">
 
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-
     <!-- adb shell pm grant com.dp.logcatapp android.permission.READ_LOGS -->
     <uses-permission android:name="android.permission.READ_LOGS" />
 

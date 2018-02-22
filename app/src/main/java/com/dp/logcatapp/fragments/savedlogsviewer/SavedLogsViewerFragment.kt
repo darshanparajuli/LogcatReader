@@ -1,24 +1,23 @@
 package com.dp.logcatapp.fragments.savedlogsviewer
 
-import android.Manifest
+import android.arch.lifecycle.Observer
 import android.arch.lifecycle.ViewModelProviders
-import android.content.pm.PackageManager
 import android.net.Uri
+import android.opengl.Visibility
 import android.os.AsyncTask
 import android.os.Bundle
 import android.support.design.widget.FloatingActionButton
-import android.support.v4.content.ContextCompat
 import android.support.v7.widget.DividerItemDecoration
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.SearchView
 import android.view.*
+import android.widget.ProgressBar
 import com.dp.logcat.Log
 import com.dp.logcat.LogcatStreamReader
 import com.dp.logcatapp.R
 import com.dp.logcatapp.activities.BaseActivityWithToolbar
 import com.dp.logcatapp.fragments.base.BaseFragment
-import com.dp.logcatapp.fragments.logcatlive.dialogs.InstructionToGrantPermissionDialogFragment
 import com.dp.logcatapp.fragments.shared.dialogs.CopyToClipboardDialogFragment
 import com.dp.logcatapp.util.containsIgnoreCase
 import com.dp.logcatapp.util.inflateLayout
@@ -29,8 +28,6 @@ import java.lang.ref.WeakReference
 class SavedLogsViewerFragment : BaseFragment() {
     companion object {
         val TAG = SavedLogsViewerFragment::class.qualifiedName
-
-        private const val REQ_READ_STORAGE_PERMISSION = 123
 
         private val KEY_FILE_URI = TAG + "_key_filename"
 
@@ -49,6 +46,7 @@ class SavedLogsViewerFragment : BaseFragment() {
     private lateinit var adapter: MyRecyclerViewAdapter
     private lateinit var fabUp: FloatingActionButton
     private lateinit var fabDown: FloatingActionButton
+    private lateinit var progressBar: ProgressBar
     private var ignoreScrollEvent = false
     private var searchViewActive = false
     private var lastLogId = -1
@@ -160,13 +158,15 @@ class SavedLogsViewerFragment : BaseFragment() {
         super.onCreate(savedInstanceState)
         setHasOptionsMenu(true)
         adapter = MyRecyclerViewAdapter(activity!!)
-    }
-
-    override fun onActivityCreated(savedInstanceState: Bundle?) {
-        super.onActivityCreated(savedInstanceState)
         viewModel = ViewModelProviders.of(this)
                 .get(SavedLogsViewerViewModel::class.java)
-        tryStartLoader()
+        viewModel.init(Uri.parse(arguments!!.getString(KEY_FILE_URI)))
+        viewModel.logs.observe(this, Observer {
+            if (it != null) {
+                progressBar.visibility = View.GONE
+                setLogs(it)
+            }
+        })
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
@@ -175,6 +175,8 @@ class SavedLogsViewerFragment : BaseFragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        progressBar = view.findViewById(R.id.progressBar)
 
         recyclerView = view.findViewById(R.id.recyclerView)
         linearLayoutManager = LinearLayoutManager(activity)
@@ -212,12 +214,6 @@ class SavedLogsViewerFragment : BaseFragment() {
                 CopyToClipboardDialogFragment.newInstance(log)
                         .show(fragmentManager, CopyToClipboardDialogFragment.TAG)
             }
-        }
-
-        if (!checkReadLogsPermission() && !viewModel.showedGrantPermissionInstruction) {
-            viewModel.showedGrantPermissionInstruction = true
-            InstructionToGrantPermissionDialogFragment().show(fragmentManager,
-                    InstructionToGrantPermissionDialogFragment.TAG)
         }
     }
 
@@ -291,45 +287,6 @@ class SavedLogsViewerFragment : BaseFragment() {
             else -> return super.onOptionsItemSelected(item)
         }
     }
-
-    private fun tryStartLoader() {
-        if (checkReadLogsPermission()) {
-            startLoader()
-        } else {
-            requestPermissions(arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE),
-                    REQ_READ_STORAGE_PERMISSION)
-        }
-    }
-
-    private fun startLoader() {
-        logs.clear()
-        val uri = Uri.parse(arguments!!.getString(KEY_FILE_URI))
-        val inputStream = context?.contentResolver?.openInputStream(uri)
-        if (inputStream != null) {
-            val reader = LogcatStreamReader(inputStream)
-            for (log in reader) {
-                logs += log
-            }
-            setLogs(logs)
-        }
-    }
-
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>,
-                                            grantResults: IntArray) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        when (requestCode) {
-            REQ_READ_STORAGE_PERMISSION -> {
-                if (grantResults.isNotEmpty() &&
-                        grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    startLoader()
-                }
-            }
-        }
-    }
-
-    private fun checkReadLogsPermission() =
-            ContextCompat.checkSelfPermission(activity!!,
-                    Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
 
     private fun removeLastSearchRunnableCallback() {
         if (lastSearchRunnable != null) {
