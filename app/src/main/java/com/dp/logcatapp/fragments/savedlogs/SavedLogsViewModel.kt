@@ -10,6 +10,7 @@ import java.lang.ref.WeakReference
 
 internal class SavedLogsViewModel(application: Application) : AndroidViewModel(application) {
     val fileNames: SavedLogsLiveData = SavedLogsLiveData(application)
+    val selectedItems = mutableSetOf<Int>()
 }
 
 internal class SavedLogsResult {
@@ -29,6 +30,20 @@ internal class SavedLogsLiveData(private val application: Application) :
         Loader(this).execute(folder)
     }
 
+    fun update(fileNames: List<String>) {
+        val savedLogsResult = SavedLogsResult()
+        savedLogsResult.fileNames += fileNames
+
+        val folder = File(application.filesDir, LogcatLiveFragment.LOGCAT_DIR)
+        val totalSize = fileNames.sumByDouble { File(folder, it).length().toDouble() }
+        if (totalSize > 0) {
+            savedLogsResult.totalSize = sizeToString(totalSize)
+        }
+
+        value = savedLogsResult
+    }
+
+
     class Loader(savedLogsLiveData: SavedLogsLiveData) : AsyncTask<File, Void, SavedLogsResult>() {
 
         private val ref: WeakReference<SavedLogsLiveData> = WeakReference(savedLogsLiveData)
@@ -46,19 +61,10 @@ internal class SavedLogsLiveData(private val application: Application) :
                 }
             }
 
-            if (totalSize > 0) {
-                val units = arrayOf("B", "KB", "MB", "GB", "TB")
-                var unit = units[0]
-                for (i in 1 until units.size) {
-                    if (totalSize >= 1024) {
-                        totalSize /= 1024
-                        unit = units[i]
-                    } else {
-                        break
-                    }
-                }
+            savedLogsResult.fileNames.sort()
 
-                savedLogsResult.totalSize = "%.2f %s".format(totalSize, unit)
+            if (totalSize > 0) {
+                savedLogsResult.totalSize = sizeToString(totalSize)
             }
 
             return savedLogsResult
@@ -69,6 +75,24 @@ internal class SavedLogsLiveData(private val application: Application) :
             if (savedLogsLiveData != null) {
                 savedLogsLiveData.value = result
             }
+        }
+    }
+
+    companion object {
+        fun sizeToString(size: Double): String {
+            val units = arrayOf("B", "KB", "MB", "GB", "TB")
+            var unit = units[0]
+            var totalSize = size
+            for (i in 1 until units.size) {
+                if (totalSize >= 1024) {
+                    totalSize /= 1024
+                    unit = units[i]
+                } else {
+                    break
+                }
+            }
+
+            return "%.2f %s".format(totalSize, unit)
         }
     }
 }

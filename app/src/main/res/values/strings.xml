@@ -54,4 +54,6 @@
     <string name="pref_key_about_github_repo_summary">View source, create issues, etc</string>
     <string name="filter">Filter</string>
     <string name="empty">Empty</string>
+    <string name="delete">Delete</string>
+    <string name="share">Share</string>
 </resources>
