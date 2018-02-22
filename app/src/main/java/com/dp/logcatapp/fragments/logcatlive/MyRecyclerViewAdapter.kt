@@ -58,7 +58,7 @@ internal class MyRecyclerViewAdapter(context: Context) : RecyclerView.Adapter<My
 
     override fun onClick(v: View) {
         when (v.id) {
-            R.id.logcat_list_item_root -> onClickListener?.invoke(v)
+            R.id.list_item_root -> onClickListener?.invoke(v)
         }
     }
 
