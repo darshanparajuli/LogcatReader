@@ -105,4 +105,21 @@ class FixedCircularArrayTest {
         array += 1
         assertTrue(array.isFull())
     }
+
+    @Test
+    fun testIterator() {
+        val array = FixedCircularArray<Int>(10)
+        val expected = mutableListOf<Int>()
+        for (i in 0 until array.size) {
+            array += i * i
+            expected += i * i
+        }
+
+        val actual = mutableListOf<Int>()
+        for (i in array) {
+            actual += i
+        }
+
+        assertEquals(expected, actual)
+    }
 }
