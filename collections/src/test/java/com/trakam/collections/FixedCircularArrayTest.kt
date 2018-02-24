@@ -1,7 +1,6 @@
 package com.trakam.collections
 
-import junit.framework.Assert.assertEquals
-import junit.framework.Assert.assertTrue
+import junit.framework.Assert.*
 import org.junit.Test
 
 class FixedCircularArrayTest {
@@ -88,5 +87,22 @@ class FixedCircularArrayTest {
 
         assertEquals(100, array[array.size - 1])
         assertEquals(91, array[0])
+    }
+
+    @Test
+    fun testIsFull() {
+        val array = FixedCircularArray<Int>(100)
+        assertTrue(array.isEmpty())
+        assertFalse(array.isFull())
+
+        for (i in 0..98) {
+            array += 1
+        }
+
+        assertTrue(array.isNotEmpty())
+        assertFalse(array.isFull())
+
+        array += 1
+        assertTrue(array.isFull())
     }
 }

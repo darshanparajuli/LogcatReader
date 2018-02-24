@@ -123,6 +123,8 @@ class FixedCircularArray<E>(val capacity: Int) : Iterable<E> {
 
     fun isNotEmpty() = size != 0
 
+    fun isFull() = size == capacity
+
     override fun iterator(): Iterator<E> = FixedCircularArrayIterator()
 
     private inner class FixedCircularArrayIterator : Iterator<E> {
