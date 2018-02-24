@@ -1,10 +1,12 @@
 package com.logcat.collections
 
-import java.util.*
-
 class FixedCircularArray<E>(val capacity: Int) : Iterable<E> {
 
-    private val array = arrayOfNulls<Any>(capacity)
+    companion object {
+        private const val INITIAL_SIZE = 16
+    }
+
+    private var array = arrayOfNulls<Any>(INITIAL_SIZE)
     private var head = 0
     private var next = 0
 
@@ -32,6 +34,8 @@ class FixedCircularArray<E>(val capacity: Int) : Iterable<E> {
     }
 
     fun add(e: E) {
+        tryGrow()
+
         if (head < 0) {
             head = 0
         } else if (next == head) {
@@ -97,6 +101,17 @@ class FixedCircularArray<E>(val capacity: Int) : Iterable<E> {
         }
     }
 
+    private fun tryGrow() {
+        if (array.size == capacity) {
+            return
+        }
+
+        val newSize = Math.min(array.size * 2, capacity)
+        val newArray = arrayOfNulls<Any>(newSize)
+        System.arraycopy(array, 0, newArray, 0, newSize)
+        array = newArray
+    }
+
     operator fun plusAssign(e: E) {
         add(e)
     }
@@ -111,7 +126,7 @@ class FixedCircularArray<E>(val capacity: Int) : Iterable<E> {
 
     fun clear() {
         resetHead()
-        Arrays.fill(array, null)
+        array = arrayOfNulls(INITIAL_SIZE)
     }
 
     private fun resetHead() {
