@@ -1,12 +1,12 @@
 package com.logcat.collections
 
-class FixedCircularArray<E>(val capacity: Int) : Iterable<E> {
+class FixedCircularArray<E>(val capacity: Int, initialSize: Int = INITIAL_SIZE) : Iterable<E> {
 
     companion object {
         private const val INITIAL_SIZE = 16
     }
 
-    private var array = arrayOfNulls<Any>(INITIAL_SIZE)
+    private var array = arrayOfNulls<Any>(initialSize)
     private var head = 0
     private var next = 0
 
