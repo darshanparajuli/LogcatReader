@@ -8,8 +8,11 @@ import android.os.Handler
 import android.os.Looper
 import android.support.v7.app.AppCompatActivity
 import com.dp.logger.MyLogger
+import com.logcat.collections.FixedCircularArray
 import java.io.*
 import java.util.*
+import java.util.concurrent.locks.Lock
+import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.thread
 
 class Logcat : Closeable {
@@ -35,10 +38,11 @@ class Logcat : Closeable {
     private val pausePostLogsCondition = ConditionVariable()
 
     // must be synchronized
-    private val logsLock = Any()
-    private val logs = mutableListOf<Log>()
+    private val logsLock = ReentrantLock()
+    private val pendingLogsFullCondition = logsLock.newCondition()
+    private var logs = FixedCircularArray<Log>(INITIAL_LOG_CAPACITY)
+    private var pendingLogs = FixedCircularArray<Log>(INITIAL_LOG_CAPACITY)
     private val filters = mutableMapOf<String, LogcatFilter>()
-    private val pendingLogs = mutableListOf<Log>()
 
     private var _activityInBackgroundLock = Any()
     private var activityInBackground: Boolean = false
@@ -50,7 +54,7 @@ class Logcat : Closeable {
                 field = value
             }
         }
-    private var activityInBackgroundCondition = ConditionVariable()
+    private val activityInBackgroundCondition = ConditionVariable()
 
     var isBound = false
         private set
@@ -65,14 +69,16 @@ class Logcat : Closeable {
                 postPendingLogs()
             }
 
-            activityInBackground = false
+            lockedBlock(logsLock) {
+                activityInBackground = false
+            }
             activityInBackgroundCondition.open()
         }
 
         @OnLifecycleEvent(Lifecycle.Event.ON_PAUSE)
         private fun onActivityInBackground() {
             MyLogger.logDebug(Logcat::class, "onActivityInBackground")
-            synchronized(logsLock) {
+            lockedBlock(logsLock) {
                 activityInBackground = true
             }
         }
@@ -82,9 +88,9 @@ class Logcat : Closeable {
     private var isProcessAlive = false
 
     private fun postPendingLogs() {
-        synchronized(logsLock) {
+        lockedBlock(logsLock) {
             if (pendingLogs.isNotEmpty()) {
-                logs += pendingLogs
+                logs.add(pendingLogs)
 
                 if (pendingLogs.size == 1) {
                     val log = pendingLogs[0]
@@ -102,6 +108,7 @@ class Logcat : Closeable {
                 }
 
                 pendingLogs.clear()
+                pendingLogsFullCondition.signal()
             }
         }
     }
@@ -127,7 +134,7 @@ class Logcat : Closeable {
         threadLogcat = null
         logcatProcess = null
 
-        synchronized(logsLock) {
+        lockedBlock(logsLock) {
             logs.clear()
             pendingLogs.clear()
         }
@@ -154,31 +161,31 @@ class Logcat : Closeable {
     }
 
     fun getLogs(): List<Log> {
-        synchronized(logsLock) {
+        lockedBlock(logsLock) {
             return logs.toList()
         }
     }
 
     fun getLogsFiltered(): List<Log> {
-        synchronized(logsLock) {
+        lockedBlock(logsLock) {
             return logs.filter { log -> filters.values.all { it.filter(log) } }
         }
     }
 
     fun addFilter(name: String, filter: LogcatFilter) {
-        synchronized(logsLock) {
+        lockedBlock(logsLock) {
             filters.put(name, filter)
         }
     }
 
     fun removeFilter(name: String) {
-        synchronized(logsLock) {
+        lockedBlock(logsLock) {
             filters.remove(name)
         }
     }
 
     fun clearFilters() {
-        synchronized(logsLock) {
+        lockedBlock(logsLock) {
             filters.clear()
         }
     }
@@ -196,13 +203,13 @@ class Logcat : Closeable {
     }
 
     fun startRecording() {
-        synchronized(logsLock) {
+        lockedBlock(logsLock) {
             recordStartIndex = logs.size - 1
         }
     }
 
     fun stopRecording(): List<Log> {
-        synchronized(logsLock) {
+        lockedBlock(logsLock) {
             val result = mutableListOf<Log>()
             if (recordStartIndex >= 0) {
                 for (i in recordStartIndex until logs.size) {
@@ -282,9 +289,25 @@ class Logcat : Closeable {
         }
     }
 
+    fun setMaxLogsCount(maxLogsCount: Int) {
+        lockedBlock(logsLock) {
+            logs = FixedCircularArray(maxLogsCount)
+            pendingLogs = FixedCircularArray(maxLogsCount)
+        }
+    }
+
+    private inline fun <R> lockedBlock(lock: Lock, block: () -> R): R {
+        lock.lock()
+        try {
+            return block()
+        } finally {
+            lock.unlock()
+        }
+    }
+
     override fun toString(): String {
         val stringBuilder = StringBuilder()
-        synchronized(logsLock) {
+        lockedBlock(logsLock) {
             logs.forEach { log -> stringBuilder.append(log) }
         }
         return stringBuilder.toString()
@@ -337,8 +360,12 @@ class Logcat : Closeable {
         try {
             reader = LogcatStreamReader(inputStream!!)
             for (log in reader) {
-                synchronized(logsLock) {
-                    pendingLogs += log
+                lockedBlock(logsLock) {
+                    pendingLogs.add(log)
+
+                    if (pendingLogs.isFull()) {
+                        pendingLogsFullCondition.awaitUninterruptibly()
+                    }
                 }
             }
         } catch (e: Exception) {
@@ -350,6 +377,7 @@ class Logcat : Closeable {
     companion object {
         val DEFAULT_BUFFERS: Set<String>
         val AVAILABLE_BUFFERS: Array<String>
+        const val INITIAL_LOG_CAPACITY = 500_000
 
         init {
             DEFAULT_BUFFERS = getDefaultBuffers()
