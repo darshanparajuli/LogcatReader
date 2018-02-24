@@ -8,17 +8,13 @@ class FixedCircularArray<E>(val capacity: Int, initialSize: Int = INITIAL_SIZE) 
         private const val INITIAL_SIZE = 16
     }
 
-    private var array = arrayOfNulls<Any>(initialSize)
+    private var array = arrayOfNulls<Any>(Math.min(capacity, initialSize))
     private var head = 0
     private var next = 0
 
     init {
         if (capacity <= 0) {
             throw IllegalStateException("capacity (= $capacity) must be > 0")
-        }
-        if (initialSize > capacity) {
-            throw IllegalStateException("initialSize (= $initialSize) cannot" +
-                    " be greater than capacity (= $capacity)")
         }
 
         resetHead()
