@@ -40,8 +40,8 @@ class Logcat : Closeable {
     // must be synchronized
     private val logsLock = ReentrantLock()
     private val pendingLogsFullCondition = logsLock.newCondition()
-    private var logs = FixedCircularArray<Log>(INITIAL_LOG_CAPACITY)
-    private var pendingLogs = FixedCircularArray<Log>(INITIAL_LOG_CAPACITY)
+    private var logs = FixedCircularArray<Log>(INITIAL_LOG_CAPACITY, INITIAL_LOG_SIZE)
+    private var pendingLogs = FixedCircularArray<Log>(INITIAL_LOG_CAPACITY, INITIAL_LOG_SIZE)
     private val filters = mutableMapOf<String, LogcatFilter>()
 
     private var _activityInBackgroundLock = Any()
@@ -55,9 +55,6 @@ class Logcat : Closeable {
             }
         }
     private val activityInBackgroundCondition = ConditionVariable()
-
-    var isBound = false
-        private set
 
     private val lifeCycleObserver = object : LifecycleObserver {
         @OnLifecycleEvent(Lifecycle.Event.ON_RESUME)
@@ -223,12 +220,10 @@ class Logcat : Closeable {
 
     fun bind(activity: AppCompatActivity?) {
         activity?.lifecycle?.addObserver(lifeCycleObserver)
-        isBound = true
     }
 
     fun unbind(activity: AppCompatActivity?) {
         activity?.lifecycle?.removeObserver(lifeCycleObserver)
-        isBound = false
     }
 
     override fun close() {
@@ -291,8 +286,8 @@ class Logcat : Closeable {
 
     fun setMaxLogsCount(maxLogsCount: Int) {
         lockedBlock(logsLock) {
-            logs = FixedCircularArray(maxLogsCount)
-            pendingLogs = FixedCircularArray(maxLogsCount)
+            logs = FixedCircularArray(maxLogsCount, INITIAL_LOG_SIZE)
+            pendingLogs = FixedCircularArray(maxLogsCount, INITIAL_LOG_SIZE)
         }
     }
 
@@ -378,6 +373,7 @@ class Logcat : Closeable {
         val DEFAULT_BUFFERS: Set<String>
         val AVAILABLE_BUFFERS: Array<String>
         const val INITIAL_LOG_CAPACITY = 500_000
+        private const val INITIAL_LOG_SIZE = 10_000
 
         init {
             DEFAULT_BUFFERS = getDefaultBuffers()

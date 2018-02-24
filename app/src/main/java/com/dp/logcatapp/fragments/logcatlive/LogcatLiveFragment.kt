@@ -568,9 +568,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
         logcat.setEventListener(this)
         resumeLogcat()
 
-        if (!logcat.isBound) {
-            logcat.bind(activity as AppCompatActivity)
-        }
+        logcat.bind(activity as AppCompatActivity)
 
         if (viewModel.stopRecording || arguments?.getBoolean(STOP_RECORDING) == true) {
             arguments?.putBoolean(STOP_RECORDING, false)
