@@ -1,5 +1,7 @@
 package com.logcat.collections
 
+import java.util.*
+
 class FixedCircularArray<E>(val capacity: Int, initialSize: Int = INITIAL_SIZE) : Iterable<E> {
 
     companion object {
@@ -126,7 +128,7 @@ class FixedCircularArray<E>(val capacity: Int, initialSize: Int = INITIAL_SIZE) 
 
     fun clear() {
         resetHead()
-        array = arrayOfNulls(INITIAL_SIZE)
+        Arrays.fill(array, null)
     }
 
     private fun resetHead() {
