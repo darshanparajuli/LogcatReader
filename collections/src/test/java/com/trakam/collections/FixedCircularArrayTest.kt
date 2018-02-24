@@ -122,4 +122,23 @@ class FixedCircularArrayTest {
 
         assertEquals(expected, actual)
     }
+
+    @Test
+    fun testContains() {
+        val array = FixedCircularArray<Int>(100)
+        array += 10
+        array += 20
+
+        assertTrue(10 in array)
+        assertTrue(20 in array)
+        assertTrue(30 !in array)
+
+        for (i in 0..1000) {
+            array += i
+        }
+
+        assertTrue(901 in array)
+        assertTrue(1000 in array)
+        assertTrue(900 !in array)
+    }
 }

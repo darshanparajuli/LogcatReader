@@ -125,6 +125,15 @@ class FixedCircularArray<E>(val capacity: Int) : Iterable<E> {
 
     fun isFull() = size == capacity
 
+    operator fun contains(element: E): Boolean {
+        for (i in 0 until size) {
+            if (element == array[(head + i) % capacity]) {
+                return true
+            }
+        }
+        return false
+    }
+
     override fun iterator(): Iterator<E> = FixedCircularArrayIterator()
 
     private inner class FixedCircularArrayIterator : Iterator<E> {
