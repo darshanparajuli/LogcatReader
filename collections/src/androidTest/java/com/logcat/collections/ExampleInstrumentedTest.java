@@ -1,4 +1,4 @@
-package com.trakam.collections;
+package com.logcat.collections;
 
 import android.content.Context;
 import android.support.test.InstrumentationRegistry;
