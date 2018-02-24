@@ -4,15 +4,17 @@ import java.util.*
 
 class FixedCircularArray<E>(val capacity: Int) : Iterable<E> {
 
+    private val array = arrayOfNulls<Any>(capacity)
+    private var head = 0
+    private var next = 0
+
     init {
         if (capacity <= 0) {
             throw IllegalStateException("capacity must be > 0")
         }
-    }
 
-    private val array = arrayOfNulls<Any>(capacity)
-    private var head = -1
-    private var next = 0
+        resetHead()
+    }
 
     val size: Int
         get() {
@@ -91,7 +93,7 @@ class FixedCircularArray<E>(val capacity: Int) : Iterable<E> {
 
     private fun checkIOBAndThrow(index: Int) {
         if (index < 0 || index >= size) {
-            throw IndexOutOfBoundsException("index == $index")
+            throw IndexOutOfBoundsException("index = $index, size = $size")
         }
     }
 
@@ -108,7 +110,11 @@ class FixedCircularArray<E>(val capacity: Int) : Iterable<E> {
     }
 
     fun clear() {
+        resetHead()
         Arrays.fill(array, null)
+    }
+
+    private fun resetHead() {
         head = -1
         next = 0
     }
@@ -126,6 +132,6 @@ class FixedCircularArray<E>(val capacity: Int) : Iterable<E> {
 
         override fun hasNext(): Boolean = index < size
 
-        override fun next(): E = get(index)
+        override fun next(): E = get(index++)
     }
 }
