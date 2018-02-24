@@ -23,13 +23,7 @@ class FixedCircularArray<E>(val capacity: Int) : Iterable<E> {
             }
         }
 
-    fun add(list: List<E>) {
-        for (e in list) {
-            add(e)
-        }
-    }
-
-    fun add(list: FixedCircularArray<E>) {
+    fun add(list: Iterable<E>) {
         for (e in list) {
             add(e)
         }
