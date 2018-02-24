@@ -102,13 +102,13 @@ class FixedCircularArray<E>(val capacity: Int) : Iterable<E> {
     }
 
     private fun tryGrow() {
-        if (array.size == capacity) {
+        if (size < array.size || array.size == capacity) {
             return
         }
 
         val newSize = Math.min(array.size * 2, capacity)
         val newArray = arrayOfNulls<Any>(newSize)
-        System.arraycopy(array, 0, newArray, 0, newSize)
+        System.arraycopy(array, 0, newArray, 0, array.size)
         array = newArray
     }
 
