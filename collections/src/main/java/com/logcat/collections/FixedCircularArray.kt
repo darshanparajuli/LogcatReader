@@ -14,7 +14,11 @@ class FixedCircularArray<E>(val capacity: Int, initialSize: Int = INITIAL_SIZE) 
 
     init {
         if (capacity <= 0) {
-            throw IllegalStateException("capacity must be > 0")
+            throw IllegalStateException("capacity (= $capacity) must be > 0")
+        }
+        if (initialSize > capacity) {
+            throw IllegalStateException("initialSize (= $initialSize) cannot" +
+                    " be greater than capacity (= $capacity)")
         }
 
         resetHead()
