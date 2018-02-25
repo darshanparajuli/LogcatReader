@@ -1,10 +1,18 @@
 package com.dp.logcatapp.fragments.savedlogs
 
+import android.annotation.TargetApi
+import android.app.Activity
+import android.app.Dialog
+import android.app.ProgressDialog
+import android.app.usage.ExternalStorageStats
 import android.arch.lifecycle.Observer
 import android.arch.lifecycle.ViewModelProviders
 import android.content.Intent
 import android.net.Uri
+import android.os.AsyncTask
+import android.os.Build
 import android.os.Bundle
+import android.os.Environment
 import android.support.v4.content.FileProvider
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
@@ -19,17 +27,20 @@ import com.dp.logcatapp.activities.BaseActivityWithToolbar
 import com.dp.logcatapp.activities.CabToolbarCallback
 import com.dp.logcatapp.activities.SavedLogsActivity
 import com.dp.logcatapp.activities.SavedLogsViewerActivity
+import com.dp.logcatapp.fragments.base.BaseDialogFragment
 import com.dp.logcatapp.fragments.base.BaseFragment
 import com.dp.logcatapp.fragments.logcatlive.LogcatLiveFragment
 import com.dp.logcatapp.util.inflateLayout
 import com.dp.logcatapp.util.showToast
 import kotlinx.android.synthetic.main.app_bar.*
-import java.io.File
+import java.io.*
+import java.lang.ref.WeakReference
 
 class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListener,
         Toolbar.OnMenuItemClickListener, CabToolbarCallback {
     companion object {
         val TAG = SavedLogsFragment::class.qualifiedName
+        private const val SAVE_REQ = 12
     }
 
     private lateinit var viewModel: SavedLogsViewModel
@@ -167,6 +178,14 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
                 }
                 true
             }
+            R.id.action_save -> {
+                if (Build.VERSION.SDK_INT >= 19) {
+                    saveToDeviceKitkat()
+                } else {
+                    saveToDeviceFallback()
+                }
+                true
+            }
             R.id.action_delete -> {
                 val folder = File(context!!.filesDir, LogcatLiveFragment.LOGCAT_DIR)
                 val deleted = viewModel.selectedItems
@@ -189,12 +208,83 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
         }
     }
 
+    private fun saveToDeviceFallback() {
+        if (Environment.getExternalStorageState() != Environment.MEDIA_MOUNTED) {
+            activity!!.showToast(getString(R.string.external_storage_not_mounted_error))
+            return
+        }
+
+        val fileName = recyclerViewAdapter.getItem(viewModel.selectedItems.toIntArray()[0])
+        val srcFolder = File(context!!.filesDir, LogcatLiveFragment.LOGCAT_DIR)
+        val src = File(srcFolder, fileName)
+
+        val documentsFolder = Environment.getExternalStoragePublicDirectory("Documents")
+        val destFolder = File(documentsFolder, "LogcatReader")
+        if (!destFolder.exists()) {
+            if (!destFolder.mkdirs()) {
+                activity!!.showToast(getString(R.string.error_saving))
+                return
+            }
+        }
+
+        val dest = File(destFolder, fileName)
+
+        try {
+            SaveFileTask(this, FileInputStream(src), FileOutputStream(dest)).execute()
+        } catch (e: IOException) {
+            activity!!.showToast(getString(R.string.error_saving))
+        }
+    }
+
+    @TargetApi(19)
+    private fun saveToDeviceKitkat() {
+        try {
+            val intent = Intent(Intent.ACTION_CREATE_DOCUMENT)
+            intent.addCategory(Intent.CATEGORY_OPENABLE)
+            intent.type = "text/plain"
+            startActivityForResult(intent, SAVE_REQ)
+        } catch (e: Exception) {
+            context?.showToast(getString(R.string.error))
+        }
+    }
+
+    private fun onSaveCallback(uri: Uri) {
+        val fileName = recyclerViewAdapter.getItem(viewModel.selectedItems.toIntArray()[0])
+        val folder = File(context!!.filesDir, LogcatLiveFragment.LOGCAT_DIR)
+        val file = File(folder, fileName)
+
+        try {
+            val src = FileInputStream(file)
+            val dest = context!!.contentResolver.openOutputStream(uri)
+            SaveFileTask(this, src, dest).execute()
+        } catch (e: IOException) {
+            activity!!.showToast(getString(R.string.error_saving))
+        }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        when (requestCode) {
+            SAVE_REQ -> {
+                if (resultCode == Activity.RESULT_OK) {
+                    if (data != null) {
+                        onSaveCallback(data.data)
+                    }
+                }
+            }
+        }
+    }
+
     override fun onCabToolbarOpen(toolbar: Toolbar) {
     }
 
     override fun onCabToolbarInvalidate(toolbar: Toolbar) {
         val share = toolbar.menu.findItem(R.id.action_share)
-        share.isVisible = viewModel.selectedItems.size <= 1
+        val save = toolbar.menu.findItem(R.id.action_save)
+
+        val visible = viewModel.selectedItems.size <= 1
+        share.isVisible = visible
+        save.isVisible = visible
     }
 
     override fun onCabToolbarClose(toolbar: Toolbar) {
@@ -238,6 +328,39 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
 
         class MyViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
             val textView: TextView = itemView.findViewById(R.id.fileName)
+        }
+    }
+
+    class SaveFileTask(frag: SavedLogsFragment,
+                       private val src: InputStream,
+                       private val dest: OutputStream) :
+            AsyncTask<Void, Void, Boolean>() {
+
+        private val ref = WeakReference(frag)
+
+        override fun doInBackground(vararg params: Void?): Boolean {
+            try {
+                src.copyTo(dest)
+                return true
+            } catch (e: IOException) {
+                return false
+            } finally {
+                src.close()
+                dest.close()
+            }
+        }
+
+        override fun onPostExecute(result: Boolean) {
+            val frag = ref.get() ?: return
+            if (frag.activity == null) {
+                return
+            }
+
+            if (result) {
+                frag.activity!!.showToast(frag.getString(R.string.saved))
+            } else {
+                frag.activity!!.showToast(frag.getString(R.string.error_saving))
+            }
         }
     }
 }

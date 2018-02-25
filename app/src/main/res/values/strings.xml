@@ -56,4 +56,9 @@
     <string name="empty">Empty</string>
     <string name="delete">Delete</string>
     <string name="share">Share</string>
+    <string name="save">Save</string>
+    <string name="error">Error</string>
+    <string name="saved">Saved</string>
+    <string name="error_saving">Error saving</string>
+    <string name="external_storage_not_mounted_error">External storage is not mounted</string>
 </resources>
