@@ -147,12 +147,14 @@ class Logcat : Closeable {
     fun isRunning() = isProcessAlive
 
     fun setEventListener(listener: LogcatEventListener?) {
-        val pausedOld = paused
+        val wasPaused = paused
         pause()
 
-        this.listener = listener
+        lockedBlock(logsLock) {
+            this.listener = listener
+        }
 
-        if (!pausedOld) {
+        if (!wasPaused) {
             resume()
         }
     }
@@ -228,7 +230,9 @@ class Logcat : Closeable {
 
     override fun close() {
         stop()
-        listener = null
+        lockedBlock(logsLock) {
+            listener = null
+        }
     }
 
     fun setPollInterval(interval: Long) {
