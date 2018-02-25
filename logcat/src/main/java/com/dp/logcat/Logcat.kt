@@ -15,7 +15,7 @@ import java.util.concurrent.locks.Lock
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.thread
 
-class Logcat : Closeable {
+class Logcat(initialCapacity: Int = INITIAL_LOG_CAPACITY) : Closeable {
     var logcatBuffers = DEFAULT_BUFFERS
     private val logcatCmd = arrayOf("logcat", "-v", "long")
     private var pollInterval: Long = 250L // in ms
@@ -40,8 +40,8 @@ class Logcat : Closeable {
     // must be synchronized
     private val logsLock = ReentrantLock()
     private val pendingLogsFullCondition = logsLock.newCondition()
-    private var logs = FixedCircularArray<Log>(INITIAL_LOG_CAPACITY, INITIAL_LOG_SIZE)
-    private var pendingLogs = FixedCircularArray<Log>(INITIAL_LOG_CAPACITY, INITIAL_LOG_SIZE)
+    private var logs = FixedCircularArray<Log>(initialCapacity, INITIAL_LOG_SIZE)
+    private var pendingLogs = FixedCircularArray<Log>(initialCapacity, INITIAL_LOG_SIZE)
     private val filters = mutableMapOf<String, LogcatFilter>()
 
     private var _activityInBackgroundLock = Any()
@@ -377,7 +377,7 @@ class Logcat : Closeable {
         val DEFAULT_BUFFERS: Set<String>
         val AVAILABLE_BUFFERS: Array<String>
         const val INITIAL_LOG_CAPACITY = 500_000
-        private const val INITIAL_LOG_SIZE = 10_000
+        const val INITIAL_LOG_SIZE = 10_000
 
         init {
             DEFAULT_BUFFERS = getDefaultBuffers()

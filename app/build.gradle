@@ -43,6 +43,7 @@ android {
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation project(':collections')
     implementation project(':logcat')
     implementation project(':logger')
     implementation project(':jshellsession')

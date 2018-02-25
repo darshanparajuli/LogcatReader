@@ -31,7 +31,8 @@ class LogcatService : BaseService() {
     }
 
     private val localBinder = LocalBinder()
-    val logcat: Logcat = Logcat()
+    lateinit var logcat: Logcat
+        private set
     var restartedLogcat = false
 
     var paused = false
@@ -43,8 +44,7 @@ class LogcatService : BaseService() {
             createNotificationChannel()
         }
 
-        initLogcatPrefs()
-        logcat.start()
+        initLogcat()
     }
 
     override fun onBasePostSuperCreate() {
@@ -155,6 +155,17 @@ class LogcatService : BaseService() {
                 logcat.setPollInterval(pollInterval)
             }
             PreferenceKeys.Logcat.KEY_BUFFERS -> handleBufferUpdate(sharedPreferences, key)
+            PreferenceKeys.Logcat.KEY_MAX_LOGS -> {
+                val newCapacity = sharedPreferences.getString(PreferenceKeys.Logcat.KEY_MAX_LOGS,
+                        PreferenceKeys.Logcat.Default.MAX_LOGS).trim().toInt()
+
+                showToast(getString(R.string.restarting_logcat))
+
+                logcat.stop()
+                restartedLogcat = true
+                logcat.setMaxLogsCount(newCapacity)
+                logcat.start()
+            }
         }
     }
 
@@ -170,17 +181,21 @@ class LogcatService : BaseService() {
         logcat.restart()
     }
 
-    private fun initLogcatPrefs() {
+    private fun initLogcat() {
         val sharedPreferences = getDefaultSharedPreferences()
         val bufferValues = sharedPreferences.getStringSet(PreferenceKeys.Logcat.KEY_BUFFERS,
                 PreferenceKeys.Logcat.Default.BUFFERS)
         val pollInterval = sharedPreferences.getString(PreferenceKeys.Logcat.KEY_POLL_INTERVAL,
                 PreferenceKeys.Logcat.Default.POLL_INTERVAL).trim().toLong()
+        val maxLogs = sharedPreferences.getString(PreferenceKeys.Logcat.KEY_MAX_LOGS,
+                PreferenceKeys.Logcat.Default.MAX_LOGS).trim().toInt()
 
+        logcat = Logcat(maxLogs)
         logcat.setPollInterval(pollInterval)
 
         val buffers = Logcat.AVAILABLE_BUFFERS
         logcat.logcatBuffers = bufferValues.map { e -> buffers[e.toInt()].toLowerCase() }.toSet()
+        logcat.start()
     }
 
     inner class LocalBinder : Binder() {

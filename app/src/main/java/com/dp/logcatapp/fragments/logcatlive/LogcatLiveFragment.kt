@@ -182,7 +182,13 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
         super.onCreate(savedInstanceState)
         setHasOptionsMenu(true)
         serviceBinder = ServiceBinder(LogcatService::class.java, this)
-        adapter = MyRecyclerViewAdapter(activity!!)
+
+        val maxLogs = activity!!.getDefaultSharedPreferences()
+                .getString(PreferenceKeys.Logcat.KEY_MAX_LOGS,
+                        PreferenceKeys.Logcat.Default.MAX_LOGS).trim().toInt()
+        adapter = MyRecyclerViewAdapter(activity!!, maxLogs)
+        activity!!.getDefaultSharedPreferences().registerOnSharedPreferenceChangeListener(adapter)
+
         viewModel = ViewModelProviders.of(this)
                 .get(LogcatLiveViewModel::class.java)
     }
@@ -523,6 +529,8 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
 
     override fun onDestroy() {
         super.onDestroy()
+        activity!!.getDefaultSharedPreferences().unregisterOnSharedPreferenceChangeListener(adapter)
+
         removeLastSearchRunnableCallback()
         searchTask?.cancel(true)
 

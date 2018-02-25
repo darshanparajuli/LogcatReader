@@ -1,6 +1,7 @@
 package com.dp.logcatapp.fragments.logcatlive
 
 import android.content.Context
+import android.content.SharedPreferences
 import android.support.v4.content.ContextCompat
 import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
@@ -9,11 +10,17 @@ import android.view.ViewGroup
 import android.widget.TextView
 import com.dp.logcat.Log
 import com.dp.logcat.LogPriority
+import com.dp.logcat.Logcat
 import com.dp.logcatapp.R
+import com.dp.logcatapp.util.PreferenceKeys
+import com.logcat.collections.FixedCircularArray
 
-internal class MyRecyclerViewAdapter(context: Context) : RecyclerView.Adapter<MyRecyclerViewAdapter.MyViewHolder>(),
-        View.OnClickListener {
-    private val data = mutableListOf<Log>()
+internal class MyRecyclerViewAdapter(context: Context, initialCapacity: Int) :
+        RecyclerView.Adapter<MyRecyclerViewAdapter.MyViewHolder>(),
+        View.OnClickListener,
+        SharedPreferences.OnSharedPreferenceChangeListener {
+
+    private var data = FixedCircularArray<Log>(initialCapacity, Logcat.INITIAL_LOG_SIZE)
     private var onClickListener: ((View) -> Unit)? = null
 
     private val priorityColorAssert = ContextCompat.getColor(context, R.color.priority_assert)
@@ -65,23 +72,33 @@ internal class MyRecyclerViewAdapter(context: Context) : RecyclerView.Adapter<My
     override fun getItemCount() = data.size
 
     internal fun addItem(item: Log) {
-        val size = data.size
-        data += item
-        notifyItemInserted(size)
+        data.add(item)
+        notifyDataSetChanged()
     }
 
     internal fun addItems(items: List<Log>) {
-        val size = data.size
-        data += items
-        notifyItemRangeInserted(size, items.size)
+        data.add(items)
+        notifyDataSetChanged()
     }
 
     operator fun get(index: Int) = data[index]
 
     internal fun clear() {
-        val size = data.size
         data.clear()
-        notifyItemRangeRemoved(0, size)
+        notifyDataSetChanged()
+    }
+
+    override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences, key: String) {
+        when (key) {
+            PreferenceKeys.Logcat.KEY_MAX_LOGS -> {
+                val newCapacity = sharedPreferences.getString(PreferenceKeys.Logcat.KEY_MAX_LOGS,
+                        PreferenceKeys.Logcat.Default.MAX_LOGS).trim().toInt()
+                val newData = FixedCircularArray<Log>(newCapacity, Logcat.INITIAL_LOG_SIZE)
+                newData.add(data)
+                data = newData
+                notifyDataSetChanged()
+            }
+        }
     }
 
     internal fun setOnClickListener(onClickListener: (View) -> Unit) {

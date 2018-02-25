@@ -34,6 +34,13 @@
             android:persistent="true"
             android:summary="Crash, Main, System"
             android:title="@string/pref_logcat_buffer_dialog_title" />
+
+        <android.support.v7.preference.EditTextPreference
+            android:defaultValue="500000"
+            android:dialogTitle="@string/pref_logcat_max_recent_logs_to_keep_in_memory"
+            android:key="pref_key_logcat_max_logs"
+            android:persistent="true"
+            android:title="@string/pref_logcat_max_recent_logs_to_keep_in_memory" />
     </android.support.v7.preference.PreferenceCategory>
 
     <android.support.v7.preference.PreferenceCategory android:title="@string/about">

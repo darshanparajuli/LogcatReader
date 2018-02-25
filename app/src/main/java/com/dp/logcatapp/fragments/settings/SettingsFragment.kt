@@ -14,6 +14,7 @@ import com.dp.logcatapp.util.PreferenceKeys
 import com.dp.logcatapp.util.isDarkThemeOn
 import com.dp.logcatapp.util.restartApp
 import com.dp.logcatapp.util.showToast
+import java.text.NumberFormat
 
 class SettingsFragment : PreferenceFragmentCompat() {
 
@@ -65,6 +66,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
         val prefPollInterval = findPreference(PreferenceKeys.Logcat.KEY_POLL_INTERVAL)
         val prefBuffers = findPreference(PreferenceKeys.Logcat.KEY_BUFFERS)
                 as MultiSelectListPreference
+        val prefMaxLogs = findPreference(PreferenceKeys.Logcat.KEY_MAX_LOGS)
 
         prefPollInterval.summary = preferenceScreen.sharedPreferences
                 .getString(PreferenceKeys.Logcat.KEY_POLL_INTERVAL,
@@ -123,6 +125,32 @@ class SettingsFragment : PreferenceFragmentCompat() {
         } else {
             prefBuffers.isVisible = false
         }
+
+        val maxLogs = preferenceScreen.sharedPreferences.getString(
+                PreferenceKeys.Logcat.KEY_MAX_LOGS,
+                PreferenceKeys.Logcat.Default.MAX_LOGS
+        ).trim().toInt()
+
+        prefMaxLogs.summary = NumberFormat.getInstance().format(maxLogs)
+        prefMaxLogs.onPreferenceChangeListener = Preference
+                .OnPreferenceChangeListener callback@ { _, newValue ->
+                    try {
+                        val newMaxLogs = (newValue as String).trim().toInt()
+                        if (newMaxLogs == maxLogs) {
+                            return@callback false
+                        }
+
+                        if (newMaxLogs < 1000) {
+                            activity!!.showToast("Cannot be less than 1000")
+                            return@callback false
+                        }
+
+                        true
+                    } catch (e: NumberFormatException) {
+                        activity!!.showToast(getString(R.string.not_a_valid_number))
+                        false
+                    }
+                }
     }
 
     private fun setupAboutCategory() {
