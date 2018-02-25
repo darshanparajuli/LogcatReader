@@ -45,7 +45,7 @@ class Logcat : Closeable {
     private val filters = mutableMapOf<String, LogcatFilter>()
 
     private var _activityInBackgroundLock = Any()
-    private var activityInBackground: Boolean = false
+    private var activityInBackground: Boolean = true
         get() = synchronized(_activityInBackgroundLock) {
             field
         }
