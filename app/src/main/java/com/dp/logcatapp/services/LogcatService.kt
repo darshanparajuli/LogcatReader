@@ -13,6 +13,7 @@ import android.os.Binder
 import android.os.Build
 import android.support.v4.app.NotificationCompat
 import android.support.v4.content.ContextCompat
+import androidx.content.edit
 import com.dp.logcat.Logcat
 import com.dp.logcatapp.R
 import com.dp.logcatapp.activities.MainActivity
@@ -23,8 +24,10 @@ import com.dp.logcatapp.util.showToast
 class LogcatService : BaseService() {
 
     companion object {
+        val TAG = LogcatService::class.qualifiedName
         private const val NOTIFICAION_CHANNEL = "logcat_channel_01"
         private const val NOTIFICAION_ID = 1
+        private val KEY_SET_INITIAL_DEFAULT_BUFFERS = TAG + "_key_set_initial_default_buffers"
     }
 
     private val localBinder = LocalBinder()
@@ -47,10 +50,13 @@ class LogcatService : BaseService() {
     override fun onBasePostSuperCreate() {
         val defaultBuffers = PreferenceKeys.Logcat.Default.BUFFERS
         if (defaultBuffers.isNotEmpty() && Logcat.AVAILABLE_BUFFERS.isNotEmpty()) {
-            getDefaultSharedPreferences()
-                    .edit()
-                    .putStringSet(PreferenceKeys.Logcat.KEY_BUFFERS, defaultBuffers)
-                    .apply()
+            if (!getDefaultSharedPreferences().getBoolean(KEY_SET_INITIAL_DEFAULT_BUFFERS,
+                            false)) {
+                getDefaultSharedPreferences().edit {
+                    putStringSet(PreferenceKeys.Logcat.KEY_BUFFERS, defaultBuffers)
+                    putBoolean(KEY_SET_INITIAL_DEFAULT_BUFFERS, true)
+                }
+            }
         }
     }
 
