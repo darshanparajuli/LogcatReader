@@ -57,4 +57,11 @@
     <string name="pref_key_about_github_repo_summary">Посмотреть код, задать вопрос, и т.д.</string>
     <string name="filter">Фильтр</string>
     <string name="empty">пустой</string>
+    <string name="delete">Удалить</string>
+    <string name="share">Поделиться</string>
+    <string name="save">Сохранить</string>
+    <string name="error">ошибка</string>
+    <string name="saved">Сохраненный</string>
+    <string name="error_saving">Ошибка при сохранении</string>
+    <string name="external_storage_not_mounted_error">Внешнее хранилище не установлено</string>
 </resources>
