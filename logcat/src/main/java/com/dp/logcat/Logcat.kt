@@ -95,12 +95,12 @@ class Logcat : Closeable {
                         handler.post { listener?.onLogEvent(log) }
                     }
                 } else {
-                    val dup = pendingLogs.filter { e ->
+                    val filteredLogs = pendingLogs.filter { e ->
                         filters.values.all { it.filter(e) }
                     }.toList()
 
-                    if (dup.isNotEmpty()) {
-                        handler.post { listener?.onLogEvents(dup) }
+                    if (filteredLogs.isNotEmpty()) {
+                        handler.post { listener?.onLogEvents(filteredLogs) }
                     }
                 }
 
