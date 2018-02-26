@@ -376,7 +376,7 @@ class Logcat(initialCapacity: Int = INITIAL_LOG_CAPACITY) : Closeable {
     companion object {
         val DEFAULT_BUFFERS: Set<String>
         val AVAILABLE_BUFFERS: Array<String>
-        const val INITIAL_LOG_CAPACITY = 500_000
+        const val INITIAL_LOG_CAPACITY = 250_000
         const val INITIAL_LOG_SIZE = 10_000
 
         init {
