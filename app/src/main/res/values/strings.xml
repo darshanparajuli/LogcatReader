@@ -65,4 +65,7 @@
         Max recent logs to keep in memory
     </string>
     <string name="not_a_valid_number">Not a valid number</string>
+    <string name="cannot_be_less_than_1000">Cannot be less than 1000</string>
+    <string name="value_must_be_greater_than_0">Value must be greater than 0</string>
+    <string name="value_must_be_a_positive_integer">Value must be a postive integer</string>
 </resources>

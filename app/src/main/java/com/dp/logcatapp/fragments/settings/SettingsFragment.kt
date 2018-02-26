@@ -77,14 +77,14 @@ class SettingsFragment : PreferenceFragmentCompat() {
                 val v = newValue.toString().trim()
                 val num = v.toLong()
                 if (num <= 0) {
-                    activity!!.showToast("Value must be greater than 0")
+                    activity!!.showToast(getString(R.string.value_must_be_greater_than_0))
                     false
                 } else {
                     prefPollInterval.summary = "$v ms"
                     true
                 }
             } catch (e: NumberFormatException) {
-                activity!!.showToast("Value must be a postive integer")
+                activity!!.showToast(getString(R.string.value_must_be_a_positive_integer))
                 false
             }
         }
@@ -141,7 +141,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
                         }
 
                         if (newMaxLogs < 1000) {
-                            activity!!.showToast("Cannot be less than 1000")
+                            activity!!.showToast(getString(R.string.cannot_be_less_than_1000))
                             return@callback false
                         }
 
