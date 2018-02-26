@@ -133,7 +133,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
         prefMaxLogs.summary = NumberFormat.getInstance().format(maxLogs)
         prefMaxLogs.onPreferenceChangeListener = Preference
-                .OnPreferenceChangeListener callback@ { _, newValue ->
+                .OnPreferenceChangeListener callback@ { preference, newValue ->
                     try {
                         val newMaxLogs = (newValue as String).trim().toInt()
                         if (newMaxLogs == maxLogs) {
@@ -145,6 +145,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
                             return@callback false
                         }
 
+                        preference.summary = NumberFormat.getInstance().format(newMaxLogs)
                         true
                     } catch (e: NumberFormatException) {
                         activity!!.showToast(getString(R.string.not_a_valid_number))
