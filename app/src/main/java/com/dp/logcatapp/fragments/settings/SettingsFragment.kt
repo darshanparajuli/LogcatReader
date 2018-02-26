@@ -72,22 +72,23 @@ class SettingsFragment : PreferenceFragmentCompat() {
                 .getString(PreferenceKeys.Logcat.KEY_POLL_INTERVAL,
                         PreferenceKeys.Logcat.Default.POLL_INTERVAL) + " ms"
 
-        prefPollInterval.onPreferenceChangeListener = Preference.OnPreferenceChangeListener { _, newValue ->
-            try {
-                val v = newValue.toString().trim()
-                val num = v.toLong()
-                if (num <= 0) {
-                    activity!!.showToast(getString(R.string.value_must_be_greater_than_0))
-                    false
-                } else {
-                    prefPollInterval.summary = "$v ms"
-                    true
+        prefPollInterval.onPreferenceChangeListener = Preference
+                .OnPreferenceChangeListener { preference, newValue ->
+                    try {
+                        val v = newValue.toString().trim()
+                        val num = v.toLong()
+                        if (num <= 0) {
+                            activity!!.showToast(getString(R.string.value_must_be_greater_than_0))
+                            false
+                        } else {
+                            preference.summary = "$v ms"
+                            true
+                        }
+                    } catch (e: NumberFormatException) {
+                        activity!!.showToast(getString(R.string.value_must_be_a_positive_integer))
+                        false
+                    }
                 }
-            } catch (e: NumberFormatException) {
-                activity!!.showToast(getString(R.string.value_must_be_a_positive_integer))
-                false
-            }
-        }
 
         val availableBuffers = Logcat.AVAILABLE_BUFFERS
         val defaultBuffers = PreferenceKeys.Logcat.Default.BUFFERS
