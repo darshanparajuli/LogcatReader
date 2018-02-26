@@ -136,8 +136,13 @@ class SettingsFragment : PreferenceFragmentCompat() {
         prefMaxLogs.onPreferenceChangeListener = Preference
                 .OnPreferenceChangeListener callback@ { preference, newValue ->
                     try {
+                        val oldValue = preferenceScreen.sharedPreferences.getString(
+                                PreferenceKeys.Logcat.KEY_MAX_LOGS,
+                                PreferenceKeys.Logcat.Default.MAX_LOGS
+                        ).trim().toInt()
+
                         val newMaxLogs = (newValue as String).trim().toInt()
-                        if (newMaxLogs == maxLogs) {
+                        if (newMaxLogs == oldValue) {
                             return@callback false
                         }
 
