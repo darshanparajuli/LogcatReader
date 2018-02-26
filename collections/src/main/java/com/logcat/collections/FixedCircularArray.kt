@@ -60,6 +60,7 @@ class FixedCircularArray<E>(val capacity: Int, initialSize: Int = INITIAL_SIZE) 
         return null
     }
 
+    @Suppress("unchecked_cast")
     fun removeAt(index: Int): E {
         checkIOBAndThrow(index)
         val result = array[(head + index) % capacity] as E
@@ -92,6 +93,7 @@ class FixedCircularArray<E>(val capacity: Int, initialSize: Int = INITIAL_SIZE) 
         return -1
     }
 
+    @Suppress("unchecked_cast")
     operator fun get(index: Int): E {
         checkIOBAndThrow(index)
         return array[(head + index) % capacity] as E
