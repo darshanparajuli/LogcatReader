@@ -2,9 +2,6 @@ package com.dp.logcatapp.fragments.savedlogs
 
 import android.annotation.TargetApi
 import android.app.Activity
-import android.app.Dialog
-import android.app.ProgressDialog
-import android.app.usage.ExternalStorageStats
 import android.arch.lifecycle.Observer
 import android.arch.lifecycle.ViewModelProviders
 import android.content.Intent
@@ -27,7 +24,6 @@ import com.dp.logcatapp.activities.BaseActivityWithToolbar
 import com.dp.logcatapp.activities.CabToolbarCallback
 import com.dp.logcatapp.activities.SavedLogsActivity
 import com.dp.logcatapp.activities.SavedLogsViewerActivity
-import com.dp.logcatapp.fragments.base.BaseDialogFragment
 import com.dp.logcatapp.fragments.base.BaseFragment
 import com.dp.logcatapp.fragments.logcatlive.LogcatLiveFragment
 import com.dp.logcatapp.util.inflateLayout

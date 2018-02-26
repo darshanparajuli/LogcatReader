@@ -3,7 +3,6 @@ package com.dp.logcatapp.fragments.savedlogsviewer
 import android.arch.lifecycle.Observer
 import android.arch.lifecycle.ViewModelProviders
 import android.net.Uri
-import android.opengl.Visibility
 import android.os.AsyncTask
 import android.os.Bundle
 import android.support.design.widget.FloatingActionButton
@@ -14,7 +13,6 @@ import android.support.v7.widget.SearchView
 import android.view.*
 import android.widget.ProgressBar
 import com.dp.logcat.Log
-import com.dp.logcat.LogcatStreamReader
 import com.dp.logcatapp.R
 import com.dp.logcatapp.activities.BaseActivityWithToolbar
 import com.dp.logcatapp.fragments.base.BaseFragment
