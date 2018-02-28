@@ -27,7 +27,6 @@ class LogcatService : BaseService() {
         val TAG = LogcatService::class.qualifiedName
         private const val NOTIFICAION_CHANNEL = "logcat_channel_01"
         private const val NOTIFICAION_ID = 1
-        private val KEY_SET_INITIAL_DEFAULT_BUFFERS = TAG + "_key_set_initial_default_buffers"
     }
 
     private val localBinder = LocalBinder()
@@ -50,11 +49,11 @@ class LogcatService : BaseService() {
     override fun onBasePostSuperCreate() {
         val defaultBuffers = PreferenceKeys.Logcat.Default.BUFFERS
         if (defaultBuffers.isNotEmpty() && Logcat.AVAILABLE_BUFFERS.isNotEmpty()) {
-            if (!getDefaultSharedPreferences().getBoolean(KEY_SET_INITIAL_DEFAULT_BUFFERS,
-                            false)) {
+            val buffers = getDefaultSharedPreferences()
+                    .getStringSet(PreferenceKeys.Logcat.KEY_BUFFERS, emptySet())
+            if (buffers == null || buffers.isEmpty()) {
                 getDefaultSharedPreferences().edit {
                     putStringSet(PreferenceKeys.Logcat.KEY_BUFFERS, defaultBuffers)
-                    putBoolean(KEY_SET_INITIAL_DEFAULT_BUFFERS, true)
                 }
             }
         }

@@ -32,7 +32,7 @@
             android:entryValues="@array/pref_logcat_log_buffers_values"
             android:key="pref_key_logcat_buffers"
             android:persistent="true"
-            android:summary="Crash, Main, System"
+            android:summary=""
             android:title="@string/pref_logcat_buffer_dialog_title" />
 
         <android.support.v7.preference.EditTextPreference
