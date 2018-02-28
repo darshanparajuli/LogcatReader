@@ -20,7 +20,6 @@ import com.dp.logcatapp.fragments.shared.dialogs.CopyToClipboardDialogFragment
 import com.dp.logcatapp.util.containsIgnoreCase
 import com.dp.logcatapp.util.inflateLayout
 import com.dp.logger.MyLogger
-import kotlinx.android.synthetic.main.app_bar.*
 import java.lang.ref.WeakReference
 
 class SavedLogsViewerFragment : BaseFragment() {
