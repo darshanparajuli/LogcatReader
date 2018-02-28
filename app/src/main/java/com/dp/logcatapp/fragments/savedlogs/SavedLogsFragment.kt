@@ -2,6 +2,7 @@ package com.dp.logcatapp.fragments.savedlogs
 
 import android.annotation.TargetApi
 import android.app.Activity
+import android.app.Dialog
 import android.arch.lifecycle.Observer
 import android.arch.lifecycle.ViewModelProviders
 import android.content.Intent
@@ -11,6 +12,7 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.support.v4.content.FileProvider
+import android.support.v7.app.AlertDialog
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.Toolbar
@@ -18,17 +20,18 @@ import android.view.LayoutInflater
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
+import android.widget.EditText
 import android.widget.TextView
 import com.dp.logcatapp.R
 import com.dp.logcatapp.activities.BaseActivityWithToolbar
 import com.dp.logcatapp.activities.CabToolbarCallback
 import com.dp.logcatapp.activities.SavedLogsActivity
 import com.dp.logcatapp.activities.SavedLogsViewerActivity
+import com.dp.logcatapp.fragments.base.BaseDialogFragment
 import com.dp.logcatapp.fragments.base.BaseFragment
 import com.dp.logcatapp.fragments.logcatlive.LogcatLiveFragment
 import com.dp.logcatapp.util.inflateLayout
 import com.dp.logcatapp.util.showToast
-import kotlinx.android.synthetic.main.app_bar.*
 import java.io.*
 import java.lang.ref.WeakReference
 
@@ -97,6 +100,9 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
         recyclerView.itemAnimator = null
         recyclerView.layoutManager = linearLayoutManager
         recyclerView.adapter = recyclerViewAdapter
+
+        fragmentManager?.findFragmentByTag(RenameDialogFragment.TAG)
+                ?.setTargetFragment(this, 0)
     }
 
     override fun onClick(v: View) {
@@ -155,6 +161,23 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
 
     override fun onMenuItemClick(item: MenuItem): Boolean {
         return when (item.itemId) {
+            R.id.action_rename -> {
+                val fileName = recyclerViewAdapter.getItem(viewModel.selectedItems.toIntArray()[0])
+                val folder = File(context!!.filesDir, LogcatLiveFragment.LOGCAT_DIR)
+                val file = File(folder, fileName)
+                val frag = RenameDialogFragment.newInstance(file.absolutePath)
+                frag.setTargetFragment(this, 0)
+                frag.show(fragmentManager, RenameDialogFragment.TAG)
+                true
+            }
+            R.id.action_save -> {
+                if (Build.VERSION.SDK_INT >= 19) {
+                    saveToDeviceKitkat()
+                } else {
+                    saveToDeviceFallback()
+                }
+                true
+            }
             R.id.action_share -> {
                 val fileName = recyclerViewAdapter.getItem(viewModel.selectedItems.toIntArray()[0])
                 val folder = File(context!!.filesDir, LogcatLiveFragment.LOGCAT_DIR)
@@ -171,14 +194,6 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
                     startActivity(Intent.createChooser(intent, getString(R.string.share)))
                 } catch (e: Exception) {
                     context?.showToast("Unable to share")
-                }
-                true
-            }
-            R.id.action_save -> {
-                if (Build.VERSION.SDK_INT >= 19) {
-                    saveToDeviceKitkat()
-                } else {
-                    saveToDeviceFallback()
                 }
                 true
             }
@@ -277,10 +292,12 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
     override fun onCabToolbarInvalidate(toolbar: Toolbar) {
         val share = toolbar.menu.findItem(R.id.action_share)
         val save = toolbar.menu.findItem(R.id.action_save)
+        val rename = toolbar.menu.findItem(R.id.action_rename)
 
         val visible = viewModel.selectedItems.size <= 1
         share.isVisible = visible
         save.isVisible = visible
+        rename.isVisible = visible
     }
 
     override fun onCabToolbarClose(toolbar: Toolbar) {
@@ -357,6 +374,53 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
             } else {
                 frag.activity!!.showToast(frag.getString(R.string.error_saving))
             }
+        }
+    }
+
+    class RenameDialogFragment : BaseDialogFragment() {
+
+        companion object {
+            val TAG = RenameDialogFragment::class.qualifiedName
+
+            private val KEY_PATH = TAG + "_key_path"
+
+            fun newInstance(path: String): RenameDialogFragment {
+                val bundle = Bundle()
+                bundle.putString(KEY_PATH, path)
+                val frag = RenameDialogFragment()
+                frag.arguments = bundle
+                return frag
+            }
+        }
+
+        override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
+            val view = inflateLayout(R.layout.rename_dialog)
+            val editText = view.findViewById<EditText>(R.id.editText)
+
+            val path = arguments!!.getString(KEY_PATH)
+            val file = File(path)
+
+            editText.setText(file.name)
+            editText.selectAll()
+
+            return AlertDialog.Builder(activity!!)
+                    .setView(view)
+                    .setPositiveButton(android.R.string.ok, { _, _ ->
+                        val newName = editText.text.toString()
+                        if (newName.isNotEmpty()) {
+                            if (file.renameTo(File(file.parent, newName))) {
+                                (targetFragment as SavedLogsFragment).viewModel.fileNames.load()
+                            } else {
+                                activity!!.showToast(getString(R.string.error))
+                            }
+                            (activity as SavedLogsActivity).closeCabToolbar()
+                        }
+                        dismiss()
+                    })
+                    .setNegativeButton(android.R.string.cancel, { _, _ ->
+                        dismiss()
+                    })
+                    .create()
         }
     }
 }

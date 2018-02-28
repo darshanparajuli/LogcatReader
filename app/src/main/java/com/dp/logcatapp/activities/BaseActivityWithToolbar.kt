@@ -27,7 +27,7 @@ abstract class BaseActivityWithToolbar : AppCompatActivity() {
         }
     }
 
-    protected lateinit var toolbar: Toolbar
+    lateinit var toolbar: Toolbar
         private set
     protected val handler = Handler()
 

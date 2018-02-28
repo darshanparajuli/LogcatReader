@@ -3,15 +3,21 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
-        android:id="@+id/action_share"
-        android:icon="@drawable/ic_share_white_24dp"
-        android:title="@string/share"
+        android:id="@+id/action_rename"
+        android:icon="@drawable/ic_mode_edit_white_24dp"
+        android:title="@string/rename"
         app:showAsAction="always" />
 
     <item
         android:id="@+id/action_save"
         android:icon="@drawable/ic_save_white_24dp"
         android:title="@string/save"
+        app:showAsAction="always" />
+
+    <item
+        android:id="@+id/action_share"
+        android:icon="@drawable/ic_share_white_24dp"
+        android:title="@string/share"
         app:showAsAction="always" />
 
     <item

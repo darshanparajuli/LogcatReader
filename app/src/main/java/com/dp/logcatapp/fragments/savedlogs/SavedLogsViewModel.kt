@@ -25,7 +25,7 @@ internal class SavedLogsLiveData(private val application: Application) :
         load()
     }
 
-    private fun load() {
+    internal fun load() {
         val folder = File(application.filesDir, LogcatLiveFragment.LOGCAT_DIR)
         Loader(this).execute(folder)
     }
