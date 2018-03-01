@@ -404,6 +404,7 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
             editText.selectAll()
 
             return AlertDialog.Builder(activity!!)
+                    .setTitle(R.string.rename)
                     .setView(view)
                     .setPositiveButton(android.R.string.ok, { _, _ ->
                         val newName = editText.text.toString()
