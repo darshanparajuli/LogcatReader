@@ -5,6 +5,7 @@ import android.app.Activity
 import android.app.Dialog
 import android.arch.lifecycle.Observer
 import android.arch.lifecycle.ViewModelProviders
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.AsyncTask
@@ -20,6 +21,7 @@ import android.view.LayoutInflater
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
+import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
 import android.widget.TextView
 import com.dp.logcatapp.R
@@ -403,7 +405,7 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
             editText.setText(file.name)
             editText.selectAll()
 
-            return AlertDialog.Builder(activity!!)
+            val dialog = AlertDialog.Builder(activity!!)
                     .setTitle(R.string.rename)
                     .setView(view)
                     .setPositiveButton(android.R.string.ok, { _, _ ->
@@ -422,6 +424,15 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
                         dismiss()
                     })
                     .create()
+
+            dialog.setOnShowListener {
+                editText.requestFocus()
+                val imm = activity!!.getSystemService(Context.INPUT_METHOD_SERVICE) as
+                        InputMethodManager
+                imm.showSoftInput(editText, InputMethodManager.SHOW_IMPLICIT)
+            }
+
+            return dialog
         }
     }
 }
