@@ -35,7 +35,6 @@ class FilterDialogFragment : BaseDialogFragment() {
 
         val editTextKeyword = rootView.findViewById<EditText>(R.id.keyword)
         editTextKeyword.setText(arguments!!.getString(KEY_KEYWORD))
-        editTextKeyword.selectAll()
 
         val checkBoxMap = mutableMapOf<CheckBox, String>()
         checkBoxMap[rootView.findViewById(R.id.checkboxAssert)] = LogPriority.ASSERT
