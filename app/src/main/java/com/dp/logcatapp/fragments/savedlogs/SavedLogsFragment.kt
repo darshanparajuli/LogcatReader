@@ -355,11 +355,11 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
         private val ref = WeakReference(frag)
 
         override fun doInBackground(vararg params: Void?): Boolean {
-            try {
+            return try {
                 src.copyTo(dest)
-                return true
+                true
             } catch (e: IOException) {
-                return false
+                false
             } finally {
                 src.closeQuietly()
                 dest.closeQuietly()
