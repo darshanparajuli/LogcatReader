@@ -32,6 +32,7 @@ import com.dp.logcatapp.activities.SavedLogsViewerActivity
 import com.dp.logcatapp.fragments.base.BaseDialogFragment
 import com.dp.logcatapp.fragments.base.BaseFragment
 import com.dp.logcatapp.fragments.logcatlive.LogcatLiveFragment
+import com.dp.logcatapp.util.closeQuietly
 import com.dp.logcatapp.util.inflateLayout
 import com.dp.logcatapp.util.showToast
 import java.io.*
@@ -360,8 +361,8 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
             } catch (e: IOException) {
                 return false
             } finally {
-                src.close()
-                dest.close()
+                src.closeQuietly()
+                dest.closeQuietly()
             }
         }
 
