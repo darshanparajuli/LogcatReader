@@ -20,6 +20,9 @@ import com.dp.logcatapp.R
 import com.dp.logcatapp.activities.MainActivity
 import com.dp.logcatapp.activities.SettingsActivity
 import com.dp.logger.MyLogger
+import java.io.IOException
+import java.io.InputStream
+import java.io.OutputStream
 import java.util.*
 
 //// BEGIN Activity
@@ -199,3 +202,22 @@ fun Context.getFileNameFromUri(uri: Uri): String {
 fun String.containsIgnoreCase(other: String) = toLowerCase().contains(other.toLowerCase())
 
 //// END String
+
+
+//// BEGIN Misc
+
+fun InputStream.closeQuietly() {
+    try {
+        close()
+    } catch (e: IOException) {
+    }
+}
+
+fun OutputStream.closeQuietly() {
+    try {
+        close()
+    } catch (e: IOException) {
+    }
+}
+
+//// END Misc
