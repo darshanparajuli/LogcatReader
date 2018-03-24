@@ -4,13 +4,18 @@ import android.util.Log
 import kotlin.reflect.KClass
 
 object Logger {
-    private const val TAG = "MyDeviceLogs"
     private const val DEBUG = 1
     private const val ERROR = 2
     private const val INFO = 3
     private const val VERBOSE = 4
     private const val WARNING = 5
     private const val WTF = 6
+
+    private var sTag = "MyDeviceLogs"
+
+    fun init(tag: String) {
+        sTag = tag
+    }
 
     private fun KClass<*>.name(): String = simpleName ?: "N/A"
 
@@ -64,12 +69,12 @@ object Logger {
 
     private fun log(type: Int, msg: String) {
         when (type) {
-            DEBUG -> Log.d(TAG, msg)
-            ERROR -> Log.e(TAG, msg)
-            INFO -> Log.i(TAG, msg)
-            VERBOSE -> Log.v(TAG, msg)
-            WARNING -> Log.w(TAG, msg)
-            WTF -> Log.wtf(TAG, msg)
+            DEBUG -> Log.d(sTag, msg)
+            ERROR -> Log.e(sTag, msg)
+            INFO -> Log.i(sTag, msg)
+            VERBOSE -> Log.v(sTag, msg)
+            WARNING -> Log.w(sTag, msg)
+            WTF -> Log.wtf(sTag, msg)
         }
     }
 }
