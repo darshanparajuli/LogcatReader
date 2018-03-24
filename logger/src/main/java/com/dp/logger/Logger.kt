@@ -3,7 +3,7 @@ package com.dp.logger
 import android.util.Log
 import kotlin.reflect.KClass
 
-object MyLogger {
+object Logger {
     private const val TAG = "MyDeviceLogs"
     private const val DEBUG = 1
     private const val ERROR = 2

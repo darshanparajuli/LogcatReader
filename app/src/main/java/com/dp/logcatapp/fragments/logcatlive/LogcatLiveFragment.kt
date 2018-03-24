@@ -35,8 +35,7 @@ import com.dp.logcatapp.fragments.logcatlive.dialogs.InstructionToGrantPermissio
 import com.dp.logcatapp.fragments.shared.dialogs.CopyToClipboardDialogFragment
 import com.dp.logcatapp.services.LogcatService
 import com.dp.logcatapp.util.*
-import com.dp.logger.MyLogger
-import kotlinx.android.synthetic.main.app_bar.*
+import com.dp.logger.Logger
 import java.io.File
 import java.lang.ref.WeakReference
 import java.text.SimpleDateFormat
@@ -306,7 +305,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
     }
 
     private fun onSearchAction(logcat: Logcat, newText: String) {
-        MyLogger.logDebug(LogcatLiveFragment::class, "onSearchAction: $newText")
+        Logger.logDebug(LogcatLiveFragment::class, "onSearchAction: $newText")
         searchTask?.cancel(true)
         searchTask = SearchTask(this, logcat, newText)
         searchTask!!.execute()
@@ -477,7 +476,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
 
     private fun actuallySaveToFile(logs: List<Log>, fileName: String) {
         if (logs.isEmpty()) {
-            MyLogger.logDebug(LogcatLiveFragment::class, "Nothing to save")
+            Logger.logDebug(LogcatLiveFragment::class, "Nothing to save")
             showSnackbar(view, getString(R.string.nothing_to_save))
             return
         }
@@ -541,7 +540,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
     }
 
     override fun onServiceConnected(name: ComponentName, service: IBinder) {
-        MyLogger.logDebug(LogcatLiveFragment::class, "onServiceConnected")
+        Logger.logDebug(LogcatLiveFragment::class, "onServiceConnected")
         logcatService = (service as LogcatService.LocalBinder).getLogcatService()
         val logcat = logcatService!!.logcat
         logcat.pause()
@@ -563,10 +562,10 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
         }
 
         if (adapter.itemCount == 0) {
-            MyLogger.logDebug(LogcatLiveFragment::class, "Added all logs")
+            Logger.logDebug(LogcatLiveFragment::class, "Added all logs")
             addAllLogs(logcat.getLogsFiltered())
         } else if (logcatService!!.restartedLogcat) {
-            MyLogger.logDebug(LogcatLiveFragment::class, "Logcat restarted")
+            Logger.logDebug(LogcatLiveFragment::class, "Logcat restarted")
             logcatService!!.restartedLogcat = false
             adapter.clear()
         }
@@ -629,7 +628,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
     }
 
     override fun onServiceDisconnected(name: ComponentName) {
-        MyLogger.logDebug(LogcatLiveFragment::class, "onServiceDisconnected")
+        Logger.logDebug(LogcatLiveFragment::class, "onServiceDisconnected")
         logcatService = null
     }
 

@@ -19,7 +19,7 @@ import android.widget.Toast
 import com.dp.logcatapp.R
 import com.dp.logcatapp.activities.MainActivity
 import com.dp.logcatapp.activities.SettingsActivity
-import com.dp.logger.MyLogger
+import com.dp.logger.Logger
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
@@ -102,7 +102,7 @@ private class ToastWindowManager(val base: WindowManager) : WindowManager {
         try {
             base.addView(view, params)
         } catch (e: WindowManager.BadTokenException) {
-            MyLogger.logError("Toast", "caught BadTokenException crash")
+            Logger.logError("Toast", "caught BadTokenException crash")
         }
     }
 

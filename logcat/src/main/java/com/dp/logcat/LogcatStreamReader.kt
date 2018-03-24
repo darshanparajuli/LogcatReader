@@ -1,6 +1,6 @@
 package com.dp.logcat
 
-import com.dp.logger.MyLogger
+import com.dp.logger.Logger
 import java.io.*
 
 class LogcatStreamReader(inputStream: InputStream) : Iterator<Log>, Closeable {
@@ -27,7 +27,7 @@ class LogcatStreamReader(inputStream: InputStream) : Iterator<Log>, Closeable {
                     log = LogFactory.createNewLog(metadata, msgBuffer.toString())
                     true
                 } catch (e: Exception) {
-                    MyLogger.logDebug(Logcat::class, "${e.message}: $metadata")
+                    Logger.logDebug(Logcat::class, "${e.message}: $metadata")
                     false
                 } finally {
                     msgBuffer.setLength(0)

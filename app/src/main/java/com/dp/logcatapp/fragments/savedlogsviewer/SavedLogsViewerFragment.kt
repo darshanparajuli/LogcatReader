@@ -19,7 +19,7 @@ import com.dp.logcatapp.fragments.base.BaseFragment
 import com.dp.logcatapp.fragments.shared.dialogs.CopyToClipboardDialogFragment
 import com.dp.logcatapp.util.containsIgnoreCase
 import com.dp.logcatapp.util.inflateLayout
-import com.dp.logger.MyLogger
+import com.dp.logger.Logger
 import java.lang.ref.WeakReference
 
 class SavedLogsViewerFragment : BaseFragment() {
@@ -255,7 +255,7 @@ class SavedLogsViewerFragment : BaseFragment() {
     }
 
     private fun onSearchAction(newText: String) {
-        MyLogger.logDebug(SavedLogsViewerFragment::class, "onSearchAction: $newText")
+        Logger.logDebug(SavedLogsViewerFragment::class, "onSearchAction: $newText")
         searchTask?.cancel(true)
         searchTask = SearchTask(this, logs, newText)
         searchTask!!.execute()

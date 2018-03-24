@@ -7,7 +7,7 @@ import android.os.ConditionVariable
 import android.os.Handler
 import android.os.Looper
 import android.support.v7.app.AppCompatActivity
-import com.dp.logger.MyLogger
+import com.dp.logger.Logger
 import com.logcat.collections.FixedCircularArray
 import java.io.*
 import java.util.*
@@ -59,10 +59,10 @@ class Logcat(initialCapacity: Int = INITIAL_LOG_CAPACITY) : Closeable {
     private val lifeCycleObserver = object : LifecycleObserver {
         @OnLifecycleEvent(Lifecycle.Event.ON_RESUME)
         private fun onActivityInForeground() {
-            MyLogger.logDebug(Logcat::class, "onActivityInForeground")
+            Logger.logDebug(Logcat::class, "onActivityInForeground")
 
             if (!paused) {
-                MyLogger.logDebug(Logcat::class, "Posting pending logs")
+                Logger.logDebug(Logcat::class, "Posting pending logs")
                 postPendingLogs()
             }
 
@@ -74,7 +74,7 @@ class Logcat(initialCapacity: Int = INITIAL_LOG_CAPACITY) : Closeable {
 
         @OnLifecycleEvent(Lifecycle.Event.ON_PAUSE)
         private fun onActivityInBackground() {
-            MyLogger.logDebug(Logcat::class, "onActivityInBackground")
+            Logger.logDebug(Logcat::class, "onActivityInBackground")
             lockedBlock(logsLock) {
                 activityInBackground = true
             }
@@ -116,7 +116,7 @@ class Logcat(initialCapacity: Int = INITIAL_LOG_CAPACITY) : Closeable {
             exitCode = -1
             threadLogcat = thread(block = { runLogcat() }, name = "logcat")
         } else {
-            MyLogger.logInfo(Logcat::class, "Logcat is already running!")
+            Logger.logInfo(Logcat::class, "Logcat is already running!")
         }
     }
 
@@ -383,9 +383,9 @@ class Logcat(initialCapacity: Int = INITIAL_LOG_CAPACITY) : Closeable {
             DEFAULT_BUFFERS = getDefaultBuffers()
             AVAILABLE_BUFFERS = getAvailabeBuffers()
 
-            MyLogger.logDebug(Logcat::class, "Available buffers: " +
+            Logger.logDebug(Logcat::class, "Available buffers: " +
                     Arrays.toString(AVAILABLE_BUFFERS))
-            MyLogger.logDebug(Logcat::class, "Default buffers: $DEFAULT_BUFFERS")
+            Logger.logDebug(Logcat::class, "Default buffers: $DEFAULT_BUFFERS")
         }
 
         fun writeToFile(logs: List<Log>, file: File): Boolean {
