@@ -12,6 +12,7 @@
         android:maxSdkVersion="18" />
 
     <application
+        android:name=".LogcatApp"
         android:allowBackup="true"
         android:fullBackupContent="true"
         android:icon="@mipmap/ic_launcher"
