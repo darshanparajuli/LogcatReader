@@ -11,7 +11,7 @@ object Logger {
     private const val WARNING = 5
     private const val WTF = 6
 
-    private var sTag = "MyDeviceLogs"
+    private var sTag = "Logger"
 
     fun init(tag: String) {
         sTag = tag
