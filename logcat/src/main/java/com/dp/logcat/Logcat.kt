@@ -264,7 +264,11 @@ class Logcat(initialCapacity: Int = INITIAL_LOG_CAPACITY) : Closeable {
         val stderrThread = thread(block = { processStderr(errorStream) }, name = "logcat-stderr")
         val stdoutThread = thread(block = { processStdout(inputStream) }, name = "logcat-stdout")
 
-        exitCode = logcatProcess?.waitFor() ?: -1
+        exitCode = try {
+            logcatProcess?.waitFor() ?: -1
+        } catch (e: InterruptedException) {
+            -1
+        }
 
         isProcessAlive = false
 
