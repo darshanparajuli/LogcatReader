@@ -161,6 +161,7 @@ class SavedLogsViewerFragment : BaseFragment() {
             if (it != null) {
                 progressBar.visibility = View.GONE
                 setLogs(it)
+                scrollRecyclerView()
             }
         })
     }
