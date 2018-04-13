@@ -13,7 +13,7 @@ import android.os.Binder
 import android.os.Build
 import android.support.v4.app.NotificationCompat
 import android.support.v4.content.ContextCompat
-import androidx.content.edit
+import androidx.core.content.edit
 import com.dp.logcat.Logcat
 import com.dp.logcatapp.R
 import com.dp.logcatapp.activities.MainActivity

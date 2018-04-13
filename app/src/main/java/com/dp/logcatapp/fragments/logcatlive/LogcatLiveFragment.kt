@@ -20,7 +20,7 @@ import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.SearchView
 import android.view.*
-import androidx.content.edit
+import androidx.core.content.edit
 import com.dp.logcat.Log
 import com.dp.logcat.Logcat
 import com.dp.logcat.LogcatEventListener
