@@ -49,7 +49,6 @@ class SavedLogsViewerFragment : BaseFragment() {
     private var lastLogId = -1
     private var lastSearchRunnable: Runnable? = null
     private var searchTask: SearchTask? = null
-    private val logs = mutableListOf<Log>()
 
     private val hideFabUpRunnable: Runnable = Runnable {
         fabUp.hide()
@@ -257,12 +256,23 @@ class SavedLogsViewerFragment : BaseFragment() {
     private fun onSearchAction(newText: String) {
         Logger.logDebug(SavedLogsViewerFragment::class, "onSearchAction: $newText")
         searchTask?.cancel(true)
+
+        var logs = viewModel.logs.value
+        if (logs == null) {
+            logs = emptyList()
+        }
+
         searchTask = SearchTask(this, logs, newText)
         searchTask!!.execute()
     }
 
     private fun onSearchViewClose() {
+        var logs = viewModel.logs.value
+        if (logs == null) {
+            logs = emptyList()
+        }
         setLogs(logs)
+
         if (lastLogId == -1) {
             scrollRecyclerView()
         } else {
@@ -301,6 +311,10 @@ class SavedLogsViewerFragment : BaseFragment() {
     }
 
     private fun setLogs(logs: List<Log>) {
+        if (adapter.itemCount == logs.size) {
+            return
+        }
+
         adapter.setItems(logs)
 
         if (logs.isEmpty()) {
