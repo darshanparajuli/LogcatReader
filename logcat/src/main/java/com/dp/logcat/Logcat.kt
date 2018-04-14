@@ -382,6 +382,7 @@ class Logcat(initialCapacity: Int = INITIAL_LOG_CAPACITY) : Closeable {
         val AVAILABLE_BUFFERS: Array<String>
         const val INITIAL_LOG_CAPACITY = 250_000
         const val INITIAL_LOG_SIZE = 10_000
+        private const val LOG_FILE_HEADER_FMT = "<<< log_count = %d >>>"
 
         init {
             DEFAULT_BUFFERS = getDefaultBuffers()
@@ -396,6 +397,7 @@ class Logcat(initialCapacity: Int = INITIAL_LOG_CAPACITY) : Closeable {
             var writer: BufferedWriter? = null
             return try {
                 writer = BufferedWriter(FileWriter(file))
+                writer.write(LOG_FILE_HEADER_FMT.format(logs.size))
                 for (log in logs) {
                     writer.write(log.toString())
                 }
