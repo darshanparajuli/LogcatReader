@@ -18,11 +18,9 @@ internal class SavedLogsViewerViewModel(application: Application) : AndroidViewM
 
     lateinit var logs: LogsLiveData
 
-    private var init = false
     fun init(uri: Uri) {
-        if (!init) {
+        if (!::logs.isInitialized) {
             logs = LogsLiveData(getApplication(), uri)
-            init = true
         }
     }
 }
