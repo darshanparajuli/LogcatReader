@@ -404,7 +404,6 @@ class Logcat(initialCapacity: Int = INITIAL_LOG_CAPACITY) : Closeable {
                         startIndex += 2
                         var endIndex = header.indexOf(' ', startIndex)
                         if (endIndex != -1) {
-                            endIndex -= 1
                             val value = header.substring(startIndex, endIndex)
                             return value.toLong()
                         }
