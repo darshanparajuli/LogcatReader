@@ -23,6 +23,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
+import android.widget.ProgressBar
 import android.widget.TextView
 import com.dp.logcatapp.R
 import com.dp.logcatapp.activities.BaseActivityWithToolbar
@@ -50,6 +51,7 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
     private lateinit var emptyView: View
     private lateinit var recyclerViewAdapter: MyRecyclerViewAdapter
     private lateinit var linearLayoutManager: LinearLayoutManager
+    private lateinit var progressBar: ProgressBar
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -59,6 +61,7 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
         recyclerViewAdapter = MyRecyclerViewAdapter(activity!!, this,
                 this, viewModel.selectedItems)
         viewModel.fileNames.observe(this, Observer {
+            progressBar.visibility = View.GONE
             if (it != null) {
                 if (it.fileNames.isNotEmpty()) {
                     emptyView.visibility = View.GONE
@@ -85,6 +88,8 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
                     recyclerViewAdapter.setItems(emptyList())
                     (activity as BaseActivityWithToolbar).toolbar.subtitle = null
                 }
+            } else {
+                emptyView.visibility = View.VISIBLE
             }
         })
     }
@@ -97,6 +102,7 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
         super.onViewCreated(view, savedInstanceState)
 
         emptyView = view.findViewById(R.id.textViewEmpty)
+        progressBar = view.findViewById(R.id.progressBar)
 
         recyclerView = view.findViewById(R.id.recyclerView)
         linearLayoutManager = LinearLayoutManager(context)
