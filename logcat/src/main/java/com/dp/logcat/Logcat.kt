@@ -393,6 +393,28 @@ class Logcat(initialCapacity: Int = INITIAL_LOG_CAPACITY) : Closeable {
             Logger.logDebug(Logcat::class, "Default buffers: $DEFAULT_BUFFERS")
         }
 
+        fun getLogCountFromHeader(file: File): Long {
+            try {
+                val reader = BufferedReader(FileReader(file))
+                val header = reader.readLine()
+                if (header.startsWith("<<<")) {
+                    var startIndex = header.indexOf('=')
+                    if (startIndex != -1) {
+                        startIndex += 2
+                        var endIndex = header.indexOf(' ', startIndex)
+                        if (endIndex != -1) {
+                            endIndex -= 1
+                            val value = header.substring(startIndex, endIndex)
+                            return value.toLong()
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                // ignore
+            }
+            return 0L
+        }
+
         fun writeToFile(logs: List<Log>, file: File): Boolean {
             var writer: BufferedWriter? = null
             return try {
