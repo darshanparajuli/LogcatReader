@@ -72,8 +72,15 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
                         (activity as BaseActivityWithToolbar).toolbar.subtitle =
                                 "${it.logFiles.size}"
                     } else {
+                        val totalLogCountFmt = if (it.totalLogCount == 1L) {
+                            resources.getString(R.string.log_count_fmt)
+                        } else {
+                            resources.getString(R.string.log_count_fmt_plural)
+                        }
+
+                        val totalLogCountStr = totalLogCountFmt.format(it.totalLogCount)
                         (activity as BaseActivityWithToolbar).toolbar.subtitle =
-                                "${it.logFiles.size} (${it.totalSize}, ${it.totalLogCount})"
+                                "${it.logFiles.size} ($totalLogCountStr, ${it.totalSize})"
                     }
 
                     if (viewModel.selectedItems.isNotEmpty()) {
