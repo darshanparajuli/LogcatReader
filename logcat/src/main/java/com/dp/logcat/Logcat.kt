@@ -412,7 +412,7 @@ class Logcat(initialCapacity: Int = INITIAL_LOG_CAPACITY) : Closeable {
             } catch (e: Exception) {
                 // ignore
             }
-            return 0L
+            return -1L
         }
 
         fun writeToFile(logs: List<Log>, file: File): Boolean {
