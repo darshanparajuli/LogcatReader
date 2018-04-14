@@ -312,8 +312,7 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
             val onClickListener: View.OnClickListener,
             val onLongClickListener: View.OnLongClickListener,
             val selectedItems: Set<Int>
-    ) :
-            RecyclerView.Adapter<MyRecyclerViewAdapter.MyViewHolder>() {
+    ) : RecyclerView.Adapter<MyRecyclerViewAdapter.MyViewHolder>() {
 
         val data = mutableListOf<String>()
 
