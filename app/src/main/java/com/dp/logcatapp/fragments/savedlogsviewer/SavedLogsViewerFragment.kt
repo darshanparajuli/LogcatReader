@@ -12,6 +12,7 @@ import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.SearchView
 import android.view.*
 import android.widget.ProgressBar
+import android.widget.TextView
 import com.dp.logcat.Log
 import com.dp.logcatapp.R
 import com.dp.logcatapp.activities.BaseActivityWithToolbar
@@ -44,6 +45,7 @@ class SavedLogsViewerFragment : BaseFragment() {
     private lateinit var fabUp: FloatingActionButton
     private lateinit var fabDown: FloatingActionButton
     private lateinit var progressBar: ProgressBar
+    private lateinit var textViewEmpty: TextView
     private var ignoreScrollEvent = false
     private var searchViewActive = false
     private var lastLogId = -1
@@ -158,10 +160,17 @@ class SavedLogsViewerFragment : BaseFragment() {
                 .get(SavedLogsViewerViewModel::class.java)
         viewModel.init(Uri.parse(arguments!!.getString(KEY_FILE_URI)))
         viewModel.logs.observe(this, Observer {
+            progressBar.visibility = View.GONE
             if (it != null) {
-                progressBar.visibility = View.GONE
-                setLogs(it)
-                scrollRecyclerView()
+                if (it.isEmpty()) {
+                    textViewEmpty.visibility = View.VISIBLE
+                } else {
+                    textViewEmpty.visibility = View.GONE
+                    setLogs(it)
+                    scrollRecyclerView()
+                }
+            } else {
+                textViewEmpty.visibility = View.VISIBLE
             }
         })
     }
@@ -174,6 +183,7 @@ class SavedLogsViewerFragment : BaseFragment() {
         super.onViewCreated(view, savedInstanceState)
 
         progressBar = view.findViewById(R.id.progressBar)
+        textViewEmpty = view.findViewById(R.id.textViewEmpty)
 
         recyclerView = view.findViewById(R.id.recyclerView)
         linearLayoutManager = LinearLayoutManager(activity)

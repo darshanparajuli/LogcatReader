@@ -32,6 +32,16 @@
         android:src="@drawable/ic_keyboard_arrow_down_white_24dp"
         app:fabSize="mini" />
 
+    <com.dp.logcatapp.views.CustomTextView
+        android:id="@+id/textViewEmpty"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:text="@string/empty"
+        android:textColor="?attr/secondary_text_color"
+        android:textSize="36sp"
+        android:visibility="gone"
+        app:useFont="@string/font_Roboto_Light" />
 
     <ProgressBar
         android:id="@+id/progressBar"
