@@ -327,7 +327,7 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
         override fun getItemCount(): Int = data.size
 
         override fun onBindViewHolder(holder: MyViewHolder, position: Int) {
-            holder.textView.text = data[position]
+            holder.fileName.text = data[position]
             holder.itemView.isSelected = selectedItems.contains(position)
         }
 
@@ -342,7 +342,7 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
         }
 
         class MyViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-            val textView: TextView = itemView.findViewById(R.id.fileName)
+            val fileName: TextView = itemView.findViewById(R.id.fileName)
         }
     }
 
