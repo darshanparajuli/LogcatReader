@@ -422,6 +422,7 @@ class Logcat(initialCapacity: Int = INITIAL_LOG_CAPACITY) : Closeable {
             return try {
                 writer = BufferedWriter(FileWriter(file, false))
                 writer.write(LOG_FILE_HEADER_FMT.format(logs.size))
+                writer.newLine()
                 for (log in logs) {
                     writer.write(log.toString())
                 }
