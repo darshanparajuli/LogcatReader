@@ -394,8 +394,9 @@ class Logcat(initialCapacity: Int = INITIAL_LOG_CAPACITY) : Closeable {
         }
 
         fun getLogCountFromHeader(file: File): Long {
+            var reader: BufferedReader? = null
             try {
-                val reader = BufferedReader(FileReader(file))
+                reader = BufferedReader(FileReader(file))
                 val header = reader.readLine()
                 if (header.startsWith("<<<")) {
                     var startIndex = header.indexOf('=')
@@ -411,6 +412,8 @@ class Logcat(initialCapacity: Int = INITIAL_LOG_CAPACITY) : Closeable {
                 }
             } catch (e: Exception) {
                 // ignore
+            } finally {
+                reader?.close()
             }
             return -1L
         }
