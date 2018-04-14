@@ -342,8 +342,8 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
     ) : RecyclerView.Adapter<MyRecyclerViewAdapter.MyViewHolder>() {
 
         val data = mutableListOf<LogFileInfo>()
-        val logFormat = context.resources.getString(R.string.log_count_fmt)
-        val logsFormat = context.resources.getString(R.string.log_count_fmt_plural)
+        val logFormat: String = context.resources.getString(R.string.log_count_fmt)
+        val logsFormat: String = context.resources.getString(R.string.log_count_fmt_plural)
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MyViewHolder {
             val view = LayoutInflater.from(parent.context)
