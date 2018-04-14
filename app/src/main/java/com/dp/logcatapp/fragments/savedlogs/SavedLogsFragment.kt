@@ -175,6 +175,13 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
         return false
     }
 
+    private fun selectAll() {
+        viewModel.selectedItems.clear()
+        for (i in 0 until recyclerViewAdapter.itemCount) {
+            onSelect(i)
+        }
+    }
+
     override fun onMenuItemClick(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.action_rename -> {
@@ -211,6 +218,10 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
                 } catch (e: Exception) {
                     context?.showToast("Unable to share")
                 }
+                true
+            }
+            R.id.action_select_all -> {
+                selectAll()
                 true
             }
             R.id.action_delete -> {
