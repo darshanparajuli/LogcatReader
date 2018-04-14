@@ -119,7 +119,7 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
                             (activity as SavedLogsActivity).closeCabToolbar()
                         }
                     } else {
-                        val fileName = recyclerViewAdapter.getItem(pos)
+                        val fileName = recyclerViewAdapter.getItem(pos).name
                         val folder = File(context!!.filesDir, LogcatLiveFragment.LOGCAT_DIR)
                         val file = File(folder, fileName)
                         val intent = Intent(context, SavedLogsViewerActivity::class.java)
@@ -165,9 +165,9 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
     override fun onMenuItemClick(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.action_rename -> {
-                val fileName = recyclerViewAdapter.getItem(viewModel.selectedItems.toIntArray()[0])
+                val fileInfo = recyclerViewAdapter.getItem(viewModel.selectedItems.toIntArray()[0])
                 val folder = File(context!!.filesDir, LogcatLiveFragment.LOGCAT_DIR)
-                val file = File(folder, fileName)
+                val file = File(folder, fileInfo.name)
                 val frag = RenameDialogFragment.newInstance(file.absolutePath)
                 frag.setTargetFragment(this, 0)
                 frag.show(fragmentManager, RenameDialogFragment.TAG)
@@ -182,9 +182,9 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
                 true
             }
             R.id.action_share -> {
-                val fileName = recyclerViewAdapter.getItem(viewModel.selectedItems.toIntArray()[0])
+                val fileInfo = recyclerViewAdapter.getItem(viewModel.selectedItems.toIntArray()[0])
                 val folder = File(context!!.filesDir, LogcatLiveFragment.LOGCAT_DIR)
-                val file = File(folder, fileName)
+                val file = File(folder, fileInfo.name)
 
                 try {
                     val intent = Intent(Intent.ACTION_SEND)
@@ -204,13 +204,14 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
                 val folder = File(context!!.filesDir, LogcatLiveFragment.LOGCAT_DIR)
                 val deleted = viewModel.selectedItems
                         .map {
-                            File(folder, recyclerViewAdapter.data[it])
+                            File(folder, recyclerViewAdapter.data[it].name)
                         }
                         .filter { it.delete() }
                         .map { it.name }
                         .toList()
 
-                val updatedList = recyclerViewAdapter.data.filter { it !in deleted }.toList()
+                val updatedList = recyclerViewAdapter.data
+                        .filter { it.name !in deleted }.toList()
 
                 viewModel.selectedItems.clear()
                 viewModel.fileNames.update(updatedList)
@@ -228,7 +229,8 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
             return
         }
 
-        val fileName = recyclerViewAdapter.getItem(viewModel.selectedItems.toIntArray()[0])
+        val fileInfo = recyclerViewAdapter.getItem(viewModel.selectedItems.toIntArray()[0])
+        val fileName = fileInfo.name
         val srcFolder = File(context!!.filesDir, LogcatLiveFragment.LOGCAT_DIR)
         val src = File(srcFolder, fileName)
 
@@ -263,9 +265,9 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
     }
 
     private fun onSaveCallback(uri: Uri) {
-        val fileName = recyclerViewAdapter.getItem(viewModel.selectedItems.toIntArray()[0])
+        val fileInfo = recyclerViewAdapter.getItem(viewModel.selectedItems.toIntArray()[0])
         val folder = File(context!!.filesDir, LogcatLiveFragment.LOGCAT_DIR)
-        val file = File(folder, fileName)
+        val file = File(folder, fileInfo.name)
 
         try {
             val src = FileInputStream(file)
@@ -314,7 +316,7 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
             val selectedItems: Set<Int>
     ) : RecyclerView.Adapter<MyRecyclerViewAdapter.MyViewHolder>() {
 
-        val data = mutableListOf<String>()
+        val data = mutableListOf<LogFileInfo>()
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MyViewHolder {
             val view = LayoutInflater.from(parent.context)
@@ -327,13 +329,15 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
         override fun getItemCount(): Int = data.size
 
         override fun onBindViewHolder(holder: MyViewHolder, position: Int) {
-            holder.fileName.text = data[position]
+            val fileInfo = data[position]
+            holder.fileName.text = fileInfo.name
+            holder.fileSize.text = fileInfo.sizeStr
             holder.itemView.isSelected = selectedItems.contains(position)
         }
 
         fun getItem(index: Int) = data[index]
 
-        fun setItems(items: List<String>) {
+        fun setItems(items: List<LogFileInfo>) {
             val previousSize = data.size
             data.clear()
             notifyItemRangeRemoved(0, previousSize)
@@ -343,6 +347,7 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
 
         class MyViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
             val fileName: TextView = itemView.findViewById(R.id.fileName)
+            val fileSize: TextView = itemView.findViewById(R.id.fileSize)
         }
     }
 

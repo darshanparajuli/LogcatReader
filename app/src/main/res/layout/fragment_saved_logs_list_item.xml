@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/list_item_root"
     android:layout_width="match_parent"
     android:layout_height="48dp"
     android:background="?attr/list_item_selector"
     android:descendantFocusability="blocksDescendants"
+    android:gravity="center_vertical"
+    android:orientation="vertical"
     android:paddingLeft="16dp"
     android:paddingRight="16dp">
 
@@ -13,10 +15,18 @@
         android:id="@+id/fileName"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_gravity="center_vertical"
         android:text="File name"
         android:textColor="?attr/primary_text_color"
         android:textSize="@dimen/text_size_medium"
         app:useFont="@string/font_Roboto_Regular" />
 
-</FrameLayout>
+    <com.dp.logcatapp.views.CustomTextView
+        android:id="@+id/fileSize"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="20 MB"
+        android:textColor="?attr/secondary_text_color"
+        android:textSize="@dimen/text_size_small"
+        app:useFont="@string/font_Roboto_Regular" />
+
+</LinearLayout>

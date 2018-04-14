@@ -6,6 +6,7 @@ import android.arch.lifecycle.LiveData
 import android.os.AsyncTask
 import com.dp.logcatapp.fragments.logcatlive.LogcatLiveFragment
 import java.io.File
+import java.io.FileInputStream
 import java.lang.ref.WeakReference
 
 internal class SavedLogsViewModel(application: Application) : AndroidViewModel(application) {
@@ -13,9 +14,11 @@ internal class SavedLogsViewModel(application: Application) : AndroidViewModel(a
     val selectedItems = mutableSetOf<Int>()
 }
 
+data class LogFileInfo(val name: String, val size: Long, val sizeStr: String)
+
 internal class SavedLogsResult {
     var totalSize = ""
-    val fileNames = mutableListOf<String>()
+    val fileNames = mutableListOf<LogFileInfo>()
 }
 
 internal class SavedLogsLiveData(private val application: Application) :
@@ -30,12 +33,12 @@ internal class SavedLogsLiveData(private val application: Application) :
         Loader(this).execute(folder)
     }
 
-    fun update(fileNames: List<String>) {
+    fun update(fileNames: List<LogFileInfo>) {
         val savedLogsResult = SavedLogsResult()
         savedLogsResult.fileNames += fileNames
 
         val folder = File(application.filesDir, LogcatLiveFragment.LOGCAT_DIR)
-        val totalSize = fileNames.sumByDouble { File(folder, it).length().toDouble() }
+        val totalSize = fileNames.sumByDouble { File(folder, it.name).length().toDouble() }
         if (totalSize > 0) {
             savedLogsResult.totalSize = sizeToString(totalSize)
         }
@@ -56,12 +59,14 @@ internal class SavedLogsLiveData(private val application: Application) :
             var totalSize = 0.toDouble()
             if (files != null) {
                 for (f in files) {
-                    savedLogsResult.fileNames += f.name
-                    totalSize += f.length()
+                    val size = f.length()
+                    val fileInfo = LogFileInfo(f.name, size, sizeToString(size.toDouble()))
+                    savedLogsResult.fileNames += fileInfo
+                    totalSize += fileInfo.size
                 }
             }
 
-            savedLogsResult.fileNames.sort()
+            savedLogsResult.fileNames.sortBy { it.name }
 
             if (totalSize > 0) {
                 savedLogsResult.totalSize = sizeToString(totalSize)
