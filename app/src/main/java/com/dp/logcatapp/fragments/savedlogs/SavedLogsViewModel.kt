@@ -7,6 +7,7 @@ import android.os.AsyncTask
 import com.dp.logcat.Logcat
 import com.dp.logcat.LogcatStreamReader
 import com.dp.logcatapp.fragments.logcatlive.LogcatLiveFragment
+import com.dp.logcatapp.util.Utils
 import com.dp.logger.Logger
 import java.io.File
 import java.io.FileInputStream
@@ -51,7 +52,7 @@ internal class SavedLogsLiveData(private val application: Application) :
         val folder = File(application.filesDir, LogcatLiveFragment.LOGCAT_DIR)
         val totalSize = fileInfos.sumByDouble { File(folder, it.name).length().toDouble() }
         if (totalSize > 0) {
-            savedLogsResult.totalSize = sizeToString(totalSize)
+            savedLogsResult.totalSize = Utils.sizeToString(totalSize)
         }
 
         value = savedLogsResult
@@ -72,7 +73,7 @@ internal class SavedLogsLiveData(private val application: Application) :
                 for (f in files) {
                     val size = f.length()
                     val count = countLogs(f)
-                    val fileInfo = LogFileInfo(f.name, size, sizeToString(size.toDouble()), count)
+                    val fileInfo = LogFileInfo(f.name, size, Utils.sizeToString(size.toDouble()), count)
                     savedLogsResult.logFiles += fileInfo
                     totalSize += fileInfo.size
                 }
@@ -85,7 +86,7 @@ internal class SavedLogsLiveData(private val application: Application) :
             savedLogsResult.logFiles.sortBy { it.name }
 
             if (totalSize > 0) {
-                savedLogsResult.totalSize = sizeToString(totalSize)
+                savedLogsResult.totalSize = Utils.sizeToString(totalSize)
             }
 
             return savedLogsResult
@@ -116,24 +117,6 @@ internal class SavedLogsLiveData(private val application: Application) :
             if (savedLogsLiveData != null) {
                 savedLogsLiveData.value = result
             }
-        }
-    }
-
-    companion object {
-        fun sizeToString(size: Double): String {
-            val units = arrayOf("B", "KB", "MB", "GB", "TB")
-            var unit = units[0]
-            var totalSize = size
-            for (i in 1 until units.size) {
-                if (totalSize >= 1024) {
-                    totalSize /= 1024
-                    unit = units[i]
-                } else {
-                    break
-                }
-            }
-
-            return "%.2f %s".format(totalSize, unit)
         }
     }
 }
