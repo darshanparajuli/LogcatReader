@@ -4,8 +4,10 @@ import android.app.Application
 import android.arch.lifecycle.AndroidViewModel
 import android.arch.lifecycle.LiveData
 import android.os.AsyncTask
+import com.dp.logcat.Logcat
 import com.dp.logcat.LogcatStreamReader
 import com.dp.logcatapp.fragments.logcatlive.LogcatLiveFragment
+import com.dp.logger.Logger
 import java.io.File
 import java.io.FileInputStream
 import java.io.IOException
@@ -90,10 +92,21 @@ internal class SavedLogsLiveData(private val application: Application) :
         }
 
         private fun countLogs(file: File): Long {
+            val logCount = Logcat.getLogCountFromHeader(file)
+            if (logCount != -1L) {
+                return logCount
+            }
+
             return try {
                 val reader = LogcatStreamReader(FileInputStream(file))
-                var count = 0L
-                for (l in reader) ++count
+                val logs = reader.asSequence().toList()
+                val count = logs.size.toLong()
+
+
+                if (!Logcat.writeToFile(logs, file)) {
+                    Logger.logDebug(SavedLogsViewModel::class, "Failed to write log header")
+                }
+
                 count
             } catch (e: IOException) {
                 0L
