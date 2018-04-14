@@ -69,4 +69,6 @@
     <string name="value_must_be_greater_than_0">Value must be greater than 0</string>
     <string name="value_must_be_a_positive_integer">Value must be a postive integer</string>
     <string name="rename">Rename</string>
+    <string name="log_count_fmt">%d log</string>
+    <string name="log_count_fmt_plural">%d logs</string>
 </resources>

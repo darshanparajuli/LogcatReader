@@ -20,13 +20,30 @@
         android:textSize="@dimen/text_size_medium"
         app:useFont="@string/font_Roboto_Regular" />
 
-    <com.dp.logcatapp.views.CustomTextView
-        android:id="@+id/fileSize"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="20 MB"
-        android:textColor="?attr/secondary_text_color"
-        android:textSize="@dimen/text_size_small"
-        app:useFont="@string/font_Roboto_Regular" />
+        android:orientation="horizontal">
+
+        <com.dp.logcatapp.views.CustomTextView
+            android:id="@+id/fileSize"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:layout_marginRight="8dp"
+            android:text="20 MB"
+            android:textColor="?attr/secondary_text_color"
+            android:textSize="@dimen/text_size_small"
+            app:useFont="@string/font_Roboto_Regular" />
+
+        <com.dp.logcatapp.views.CustomTextView
+            android:id="@+id/logCount"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="100 logs"
+            android:textColor="?attr/secondary_text_color"
+            android:textSize="@dimen/text_size_small"
+            app:useFont="@string/font_Roboto_Regular" />
+    </LinearLayout>
 
 </LinearLayout>

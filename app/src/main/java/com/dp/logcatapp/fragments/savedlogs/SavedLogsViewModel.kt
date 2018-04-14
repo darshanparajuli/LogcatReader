@@ -4,9 +4,11 @@ import android.app.Application
 import android.arch.lifecycle.AndroidViewModel
 import android.arch.lifecycle.LiveData
 import android.os.AsyncTask
+import com.dp.logcat.LogcatStreamReader
 import com.dp.logcatapp.fragments.logcatlive.LogcatLiveFragment
 import java.io.File
 import java.io.FileInputStream
+import java.io.IOException
 import java.lang.ref.WeakReference
 
 internal class SavedLogsViewModel(application: Application) : AndroidViewModel(application) {
@@ -14,7 +16,10 @@ internal class SavedLogsViewModel(application: Application) : AndroidViewModel(a
     val selectedItems = mutableSetOf<Int>()
 }
 
-data class LogFileInfo(val name: String, val size: Long, val sizeStr: String)
+data class LogFileInfo(val name: String,
+                       val size: Long,
+                       val sizeStr: String,
+                       val count: Long)
 
 internal class SavedLogsResult {
     var totalSize = ""
@@ -60,7 +65,8 @@ internal class SavedLogsLiveData(private val application: Application) :
             if (files != null) {
                 for (f in files) {
                     val size = f.length()
-                    val fileInfo = LogFileInfo(f.name, size, sizeToString(size.toDouble()))
+                    val count = countLogs(f)
+                    val fileInfo = LogFileInfo(f.name, size, sizeToString(size.toDouble()), count)
                     savedLogsResult.fileNames += fileInfo
                     totalSize += fileInfo.size
                 }
@@ -73,6 +79,17 @@ internal class SavedLogsLiveData(private val application: Application) :
             }
 
             return savedLogsResult
+        }
+
+        private fun countLogs(file: File): Long {
+            return try {
+                val reader = LogcatStreamReader(FileInputStream(file))
+                var count = 0L
+                for (l in reader) ++count
+                count
+            } catch (e: IOException) {
+                0L
+            }
         }
 
         override fun onPostExecute(result: SavedLogsResult) {

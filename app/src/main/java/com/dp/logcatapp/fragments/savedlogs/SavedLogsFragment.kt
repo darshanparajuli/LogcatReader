@@ -56,8 +56,8 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
         viewModel = ViewModelProviders.of(this)
                 .get(SavedLogsViewModel::class.java)
 
-        recyclerViewAdapter = MyRecyclerViewAdapter(this, this,
-                viewModel.selectedItems)
+        recyclerViewAdapter = MyRecyclerViewAdapter(activity!!, this,
+                this, viewModel.selectedItems)
         viewModel.fileNames.observe(this, Observer {
             if (it != null) {
                 if (it.fileNames.isNotEmpty()) {
@@ -311,12 +311,15 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
     }
 
     private class MyRecyclerViewAdapter(
+            context: Context,
             val onClickListener: View.OnClickListener,
             val onLongClickListener: View.OnLongClickListener,
             val selectedItems: Set<Int>
     ) : RecyclerView.Adapter<MyRecyclerViewAdapter.MyViewHolder>() {
 
         val data = mutableListOf<LogFileInfo>()
+        val logFormat = context.resources.getString(R.string.log_count_fmt)
+        val logsFormat = context.resources.getString(R.string.log_count_fmt_plural)
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MyViewHolder {
             val view = LayoutInflater.from(parent.context)
@@ -332,6 +335,14 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
             val fileInfo = data[position]
             holder.fileName.text = fileInfo.name
             holder.fileSize.text = fileInfo.sizeStr
+
+            // no need to check for 0 as the app does not allow for saving empty logs
+            if (fileInfo.count == 1L) {
+                holder.logCount.text = logFormat.format(fileInfo.count)
+            } else {
+                holder.logCount.text = logsFormat.format(fileInfo.count)
+            }
+
             holder.itemView.isSelected = selectedItems.contains(position)
         }
 
@@ -348,6 +359,7 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
         class MyViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
             val fileName: TextView = itemView.findViewById(R.id.fileName)
             val fileSize: TextView = itemView.findViewById(R.id.fileSize)
+            val logCount: TextView = itemView.findViewById(R.id.logCount)
         }
     }
 

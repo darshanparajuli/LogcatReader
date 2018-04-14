@@ -70,4 +70,6 @@
     <string name="value_must_be_greater_than_0">Значение должно быть больше 0</string>
     <string name="value_must_be_a_positive_integer">Значение должно быть целым числом</string>
     <string name="rename">переименовывать</string>
+    <string name="log_count_fmt">%d журнал</string>
+    <string name="log_count_fmt_plural">%d журналы</string>
 </resources>
