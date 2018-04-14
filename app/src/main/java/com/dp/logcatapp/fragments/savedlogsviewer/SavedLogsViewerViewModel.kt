@@ -36,7 +36,7 @@ internal class LogsLiveData(application: Application, uri: Uri) : LiveData<List<
             val inputStream = application.contentResolver.openInputStream(uri)
             Loader(this).execute(inputStream)
         } catch (e: FileNotFoundException) {
-            // ignore
+            this.value = emptyList()
         }
     }
 
