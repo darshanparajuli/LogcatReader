@@ -23,7 +23,8 @@ data class LogFileInfo(val name: String,
 
 internal class SavedLogsResult {
     var totalSize = ""
-    val fileNames = mutableListOf<LogFileInfo>()
+    var totalLogCount = 0L
+    val logFiles = mutableListOf<LogFileInfo>()
 }
 
 internal class SavedLogsLiveData(private val application: Application) :
@@ -38,12 +39,15 @@ internal class SavedLogsLiveData(private val application: Application) :
         Loader(this).execute(folder)
     }
 
-    fun update(fileNames: List<LogFileInfo>) {
+    fun update(fileInfos: List<LogFileInfo>) {
         val savedLogsResult = SavedLogsResult()
-        savedLogsResult.fileNames += fileNames
+        savedLogsResult.logFiles += fileInfos
+        savedLogsResult.totalLogCount = fileInfos.foldRight(0L, { logFileInfo, acc ->
+            acc + logFileInfo.count
+        })
 
         val folder = File(application.filesDir, LogcatLiveFragment.LOGCAT_DIR)
-        val totalSize = fileNames.sumByDouble { File(folder, it.name).length().toDouble() }
+        val totalSize = fileInfos.sumByDouble { File(folder, it.name).length().toDouble() }
         if (totalSize > 0) {
             savedLogsResult.totalSize = sizeToString(totalSize)
         }
@@ -67,12 +71,16 @@ internal class SavedLogsLiveData(private val application: Application) :
                     val size = f.length()
                     val count = countLogs(f)
                     val fileInfo = LogFileInfo(f.name, size, sizeToString(size.toDouble()), count)
-                    savedLogsResult.fileNames += fileInfo
+                    savedLogsResult.logFiles += fileInfo
                     totalSize += fileInfo.size
                 }
             }
 
-            savedLogsResult.fileNames.sortBy { it.name }
+            savedLogsResult.totalLogCount = savedLogsResult.logFiles
+                    .foldRight(0L, { logFileInfo, acc ->
+                        acc + logFileInfo.count
+                    })
+            savedLogsResult.logFiles.sortBy { it.name }
 
             if (totalSize > 0) {
                 savedLogsResult.totalSize = sizeToString(totalSize)

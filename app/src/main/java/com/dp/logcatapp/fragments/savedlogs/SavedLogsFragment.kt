@@ -63,17 +63,17 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
         viewModel.fileNames.observe(this, Observer {
             progressBar.visibility = View.GONE
             if (it != null) {
-                if (it.fileNames.isNotEmpty()) {
+                if (it.logFiles.isNotEmpty()) {
                     emptyView.visibility = View.GONE
                     recyclerView.visibility = View.VISIBLE
-                    recyclerViewAdapter.setItems(it.fileNames)
+                    recyclerViewAdapter.setItems(it.logFiles)
 
                     if (it.totalSize.isEmpty()) {
                         (activity as BaseActivityWithToolbar).toolbar.subtitle =
-                                "${it.fileNames.size}"
+                                "${it.logFiles.size}"
                     } else {
                         (activity as BaseActivityWithToolbar).toolbar.subtitle =
-                                "${it.fileNames.size} (${it.totalSize})"
+                                "${it.logFiles.size} (${it.totalSize}, ${it.totalLogCount})"
                     }
 
                     if (viewModel.selectedItems.isNotEmpty()) {
