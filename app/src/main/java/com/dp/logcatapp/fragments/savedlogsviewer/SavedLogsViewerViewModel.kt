@@ -7,6 +7,8 @@ import android.net.Uri
 import android.os.AsyncTask
 import com.dp.logcat.Log
 import com.dp.logcat.LogcatStreamReader
+import java.io.FileNotFoundException
+import java.io.IOException
 import java.io.InputStream
 import java.lang.ref.WeakReference
 
@@ -32,8 +34,12 @@ internal class LogsLiveData(application: Application, uri: Uri) : LiveData<List<
     }
 
     private fun load(application: Application, uri: Uri) {
-        val inputStream = application.contentResolver.openInputStream(uri)
-        Loader(this).execute(inputStream)
+        try {
+            val inputStream = application.contentResolver.openInputStream(uri)
+            Loader(this).execute(inputStream)
+        } catch (e: FileNotFoundException) {
+            // ignore
+        }
     }
 
     class Loader(savedLogsLiveData: LogsLiveData) : AsyncTask<InputStream, Void, List<Log>>() {
@@ -45,9 +51,13 @@ internal class LogsLiveData(application: Application, uri: Uri) : LiveData<List<
 
             val inputStream = params[0]
             if (inputStream != null) {
-                val reader = LogcatStreamReader(inputStream)
-                for (log in reader) {
-                    logs += log
+                try {
+                    val reader = LogcatStreamReader(inputStream)
+                    for (log in reader) {
+                        logs += log
+                    }
+                } catch (e: IOException) {
+                    // ignore
                 }
             }
 
