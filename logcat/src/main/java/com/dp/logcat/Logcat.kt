@@ -418,7 +418,7 @@ class Logcat(initialCapacity: Int = INITIAL_LOG_CAPACITY) : Closeable {
         fun writeToFile(logs: List<Log>, file: File): Boolean {
             var writer: BufferedWriter? = null
             return try {
-                writer = BufferedWriter(FileWriter(file))
+                writer = BufferedWriter(FileWriter(file, false))
                 writer.write(LOG_FILE_HEADER_FMT.format(logs.size))
                 for (log in logs) {
                     writer.write(log.toString())
