@@ -100,14 +100,12 @@ internal class SavedLogsLiveData(private val application: Application) :
             return try {
                 val reader = LogcatStreamReader(FileInputStream(file))
                 val logs = reader.asSequence().toList()
-                val count = logs.size.toLong()
-
 
                 if (!Logcat.writeToFile(logs, file)) {
                     Logger.logDebug(SavedLogsViewModel::class, "Failed to write log header")
                 }
 
-                count
+                logs.size.toLong()
             } catch (e: IOException) {
                 0L
             }
