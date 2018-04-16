@@ -35,6 +35,7 @@ import com.dp.logcatapp.fragments.logcatlive.dialogs.InstructionToGrantPermissio
 import com.dp.logcatapp.fragments.shared.dialogs.CopyToClipboardDialogFragment
 import com.dp.logcatapp.services.LogcatService
 import com.dp.logcatapp.util.*
+import com.dp.logcatapp.views.IndeterminateProgressSnackBar
 import com.dp.logger.Logger
 import java.io.File
 import java.lang.ref.WeakReference
@@ -683,12 +684,11 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
                        private val logs: List<Log>) : AsyncTask<Void, Void, Boolean>() {
 
         private val ref = WeakReference(frag)
+        private val snackBarProgress = IndeterminateProgressSnackBar(frag.view!!,
+                frag.getString(R.string.saving))
 
         override fun onPreExecute() {
-            val frag = ref.get()
-            if (frag != null) {
-                showSnackbar(frag.view, frag.getString(R.string.saving))
-            }
+            snackBarProgress.show()
         }
 
         override fun doInBackground(vararg params: Void?): Boolean {
@@ -696,6 +696,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
         }
 
         override fun onPostExecute(result: Boolean) {
+            snackBarProgress.dismiss()
             val frag = ref.get() ?: return
             if (frag.activity == null) {
                 return
