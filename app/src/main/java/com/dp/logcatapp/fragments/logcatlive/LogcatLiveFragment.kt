@@ -679,10 +679,17 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
         }
     }
 
-    class SaveFileTask(frag: LogcatLiveFragment, val file: File, val logs: List<Log>) :
-            AsyncTask<Void, Void, Boolean>() {
+    class SaveFileTask(frag: LogcatLiveFragment, val file: File,
+                       private val logs: List<Log>) : AsyncTask<Void, Void, Boolean>() {
 
         private val ref = WeakReference(frag)
+
+        override fun onPreExecute() {
+            val frag = ref.get()
+            if (frag != null) {
+                showSnackbar(frag.view, frag.getString(R.string.saving))
+            }
+        }
 
         override fun doInBackground(vararg params: Void?): Boolean {
             return Logcat.writeToFile(logs, file)
