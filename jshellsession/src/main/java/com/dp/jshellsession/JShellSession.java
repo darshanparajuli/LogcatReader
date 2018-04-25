@@ -126,7 +126,9 @@ public class JShellSession implements Closeable {
             mWriter.newLine();
             mWriter.flush();
 
-            waitForEndMarker(timeout);
+            if (timeout >= 0) {
+                waitForEndMarker(timeout);
+            }
 
 //            MyLogger.logDebug("JShell", "reached return");
             return new CommandResult(mExitCode, mSuccessExitValues, mStdOut.toArray(new String[mStdOut.size()]),
@@ -242,7 +244,7 @@ public class JShellSession implements Closeable {
         if (mProcess != null) {
             if (mRunExitOnClose) {
                 try {
-                    run("exit");
+                    run("exit", -1);
                 } catch (IOException ignored) {
                 }
             }
