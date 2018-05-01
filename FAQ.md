@@ -1,7 +1,4 @@
-FREQUENTLY ASKED QUESTIONS (FAQ) FOR LOGCAT READER
-
-![logcat](https://user-images.githubusercontent.com/35721447/39463089-c9967504-4d0d-11e8-8515-8acd63a7d732.png)
-
+# FREQUENTLY ASKED QUESTIONS (FAQ) FOR LOGCAT READER
 
 **Q**. What is logcatreader?
 
@@ -26,6 +23,7 @@ FREQUENTLY ASKED QUESTIONS (FAQ) FOR LOGCAT READER
 
 
 **Q**. Where are log files being stored?
+
 **A**. Log files created by your device are being stored in "dev/log".
 
 **Q**. How do i save logs at a specific time with logcatreader?
