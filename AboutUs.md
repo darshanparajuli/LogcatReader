@@ -1,4 +1,4 @@
-ABOUT US (LOGCAT READER)
+ABOUT US (LOGCATREADER)
 
 # What is Logcatreader
 Logcatreader is an android app tool that allows access to messages from applications and services running on an Android device. Most Android developers depend heavily on log-cat (and adb) during development to debug their applications. 
@@ -19,7 +19,7 @@ In logcatreader we have added the following into the provided log details:
 
  This identifies  the software component that generated the message, which is being used to filter messages.
 
-### 3 The actual message
+#### 3 The actual message
 
 A new line character is added to the end of every messages.
 
