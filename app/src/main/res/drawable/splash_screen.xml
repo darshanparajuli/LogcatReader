@@ -11,6 +11,6 @@
         <bitmap
             android:antialias="true"
             android:gravity="center"
-            android:src="@mipmap/ic_splash" />
+            android:src="@drawable/splash_screen_img" />
     </item>
 </layer-list>
