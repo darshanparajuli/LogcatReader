@@ -1,4 +1,6 @@
-# Logcat Reader
+<img src="/app/playstore_images/launcher_icon.png" width="192px" />
+
+# Logcat Reader 
 
 A simple app to view logs on an android device.
 
