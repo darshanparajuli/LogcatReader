@@ -52,7 +52,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
         private const val LOG_KEYWORD_FILTER = "logKeywordFilter"
 
         private val STOP_RECORDING = TAG + "_stop_recording"
-        private val KEY_FILTER_PRIORITES = TAG + "_key_filter_priorites"
+        private val KEY_FILTER_PRIORITIES = TAG + "_key_filter_priorites"
         private val KEY_FILTER_KEYWORD = TAG + "_key_filter_keyword"
 
         fun newInstance(stopRecording: Boolean): LogcatLiveFragment {
@@ -403,7 +403,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
             R.id.filter_action -> {
                 val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(activity)
                 val keyword = sharedPreferences.getString(KEY_FILTER_KEYWORD, "")
-                val logPriorites = sharedPreferences.getStringSet(KEY_FILTER_PRIORITES, setOf())
+                val logPriorites = sharedPreferences.getStringSet(KEY_FILTER_PRIORITIES, setOf())
                 val frag = FilterDialogFragment.newInstance(keyword, logPriorites)
                 frag.setTargetFragment(this, 0)
                 frag.show(fragmentManager, FilterDialogFragment.TAG)
@@ -441,7 +441,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
             val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(activity)
             sharedPreferences.edit {
                 putString(KEY_FILTER_KEYWORD, keyword)
-                putStringSet(KEY_FILTER_PRIORITES, logPriorities)
+                putStringSet(KEY_FILTER_PRIORITIES, logPriorities)
             }
 
             adapter.clear()
@@ -548,7 +548,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
 
         val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(activity)
         val keyword = sharedPreferences.getString(KEY_FILTER_KEYWORD, null)
-        val logPriorites = sharedPreferences.getStringSet(KEY_FILTER_PRIORITES, null)
+        val logPriorites = sharedPreferences.getStringSet(KEY_FILTER_PRIORITIES, null)
 
         if (keyword == null) {
             logcat.removeFilter(LOG_KEYWORD_FILTER)
