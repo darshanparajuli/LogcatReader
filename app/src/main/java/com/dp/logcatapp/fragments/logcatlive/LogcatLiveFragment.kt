@@ -21,6 +21,7 @@ import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.SearchView
 import android.view.*
 import androidx.core.content.edit
+import androidx.core.net.toFile
 import com.dp.logcat.Log
 import com.dp.logcat.Logcat
 import com.dp.logcat.LogcatEventListener
@@ -482,21 +483,22 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
             return
         }
 
-        val file = File(getSaveLocation())
-        file.mkdirs()
+        val file = getSaveLocation()
         SaveFileTask(this, File(file, fileName), logs).execute()
     }
 
-    private fun getSaveLocation(): String {
+    private fun getSaveLocation(): File {
         val saveLocationPref = activity!!.getDefaultSharedPreferences().getString(
                 PreferenceKeys.Logcat.KEY_SAVE_LOCATION,
                 PreferenceKeys.Logcat.Default.SAVE_LOCATION
         )
 
         return if (saveLocationPref.isEmpty()) {
-            "${context!!.filesDir}/$LOGCAT_DIR"
+            val file = File(context!!.filesDir, LOGCAT_DIR)
+            file.mkdirs()
+            file
         } else {
-            ""
+            Uri.parse(saveLocationPref).toFile()
         }
     }
 
