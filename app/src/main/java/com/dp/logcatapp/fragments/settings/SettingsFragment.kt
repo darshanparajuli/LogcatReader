@@ -1,19 +1,23 @@
 package com.dp.logcatapp.fragments.settings
 
+import android.annotation.TargetApi
+import android.app.Dialog
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.support.v14.preference.MultiSelectListPreference
+import android.support.v4.content.ContextCompat.startActivity
+import android.support.v7.app.AlertDialog
 import android.support.v7.preference.ListPreference
 import android.support.v7.preference.Preference
 import android.support.v7.preference.PreferenceFragmentCompat
+import androidx.core.content.edit
 import com.dp.logcat.Logcat
 import com.dp.logcatapp.BuildConfig
 import com.dp.logcatapp.R
-import com.dp.logcatapp.util.PreferenceKeys
-import com.dp.logcatapp.util.isDarkThemeOn
-import com.dp.logcatapp.util.restartApp
-import com.dp.logcatapp.util.showToast
+import com.dp.logcatapp.fragments.base.BaseDialogFragment
+import com.dp.logcatapp.util.*
 import java.text.NumberFormat
 
 class SettingsFragment : PreferenceFragmentCompat() {
@@ -21,6 +25,8 @@ class SettingsFragment : PreferenceFragmentCompat() {
     companion object {
         val TAG = SettingsFragment::class.qualifiedName
     }
+
+    private lateinit var prefSaveLocation: Preference
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         addPreferencesFromResource(R.xml.settings)
@@ -158,6 +164,53 @@ class SettingsFragment : PreferenceFragmentCompat() {
                         false
                     }
                 }
+
+        setupSaveLocationOption()
+    }
+
+    private fun setupSaveLocationOption() {
+        prefSaveLocation = findPreference(PreferenceKeys.Logcat.KEY_SAVE_LOCATION)
+        val saveLocation = preferenceScreen.sharedPreferences.getString(
+                PreferenceKeys.Logcat.KEY_SAVE_LOCATION,
+                PreferenceKeys.Logcat.Default.SAVE_LOCATION
+        ).trim()
+        if (saveLocation.isEmpty()) {
+            prefSaveLocation.summary = getString(R.string.save_location_internal)
+        } else {
+            prefSaveLocation.summary = saveLocation
+        }
+
+        prefSaveLocation.setOnPreferenceClickListener {
+            val frag = SaveLocationDialogFragment()
+            frag.setTargetFragment(this@SettingsFragment, 0)
+            frag.show(fragmentManager, SaveLocationDialogFragment.TAG)
+            true
+        }
+
+        val frag = fragmentManager?.findFragmentByTag(SaveLocationDialogFragment.TAG)
+        frag?.setTargetFragment(this, 0)
+    }
+
+    private fun setupCustomSaveLocation() {
+        if (Build.VERSION.SDK_INT >= 19) {
+            setupCustomSaveLocationKitkat()
+        } else {
+            val frag = FileChooserDialogFragment()
+            frag.setTargetFragment(this, 0)
+            frag.show(fragmentManager, FileChooserDialogFragment.TAG)
+        }
+    }
+
+    @TargetApi(19)
+    private fun setupCustomSaveLocationKitkat() {
+        // TODO(darshan): Use document API for setting a path uri
+    }
+
+    private fun setupDefaultSaveLocation() {
+        preferenceScreen.sharedPreferences.edit {
+            putString(PreferenceKeys.Logcat.KEY_SAVE_LOCATION, "")
+        }
+        prefSaveLocation.summary = getString(R.string.save_location_internal)
     }
 
     private fun setupAboutCategory() {
@@ -177,4 +230,30 @@ class SettingsFragment : PreferenceFragmentCompat() {
             }
         }
     }
+
+    class SaveLocationDialogFragment: BaseDialogFragment() {
+        companion object {
+            val TAG = SaveLocationDialogFragment::class.qualifiedName
+        }
+
+        override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
+            return AlertDialog.Builder(activity!!)
+                    .setTitle(R.string.save_location)
+                    .setItems(R.array.save_location_options, { _, which ->
+                        if (which == 0) {
+                            (targetFragment as SettingsFragment).setupDefaultSaveLocation()
+                        } else {
+                            (targetFragment as SettingsFragment).setupCustomSaveLocation()
+                        }
+                    })
+                    .create()
+        }
+    }
+
+    class FileChooserDialogFragment: BaseDialogFragment() {
+        companion object {
+            val TAG = FileChooserDialogFragment::class.qualifiedName
+        }
+    }
+
 }

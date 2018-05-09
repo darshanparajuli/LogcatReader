@@ -8,4 +8,8 @@
         <item>Process ID</item>
         <item>Thread ID</item>
     </string-array>
+    <string-array name="save_location_options">
+        <item>@string/save_location_internal</item>
+        <item>@string/save_location_custom</item>
+    </string-array>
 </resources>

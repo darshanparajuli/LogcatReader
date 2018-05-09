@@ -27,11 +27,13 @@ object PreferenceKeys {
         const val KEY_POLL_INTERVAL = "pref_key_logcat_poll_interval"
         const val KEY_BUFFERS = "pref_key_logcat_buffers"
         const val KEY_MAX_LOGS = "pref_key_logcat_max_logs"
+        const val KEY_SAVE_LOCATION = "pref_key_logcat_save_location"
 
         object Default {
             const val POLL_INTERVAL = "250"
             val BUFFERS: Set<String> = getDefaultBufferValues()
             const val MAX_LOGS = com.dp.logcat.Logcat.INITIAL_LOG_CAPACITY.toString()
+            const val SAVE_LOCATION = ""
 
             private fun getDefaultBufferValues(): Set<String> {
                 val bufferValues = mutableSetOf<String>()

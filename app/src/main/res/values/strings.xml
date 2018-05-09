@@ -73,4 +73,7 @@
     <string name="log_count_fmt_plural">%d logs</string>
     <string name="select_all">Select all</string>
     <string name="saving">Saving…</string>
+    <string name="save_location">Save location</string>
+    <string name="save_location_internal">Internal</string>
+    <string name="save_location_custom">Custom</string>
 </resources>

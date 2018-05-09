@@ -482,9 +482,22 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
             return
         }
 
-        val file = File(context!!.filesDir, LOGCAT_DIR)
+        val file = File(getSaveLocation())
         file.mkdirs()
         SaveFileTask(this, File(file, fileName), logs).execute()
+    }
+
+    private fun getSaveLocation(): String {
+        val saveLocationPref = activity!!.getDefaultSharedPreferences().getString(
+                PreferenceKeys.Logcat.KEY_SAVE_LOCATION,
+                PreferenceKeys.Logcat.Default.SAVE_LOCATION
+        )
+
+        return if (saveLocationPref.isEmpty()) {
+            "${context!!.filesDir}/$LOGCAT_DIR"
+        } else {
+            ""
+        }
     }
 
     private fun saveToFile(logs: List<Log>) {
