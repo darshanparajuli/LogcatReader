@@ -403,8 +403,8 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
             R.id.filter_action -> {
                 val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(activity)
                 val keyword = sharedPreferences.getString(KEY_FILTER_KEYWORD, "")
-                val logPriorites = sharedPreferences.getStringSet(KEY_FILTER_PRIORITIES, setOf())
-                val frag = FilterDialogFragment.newInstance(keyword, logPriorites)
+                val logPriorities = sharedPreferences.getStringSet(KEY_FILTER_PRIORITIES, setOf())
+                val frag = FilterDialogFragment.newInstance(keyword, logPriorities)
                 frag.setTargetFragment(this, 0)
                 frag.show(fragmentManager, FilterDialogFragment.TAG)
                 true
