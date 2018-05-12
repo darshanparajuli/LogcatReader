@@ -120,6 +120,7 @@ internal class MyViewModel(application: Application) : AndroidViewModel(applicat
 
         file.listFiles()
                 ?.map { FileHolder(it) }
+                ?.sortedBy { it.file.name }
                 ?.forEach({ files.add(it) })
 
         this.files.value = files
