@@ -5,6 +5,7 @@ import android.arch.lifecycle.LifecycleObserver
 import android.arch.lifecycle.OnLifecycleEvent
 import android.content.ContentProvider
 import android.content.Context
+import android.net.Uri
 import android.os.ConditionVariable
 import android.os.Handler
 import android.os.Looper
@@ -397,9 +398,28 @@ class Logcat(initialCapacity: Int = INITIAL_LOG_CAPACITY) : Closeable {
         }
 
         fun getLogCountFromHeader(file: File): Long {
+            try {
+                return getLogCountFromHeader(FileInputStream(file))
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+            return -1L
+        }
+
+        fun getLogCountFromHeader(context: Context, file: DocumentFile): Long {
+            try {
+                val fis = context.contentResolver.openInputStream(file.uri)
+                return getLogCountFromHeader(fis)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+            return -1L
+        }
+
+        private fun getLogCountFromHeader(inputStream: InputStream): Long {
             var reader: BufferedReader? = null
             try {
-                reader = BufferedReader(FileReader(file))
+                reader = BufferedReader(InputStreamReader(inputStream))
                 val header = reader.readLine()
                 if (header.startsWith("<<<")) {
                     var startIndex = header.indexOf('=')
@@ -434,10 +454,10 @@ class Logcat(initialCapacity: Int = INITIAL_LOG_CAPACITY) : Closeable {
             }
         }
 
-        fun writeToFile(context: Context, logs: List<Log>, file: DocumentFile): Boolean {
+        fun writeToFile(context: Context, logs: List<Log>, uri: Uri): Boolean {
             var writer: BufferedWriter? = null
             return try {
-                val fos = context.contentResolver.openOutputStream(file.uri)
+                val fos = context.contentResolver.openOutputStream(uri)
                 writer = BufferedWriter(OutputStreamWriter(fos))
                 writeToFileHelper(logs, writer)
                 true
