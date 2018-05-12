@@ -34,7 +34,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
     companion object {
         val TAG = SettingsFragment::class.qualifiedName
         private const val WRITE_STORAGE_PERMISSION_REQ = 12
-        private const val SAVE_LOCATION_REQ = 123;
+        private const val SAVE_LOCATION_REQ = 123
     }
 
     private lateinit var prefSaveLocation: Preference
