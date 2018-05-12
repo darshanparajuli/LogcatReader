@@ -13,6 +13,7 @@ import android.provider.OpenableColumns
 import android.support.annotation.LayoutRes
 import android.support.design.widget.Snackbar
 import android.support.v4.app.Fragment
+import android.support.v4.content.FileProvider
 import android.support.v7.preference.PreferenceManager
 import android.view.*
 import android.widget.Toast
@@ -20,6 +21,7 @@ import com.dp.logcatapp.R
 import com.dp.logcatapp.activities.MainActivity
 import com.dp.logcatapp.activities.SettingsActivity
 import com.dp.logger.Logger
+import java.io.File
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
@@ -169,6 +171,8 @@ fun Context.setTheme() {
     }
 }
 
+fun Context.getUriFromFile(file: File): Uri = FileProvider.getUriForFile(this,
+        "$packageName.file_provider", file)
 
 fun Context.getFileNameFromUri(uri: Uri): String {
     var name: String? = null

@@ -8,11 +8,14 @@ import android.content.ServiceConnection
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.AsyncTask
+import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
 import android.support.design.widget.FloatingActionButton
 import android.support.design.widget.Snackbar
 import android.support.v4.content.ContextCompat
+import android.support.v4.content.FileProvider
+import android.support.v4.provider.DocumentFile
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.preference.PreferenceManager
 import android.support.v7.widget.DividerItemDecoration
@@ -22,11 +25,13 @@ import android.support.v7.widget.SearchView
 import android.view.*
 import androidx.core.content.edit
 import androidx.core.net.toFile
+import androidx.core.net.toUri
 import com.dp.logcat.Log
 import com.dp.logcat.Logcat
 import com.dp.logcat.LogcatEventListener
 import com.dp.logcat.LogcatFilter
 import com.dp.logcatapp.R
+import com.dp.logcatapp.R.id.fileName
 import com.dp.logcatapp.activities.BaseActivityWithToolbar
 import com.dp.logcatapp.activities.SavedLogsActivity
 import com.dp.logcatapp.activities.SavedLogsViewerActivity
@@ -476,44 +481,48 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
         viewModel.stopRecording = false
     }
 
-    private fun actuallySaveToFile(logs: List<Log>, fileName: String) {
+    private fun usingCustomSaveLocation() =
+            activity!!.getDefaultSharedPreferences().getString(
+                    PreferenceKeys.Logcat.KEY_SAVE_LOCATION, "").isNotEmpty()
+
+    private fun saveToFile(logs: List<Log>) {
+        val timeStamp = SimpleDateFormat("MM-dd-yyyy_HH-mm-ss", Locale.getDefault())
+                .format(Date())
+        val fileName = "logcat_$timeStamp"
+
         if (logs.isEmpty()) {
             Logger.logDebug(LogcatLiveFragment::class, "Nothing to save")
             showSnackbar(view, getString(R.string.nothing_to_save))
             return
         }
 
-        val file = getSaveLocation()
-        SaveFileTask(this, File(file, fileName), logs).execute()
-    }
-
-    private fun getSaveLocation(): File {
         val saveLocationPref = activity!!.getDefaultSharedPreferences().getString(
                 PreferenceKeys.Logcat.KEY_SAVE_LOCATION,
                 PreferenceKeys.Logcat.Default.SAVE_LOCATION
         )
 
-        return if (saveLocationPref.isEmpty()) {
+        val uri = if (saveLocationPref.isEmpty()) {
             val file = File(context!!.filesDir, LOGCAT_DIR)
             file.mkdirs()
-            file
+            File(file, "$fileName.txt").toUri()
         } else {
-            Uri.parse(saveLocationPref).toFile()
+            if (Build.VERSION.SDK_INT >= 21) {
+                val documentFile = DocumentFile.fromTreeUri(context!!, Uri.parse(saveLocationPref))
+                val file = documentFile.createFile("text/plain", fileName)
+                file.uri
+            } else {
+                val file = File(saveLocationPref, LOGCAT_DIR)
+                file.mkdirs()
+                File(file, "$fileName.txt").toUri()
+            }
         }
+
+        SaveFileTask(this, uri, logs).execute()
     }
 
-    private fun saveToFile(logs: List<Log>) {
-        val timeStamp = SimpleDateFormat("MM-dd-yyyy_HH-mm-ss", Locale.getDefault())
-                .format(Date())
-        val fileName = "logcat_$timeStamp.txt"
-        actuallySaveToFile(logs, fileName)
-    }
-
-    private fun viewSavedLog(fileName: String): Boolean {
-        val folder = File(context!!.filesDir, LOGCAT_DIR)
-        val file = File(folder, fileName)
+    private fun viewSavedLog(uri: Uri): Boolean {
         val intent = Intent(context, SavedLogsViewerActivity::class.java)
-        intent.setDataAndType(Uri.fromFile(file), "text/plain")
+        intent.setDataAndType(uri, "text/plain")
         startActivity(intent)
         return true
     }
@@ -695,7 +704,8 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
         }
     }
 
-    class SaveFileTask(frag: LogcatLiveFragment, val file: File,
+    class SaveFileTask(frag: LogcatLiveFragment,
+                       private val uri: Uri,
                        private val logs: List<Log>) : AsyncTask<Void, Void, Boolean>() {
 
         private val ref = WeakReference(frag)
@@ -707,7 +717,17 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
         }
 
         override fun doInBackground(vararg params: Void?): Boolean {
-            return Logcat.writeToFile(logs, file)
+            val frag = ref.get()
+            if (frag != null) {
+                val context = frag.context!!
+                if (frag.usingCustomSaveLocation() && Build.VERSION.SDK_INT >= 21) {
+                    return Logcat.writeToFile(context, logs, uri)
+                } else {
+                    return Logcat.writeToFile(logs, uri.toFile())
+                }
+            }
+
+            return false
         }
 
         override fun onPostExecute(result: Boolean) {
@@ -717,13 +737,12 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
                 return
             }
 
-            val fileName = file.name
-
             if (result) {
+                val fileName = uri.toFile().name
                 newSnakcbar(frag.view, frag.getString(R.string.saved_as_filename).format(fileName),
                         Snackbar.LENGTH_LONG)
                         ?.setAction(frag.getString(R.string.view_log), {
-                            if (!frag.viewSavedLog(fileName)) {
+                            if (!frag.viewSavedLog(uri)) {
                                 showSnackbar(frag.view, frag.getString(R.string.could_not_open_log_file))
                             }
                         })?.show()
