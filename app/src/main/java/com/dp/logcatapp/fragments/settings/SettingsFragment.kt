@@ -1,13 +1,16 @@
 package com.dp.logcatapp.fragments.settings
 
+import android.Manifest
 import android.annotation.TargetApi
 import android.app.Dialog
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.support.v14.preference.MultiSelectListPreference
+import android.support.v4.content.ContextCompat
 import android.support.v7.app.AlertDialog
 import android.support.v7.preference.ListPreference
 import android.support.v7.preference.Preference
@@ -29,6 +32,8 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
     companion object {
         val TAG = SettingsFragment::class.qualifiedName
+        private const val WRITE_STORAGE_PERMISSION_REQ = 12
+        private const val SAVE_LOCATION_REQ = 123;
     }
 
     private lateinit var prefSaveLocation: Preference
@@ -182,7 +187,11 @@ class SettingsFragment : PreferenceFragmentCompat() {
         if (saveLocation.isEmpty()) {
             prefSaveLocation.summary = getString(R.string.save_location_internal)
         } else {
-            prefSaveLocation.summary = saveLocation
+            if (Build.VERSION.SDK_INT >= 21) {
+                prefSaveLocation.summary = getString(R.string.save_location_custom)
+            } else {
+                prefSaveLocation.summary = saveLocation
+            }
         }
 
         prefSaveLocation.setOnPreferenceClickListener {
@@ -199,12 +208,13 @@ class SettingsFragment : PreferenceFragmentCompat() {
                 ?.findFragmentByTag(FolderChooserDialogFragment.TAG)
         folderChooserFragment?.setTargetFragment(this, 0)
     }
+
     private fun isExternalStorageWritable() =
             Environment.getExternalStorageState() == Environment.MEDIA_MOUNTED
 
     private fun setupCustomSaveLocation() {
-        if (Build.VERSION.SDK_INT >= 19) {
-            setupCustomSaveLocationKitkat()
+        if (Build.VERSION.SDK_INT >= 21) {
+            setupCustomSaveLocationLollipop()
         } else {
             if (isExternalStorageWritable()) {
                 val frag = FolderChooserDialogFragment()
@@ -216,7 +226,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
         }
     }
 
-    fun setupCustomSaveLocationPreKitkat(file: File?) {
+    fun setupCustomSaveLocationPreLollipop(file: File?) {
         if (file == null) {
             activity!!.showToast("Folder not selected")
         } else {
@@ -232,9 +242,54 @@ class SettingsFragment : PreferenceFragmentCompat() {
         }
     }
 
-    @TargetApi(19)
-    private fun setupCustomSaveLocationKitkat() {
-        // TODO(darshan): Use document API for setting a path uri
+    @TargetApi(21)
+    private fun setupCustomSaveLocationLollipop() {
+        if (ContextCompat.checkSelfPermission(activity!!,
+                        Manifest.permission.WRITE_EXTERNAL_STORAGE) !=
+                PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
+                    WRITE_STORAGE_PERMISSION_REQ)
+        } else {
+            onPermissionGranted()
+        }
+    }
+
+    @TargetApi(21)
+    private fun onPermissionGranted() {
+        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
+        startActivityForResult(intent, SAVE_LOCATION_REQ)
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>,
+                                            grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        when (requestCode) {
+            WRITE_STORAGE_PERMISSION_REQ ->
+                if (grantResults.isNotEmpty() &&
+                        grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    onPermissionGranted()
+                }
+        }
+    }
+
+    @TargetApi(21)
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        when (requestCode) {
+            SAVE_LOCATION_REQ -> {
+                val uri = data?.data
+                if (uri != null) {
+                    activity!!.contentResolver.takePersistableUriPermission(uri,
+                            Intent.FLAG_GRANT_READ_URI_PERMISSION or
+                                    Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+                    preferenceScreen.sharedPreferences.edit {
+                        putString(PreferenceKeys.Logcat.KEY_SAVE_LOCATION,
+                                uri.toString())
+                    }
+                    prefSaveLocation.summary = getString(R.string.save_location_custom)
+                }
+            }
+        }
     }
 
     private fun setupDefaultSaveLocation() {
