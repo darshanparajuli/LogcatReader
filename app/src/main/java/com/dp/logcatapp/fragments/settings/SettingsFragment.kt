@@ -6,8 +6,8 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.Environment
 import android.support.v14.preference.MultiSelectListPreference
-import android.support.v4.content.ContextCompat.startActivity
 import android.support.v7.app.AlertDialog
 import android.support.v7.preference.ListPreference
 import android.support.v7.preference.Preference
@@ -17,7 +17,12 @@ import com.dp.logcat.Logcat
 import com.dp.logcatapp.BuildConfig
 import com.dp.logcatapp.R
 import com.dp.logcatapp.fragments.base.BaseDialogFragment
-import com.dp.logcatapp.util.*
+import com.dp.logcatapp.fragments.settings.dialogs.FolderChooserDialogFragment
+import com.dp.logcatapp.util.PreferenceKeys
+import com.dp.logcatapp.util.isDarkThemeOn
+import com.dp.logcatapp.util.restartApp
+import com.dp.logcatapp.util.showToast
+import java.io.File
 import java.text.NumberFormat
 
 class SettingsFragment : PreferenceFragmentCompat() {
@@ -140,7 +145,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
         prefMaxLogs.summary = NumberFormat.getInstance().format(maxLogs)
         prefMaxLogs.onPreferenceChangeListener = Preference
-                .OnPreferenceChangeListener callback@ { preference, newValue ->
+                .OnPreferenceChangeListener callback@{ preference, newValue ->
                     try {
                         val oldValue = preferenceScreen.sharedPreferences.getString(
                                 PreferenceKeys.Logcat.KEY_MAX_LOGS,
@@ -189,15 +194,41 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
         val frag = fragmentManager?.findFragmentByTag(SaveLocationDialogFragment.TAG)
         frag?.setTargetFragment(this, 0)
+
+        val folderChooserFragment = fragmentManager
+                ?.findFragmentByTag(FolderChooserDialogFragment.TAG)
+        folderChooserFragment?.setTargetFragment(this, 0)
     }
+    private fun isExternalStorageWritable() =
+            Environment.getExternalStorageState() == Environment.MEDIA_MOUNTED
 
     private fun setupCustomSaveLocation() {
         if (Build.VERSION.SDK_INT >= 19) {
             setupCustomSaveLocationKitkat()
         } else {
-            val frag = FileChooserDialogFragment()
-            frag.setTargetFragment(this, 0)
-            frag.show(fragmentManager, FileChooserDialogFragment.TAG)
+            if (isExternalStorageWritable()) {
+                val frag = FolderChooserDialogFragment()
+                frag.setTargetFragment(this, 0)
+                frag.show(fragmentManager, FolderChooserDialogFragment.TAG)
+            } else {
+                activity!!.showToast(getString(R.string.err_msg_external_storage_not_writable))
+            }
+        }
+    }
+
+    fun setupCustomSaveLocationPreKitkat(file: File?) {
+        if (file == null) {
+            activity!!.showToast("Folder not selected")
+        } else {
+            if (!file.canWrite()) {
+                activity!!.showToast("Folder not writable")
+                return
+            }
+
+            preferenceScreen.sharedPreferences.edit {
+                putString(PreferenceKeys.Logcat.KEY_SAVE_LOCATION, file.absolutePath)
+            }
+            prefSaveLocation.summary = file.absolutePath
         }
     }
 
@@ -231,7 +262,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
         }
     }
 
-    class SaveLocationDialogFragment: BaseDialogFragment() {
+    class SaveLocationDialogFragment : BaseDialogFragment() {
         companion object {
             val TAG = SaveLocationDialogFragment::class.qualifiedName
         }
@@ -249,11 +280,4 @@ class SettingsFragment : PreferenceFragmentCompat() {
                     .create()
         }
     }
-
-    class FileChooserDialogFragment: BaseDialogFragment() {
-        companion object {
-            val TAG = FileChooserDialogFragment::class.qualifiedName
-        }
-    }
-
 }

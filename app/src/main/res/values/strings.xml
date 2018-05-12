@@ -76,4 +76,6 @@
     <string name="save_location">Save location</string>
     <string name="save_location_internal">Internal</string>
     <string name="save_location_custom">Custom</string>
+    <string name="err_msg_external_storage_not_writable">External storage not writable</string>
+    <string name="select">Select</string>
 </resources>
