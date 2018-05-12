@@ -132,11 +132,9 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
                             (activity as SavedLogsActivity).closeCabToolbar()
                         }
                     } else {
-                        val fileName = recyclerViewAdapter.getItem(pos).name
-                        val folder = File(context!!.filesDir, LogcatLiveFragment.LOGCAT_DIR)
-                        val file = File(folder, fileName)
+                        val fileInfo = recyclerViewAdapter.getItem(pos)
                         val intent = Intent(context, SavedLogsViewerActivity::class.java)
-                        intent.setDataAndType(Uri.fromFile(file), "text/plain")
+                        intent.setDataAndType(fileInfo.uri, "text/plain")
                         startActivity(intent)
                     }
                 }
