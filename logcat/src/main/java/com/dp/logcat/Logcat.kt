@@ -437,8 +437,8 @@ class Logcat(initialCapacity: Int = INITIAL_LOG_CAPACITY) : Closeable {
         fun writeToFile(context: Context, logs: List<Log>, file: DocumentFile): Boolean {
             var writer: BufferedWriter? = null
             return try {
-                val fd = context.contentResolver.openFileDescriptor(file.uri, "w")
-                writer = BufferedWriter(OutputStreamWriter(FileOutputStream(fd.fileDescriptor)))
+                val fos = context.contentResolver.openOutputStream(file.uri)
+                writer = BufferedWriter(OutputStreamWriter(fos))
                 writeToFileHelper(logs, writer)
                 true
             } catch (e: IOException) {
