@@ -8,6 +8,7 @@ import android.arch.lifecycle.Observer
 import android.arch.lifecycle.ViewModelProviders
 import android.os.Bundle
 import android.os.Environment
+import android.provider.SyncStateContract.Helpers.update
 import android.support.v7.app.AlertDialog
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
@@ -106,9 +107,16 @@ internal class MyViewModel(application: Application) : AndroidViewModel(applicat
     init {
         val path = application.getDefaultSharedPreferences().getString(
                 PreferenceKeys.Logcat.KEY_SAVE_LOCATION,
-                Environment.getExternalStorageDirectory().absolutePath
+                ""
         )
-        update(File(path))
+
+        val file = if (path.isEmpty()) {
+            Environment.getExternalStorageDirectory()
+        } else {
+            File(path)
+        }
+
+        update(file)
     }
 
     fun update(file: File) {
