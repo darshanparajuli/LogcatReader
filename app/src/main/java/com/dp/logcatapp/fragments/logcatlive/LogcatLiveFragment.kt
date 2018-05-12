@@ -14,7 +14,6 @@ import android.os.IBinder
 import android.support.design.widget.FloatingActionButton
 import android.support.design.widget.Snackbar
 import android.support.v4.content.ContextCompat
-import android.support.v4.content.FileProvider
 import android.support.v4.provider.DocumentFile
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.preference.PreferenceManager
@@ -31,7 +30,6 @@ import com.dp.logcat.Logcat
 import com.dp.logcat.LogcatEventListener
 import com.dp.logcat.LogcatFilter
 import com.dp.logcatapp.R
-import com.dp.logcatapp.R.id.fileName
 import com.dp.logcatapp.activities.BaseActivityWithToolbar
 import com.dp.logcatapp.activities.SavedLogsActivity
 import com.dp.logcatapp.activities.SavedLogsViewerActivity
