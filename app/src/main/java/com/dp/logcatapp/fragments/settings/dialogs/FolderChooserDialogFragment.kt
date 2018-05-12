@@ -1,6 +1,11 @@
 package com.dp.logcatapp.fragments.settings.dialogs
 
+import android.app.Application
 import android.app.Dialog
+import android.arch.lifecycle.AndroidViewModel
+import android.arch.lifecycle.MutableLiveData
+import android.arch.lifecycle.Observer
+import android.arch.lifecycle.ViewModelProviders
 import android.os.Bundle
 import android.os.Environment
 import android.support.v7.app.AlertDialog
@@ -28,6 +33,18 @@ class FolderChooserDialogFragment : BaseDialogFragment(), View.OnClickListener {
 
     private val recyclerViewAdapter = MyRecyclerViewAdapter(this)
     private lateinit var layoutManager: LinearLayoutManager
+    private lateinit var viewModel: MyViewModel
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        viewModel = ViewModelProviders.of(this)
+                .get(MyViewModel::class.java)
+        viewModel.files.observe(this, Observer<List<FileHolder>> {
+            if (it != null) {
+                recyclerViewAdapter.setData(it)
+            }
+        })
+    }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         val rootView = inflateLayout(R.layout.folder_chooser)
@@ -37,14 +54,6 @@ class FolderChooserDialogFragment : BaseDialogFragment(), View.OnClickListener {
 
         recyclerView.layoutManager = layoutManager
         recyclerView.adapter = recyclerViewAdapter
-
-        val path = activity!!.getDefaultSharedPreferences().getString(
-                PreferenceKeys.Logcat.KEY_SAVE_LOCATION,
-                Environment.getExternalStorageDirectory().absolutePath
-        )
-
-        val files = getFiles(File(path))
-        recyclerViewAdapter.setData(files)
 
         return AlertDialog.Builder(activity!!)
                 .setTitle("Select a folder")
@@ -75,29 +84,34 @@ class FolderChooserDialogFragment : BaseDialogFragment(), View.OnClickListener {
                 val pos = layoutManager.getPosition(v)
                 if (pos != RecyclerView.NO_POSITION) {
                     val fileHolder = recyclerViewAdapter[pos]
-                    val files = if (fileHolder.isParent) {
+                    if (fileHolder.isParent) {
                         if (fileHolder.file.parentFile != null) {
-                            getFiles(fileHolder.file.parentFile)
-                        } else {
-                            null
+                            viewModel.update(fileHolder.file.parentFile)
                         }
                     } else {
                         if (fileHolder.file.isDirectory) {
-                            getFiles(fileHolder.file)
-                        } else {
-                            null
+                            viewModel.update(fileHolder.file)
                         }
-                    }
-
-                    if (files != null) {
-                        recyclerViewAdapter.setData(files)
                     }
                 }
             }
         }
     }
+}
 
-    private fun getFiles(file: File): List<FileHolder> {
+
+internal class MyViewModel(application: Application) : AndroidViewModel(application) {
+    val files = MutableLiveData<List<FileHolder>>()
+
+    init {
+        val path = application.getDefaultSharedPreferences().getString(
+                PreferenceKeys.Logcat.KEY_SAVE_LOCATION,
+                Environment.getExternalStorageDirectory().absolutePath
+        )
+        update(File(path))
+    }
+
+    fun update(file: File) {
         val files = mutableListOf<FileHolder>()
 
         if (file.parentFile != null) {
@@ -108,11 +122,11 @@ class FolderChooserDialogFragment : BaseDialogFragment(), View.OnClickListener {
                 ?.map { FileHolder(it) }
                 ?.forEach({ files.add(it) })
 
-        return files
+        this.files.value = files
     }
 }
 
-private data class FileHolder(val file: File, val isParent: Boolean = false)
+internal data class FileHolder(val file: File, val isParent: Boolean = false)
 
 private class MyRecyclerViewAdapter(private val onClickListener: View.OnClickListener) :
         RecyclerView.Adapter<MyRecyclerViewAdapter.MyViewHolder>() {
