@@ -70,7 +70,7 @@ class FolderChooserDialogFragment : BaseDialogFragment(), View.OnClickListener {
                         null
                     }
 
-                    (targetFragment as SettingsFragment).setupCustomSaveLocationPreKitkat(folder)
+                    (targetFragment as SettingsFragment).setupCustomSaveLocationPreLollipop(folder)
                 })
                 .setNegativeButton(android.R.string.cancel, { _, _ ->
                     dismiss()
