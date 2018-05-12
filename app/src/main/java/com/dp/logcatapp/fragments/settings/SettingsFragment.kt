@@ -3,12 +3,15 @@ package com.dp.logcatapp.fragments.settings
 import android.Manifest
 import android.annotation.TargetApi
 import android.app.Dialog
+import android.content.ContentProvider
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
+import android.provider.DocumentsContract
+import android.provider.DocumentsProvider
 import android.support.v14.preference.MultiSelectListPreference
 import android.support.v4.content.ContextCompat
 import android.support.v7.app.AlertDialog
@@ -257,6 +260,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
     @TargetApi(21)
     private fun onPermissionGranted() {
         val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
+        intent.putExtra("android.content.extra.SHOW_ADVANCED",true)
         startActivityForResult(intent, SAVE_LOCATION_REQ)
     }
 
