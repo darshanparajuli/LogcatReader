@@ -6,7 +6,7 @@
     android:paddingLeft="24dp"
     android:paddingRight="24dp"
     android:gravity="center_vertical"
-    android:background="?attr/list_item_selector"
+    android:background="?attr/selectableItemBackground"
     android:descendantFocusability="blocksDescendants"
     android:orientation="horizontal">
 
