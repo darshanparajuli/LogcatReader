@@ -3,15 +3,12 @@ package com.dp.logcatapp.fragments.settings
 import android.Manifest
 import android.annotation.TargetApi
 import android.app.Dialog
-import android.content.ContentProvider
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
-import android.provider.DocumentsContract
-import android.provider.DocumentsProvider
 import android.support.v14.preference.MultiSelectListPreference
 import android.support.v4.content.ContextCompat
 import android.support.v7.app.AlertDialog
@@ -23,6 +20,7 @@ import com.dp.logcat.Logcat
 import com.dp.logcatapp.BuildConfig
 import com.dp.logcatapp.R
 import com.dp.logcatapp.fragments.base.BaseDialogFragment
+import com.dp.logcatapp.fragments.logcatlive.LogcatLiveFragment
 import com.dp.logcatapp.fragments.settings.dialogs.FolderChooserDialogFragment
 import com.dp.logcatapp.util.PreferenceKeys
 import com.dp.logcatapp.util.isDarkThemeOn
@@ -193,7 +191,8 @@ class SettingsFragment : PreferenceFragmentCompat() {
             if (Build.VERSION.SDK_INT >= 21) {
                 prefSaveLocation.summary = getString(R.string.save_location_custom)
             } else {
-                prefSaveLocation.summary = saveLocation
+                prefSaveLocation.summary = "%s/%s".format(saveLocation,
+                        LogcatLiveFragment.LOGCAT_DIR)
             }
         }
 
@@ -241,7 +240,8 @@ class SettingsFragment : PreferenceFragmentCompat() {
             preferenceScreen.sharedPreferences.edit {
                 putString(PreferenceKeys.Logcat.KEY_SAVE_LOCATION, file.absolutePath)
             }
-            prefSaveLocation.summary = file.absolutePath
+            prefSaveLocation.summary = "%s/%s".format(file.absolutePath,
+                    LogcatLiveFragment.LOGCAT_DIR)
         }
     }
 
@@ -260,7 +260,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
     @TargetApi(21)
     private fun onPermissionGranted() {
         val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
-        intent.putExtra("android.content.extra.SHOW_ADVANCED",true)
+        intent.putExtra("android.content.extra.SHOW_ADVANCED", true)
         startActivityForResult(intent, SAVE_LOCATION_REQ)
     }
 
