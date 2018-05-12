@@ -3,9 +3,12 @@ package com.dp.logcat
 import android.arch.lifecycle.Lifecycle
 import android.arch.lifecycle.LifecycleObserver
 import android.arch.lifecycle.OnLifecycleEvent
+import android.content.ContentProvider
+import android.content.Context
 import android.os.ConditionVariable
 import android.os.Handler
 import android.os.Looper
+import android.support.v4.provider.DocumentFile
 import android.support.v7.app.AppCompatActivity
 import com.dp.logger.Logger
 import com.logcat.collections.FixedCircularArray
@@ -410,7 +413,7 @@ class Logcat(initialCapacity: Int = INITIAL_LOG_CAPACITY) : Closeable {
                     }
                 }
             } catch (e: Exception) {
-                // ignore
+                e.printStackTrace()
             } finally {
                 reader?.close()
             }
@@ -421,18 +424,38 @@ class Logcat(initialCapacity: Int = INITIAL_LOG_CAPACITY) : Closeable {
             var writer: BufferedWriter? = null
             return try {
                 writer = BufferedWriter(FileWriter(file, false))
-                writer.write(LOG_FILE_HEADER_FMT.format(logs.size))
-                writer.newLine()
-                for (log in logs) {
-                    writer.write(log.toString())
-                }
-                writer.flush()
+                writeToFileHelper(logs, writer)
                 true
             } catch (e: IOException) {
+                e.printStackTrace()
                 false
             } finally {
                 writer?.close()
             }
+        }
+
+        fun writeToFile(context: Context, logs: List<Log>, file: DocumentFile): Boolean {
+            var writer: BufferedWriter? = null
+            return try {
+                val fd = context.contentResolver.openFileDescriptor(file.uri, "w")
+                writer = BufferedWriter(OutputStreamWriter(FileOutputStream(fd.fileDescriptor)))
+                writeToFileHelper(logs, writer)
+                true
+            } catch (e: IOException) {
+                e.printStackTrace()
+                false
+            } finally {
+                writer?.close()
+            }
+        }
+
+        private fun writeToFileHelper(logs: List<Log>, writer: BufferedWriter) {
+            writer.write(LOG_FILE_HEADER_FMT.format(logs.size))
+            writer.newLine()
+            for (log in logs) {
+                writer.write(log.toString())
+            }
+            writer.flush()
         }
 
         private fun getDefaultBuffers(): Set<String> {
