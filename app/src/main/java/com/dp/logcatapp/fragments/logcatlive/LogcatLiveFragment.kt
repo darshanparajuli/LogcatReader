@@ -56,7 +56,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
         private const val LOG_KEYWORD_FILTER = "logKeywordFilter"
 
         private val STOP_RECORDING = TAG + "_stop_recording"
-        private val KEY_FILTER_PRIORITIES = TAG + "_key_filter_priorites"
+        private val KEY_FILTER_PRIORITIES = TAG + "_key_filter_priorities"
         private val KEY_FILTER_KEYWORD = TAG + "_key_filter_keyword"
 
         fun newInstance(stopRecording: Boolean): LogcatLiveFragment {
