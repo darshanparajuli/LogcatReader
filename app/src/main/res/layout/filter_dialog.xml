@@ -16,8 +16,7 @@
         <android.support.v7.widget.AppCompatEditText
             android:id="@+id/keyword"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:maxLines="1" />
+            android:layout_height="wrap_content" />
 
         <android.support.v7.widget.AppCompatCheckBox
             android:id="@+id/checkboxAssert"
