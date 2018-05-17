@@ -12,4 +12,13 @@
         <item>@string/save_location_internal</item>
         <item>@string/save_location_custom</item>
     </string-array>
+    <string-array name="log_levels">
+        <item>ASSERT</item>
+        <item>DEBUG</item>
+        <item>ERROR</item>
+        <item>FATAL</item>
+        <item>INFO</item>
+        <item>VERBOSE</item>
+        <item>WARNING</item>
+    </string-array>
 </resources>
