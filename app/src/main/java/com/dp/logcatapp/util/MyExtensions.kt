@@ -13,6 +13,8 @@ import android.provider.OpenableColumns
 import android.support.annotation.LayoutRes
 import android.support.design.widget.Snackbar
 import android.support.v4.app.Fragment
+import android.support.v4.app.FragmentManager
+import android.support.v4.app.FragmentTransaction
 import android.support.v4.content.FileProvider
 import android.support.v7.preference.PreferenceManager
 import android.view.*
@@ -58,10 +60,36 @@ fun newSnakcbar(view: View?, msg: String, length: Int = Snackbar.LENGTH_SHORT): 
 
 //// BEGIN Fragment
 
-fun Fragment.inflateLayout(@LayoutRes layoutResId: Int): View = LayoutInflater.from(activity)
-        .inflate(layoutResId, null, false)
+fun Fragment.inflateLayout(@LayoutRes layoutResId: Int, root: ViewGroup? = null,
+                           attachToRoot: Boolean = false): View =
+        activity!!.inflateLayout(layoutResId, root, attachToRoot)
 
 //// END Fragment
+
+
+//// BEGIN FragmentManager
+
+inline fun FragmentManager.transaction(allowStateLoss: Boolean = false,
+                                       now: Boolean = false,
+                                       body: FragmentTransaction.() -> Unit) {
+    val transaction = beginTransaction()
+    transaction.body()
+    if (allowStateLoss) {
+        if (now) {
+            transaction.commitNowAllowingStateLoss()
+        } else {
+            transaction.commitAllowingStateLoss()
+        }
+    } else {
+        if (now) {
+            transaction.commitNow()
+        } else {
+            transaction.commit()
+        }
+    }
+}
+
+//// END FragmentManager
 
 
 //// BEGIN Context
@@ -197,6 +225,10 @@ fun Context.getFileNameFromUri(uri: Uri): String {
 
     return name
 }
+
+fun Context.inflateLayout(@LayoutRes layoutResId: Int, root: ViewGroup? = null,
+                          attachToRoot: Boolean = false): View =
+        LayoutInflater.from(this).inflate(layoutResId, root, attachToRoot)
 
 //// END Context
 
