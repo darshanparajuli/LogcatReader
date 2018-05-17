@@ -165,7 +165,11 @@ class Logcat(initialCapacity: Int = INITIAL_LOG_CAPACITY) : Closeable {
 
     fun getLogsFiltered(): List<Log> {
         lockedBlock(logsLock) {
-            return logs.filter { log -> filters.values.all { it.filter(log) } }
+            if (filters.isEmpty()) {
+                return logs.toList()
+            } else {
+                return logs.filter { log -> filters.values.all { it.filter(log) } }
+            }
         }
     }
 
