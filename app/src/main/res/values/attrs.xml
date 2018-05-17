@@ -4,6 +4,7 @@
         <attr name="useFont" format="string" />
     </declare-styleable>
 
+    <attr name="background_color" format="color|reference" />
     <attr name="toolbar_popup_theme" format="reference" />
     <attr name="list_item_selector" format="reference" />
     <attr name="divider_color" format="color|reference" />
@@ -11,4 +12,5 @@
     <attr name="secondary_text_color" format="color|reference" />
     <attr name="ripple_mask_color" format="color|reference" />
     <attr name="toolbar_shadow" format="reference" />
+    <attr name="icon_tint" format="color|reference" />
 </resources>

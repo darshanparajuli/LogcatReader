@@ -8,6 +8,7 @@
         <item name="colorPrimaryDark">@color/color_primary_dark</item>
         <item name="preferenceTheme">@style/MyPreferenceTheme</item>
         <item name="android:windowBackground">@color/light_window_bg</item>
+        <item name="background_color">@color/light_window_bg</item>
 
         <item name="toolbar_shadow">@drawable/toolbar_shadow_light</item>
         <item name="android:textViewStyle">@style/LightTextViewStyle</item>
@@ -17,6 +18,7 @@
         <item name="secondary_text_color">@color/secondary_text_color_light</item>
         <item name="ripple_mask_color">@color/light_window_bg</item>
         <item name="toolbar_popup_theme">@style/LightToolbarPopupTheme</item>
+        <item name="icon_tint">@color/icon_tint_light</item>
     </style>
 
     <style name="DarkThemeCommon" parent="Theme.AppCompat.NoActionBar">
@@ -25,6 +27,8 @@
         <item name="colorPrimaryDark">@color/color_primary_dark_mode_dark</item>
         <item name="preferenceTheme">@style/MyPreferenceTheme</item>
         <item name="android:windowBackground">@color/dark_window_bg</item>
+        <item name="background_color">@color/dark_window_bg</item>
+        <item name="icon_tint">@color/icon_tint_dark</item>
 
         <item name="toolbar_shadow">@drawable/toolbar_shadow_dark</item>
         <item name="android:textViewStyle">@style/DarkTextViewStyle</item>
@@ -38,6 +42,7 @@
 
     <style name="BlackThemeCommon" parent="DarkThemeCommon">
         <item name="android:windowBackground">@color/black_window_bg</item>
+        <item name="background_color">@color/black_window_bg</item>
         <item name="ripple_mask_color">@color/black_window_bg</item>
     </style>
 
