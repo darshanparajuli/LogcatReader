@@ -18,8 +18,8 @@
         android:title="@string/start_recording"
         app:showAsAction="always" />
     <item
-        android:id="@+id/filter_action"
-        android:title="@string/filter" />
+        android:id="@+id/filters_action"
+        android:title="@string/filters" />
 
     <item
         android:id="@+id/action_save"

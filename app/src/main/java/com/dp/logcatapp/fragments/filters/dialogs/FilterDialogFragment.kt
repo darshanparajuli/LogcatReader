@@ -1,13 +1,19 @@
-package com.dp.logcatapp.fragments.logcatlive.dialogs
+package com.dp.logcatapp.fragments.filters.dialogs
 
 import android.app.Dialog
+import android.arch.lifecycle.ViewModel
+import android.arch.lifecycle.ViewModelProvider
+import android.arch.lifecycle.ViewModelProviders
 import android.os.Bundle
 import android.support.v7.app.AlertDialog
+import android.text.Editable
+import android.text.TextWatcher
 import android.widget.CheckBox
 import android.widget.EditText
 import com.dp.logcat.LogPriority
 import com.dp.logcatapp.R
 import com.dp.logcatapp.fragments.base.BaseDialogFragment
+import com.dp.logcatapp.fragments.filters.FiltersFragment
 import com.dp.logcatapp.fragments.logcatlive.LogcatLiveFragment
 import com.dp.logcatapp.util.inflateLayout
 
@@ -15,26 +21,33 @@ class FilterDialogFragment : BaseDialogFragment() {
 
     companion object {
         val TAG = FilterDialogFragment::class.qualifiedName
+    }
 
-        private val KEY_KEYWORD = TAG + "_key_keyword"
-        private val KEY_LOG_PRIORITIES = TAG + "_key_log_priorities"
+    private lateinit var viewModel: MyViewModel
 
-        fun newInstance(keyword: String, logPriorities: Set<String>): FilterDialogFragment {
-            val bundle = Bundle()
-            bundle.putString(KEY_KEYWORD, keyword)
-            bundle.putStringArray(KEY_LOG_PRIORITIES, logPriorities.toTypedArray())
-
-            val frag = FilterDialogFragment()
-            frag.arguments = bundle
-            return frag
-        }
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        viewModel = ViewModelProviders.of(this)
+                .get(MyViewModel::class.java)
     }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         val rootView = inflateLayout(R.layout.filter_dialog)
 
         val editTextKeyword = rootView.findViewById<EditText>(R.id.keyword)
-        editTextKeyword.setText(arguments!!.getString(KEY_KEYWORD))
+        editTextKeyword.setText(viewModel.keyword)
+
+        editTextKeyword.addTextChangedListener(object : TextWatcher {
+            override fun afterTextChanged(s: Editable) {
+                viewModel.keyword = s.toString()
+            }
+
+            override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int) {
+            }
+
+            override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {
+            }
+        })
 
         val checkBoxMap = mutableMapOf<CheckBox, String>()
         checkBoxMap[rootView.findViewById(R.id.checkboxAssert)] = LogPriority.ASSERT
@@ -45,9 +58,16 @@ class FilterDialogFragment : BaseDialogFragment() {
         checkBoxMap[rootView.findViewById(R.id.checkboxVerbose)] = LogPriority.VERBOSE
         checkBoxMap[rootView.findViewById(R.id.checkboxWarning)] = LogPriority.WARNING
 
-        val logPriorities = arguments!!.getStringArray(KEY_LOG_PRIORITIES).toSet()
         for ((k, v) in checkBoxMap) {
-            k.isChecked = v in logPriorities
+            k.isChecked = v in viewModel.logPriorities
+            val logPriority = checkBoxMap[k]!!
+            k.setOnCheckedChangeListener { _, isChecked ->
+                if (isChecked) {
+                    viewModel.logPriorities += logPriority
+                } else {
+                    viewModel.logPriorities -= logPriority
+                }
+            }
         }
 
         return AlertDialog.Builder(activity!!)
@@ -61,7 +81,7 @@ class FilterDialogFragment : BaseDialogFragment() {
                             prioritySet.add(v)
                         }
                     }
-                    (targetFragment as LogcatLiveFragment).setFilterAndSave(keyword, prioritySet)
+                    (targetFragment as FiltersFragment).addFilter(keyword, prioritySet)
                 })
                 .setNegativeButton(android.R.string.cancel, { _, _ ->
                     dismiss()
@@ -69,4 +89,9 @@ class FilterDialogFragment : BaseDialogFragment() {
                 .create()
     }
 
+}
+
+internal class MyViewModel : ViewModel() {
+    var keyword = ""
+    val logPriorities = mutableSetOf<String>()
 }

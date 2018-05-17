@@ -31,10 +31,11 @@ import com.dp.logcat.LogcatEventListener
 import com.dp.logcat.LogcatFilter
 import com.dp.logcatapp.R
 import com.dp.logcatapp.activities.BaseActivityWithToolbar
+import com.dp.logcatapp.activities.FiltersActivity
 import com.dp.logcatapp.activities.SavedLogsActivity
 import com.dp.logcatapp.activities.SavedLogsViewerActivity
 import com.dp.logcatapp.fragments.base.BaseFragment
-import com.dp.logcatapp.fragments.logcatlive.dialogs.FilterDialogFragment
+import com.dp.logcatapp.fragments.filters.FiltersFragment
 import com.dp.logcatapp.fragments.logcatlive.dialogs.InstructionToGrantPermissionDialogFragment
 import com.dp.logcatapp.fragments.shared.dialogs.CopyToClipboardDialogFragment
 import com.dp.logcatapp.services.LogcatService
@@ -193,7 +194,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
         adapter = MyRecyclerViewAdapter(activity!!, maxLogs)
         activity!!.getDefaultSharedPreferences().registerOnSharedPreferenceChangeListener(adapter)
 
-        viewModel = ViewModelProviders.of(this)
+        viewModel = ViewModelProviders.of(activity!!)
                 .get(LogcatLiveViewModel::class.java)
     }
 
@@ -404,13 +405,9 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
                 }
                 true
             }
-            R.id.filter_action -> {
-                val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(activity)
-                val keyword = sharedPreferences.getString(KEY_FILTER_KEYWORD, "")
-                val logPriorities = sharedPreferences.getStringSet(KEY_FILTER_PRIORITIES, setOf())
-                val frag = FilterDialogFragment.newInstance(keyword, logPriorities)
-                frag.setTargetFragment(this, 0)
-                frag.show(fragmentManager, FilterDialogFragment.TAG)
+            R.id.filters_action -> {
+                val intent = Intent(activity!!, FiltersActivity::class.java)
+                startActivity(intent)
                 true
             }
             R.id.action_save -> {
