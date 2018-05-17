@@ -3,7 +3,6 @@ package com.dp.logcat
 import android.arch.lifecycle.Lifecycle
 import android.arch.lifecycle.LifecycleObserver
 import android.arch.lifecycle.OnLifecycleEvent
-import android.content.ContentProvider
 import android.content.Context
 import android.net.Uri
 import android.os.ConditionVariable
