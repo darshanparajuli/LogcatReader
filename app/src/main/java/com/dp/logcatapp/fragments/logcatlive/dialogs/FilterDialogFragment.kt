@@ -31,7 +31,7 @@ class FilterDialogFragment : BaseDialogFragment() {
     }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-        val rootView = inflateLayout(R.layout.filters_dialog)
+        val rootView = inflateLayout(R.layout.filter_dialog)
 
         val editTextKeyword = rootView.findViewById<EditText>(R.id.keyword)
         editTextKeyword.setText(arguments!!.getString(KEY_KEYWORD))
