@@ -73,6 +73,8 @@ dependencies {
     implementation "android.arch.persistence.room:runtime:1.1.0"
     implementation "android.arch.persistence.room:rxjava2:1.1.0"
     implementation 'io.reactivex.rxjava2:rxkotlin:2.2.0'
+    implementation 'io.reactivex.rxjava2:rxandroid:2.0.2'
+    implementation 'io.reactivex.rxjava2:rxjava:2.1.9'
     kapt "android.arch.persistence.room:compiler:1.1.0"
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
