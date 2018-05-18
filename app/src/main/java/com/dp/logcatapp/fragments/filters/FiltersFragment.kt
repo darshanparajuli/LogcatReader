@@ -10,10 +10,15 @@ import android.widget.ImageButton
 import android.widget.TextView
 import com.dp.logcat.LogPriority
 import com.dp.logcatapp.R
+import com.dp.logcatapp.db.FiltersDB
+import com.dp.logcatapp.db.LogcatFilterRow
 import com.dp.logcatapp.fragments.base.BaseFragment
 import com.dp.logcatapp.fragments.filters.dialogs.FilterDialogFragment
 import com.dp.logcatapp.fragments.logcatlive.LogcatLiveViewModel
 import com.dp.logcatapp.util.inflateLayout
+import io.reactivex.Flowable
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.schedulers.Schedulers
 
 class FiltersFragment : BaseFragment() {
 
@@ -33,12 +38,42 @@ class FiltersFragment : BaseFragment() {
         recyclerViewAdapter = MyRecyclerViewAdapter({
             onRemoveClicked(it)
         })
+
+        FiltersDB.getInstance(activity!!)
+                .filterDAO()
+                .getAll()
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe {
+                    it.map {
+                        val logPriorities = it.logPriorities.split(",")
+                                .joinToString(", ") {
+                                    when (it) {
+                                        LogPriority.ASSERT -> "Assert"
+                                        LogPriority.ERROR -> "Error"
+                                        LogPriority.DEBUG -> "Debug"
+                                        LogPriority.FATAL -> "Fatal"
+                                        LogPriority.INFO -> "Info"
+                                        LogPriority.VERBOSE -> "Verbose"
+                                        else -> "Warning"
+                                    }
+                                }
+                        FilterListItem(it.keyword, logPriorities, it)
+                    }.forEach {
+                        recyclerViewAdapter.add(it)
+                    }
+                }
     }
 
     private fun onRemoveClicked(v: View) {
         val pos = linearLayoutManager.getPosition(v)
         if (pos != RecyclerView.NO_POSITION) {
+            val item = recyclerViewAdapter[pos]
             recyclerViewAdapter.remove(pos)
+            Flowable.just(FiltersDB.getInstance(context!!))
+                    .subscribeOn(Schedulers.io())
+                    .subscribe {
+                        it.filterDAO().delete(item.filter!!)
+                    }
         }
     }
 
@@ -74,24 +109,18 @@ class FiltersFragment : BaseFragment() {
     }
 
     fun addFilter(keyword: String, logLevels: Set<String>) {
-        val listItem = FilterListItem(keyword, logLevels.sorted().joinToString(", ") {
-            when (it) {
-                LogPriority.ASSERT -> "Assert"
-                LogPriority.ERROR -> "Error"
-                LogPriority.DEBUG -> "Debug"
-                LogPriority.FATAL -> "Fatal"
-                LogPriority.INFO -> "Info"
-                LogPriority.VERBOSE -> "Verbose"
-                else -> "Warning"
-            }
-        }, logLevels)
-        recyclerViewAdapter.add(listItem)
+        Flowable.just(FiltersDB.getInstance(context!!))
+                .subscribeOn(Schedulers.io())
+                .subscribe {
+                    it.filterDAO().insert(LogcatFilterRow(keyword,
+                            logLevels.sorted().joinToString(","), ""))
+                }
     }
 }
 
 internal data class FilterListItem(val keyword: String,
                                    val logLevelsStr: String,
-                                   val logLevels: Set<String>)
+                                   val filter: LogcatFilterRow? = null)
 
 internal class MyRecyclerViewAdapter(private val onRemoveListener: (View) -> Unit) :
         RecyclerView.Adapter<MyRecyclerViewAdapter.MyViewHolder>() {
@@ -108,6 +137,8 @@ internal class MyRecyclerViewAdapter(private val onRemoveListener: (View) -> Uni
     }
 
     override fun getItemCount() = data.size
+
+    operator fun get(index: Int) = data[index]
 
     fun remove(index: Int) {
         data.removeAt(index)
