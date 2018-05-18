@@ -84,13 +84,14 @@ class FiltersFragment : BaseFragment() {
                 LogPriority.VERBOSE -> "Verbose"
                 else -> "Warning"
             }
-        })
+        }, logLevels)
         recyclerViewAdapter.add(listItem)
     }
 }
 
 internal data class FilterListItem(val keyword: String,
-                                   val logLevels: String)
+                                   val logLevelsStr: String,
+                                   val logLevels: Set<String>)
 
 internal class MyRecyclerViewAdapter(private val onRemoveListener: (View) -> Unit) :
         RecyclerView.Adapter<MyRecyclerViewAdapter.MyViewHolder>() {
@@ -126,10 +127,10 @@ internal class MyRecyclerViewAdapter(private val onRemoveListener: (View) -> Uni
     override fun onBindViewHolder(holder: MyViewHolder, position: Int) {
         val item = data[position]
         holder.keyword.text = item.keyword
-        if (item.logLevels.isEmpty()) {
+        if (item.logLevelsStr.isEmpty()) {
             holder.logLevels.visibility = View.GONE
         } else {
-            holder.logLevels.text = item.logLevels
+            holder.logLevels.text = item.logLevelsStr
             holder.logLevels.visibility = View.VISIBLE
         }
     }
