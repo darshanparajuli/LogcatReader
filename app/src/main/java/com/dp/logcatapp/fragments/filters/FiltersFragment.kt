@@ -44,7 +44,7 @@ class FiltersFragment : BaseFragment() {
                 .getAll()
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe {
-                    it.map {
+                    val data = it.map {
                         val logPriorities = it.logPriorities.split(",")
                                 .joinToString(", ") {
                                     when (it) {
@@ -58,9 +58,8 @@ class FiltersFragment : BaseFragment() {
                                     }
                                 }
                         FilterListItem(it.keyword, logPriorities, it)
-                    }.forEach {
-                        recyclerViewAdapter.add(it)
                     }
+                    recyclerViewAdapter.setData(data)
                 }
     }
 
@@ -125,7 +124,6 @@ internal data class FilterListItem(val keyword: String,
 internal class MyRecyclerViewAdapter(private val onRemoveListener: (View) -> Unit) :
         RecyclerView.Adapter<MyRecyclerViewAdapter.MyViewHolder>() {
 
-    private val dataSet = mutableSetOf<FilterListItem>()
     private val data = mutableListOf<FilterListItem>()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MyViewHolder {
@@ -145,14 +143,12 @@ internal class MyRecyclerViewAdapter(private val onRemoveListener: (View) -> Uni
         notifyItemRemoved(index)
     }
 
-    fun add(item: FilterListItem) {
-        if (item in dataSet) {
-            return
-        }
-
-        data.add(item)
-        dataSet.add(item)
-        notifyItemInserted(data.size - 1)
+    fun setData(data: List<FilterListItem>) {
+        val size = this.data.size
+        this.data.clear()
+        notifyItemRangeRemoved(0, size)
+        this.data.addAll(data)
+        notifyItemRangeInserted(0, data.size)
     }
 
     override fun onBindViewHolder(holder: MyViewHolder, position: Int) {
