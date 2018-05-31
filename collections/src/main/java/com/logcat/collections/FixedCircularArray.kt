@@ -116,17 +116,11 @@ class FixedCircularArray<E>(val capacity: Int, initialSize: Int = INITIAL_SIZE) 
         array = newArray
     }
 
-    operator fun plusAssign(e: E) {
-        add(e)
-    }
+    operator fun plusAssign(e: E) = add(e)
 
-    operator fun plusAssign(list: List<E>) {
-        add(list)
-    }
+    operator fun plusAssign(list: List<E>) = add(list)
 
-    operator fun plusAssign(list: FixedCircularArray<E>) {
-        add(list)
-    }
+    operator fun plusAssign(list: FixedCircularArray<E>) = add(list)
 
     fun clear() {
         resetHead()
