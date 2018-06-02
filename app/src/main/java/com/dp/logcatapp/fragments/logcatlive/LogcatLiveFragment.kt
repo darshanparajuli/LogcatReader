@@ -35,7 +35,6 @@ import com.dp.logcatapp.activities.FiltersActivity
 import com.dp.logcatapp.activities.SavedLogsActivity
 import com.dp.logcatapp.activities.SavedLogsViewerActivity
 import com.dp.logcatapp.fragments.base.BaseFragment
-import com.dp.logcatapp.fragments.filters.FiltersFragment
 import com.dp.logcatapp.fragments.logcatlive.dialogs.InstructionToGrantPermissionDialogFragment
 import com.dp.logcatapp.fragments.shared.dialogs.CopyToClipboardDialogFragment
 import com.dp.logcatapp.services.LogcatService
@@ -567,7 +566,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
 
         val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(activity)
         val keyword = sharedPreferences.getString(KEY_FILTER_KEYWORD, null)
-        val logPriorites = sharedPreferences.getStringSet(KEY_FILTER_PRIORITIES, null)
+        val logPriorities = sharedPreferences.getStringSet(KEY_FILTER_PRIORITIES, null)
 
         if (keyword == null) {
             logcat.removeFilter(LOG_KEYWORD_FILTER)
@@ -575,10 +574,10 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
             logcat.addFilter(LOG_KEYWORD_FILTER, LogKeywordFilter(keyword))
         }
 
-        if (logPriorites == null) {
+        if (logPriorities == null) {
             logcat.removeFilter(LOG_PRIORITY_FILTER)
         } else {
-            logcat.addFilter(LOG_PRIORITY_FILTER, LogPriorityFilter(logPriorites))
+            logcat.addFilter(LOG_PRIORITY_FILTER, LogPriorityFilter(logPriorities))
         }
 
         if (adapter.itemCount == 0) {
