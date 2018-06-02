@@ -687,7 +687,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
             }
 
             return (priorities.isEmpty() || priorities.contains(log.priority))
-                    || (keyword.isEmpty()
+                    && (keyword.isEmpty()
                     || log.tag.containsIgnoreCase(keyword)
                     || log.msg.containsIgnoreCase(keyword))
         }
