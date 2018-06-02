@@ -16,13 +16,11 @@ import android.support.design.widget.Snackbar
 import android.support.v4.content.ContextCompat
 import android.support.v4.provider.DocumentFile
 import android.support.v7.app.AppCompatActivity
-import android.support.v7.preference.PreferenceManager
 import android.support.v7.widget.DividerItemDecoration
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.SearchView
 import android.view.*
-import androidx.core.content.edit
 import androidx.core.net.toFile
 import androidx.core.net.toUri
 import com.dp.logcat.Log
@@ -34,6 +32,8 @@ import com.dp.logcatapp.activities.BaseActivityWithToolbar
 import com.dp.logcatapp.activities.FiltersActivity
 import com.dp.logcatapp.activities.SavedLogsActivity
 import com.dp.logcatapp.activities.SavedLogsViewerActivity
+import com.dp.logcatapp.db.FiltersDB
+import com.dp.logcatapp.db.LogcatFilterRow
 import com.dp.logcatapp.fragments.base.BaseFragment
 import com.dp.logcatapp.fragments.logcatlive.dialogs.InstructionToGrantPermissionDialogFragment
 import com.dp.logcatapp.fragments.shared.dialogs.CopyToClipboardDialogFragment
@@ -41,6 +41,8 @@ import com.dp.logcatapp.services.LogcatService
 import com.dp.logcatapp.util.*
 import com.dp.logcatapp.views.IndeterminateProgressSnackBar
 import com.dp.logger.Logger
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.disposables.Disposable
 import java.io.File
 import java.lang.ref.WeakReference
 import java.text.SimpleDateFormat
@@ -51,13 +53,9 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
         val TAG = LogcatLiveFragment::class.qualifiedName
         const val LOGCAT_DIR = "logcat"
 
-        private const val FILTER_MSG = "msg"
-        private const val LOG_PRIORITY_FILTER = "logPriorityFilter"
-        private const val LOG_KEYWORD_FILTER = "logKeywordFilter"
+        private const val SEARCH_FILTER_TAG = "search_filter_tag"
 
         private val STOP_RECORDING = TAG + "_stop_recording"
-        private val KEY_FILTER_PRIORITIES = TAG + "_key_filter_priorities"
-        private val KEY_FILTER_KEYWORD = TAG + "_key_filter_keyword"
 
         fun newInstance(stopRecording: Boolean): LogcatLiveFragment {
             val bundle = Bundle()
@@ -81,6 +79,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
     private var lastLogId = -1
     private var lastSearchRunnable: Runnable? = null
     private var searchTask: SearchTask? = null
+    private var filterSubscription: Disposable? = null
 
     private val hideFabUpRunnable: Runnable = Runnable {
         fabUp.hide()
@@ -319,7 +318,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
     private fun onSearchViewClose() {
         val logcat = logcatService?.logcat ?: return
         logcat.pause()
-        logcat.removeFilter(FILTER_MSG)
+        logcat.removeFilter(SEARCH_FILTER_TAG)
 
         adapter.clear()
         addAllLogs(logcat.getLogsFiltered())
@@ -421,37 +420,6 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
         }
     }
 
-    fun setFilterAndSave(keyword: String, logPriorities: Set<String>) {
-        val logcat = logcatService?.logcat
-        if (logcat != null) {
-            logcat.pause()
-
-            if (logPriorities.isNotEmpty()) {
-                logcat.addFilter(LOG_PRIORITY_FILTER, LogPriorityFilter(logPriorities))
-            } else {
-                logcat.removeFilter(LOG_PRIORITY_FILTER)
-            }
-
-            if (keyword.isNotEmpty()) {
-                logcat.addFilter(LOG_KEYWORD_FILTER, LogKeywordFilter(keyword))
-            } else {
-                logcat.removeFilter(LOG_KEYWORD_FILTER)
-            }
-
-            val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(activity)
-            sharedPreferences.edit {
-                putString(KEY_FILTER_KEYWORD, keyword)
-                putStringSet(KEY_FILTER_PRIORITIES, logPriorities)
-            }
-
-            adapter.clear()
-            adapter.addItems(logcat.getLogsFiltered())
-            updateToolbarSubtitle(adapter.itemCount)
-            scrollRecyclerView()
-            resumeLogcat()
-        }
-    }
-
     fun tryStopRecording() {
         viewModel.stopRecording = true
         if (logcatService != null) {
@@ -535,6 +503,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
 
     override fun onStop() {
         super.onStop()
+        filterSubscription?.dispose()
         serviceBinder.unbind(activity!!)
     }
 
@@ -564,22 +533,6 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
         val logcat = logcatService!!.logcat
         logcat.pause()
 
-        val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(activity)
-        val keyword = sharedPreferences.getString(KEY_FILTER_KEYWORD, null)
-        val logPriorities = sharedPreferences.getStringSet(KEY_FILTER_PRIORITIES, null)
-
-        if (keyword == null) {
-            logcat.removeFilter(LOG_KEYWORD_FILTER)
-        } else {
-            logcat.addFilter(LOG_KEYWORD_FILTER, LogKeywordFilter(keyword))
-        }
-
-        if (logPriorities == null) {
-            logcat.removeFilter(LOG_PRIORITY_FILTER)
-        } else {
-            logcat.addFilter(LOG_PRIORITY_FILTER, LogPriorityFilter(logPriorities))
-        }
-
         if (adapter.itemCount == 0) {
             Logger.logDebug(LogcatLiveFragment::class, "Added all logs")
             addAllLogs(logcat.getLogsFiltered())
@@ -600,6 +553,33 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
             arguments?.putBoolean(STOP_RECORDING, false)
             stopRecording()
         }
+
+        updateFilters()
+    }
+
+    private fun updateFilters() {
+        filterSubscription = FiltersDB.getInstance(activity!!)
+                .filterDAO()
+                .getAll()
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe {
+                    val logcat = logcatService?.logcat
+                    if (logcat != null) {
+                        logcat.pause()
+                        logcat.clearFilters()
+
+                        for (filter in it) {
+                            logcat.addFilter("${filter.id}",
+                                    LogcatFilterRowHolder(filter))
+                        }
+
+                        adapter.clear()
+                        adapter.addItems(logcat.getLogsFiltered())
+                        updateToolbarSubtitle(adapter.itemCount)
+                        scrollRecyclerView()
+                        resumeLogcat()
+                    }
+                }
     }
 
     override fun onLogEvent(log: Log) {
@@ -659,7 +639,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
 
         override fun onPreExecute() {
             logcat.pause()
-            logcat.addFilter(FILTER_MSG, object : LogcatFilter {
+            logcat.addFilter(SEARCH_FILTER_TAG, object : LogcatFilter {
                 override fun filter(log: Log): Boolean {
                     return log.tag.containsIgnoreCase(searchText) ||
                             log.msg.containsIgnoreCase(searchText)
@@ -685,16 +665,31 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
         }
     }
 
-    private class LogPriorityFilter(val priorities: Set<String>) : LogcatFilter {
-        override fun filter(log: Log): Boolean {
-            return priorities.isEmpty() || priorities.contains(log.priority)
-        }
-    }
+    private class LogcatFilterRowHolder(logcatFilterRow: LogcatFilterRow) : LogcatFilter {
+        val keyword = logcatFilterRow.keyword
+        val priorities = mutableSetOf<String>()
+        val prioritiesEx = mutableSetOf<String>()
 
-    private class LogKeywordFilter(val keyword: String) : LogcatFilter {
+        init {
+            logcatFilterRow.logPriorities.split(",")
+                    .forEach({
+                        priorities.add(it)
+                    })
+            logcatFilterRow.logPrioritiesExcluded.split(",")
+                    .forEach({
+                        prioritiesEx.add(it)
+                    })
+        }
+
         override fun filter(log: Log): Boolean {
-            return keyword.isEmpty() || log.tag.containsIgnoreCase(keyword) ||
-                    log.msg.containsIgnoreCase(keyword)
+            if (prioritiesEx.contains(log.priority)) {
+                return false
+            }
+
+            return (priorities.isEmpty() || priorities.contains(log.priority))
+                    || (keyword.isEmpty()
+                    || log.tag.containsIgnoreCase(keyword)
+                    || log.msg.containsIgnoreCase(keyword))
         }
     }
 
