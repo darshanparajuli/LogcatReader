@@ -54,7 +54,8 @@ class FiltersFragment : BaseFragment() {
                                         LogPriority.FATAL -> "Fatal"
                                         LogPriority.INFO -> "Info"
                                         LogPriority.VERBOSE -> "Verbose"
-                                        else -> "Warning"
+                                        LogPriority.WARNING -> "warning"
+                                        else -> ""
                                     }
                                 }
                         FilterListItem(it.keyword, logPriorities, it)
@@ -108,6 +109,10 @@ class FiltersFragment : BaseFragment() {
     }
 
     fun addFilter(keyword: String, logLevels: Set<String>) {
+        if (keyword.isEmpty() && logLevels.isEmpty()) {
+            return
+        }
+
         Flowable.just(FiltersDB.getInstance(context!!))
                 .subscribeOn(Schedulers.io())
                 .subscribe {
@@ -153,7 +158,12 @@ internal class MyRecyclerViewAdapter(private val onRemoveListener: (View) -> Uni
 
     override fun onBindViewHolder(holder: MyViewHolder, position: Int) {
         val item = data[position]
-        holder.keyword.text = item.keyword
+        if (item.keyword.isEmpty()) {
+            holder.keyword.visibility = View.GONE
+        } else {
+            holder.keyword.text = item.keyword
+            holder.keyword.visibility = View.VISIBLE
+        }
         if (item.logLevelsStr.isEmpty()) {
             holder.logLevels.visibility = View.GONE
         } else {
