@@ -13,7 +13,7 @@ object CommandUtils {
         var process: Process? = null
         try {
             process = processBuilder.start()
-            val stderrstream = process.errorStream
+            val stderrStream = process.errorStream
             val stdoutStream = process.inputStream
 
             val stdoutThread = thread {
@@ -30,7 +30,7 @@ object CommandUtils {
             val stderrThread = thread {
                 val reader: BufferedReader
                 try {
-                    reader = BufferedReader(InputStreamReader(stderrstream))
+                    reader = BufferedReader(InputStreamReader(stderrStream))
                     while (true) {
                         val line = reader.readLine() ?: break
                         stderrList?.add(line)
