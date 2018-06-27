@@ -58,7 +58,7 @@ class FolderChooserDialogFragment : BaseDialogFragment(), View.OnClickListener {
         return AlertDialog.Builder(activity!!)
                 .setTitle("Select a folder")
                 .setView(rootView)
-                .setPositiveButton(getString(R.string.select), { _, _ ->
+                .setPositiveButton(getString(R.string.select)) { _, _ ->
                     val folder = if (recyclerViewAdapter.itemCount > 0) {
                         val fileHolder = recyclerViewAdapter[0]
                         if (fileHolder.isParent) {
@@ -71,10 +71,10 @@ class FolderChooserDialogFragment : BaseDialogFragment(), View.OnClickListener {
                     }
 
                     (targetFragment as SettingsFragment).setupCustomSaveLocationPreLollipop(folder)
-                })
-                .setNegativeButton(android.R.string.cancel, { _, _ ->
+                }
+                .setNegativeButton(android.R.string.cancel) { _, _ ->
                     dismiss()
-                })
+                }
                 .create()
     }
 

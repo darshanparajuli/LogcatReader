@@ -21,21 +21,21 @@ class InstructionToGrantPermissionDialogFragment : BaseDialogFragment() {
         return AlertDialog.Builder(activity!!)
                 .setTitle(R.string.read_logs_permission_required)
                 .setMessage(R.string.grant_read_logs_permission_instruction)
-                .setPositiveButton(R.string.grant_read_logs_permission_action_using_root, { _, _ ->
+                .setPositiveButton(R.string.grant_read_logs_permission_action_using_root) { _, _ ->
                     if (RootUtils.grantReadLogsPermission(activity!!)) {
                         AppClosingDialog().show(fragmentManager, AppClosingDialog.TAG)
                     } else {
                         activity!!.showToast(getString(R.string.failed))
                     }
-                })
-                .setNegativeButton(R.string.copy_to_clipboard, { _, _ ->
+                }
+                .setNegativeButton(R.string.copy_to_clipboard) { _, _ ->
                     val cmd = "adb shell pm grant ${activity!!.packageName} " +
                             Manifest.permission.READ_LOGS
                     val cm = activity!!.getSystemService(Context.CLIPBOARD_SERVICE)
                             as ClipboardManager
                     cm.primaryClip = ClipData.newPlainText("Adb command",
                             cmd)
-                })
+                }
                 .create()
     }
 
@@ -44,9 +44,9 @@ class InstructionToGrantPermissionDialogFragment : BaseDialogFragment() {
             return AlertDialog.Builder(activity!!)
                     .setTitle(R.string.app_name)
                     .setMessage(getString(R.string.app_kill_reason))
-                    .setPositiveButton(getString(R.string.kill), { _, _ ->
+                    .setPositiveButton(getString(R.string.kill)) { _, _ ->
                         killApp()
-                    })
+                    }
                     .setOnDismissListener {
                         killApp()
                     }

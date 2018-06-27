@@ -672,13 +672,13 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
 
         init {
             logcatFilterRow.logPriorities.split(",")
-                    .forEach({
+                    .forEach {
                         priorities.add(it)
-                    })
+                    }
             logcatFilterRow.logPrioritiesExcluded.split(",")
-                    .forEach({
+                    .forEach {
                         prioritiesEx.add(it)
-                    })
+                    }
         }
 
         override fun filter(log: Log): Boolean {
@@ -730,11 +730,11 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
                 val fileName = uri.toFile().name
                 newSnakcbar(frag.view, frag.getString(R.string.saved_as_filename).format(fileName),
                         Snackbar.LENGTH_LONG)
-                        ?.setAction(frag.getString(R.string.view_log), {
+                        ?.setAction(frag.getString(R.string.view_log)) {
                             if (!frag.viewSavedLog(uri)) {
                                 showSnackbar(frag.view, frag.getString(R.string.could_not_open_log_file))
                             }
-                        })?.show()
+                        }?.show()
             } else {
                 showSnackbar(frag.view, frag.getString(R.string.failed_to_save_logs))
             }

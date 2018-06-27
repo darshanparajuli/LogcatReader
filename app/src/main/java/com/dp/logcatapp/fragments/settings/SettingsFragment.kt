@@ -329,13 +329,13 @@ class SettingsFragment : PreferenceFragmentCompat() {
         override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
             return AlertDialog.Builder(activity!!)
                     .setTitle(R.string.save_location)
-                    .setItems(R.array.save_location_options, { _, which ->
+                    .setItems(R.array.save_location_options) { _, which ->
                         if (which == 0) {
                             (targetFragment as SettingsFragment).setupDefaultSaveLocation()
                         } else {
                             (targetFragment as SettingsFragment).setupCustomSaveLocation()
                         }
-                    })
+                    }
                     .create()
         }
     }

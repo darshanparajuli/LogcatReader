@@ -447,7 +447,7 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
             val dialog = AlertDialog.Builder(activity!!)
                     .setTitle(R.string.rename)
                     .setView(view)
-                    .setPositiveButton(android.R.string.ok, { _, _ ->
+                    .setPositiveButton(android.R.string.ok) { _, _ ->
                         val newName = editText.text.toString()
                         if (newName.isNotEmpty()) {
                             if (file.renameTo(File(file.parent, newName))) {
@@ -458,10 +458,10 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
                             (activity as SavedLogsActivity).closeCabToolbar()
                         }
                         dismiss()
-                    })
-                    .setNegativeButton(android.R.string.cancel, { _, _ ->
+                    }
+                    .setNegativeButton(android.R.string.cancel) { _, _ ->
                         dismiss()
-                    })
+                    }
                     .create()
 
             dialog.setOnShowListener {

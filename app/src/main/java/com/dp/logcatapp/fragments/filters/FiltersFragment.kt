@@ -35,9 +35,9 @@ class FiltersFragment : BaseFragment() {
         setHasOptionsMenu(true)
         viewModel = ViewModelProviders.of(activity!!)
                 .get(LogcatLiveViewModel::class.java)
-        recyclerViewAdapter = MyRecyclerViewAdapter({
+        recyclerViewAdapter = MyRecyclerViewAdapter {
             onRemoveClicked(it)
-        })
+        }
 
         FiltersDB.getInstance(activity!!)
                 .filterDAO()

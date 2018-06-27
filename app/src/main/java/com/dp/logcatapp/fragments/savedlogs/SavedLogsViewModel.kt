@@ -68,9 +68,9 @@ internal class SavedLogsLiveData(private val application: Application) :
     fun update(fileInfos: List<LogFileInfo>) {
         val savedLogsResult = SavedLogsResult()
         savedLogsResult.logFiles += fileInfos
-        savedLogsResult.totalLogCount = fileInfos.foldRight(0L, { logFileInfo, acc ->
+        savedLogsResult.totalLogCount = fileInfos.foldRight(0L) { logFileInfo, acc ->
             acc + logFileInfo.count
-        })
+        }
 
         val folder = File(application.filesDir, LogcatLiveFragment.LOGCAT_DIR)
         val totalSize = fileInfos.sumByDouble { File(folder, it.name).length().toDouble() }
@@ -103,9 +103,9 @@ internal class SavedLogsLiveData(private val application: Application) :
             }
 
             savedLogsResult.totalLogCount = savedLogsResult.logFiles
-                    .foldRight(0L, { logFileInfo, acc ->
+                    .foldRight(0L) { logFileInfo, acc ->
                         acc + logFileInfo.count
-                    })
+                    }
             savedLogsResult.logFiles.sortBy { it.name }
 
             if (totalSize > 0) {

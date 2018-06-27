@@ -2,7 +2,6 @@ package com.dp.logcatapp.fragments.filters.dialogs
 
 import android.app.Dialog
 import android.arch.lifecycle.ViewModel
-import android.arch.lifecycle.ViewModelProvider
 import android.arch.lifecycle.ViewModelProviders
 import android.os.Bundle
 import android.support.v7.app.AlertDialog
@@ -14,7 +13,6 @@ import com.dp.logcat.LogPriority
 import com.dp.logcatapp.R
 import com.dp.logcatapp.fragments.base.BaseDialogFragment
 import com.dp.logcatapp.fragments.filters.FiltersFragment
-import com.dp.logcatapp.fragments.logcatlive.LogcatLiveFragment
 import com.dp.logcatapp.util.inflateLayout
 
 class FilterDialogFragment : BaseDialogFragment() {

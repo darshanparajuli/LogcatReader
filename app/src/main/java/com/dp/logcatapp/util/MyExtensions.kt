@@ -206,12 +206,12 @@ fun Context.getFileNameFromUri(uri: Uri): String {
     var name: String? = null
     if (uri.scheme == "content") {
         val cursor = contentResolver.query(uri, null, null, null, null)
-        try {
-            if (cursor != null && cursor.moveToFirst()) {
-                name = cursor.getString(cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME))
+        name = cursor?.use {
+            if (it.moveToFirst()) {
+                it.getString(it.getColumnIndex(OpenableColumns.DISPLAY_NAME))
+            } else {
+                null
             }
-        } finally {
-            cursor?.close()
         }
     }
 
