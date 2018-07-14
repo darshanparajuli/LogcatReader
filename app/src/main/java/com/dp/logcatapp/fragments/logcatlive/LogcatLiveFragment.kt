@@ -405,7 +405,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
             }
             R.id.filters_action -> {
                 val intent = Intent(activity!!, FiltersActivity::class.java)
-                startActivity(intent)
+                startActivityForResult(intent, 12)
                 true
             }
             R.id.action_save -> {
@@ -531,7 +531,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
         Logger.logDebug(LogcatLiveFragment::class, "onServiceConnected")
         logcatService = (service as LogcatService.LocalBinder).getLogcatService()
         val logcat = logcatService!!.logcat
-        logcat.pause()
+        logcat.pause() // resume on updateFilters callback
 
         if (adapter.itemCount == 0) {
             Logger.logDebug(LogcatLiveFragment::class, "Added all logs")
@@ -545,8 +545,6 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
         scrollRecyclerView()
 
         logcat.setEventListener(this)
-        resumeLogcat()
-
         logcat.bind(activity as AppCompatActivity)
 
         if (viewModel.stopRecording || arguments?.getBoolean(STOP_RECORDING) == true) {
@@ -672,24 +670,36 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
 
         init {
             logcatFilterRow.logPriorities.split(",")
+                    .filter { it.isNotEmpty() }
                     .forEach {
                         priorities.add(it)
                     }
             logcatFilterRow.logPrioritiesExcluded.split(",")
+                    .filter { it.isNotEmpty() }
                     .forEach {
                         prioritiesEx.add(it)
                     }
         }
 
+        private fun filterKeyword(log: Log): Boolean {
+            if (keyword.isNotEmpty()) {
+                if (log.tag.containsIgnoreCase(keyword) || log.msg.containsIgnoreCase(keyword)) {
+                    return true
+                }
+            }
+            return false
+        }
+
         override fun filter(log: Log): Boolean {
-            if (prioritiesEx.contains(log.priority)) {
-                return false
+            if (prioritiesEx.isNotEmpty() && prioritiesEx.contains(log.priority)) {
+                return true
             }
 
-            return (priorities.isEmpty() || priorities.contains(log.priority))
-                    && (keyword.isEmpty()
-                    || log.tag.containsIgnoreCase(keyword)
-                    || log.msg.containsIgnoreCase(keyword))
+            if (priorities.isNotEmpty()) {
+                return priorities.contains(log.priority) && filterKeyword(log)
+            } else {
+                return filterKeyword(log)
+            }
         }
     }
 
