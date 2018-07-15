@@ -666,18 +666,12 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
     private class LogcatFilterRowHolder(logcatFilterRow: LogcatFilterRow) : LogcatFilter {
         val keyword = logcatFilterRow.keyword
         val priorities = mutableSetOf<String>()
-        val prioritiesEx = mutableSetOf<String>()
 
         init {
             logcatFilterRow.logPriorities.split(",")
                     .filter { it.isNotEmpty() }
                     .forEach {
                         priorities.add(it)
-                    }
-            logcatFilterRow.logPrioritiesExcluded.split(",")
-                    .filter { it.isNotEmpty() }
-                    .forEach {
-                        prioritiesEx.add(it)
                     }
         }
 
@@ -691,10 +685,6 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
         }
 
         override fun filter(log: Log): Boolean {
-            if (prioritiesEx.isNotEmpty() && prioritiesEx.contains(log.priority)) {
-                return true
-            }
-
             if (priorities.isNotEmpty() && keyword.isNotEmpty()) {
                 return priorities.contains(log.priority) && filterKeyword(log)
             } else if (priorities.isNotEmpty() && keyword.isEmpty()) {

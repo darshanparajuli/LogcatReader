@@ -117,7 +117,7 @@ class FiltersFragment : BaseFragment() {
                 .subscribeOn(Schedulers.io())
                 .subscribe {
                     it.filterDAO().insert(LogcatFilterRow(keyword,
-                            logLevels.sorted().joinToString(","), ""))
+                            logLevels.sorted().joinToString(",")))
                 }
     }
 }

@@ -7,12 +7,11 @@ import io.reactivex.Flowable
 @Entity(tableName = "filters")
 data class LogcatFilterRow(@PrimaryKey(autoGenerate = true) var id: Long?,
                            @ColumnInfo(name = "keyword") var keyword: String,
-                           @ColumnInfo(name = "log_priorities") var logPriorities: String,
-                           @ColumnInfo(name = "log_priorities_excluded") var logPrioritiesExcluded: String) {
+                           @ColumnInfo(name = "log_priorities") var logPriorities: String) {
 
     @Ignore
-    constructor(keyword: String, logPriorities: String, logPrioritiesExcluded: String) :
-            this(null, keyword, logPriorities, logPrioritiesExcluded)
+    constructor(keyword: String, logPriorities: String) :
+            this(null, keyword, logPriorities)
 }
 
 @Dao
