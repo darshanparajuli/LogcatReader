@@ -695,8 +695,10 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
                 return true
             }
 
-            if (priorities.isNotEmpty()) {
+            if (priorities.isNotEmpty() && keyword.isNotEmpty()) {
                 return priorities.contains(log.priority) && filterKeyword(log)
+            } else if (priorities.isNotEmpty() && keyword.isEmpty()) {
+                return priorities.contains(log.priority)
             } else {
                 return filterKeyword(log)
             }
