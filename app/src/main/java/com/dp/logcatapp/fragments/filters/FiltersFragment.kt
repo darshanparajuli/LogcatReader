@@ -108,15 +108,15 @@ class FiltersFragment : BaseFragment() {
         }
     }
 
-    fun addFilter(keyword: String, logLevels: Set<String>) {
-        if (keyword.isEmpty() && logLevels.isEmpty()) {
+    fun addFilter(keyword: String, tag: String, logLevels: Set<String>) {
+        if (keyword.isEmpty() && tag.isEmpty() && logLevels.isEmpty()) {
             return
         }
 
         Flowable.just(FiltersDB.getInstance(context!!))
                 .subscribeOn(Schedulers.io())
                 .subscribe {
-                    it.filterDAO().insert(LogcatFilterRow(keyword,
+                    it.filterDAO().insert(LogcatFilterRow(keyword, tag,
                             logLevels.sorted().joinToString(",")))
                 }
     }

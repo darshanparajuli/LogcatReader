@@ -80,4 +80,6 @@
     <string name="select">Select</string>
     <string name="filters">Filters</string>
     <string name="add_filter">Add filter</string>
+    <string name="keyword">keyword</string>
+    <string name="tag">tag</string>
 </resources>

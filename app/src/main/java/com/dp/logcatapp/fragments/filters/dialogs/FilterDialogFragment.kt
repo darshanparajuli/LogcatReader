@@ -34,10 +34,23 @@ class FilterDialogFragment : BaseDialogFragment() {
 
         val editTextKeyword = rootView.findViewById<EditText>(R.id.keyword)
         editTextKeyword.setText(viewModel.keyword)
-
         editTextKeyword.addTextChangedListener(object : TextWatcher {
             override fun afterTextChanged(s: Editable) {
                 viewModel.keyword = s.toString()
+            }
+
+            override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int) {
+            }
+
+            override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {
+            }
+        })
+
+        val editTextTag = rootView.findViewById<EditText>(R.id.tag)
+        editTextTag.setText(viewModel.tag)
+        editTextTag.addTextChangedListener(object : TextWatcher {
+            override fun afterTextChanged(s: Editable) {
+                viewModel.tag = s.toString()
             }
 
             override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int) {
@@ -74,12 +87,13 @@ class FilterDialogFragment : BaseDialogFragment() {
                 .setPositiveButton(android.R.string.ok, { _, _ ->
                     val prioritySet = mutableSetOf<String>()
                     val keyword = editTextKeyword.text.toString().trim()
+                    val tag = editTextTag.text.toString().trim()
                     for ((k, v) in checkBoxMap) {
                         if (k.isChecked) {
                             prioritySet.add(v)
                         }
                     }
-                    (targetFragment as FiltersFragment).addFilter(keyword, prioritySet)
+                    (targetFragment as FiltersFragment).addFilter(keyword, tag, prioritySet)
                 })
                 .setNegativeButton(android.R.string.cancel, { _, _ ->
                     dismiss()
@@ -91,5 +105,6 @@ class FilterDialogFragment : BaseDialogFragment() {
 
 internal class MyViewModel : ViewModel() {
     var keyword = ""
+    var tag = ""
     val logPriorities = mutableSetOf<String>()
 }

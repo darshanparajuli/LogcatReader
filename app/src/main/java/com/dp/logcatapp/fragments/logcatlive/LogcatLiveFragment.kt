@@ -665,6 +665,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
 
     private class LogcatFilterRowHolder(logcatFilterRow: LogcatFilterRow) : LogcatFilter {
         val keyword = logcatFilterRow.keyword
+        val tag = logcatFilterRow.tag
         val priorities = mutableSetOf<String>()
 
         init {
@@ -676,22 +677,28 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
         }
 
         private fun filterKeyword(log: Log): Boolean {
-            if (keyword.isNotEmpty()) {
-                if (log.tag.containsIgnoreCase(keyword) || log.msg.containsIgnoreCase(keyword)) {
-                    return true
-                }
+            if (keyword.isEmpty()) {
+                return true
             }
-            return false
+            return log.msg.containsIgnoreCase(keyword)
+        }
+
+        private fun filterTag(log: Log): Boolean {
+            if (tag.isEmpty()) {
+                return true
+            }
+            return log.tag.containsIgnoreCase(tag)
+        }
+
+        private fun filterPriorities(log: Log): Boolean {
+            if (priorities.isEmpty()) {
+                return true
+            }
+            return priorities.contains(log.priority)
         }
 
         override fun filter(log: Log): Boolean {
-            if (priorities.isNotEmpty() && keyword.isNotEmpty()) {
-                return priorities.contains(log.priority) && filterKeyword(log)
-            } else if (priorities.isNotEmpty() && keyword.isEmpty()) {
-                return priorities.contains(log.priority)
-            } else {
-                return filterKeyword(log)
-            }
+            return filterPriorities(log) && filterTag(log) && filterKeyword(log)
         }
     }
 

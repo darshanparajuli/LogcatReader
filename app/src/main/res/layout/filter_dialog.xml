@@ -15,6 +15,13 @@
 
         <android.support.v7.widget.AppCompatEditText
             android:id="@+id/keyword"
+            android:hint="@string/keyword"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+        <android.support.v7.widget.AppCompatEditText
+            android:id="@+id/tag"
+            android:hint="@string/tag"
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
 
