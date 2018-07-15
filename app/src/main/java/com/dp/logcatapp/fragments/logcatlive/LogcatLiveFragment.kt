@@ -405,7 +405,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
             }
             R.id.filters_action -> {
                 val intent = Intent(activity!!, FiltersActivity::class.java)
-                startActivityForResult(intent, 12)
+                startActivity(intent)
                 true
             }
             R.id.action_save -> {
