@@ -1,16 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/listItemRoot"
     android:layout_width="match_parent"
-    android:layout_height="64dp"
+    android:layout_height="wrap_content"
+    android:layout_centerVertical="true"
     android:background="?attr/selectableItemBackground"
-    android:descendantFocusability="blocksDescendants">
+    android:descendantFocusability="blocksDescendants"
+    android:paddingBottom="8dp"
+    android:paddingTop="8dp">
 
     <com.dp.logcatapp.views.CustomTextView
         android:id="@+id/filterKeyword"
         android:layout_width="0dp"
-        android:layout_height="20dp"
+        android:layout_height="wrap_content"
         android:layout_marginEnd="16dp"
         android:layout_marginLeft="16dp"
         android:layout_marginRight="16dp"
@@ -18,17 +22,35 @@
         android:text="Keyword"
         android:textColor="?attr/primary_text_color"
         android:textSize="@dimen/text_size_medium"
-        app:layout_constraintBottom_toTopOf="@+id/logLevels"
+        app:layout_constraintBottom_toTopOf="@+id/tag"
         app:layout_constraintEnd_toStartOf="@+id/removeFilterIcon"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_chainStyle="packed"
         app:useFont="@string/font_Roboto_Regular" />
+
+    <com.dp.logcatapp.views.CustomTextView
+        android:id="@+id/tag"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="16dp"
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="16dp"
+        android:layout_marginStart="16dp"
+        android:text="Tag"
+        android:textColor="?attr/secondary_text_color"
+        android:textSize="@dimen/text_size_small"
+        android:visibility="visible"
+        app:layout_constraintBottom_toTopOf="@+id/logLevels"
+        app:layout_constraintEnd_toStartOf="@+id/removeFilterIcon"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/filterKeyword"
+        app:useFont="@string/font_Roboto_Medium" />
 
     <com.dp.logcatapp.views.CustomTextView
         android:id="@+id/logLevels"
         android:layout_width="0dp"
-        android:layout_height="20dp"
+        android:layout_height="wrap_content"
         android:layout_marginEnd="16dp"
         android:layout_marginLeft="16dp"
         android:layout_marginRight="16dp"
@@ -36,10 +58,11 @@
         android:text="Assert, Debug"
         android:textColor="?attr/secondary_text_color"
         android:textSize="@dimen/text_size_small"
+        android:visibility="visible"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/removeFilterIcon"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/filterKeyword"
+        app:layout_constraintTop_toBottomOf="@+id/tag"
         app:useFont="@string/font_Roboto_Regular" />
 
     <android.support.v7.widget.AppCompatImageButton
