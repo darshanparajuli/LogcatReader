@@ -33,7 +33,7 @@ abstract class FiltersDB : RoomDatabase() {
     abstract fun filterDAO(): FilterDAO
 
     companion object {
-        private const val DB_NAME = "logcat_filters.db"
+        private const val DB_NAME = "logcat_reader_db"
         private var instance: FiltersDB? = null
 
         fun getInstance(context: Context): FiltersDB {
