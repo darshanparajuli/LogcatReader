@@ -24,6 +24,15 @@ class FiltersFragment : BaseFragment() {
 
     companion object {
         val TAG = FiltersFragment::class.qualifiedName
+        private val KEY_EXCLUSIONS = TAG + "_key_exclusions"
+
+        fun newInstance(exclusions: Boolean): FiltersFragment {
+            val frag = FiltersFragment()
+            val bundle = Bundle()
+            bundle.putBoolean(KEY_EXCLUSIONS, exclusions)
+            frag.arguments = bundle
+            return frag
+        }
     }
 
     private lateinit var viewModel: LogcatLiveViewModel
@@ -39,10 +48,14 @@ class FiltersFragment : BaseFragment() {
             onRemoveClicked(it)
         }
 
-        FiltersDB.getInstance(activity!!)
-                .filterDAO()
-                .getAll()
-                .observeOn(AndroidSchedulers.mainThread())
+        val dao = FiltersDB.getInstance(activity!!).filterDAO()
+        val flowable = if (isExclusions()) {
+            dao.getExclusions()
+        } else {
+            dao.getFilters()
+        }
+
+        flowable.observeOn(AndroidSchedulers.mainThread())
                 .subscribe {
                     val data = it.map {
                         val logPriorities = it.logPriorities.split(",")
@@ -63,6 +76,8 @@ class FiltersFragment : BaseFragment() {
                     recyclerViewAdapter.setData(data)
                 }
     }
+
+    private fun isExclusions() = arguments?.getBoolean(KEY_EXCLUSIONS) ?: false
 
     private fun onRemoveClicked(v: View) {
         val pos = linearLayoutManager.getPosition(v)
@@ -113,11 +128,12 @@ class FiltersFragment : BaseFragment() {
             return
         }
 
+        val exclude = isExclusions()
         Flowable.just(FiltersDB.getInstance(context!!))
                 .subscribeOn(Schedulers.io())
                 .subscribe {
                     it.filterDAO().insert(LogcatFilterRow(keyword, tag,
-                            logLevels.sorted().joinToString(",")))
+                            logLevels.sorted().joinToString(","), exclude))
                 }
     }
 }

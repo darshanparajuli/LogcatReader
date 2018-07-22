@@ -408,6 +408,12 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
                 startActivity(intent)
                 true
             }
+            R.id.exclusions_action -> {
+                val intent = Intent(activity!!, FiltersActivity::class.java)
+                intent.putExtra(FiltersActivity.EXTRA_EXCLUSIONS, true)
+                startActivity(intent)
+                true
+            }
             R.id.action_save -> {
                 trySaveToFile()
                 true
@@ -565,10 +571,16 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
                     if (logcat != null) {
                         logcat.pause()
                         logcat.clearFilters()
+                        logcat.clearExclusions()
 
                         for (filter in it) {
-                            logcat.addFilter("${filter.id}",
-                                    LogcatFilterRowHolder(filter))
+                            if (filter.exclude) {
+                                logcat.addExclusion("${filter.id}",
+                                        MyLogcatFilter(filter))
+                            } else {
+                                logcat.addFilter("${filter.id}",
+                                        MyLogcatFilter(filter))
+                            }
                         }
 
                         adapter.clear()
@@ -663,7 +675,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
         }
     }
 
-    private class LogcatFilterRowHolder(logcatFilterRow: LogcatFilterRow) : LogcatFilter {
+    private class MyLogcatFilter(logcatFilterRow: LogcatFilterRow) : LogcatFilter {
         val keyword = logcatFilterRow.keyword
         val tag = logcatFilterRow.tag
         val priorities = mutableSetOf<String>()

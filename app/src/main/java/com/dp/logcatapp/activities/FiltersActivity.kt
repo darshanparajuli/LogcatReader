@@ -9,6 +9,7 @@ class FiltersActivity : BaseActivityWithToolbar() {
 
     companion object {
         val TAG = FiltersActivity::class.qualifiedName
+        val EXTRA_EXCLUSIONS = TAG + "_exclusions"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -19,12 +20,19 @@ class FiltersActivity : BaseActivityWithToolbar() {
 
         if (savedInstanceState == null) {
             supportFragmentManager.transaction {
-                replace(R.id.content_frame, FiltersFragment(), FiltersFragment.TAG)
+                replace(R.id.content_frame, FiltersFragment.newInstance(isExclusions()),
+                        FiltersFragment.TAG)
             }
         }
     }
 
+    private fun isExclusions() = intent != null && intent.getBooleanExtra(EXTRA_EXCLUSIONS, false)
+
     override fun getToolbarIdRes() = R.id.toolbar
 
-    override fun getToolbarTitle(): String = getString(R.string.filters)
+    override fun getToolbarTitle(): String = if (isExclusions()) {
+        getString(R.string.exclusions)
+    } else {
+        getString(R.string.filters)
+    }
 }

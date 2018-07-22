@@ -17,9 +17,14 @@
         android:icon="@drawable/ic_fiber_manual_record_white_24dp"
         android:title="@string/start_recording"
         app:showAsAction="always" />
+
     <item
         android:id="@+id/filters_action"
         android:title="@string/filters" />
+
+    <item
+        android:id="@+id/exclusions_action"
+        android:title="@string/exclusions" />
 
     <item
         android:id="@+id/action_save"

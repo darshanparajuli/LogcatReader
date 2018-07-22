@@ -8,15 +8,22 @@ import io.reactivex.Flowable
 data class LogcatFilterRow(@PrimaryKey(autoGenerate = true) var id: Long?,
                            @ColumnInfo(name = "keyword") var keyword: String,
                            @ColumnInfo(name = "tag") var tag: String,
-                           @ColumnInfo(name = "log_priorities") var logPriorities: String) {
+                           @ColumnInfo(name = "log_priorities") var logPriorities: String,
+                           @ColumnInfo(name = "exclude") var exclude: Boolean) {
 
     @Ignore
-    constructor(keyword: String, tag: String, logPriorities: String) :
-            this(null, keyword, tag, logPriorities)
+    constructor(keyword: String, tag: String, logPriorities: String, exclude: Boolean) :
+            this(null, keyword, tag, logPriorities, exclude)
 }
 
 @Dao
 interface FilterDAO {
+
+    @Query("SELECT * FROM filters WHERE `exclude` = 0")
+    fun getFilters(): Flowable<List<LogcatFilterRow>>
+
+    @Query("SELECT * FROM filters WHERE `exclude` = 1")
+    fun getExclusions(): Flowable<List<LogcatFilterRow>>
 
     @Query("SELECT * FROM filters")
     fun getAll(): Flowable<List<LogcatFilterRow>>

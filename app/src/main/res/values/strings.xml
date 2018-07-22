@@ -82,4 +82,5 @@
     <string name="add_filter">Add filter</string>
     <string name="keyword">keyword</string>
     <string name="tag">tag</string>
+    <string name="exclusions">Exclusions</string>
 </resources>

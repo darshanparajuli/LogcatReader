@@ -46,6 +46,7 @@ class Logcat(initialCapacity: Int = INITIAL_LOG_CAPACITY) : Closeable {
     private var logs = FixedCircularArray<Log>(initialCapacity, INITIAL_LOG_SIZE)
     private var pendingLogs = FixedCircularArray<Log>(initialCapacity, INITIAL_LOG_SIZE)
     private val filters = mutableMapOf<String, LogcatFilter>()
+    private val exclusions = mutableMapOf<String, LogcatFilter>()
 
     private var _activityInBackgroundLock = Any()
     private var activityInBackground: Boolean = true
@@ -94,12 +95,12 @@ class Logcat(initialCapacity: Int = INITIAL_LOG_CAPACITY) : Closeable {
 
                 if (pendingLogs.size == 1) {
                     val log = pendingLogs[0]
-                    if (filters.values.all { it.filter(log) }) {
+                    if (!exclusions.values.any { it.filter(log) } && filters.values.all { it.filter(log) }) {
                         handler.post { listener?.onLogEvent(log) }
                     }
                 } else {
                     val filteredLogs = pendingLogs.filter { e ->
-                        filters.values.all { it.filter(e) }
+                        !exclusions.values.any { it.filter(e) } && filters.values.all { it.filter(e) }
                     }.toList()
 
                     if (filteredLogs.isNotEmpty()) {
@@ -164,17 +165,37 @@ class Logcat(initialCapacity: Int = INITIAL_LOG_CAPACITY) : Closeable {
 
     fun getLogsFiltered(): List<Log> {
         lockedBlock(logsLock) {
-            if (filters.isEmpty()) {
+            if (exclusions.isEmpty() && filters.isEmpty()) {
                 return logs.toList()
             } else {
-                return logs.filter { log -> filters.values.all { it.filter(log) } }
+                return logs.filter { log ->
+                    !exclusions.values.any { it.filter(log) } && filters.values.all { it.filter(log) }
+                }
             }
+        }
+    }
+
+    fun addExclusion(name: String, filter: LogcatFilter) {
+        lockedBlock(logsLock) {
+            exclusions[name] = filter
+        }
+    }
+
+    fun removeExclusion(name: String) {
+        lockedBlock(logsLock) {
+            exclusions.remove(name)
+        }
+    }
+
+    fun clearExclusions() {
+        lockedBlock(logsLock) {
+            exclusions.clear()
         }
     }
 
     fun addFilter(name: String, filter: LogcatFilter) {
         lockedBlock(logsLock) {
-            filters.put(name, filter)
+            filters[name] = filter
         }
     }
 
@@ -387,7 +408,7 @@ class Logcat(initialCapacity: Int = INITIAL_LOG_CAPACITY) : Closeable {
 
         init {
             DEFAULT_BUFFERS = getDefaultBuffers()
-            AVAILABLE_BUFFERS = getAvailabeBuffers()
+            AVAILABLE_BUFFERS = getAvailableBuffers()
 
             Logger.logDebug(Logcat::class, "Available buffers: " +
                     Arrays.toString(AVAILABLE_BUFFERS))
@@ -531,7 +552,7 @@ class Logcat(initialCapacity: Int = INITIAL_LOG_CAPACITY) : Closeable {
             return periodIndex != -1
         }
 
-        private fun getAvailabeBuffers(): Array<String> {
+        private fun getAvailableBuffers(): Array<String> {
             val result = mutableSetOf<String>()
 
             val stdoutList = mutableListOf<String>()
