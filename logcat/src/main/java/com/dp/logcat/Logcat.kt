@@ -36,8 +36,14 @@ class Logcat(initialCapacity: Int = INITIAL_LOG_CAPACITY) : Closeable {
     var exitCode: Int = -1
         private set
 
-    @Volatile
-    private var paused = false
+    private var _pausedLock = Any()
+    private var paused: Boolean = false
+        get() = synchronized(_pausedLock) {
+            field
+        }
+        set(value) = synchronized(_pausedLock) {
+            field = value
+        }
     private val pausePostLogsCondition = ConditionVariable()
 
     // must be synchronized
@@ -53,11 +59,10 @@ class Logcat(initialCapacity: Int = INITIAL_LOG_CAPACITY) : Closeable {
         get() = synchronized(_activityInBackgroundLock) {
             field
         }
-        set(value) {
-            synchronized(_activityInBackgroundLock) {
-                field = value
-            }
+        set(value) = synchronized(_activityInBackgroundLock) {
+            field = value
         }
+
     private val activityInBackgroundCondition = ConditionVariable()
 
     private val lifeCycleObserver = object : LifecycleObserver {
