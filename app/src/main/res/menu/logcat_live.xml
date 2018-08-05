@@ -33,4 +33,8 @@
     <item
         android:id="@+id/action_view_saved_logs"
         android:title="@string/saved_logs_action" />
+
+    <item
+        android:id="@+id/action_restart_logcat"
+        android:title="@string/restart_logcat" />
 </menu>

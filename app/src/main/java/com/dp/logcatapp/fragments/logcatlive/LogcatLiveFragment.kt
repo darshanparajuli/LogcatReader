@@ -422,6 +422,11 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
                 startActivity(Intent(activity, SavedLogsActivity::class.java))
                 true
             }
+            R.id.action_restart_logcat -> {
+                adapter.clear()
+                logcatService?.logcat?.restart()
+                true
+            }
             else -> return super.onOptionsItemSelected(item)
         }
     }
