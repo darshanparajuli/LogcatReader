@@ -481,8 +481,8 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
         } else {
             if (Build.VERSION.SDK_INT >= 21) {
                 val documentFile = DocumentFile.fromTreeUri(context!!, Uri.parse(saveLocationPref))
-                val file = documentFile.createFile("text/plain", fileName)
-                file.uri
+                val file = documentFile?.createFile("text/plain", fileName)
+                file?.uri
             } else {
                 val file = File(saveLocationPref, LOGCAT_DIR)
                 file.mkdirs()
@@ -720,7 +720,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
     }
 
     class SaveFileTask(frag: LogcatLiveFragment,
-                       private val uri: Uri,
+                       private val uri: Uri?,
                        private val logs: List<Log>) : AsyncTask<Void, Void, Boolean>() {
 
         private val ref = WeakReference(frag)
@@ -733,7 +733,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
 
         override fun doInBackground(vararg params: Void?): Boolean {
             val frag = ref.get()
-            if (frag != null) {
+            if (frag != null && uri != null) {
                 val context = frag.context!!
                 if (frag.usingCustomSaveLocation() && Build.VERSION.SDK_INT >= 21) {
                     return Logcat.writeToFile(context, logs, uri)
@@ -753,7 +753,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
             }
 
             if (result) {
-                val fileName = uri.toFile().name
+                val fileName = uri!!.toFile().name
                 newSnakcbar(frag.view, frag.getString(R.string.saved_as_filename).format(fileName),
                         Snackbar.LENGTH_LONG)
                         ?.setAction(frag.getString(R.string.view_log)) {

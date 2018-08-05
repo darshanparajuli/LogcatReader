@@ -137,12 +137,17 @@ internal class SavedLogsLiveData(private val application: Application) :
             var totalSize = 0.0
             val uri = path.toUri()
             val folder = DocumentFile.fromTreeUri(context, uri)
-            val files = folder.listFiles()
+            val files = folder?.listFiles()
             if (files != null) {
                 for (f in files) {
+                    if (f.name == null) {
+                        Logger.logDebug(this::class, "file name is null")
+                        continue
+                    }
+
                     val size = f.length()
                     val count = countLogs(context, f)
-                    val fileInfo = LogFileInfo(f.name, size, Utils.sizeToString(size.toDouble()),
+                    val fileInfo = LogFileInfo(f.name!!, size, Utils.sizeToString(size.toDouble()),
                             count, f.uri)
                     savedLogsResult.logFiles += fileInfo
                     totalSize += fileInfo.size
