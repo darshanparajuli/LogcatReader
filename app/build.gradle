@@ -7,6 +7,8 @@ def keystorePropertiesFile = rootProject.file("keystore.properties")
 def keystoreProperties = new Properties()
 keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
 
+def fileProvider = "file_provider"
+
 android {
     compileSdkVersion 27
     buildToolsVersion "27.0.3"
@@ -45,6 +47,10 @@ android {
     }
 
     buildTypes {
+        buildTypes.each {
+            it.buildConfigField("String", "FILE_PROVIDER", "\"$fileProvider\"")
+            it.addManifestPlaceholders(["fileProvider": fileProvider])
+        }
         release {
             signingConfig signingConfigs.release
             minifyEnabled false

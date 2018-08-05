@@ -25,6 +25,7 @@ import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
 import android.widget.ProgressBar
 import android.widget.TextView
+import com.dp.logcatapp.BuildConfig
 import com.dp.logcatapp.R
 import com.dp.logcatapp.activities.BaseActivityWithToolbar
 import com.dp.logcatapp.activities.CabToolbarCallback
@@ -207,7 +208,7 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
                 try {
                     val intent = Intent(Intent.ACTION_SEND)
                     val uri = FileProvider.getUriForFile(context!!,
-                            context!!.packageName + ".fileprovider", file)
+                            "${context!!.packageName}.${BuildConfig.FILE_PROVIDER}", file)
                     intent.setDataAndType(uri, "text/*")
                     intent.putExtra(Intent.EXTRA_STREAM, uri)
                     intent.flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
