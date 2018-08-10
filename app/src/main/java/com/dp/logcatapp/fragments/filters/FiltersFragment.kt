@@ -77,7 +77,7 @@ class FiltersFragment : BaseFragment() {
                 }
     }
 
-    private fun isExclusions() = arguments?.getBoolean(KEY_EXCLUSIONS) ?: false
+    fun isExclusions() = arguments?.getBoolean(KEY_EXCLUSIONS) ?: false
 
     private fun onRemoveClicked(v: View) {
         val pos = linearLayoutManager.getPosition(v)

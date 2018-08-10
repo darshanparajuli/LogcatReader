@@ -4,6 +4,7 @@ import android.app.Dialog
 import android.arch.lifecycle.ViewModel
 import android.arch.lifecycle.ViewModelProviders
 import android.os.Bundle
+import android.support.v4.app.DialogFragment
 import android.support.v7.app.AlertDialog
 import android.text.Editable
 import android.text.TextWatcher
@@ -81,8 +82,14 @@ class FilterDialogFragment : BaseDialogFragment() {
             }
         }
 
+        val title = if ((targetFragment as FiltersFragment).isExclusions()) {
+            getString(R.string.exclusion)
+        } else {
+            getString(R.string.filter)
+        }
+
         return AlertDialog.Builder(activity!!)
-                .setTitle(R.string.filter)
+                .setTitle(title)
                 .setView(rootView)
                 .setPositiveButton(android.R.string.ok, { _, _ ->
                     val prioritySet = mutableSetOf<String>()
@@ -100,7 +107,6 @@ class FilterDialogFragment : BaseDialogFragment() {
                 })
                 .create()
     }
-
 }
 
 internal class MyViewModel : ViewModel() {

@@ -81,8 +81,9 @@
     <string name="select">Выбрать</string>
     <string name="filters">фильтры</string>
     <string name="keyword">" дескриптор"</string>
-    <string name="add_filter">Добавить фильтр</string>
+    <string name="add">Добавить</string>
     <string name="tag">тег</string>
     <string name="exclusions">Исключения</string>
     <string name="restart_logcat">Перезапустить logcat</string>
+    <string name="exclusion">исключение</string>
 </resources>
