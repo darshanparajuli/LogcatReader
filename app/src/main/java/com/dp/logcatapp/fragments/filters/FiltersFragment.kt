@@ -1,6 +1,7 @@
 package com.dp.logcatapp.fragments.filters
 
 import android.arch.lifecycle.ViewModelProviders
+import android.opengl.Visibility
 import android.os.Bundle
 import android.support.v7.widget.DividerItemDecoration
 import android.support.v7.widget.LinearLayoutManager
@@ -38,6 +39,7 @@ class FiltersFragment : BaseFragment() {
     private lateinit var viewModel: LogcatLiveViewModel
     private lateinit var recyclerViewAdapter: MyRecyclerViewAdapter
     private lateinit var linearLayoutManager: LinearLayoutManager
+    private lateinit var emptyMessage: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -73,6 +75,11 @@ class FiltersFragment : BaseFragment() {
                                 }
                         FilterListItem(it.keyword, it.tag, logPriorities, it)
                     }
+                    if (data.isEmpty()) {
+                        emptyMessage.visibility = View.VISIBLE
+                    } else {
+                        emptyMessage.visibility = View.GONE
+                    }
                     recyclerViewAdapter.setData(data)
                 }
     }
@@ -95,6 +102,8 @@ class FiltersFragment : BaseFragment() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
         val rootView = inflateLayout(R.layout.filters_fragment)
+
+        emptyMessage = rootView.findViewById(R.id.textViewEmpty)
 
         val recyclerView = rootView.findViewById<RecyclerView>(R.id.recyclerView)
         recyclerView.addItemDecoration(DividerItemDecoration(activity!!,
