@@ -36,18 +36,18 @@ interface FilterDAO {
 }
 
 @Database(entities = [LogcatFilterRow::class], exportSchema = false, version = 1)
-abstract class FiltersDB : RoomDatabase() {
+abstract class MyDB : RoomDatabase() {
     abstract fun filterDAO(): FilterDAO
 
     companion object {
         private const val DB_NAME = "logcat_reader_db"
-        private var instance: FiltersDB? = null
+        private var instance: MyDB? = null
 
-        fun getInstance(context: Context): FiltersDB {
+        fun getInstance(context: Context): MyDB {
             if (instance == null) {
-                synchronized(FiltersDB::class) {
+                synchronized(MyDB::class) {
                     instance = Room.databaseBuilder(context.applicationContext,
-                            FiltersDB::class.java, DB_NAME)
+                            MyDB::class.java, DB_NAME)
                             .build()
                 }
             }

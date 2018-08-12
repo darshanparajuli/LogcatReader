@@ -32,7 +32,7 @@ import com.dp.logcatapp.activities.BaseActivityWithToolbar
 import com.dp.logcatapp.activities.FiltersActivity
 import com.dp.logcatapp.activities.SavedLogsActivity
 import com.dp.logcatapp.activities.SavedLogsViewerActivity
-import com.dp.logcatapp.db.FiltersDB
+import com.dp.logcatapp.db.MyDB
 import com.dp.logcatapp.db.LogcatFilterRow
 import com.dp.logcatapp.fragments.base.BaseFragment
 import com.dp.logcatapp.fragments.logcatlive.dialogs.InstructionToGrantPermissionDialogFragment
@@ -567,7 +567,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
     }
 
     private fun updateFilters() {
-        filterSubscription = FiltersDB.getInstance(activity!!)
+        filterSubscription = MyDB.getInstance(activity!!)
                 .filterDAO()
                 .getAll()
                 .observeOn(AndroidSchedulers.mainThread())

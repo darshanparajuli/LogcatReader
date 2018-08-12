@@ -1,7 +1,6 @@
 package com.dp.logcatapp.fragments.filters
 
 import android.arch.lifecycle.ViewModelProviders
-import android.opengl.Visibility
 import android.os.Bundle
 import android.support.v7.widget.DividerItemDecoration
 import android.support.v7.widget.LinearLayoutManager
@@ -11,7 +10,7 @@ import android.widget.ImageButton
 import android.widget.TextView
 import com.dp.logcat.LogPriority
 import com.dp.logcatapp.R
-import com.dp.logcatapp.db.FiltersDB
+import com.dp.logcatapp.db.MyDB
 import com.dp.logcatapp.db.LogcatFilterRow
 import com.dp.logcatapp.fragments.base.BaseFragment
 import com.dp.logcatapp.fragments.filters.dialogs.FilterDialogFragment
@@ -50,7 +49,7 @@ class FiltersFragment : BaseFragment() {
             onRemoveClicked(it)
         }
 
-        val dao = FiltersDB.getInstance(activity!!).filterDAO()
+        val dao = MyDB.getInstance(activity!!).filterDAO()
         val flowable = if (isExclusions()) {
             dao.getExclusions()
         } else {
@@ -91,7 +90,7 @@ class FiltersFragment : BaseFragment() {
         if (pos != RecyclerView.NO_POSITION) {
             val item = recyclerViewAdapter[pos]
             recyclerViewAdapter.remove(pos)
-            Flowable.just(FiltersDB.getInstance(context!!))
+            Flowable.just(MyDB.getInstance(context!!))
                     .subscribeOn(Schedulers.io())
                     .subscribe {
                         it.filterDAO().delete(item.filter!!)
@@ -138,7 +137,7 @@ class FiltersFragment : BaseFragment() {
         }
 
         val exclude = isExclusions()
-        Flowable.just(FiltersDB.getInstance(context!!))
+        Flowable.just(MyDB.getInstance(context!!))
                 .subscribeOn(Schedulers.io())
                 .subscribe {
                     it.filterDAO().insert(LogcatFilterRow(keyword, tag,
