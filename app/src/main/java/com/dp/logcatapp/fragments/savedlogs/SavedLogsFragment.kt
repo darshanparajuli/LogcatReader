@@ -13,6 +13,7 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.support.v4.content.FileProvider
+import android.support.v4.provider.DocumentFile
 import android.support.v7.app.AlertDialog
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
@@ -34,9 +35,7 @@ import com.dp.logcatapp.activities.SavedLogsViewerActivity
 import com.dp.logcatapp.fragments.base.BaseDialogFragment
 import com.dp.logcatapp.fragments.base.BaseFragment
 import com.dp.logcatapp.fragments.logcatlive.LogcatLiveFragment
-import com.dp.logcatapp.util.closeQuietly
-import com.dp.logcatapp.util.inflateLayout
-import com.dp.logcatapp.util.showToast
+import com.dp.logcatapp.util.*
 import java.io.*
 import java.lang.ref.WeakReference
 
@@ -224,26 +223,68 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
                 true
             }
             R.id.action_delete -> {
-                val folder = File(context!!.filesDir, LogcatLiveFragment.LOGCAT_DIR)
-                val deleted = viewModel.selectedItems
-                        .map {
-                            File(folder, recyclerViewAdapter.data[it].name)
-                        }
-                        .filter { it.delete() }
-                        .map { it.name }
-                        .toList()
-
-                val updatedList = recyclerViewAdapter.data
-                        .filter { it.name !in deleted }.toList()
-
-                viewModel.selectedItems.clear()
-                viewModel.fileNames.update(updatedList)
-
-                (activity as SavedLogsActivity).closeCabToolbar()
+                deleteSelectedLogFiles()
                 true
             }
             else -> false
         }
+    }
+
+    private fun getCustomLocation(): String =
+            context!!.getDefaultSharedPreferences().getString(PreferenceKeys.Logcat.KEY_SAVE_LOCATION, "")!!
+
+    private fun deleteSelectedLogFiles() {
+        val deleted = mutableListOf<String>()
+
+        val deleteHelper = { folder: File ->
+            viewModel.selectedItems
+                    .map {
+                        File(folder, recyclerViewAdapter.data[it].name)
+                    }
+                    .filter { it.delete() }
+                    .map { it.name }
+                    .forEach { deleted += it }
+        }
+
+        // delete internal
+        val folder = File(context!!.filesDir, LogcatLiveFragment.LOGCAT_DIR)
+        deleteHelper(folder)
+
+        val customLocation = getCustomLocation()
+        if (customLocation.isNotEmpty()) {
+            if (Build.VERSION.SDK_INT >= 21) {
+                val customFolder = DocumentFile.fromTreeUri(context!!, Uri.parse(customLocation))
+                viewModel.selectedItems
+                        .mapNotNull {
+                            customFolder?.findFile(recyclerViewAdapter.data[it].name)
+                        }
+                        .forEach {
+                            val name = it.name
+                            if (it.delete()) {
+                                if (name != null) {
+                                    deleted += name
+                                }
+                            }
+                        }
+            } else {
+                val customFolder = File(customLocation)
+                viewModel.selectedItems
+                        .map {
+                            File(customFolder, recyclerViewAdapter.data[it].name)
+                        }
+                        .filter { it.delete() }
+                        .map { it.name }
+                        .forEach { deleted += it }
+            }
+        }
+
+        val updatedList = recyclerViewAdapter.data
+                .filter { it.name !in deleted }.toList()
+
+        viewModel.selectedItems.clear()
+        viewModel.fileNames.update(updatedList)
+
+        (activity as SavedLogsActivity).closeCabToolbar()
     }
 
     private fun saveToDeviceFallback() {
