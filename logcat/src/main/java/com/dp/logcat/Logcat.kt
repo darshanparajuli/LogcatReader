@@ -51,8 +51,8 @@ class Logcat(initialCapacity: Int = INITIAL_LOG_CAPACITY) : Closeable {
     private val pendingLogsFullCondition = logsLock.newCondition()
     private var logs = FixedCircularArray<Log>(initialCapacity, INITIAL_LOG_SIZE)
     private var pendingLogs = FixedCircularArray<Log>(initialCapacity, INITIAL_LOG_SIZE)
-    private val filters = mutableMapOf<String, LogcatFilter>()
-    private val exclusions = mutableMapOf<String, LogcatFilter>()
+    private val filters = mutableMapOf<String, LogFilter>()
+    private val exclusions = mutableMapOf<String, LogFilter>()
 
     private var _activityInBackgroundLock = Any()
     private var activityInBackground: Boolean = true
@@ -180,7 +180,7 @@ class Logcat(initialCapacity: Int = INITIAL_LOG_CAPACITY) : Closeable {
         }
     }
 
-    fun addExclusion(name: String, filter: LogcatFilter) {
+    fun addExclusion(name: String, filter: LogFilter) {
         lockedBlock(logsLock) {
             exclusions[name] = filter
         }
@@ -198,7 +198,7 @@ class Logcat(initialCapacity: Int = INITIAL_LOG_CAPACITY) : Closeable {
         }
     }
 
-    fun addFilter(name: String, filter: LogcatFilter) {
+    fun addFilter(name: String, filter: LogFilter) {
         lockedBlock(logsLock) {
             filters[name] = filter
         }
@@ -432,7 +432,7 @@ class Logcat(initialCapacity: Int = INITIAL_LOG_CAPACITY) : Closeable {
         fun getLogCountFromHeader(context: Context, file: DocumentFile): Long {
             try {
                 val fis = context.contentResolver.openInputStream(file.uri)
-                return getLogCountFromHeader(fis)
+                return getLogCountFromHeader(fis!!)
             } catch (e: Exception) {
                 e.printStackTrace()
             }
@@ -448,7 +448,7 @@ class Logcat(initialCapacity: Int = INITIAL_LOG_CAPACITY) : Closeable {
                     var startIndex = header.indexOf('=')
                     if (startIndex != -1) {
                         startIndex += 2
-                        var endIndex = header.indexOf(' ', startIndex)
+                        val endIndex = header.indexOf(' ', startIndex)
                         if (endIndex != -1) {
                             val value = header.substring(startIndex, endIndex)
                             return value.toLong()

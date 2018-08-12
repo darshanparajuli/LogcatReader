@@ -26,14 +26,14 @@ import androidx.core.net.toUri
 import com.dp.logcat.Log
 import com.dp.logcat.Logcat
 import com.dp.logcat.LogcatEventListener
-import com.dp.logcat.LogcatFilter
+import com.dp.logcat.LogFilter
 import com.dp.logcatapp.R
 import com.dp.logcatapp.activities.BaseActivityWithToolbar
 import com.dp.logcatapp.activities.FiltersActivity
 import com.dp.logcatapp.activities.SavedLogsActivity
 import com.dp.logcatapp.activities.SavedLogsViewerActivity
 import com.dp.logcatapp.db.MyDB
-import com.dp.logcatapp.db.LogcatFilterRow
+import com.dp.logcatapp.db.LogFilterInfo
 import com.dp.logcatapp.fragments.base.BaseFragment
 import com.dp.logcatapp.fragments.logcatlive.dialogs.InstructionToGrantPermissionDialogFragment
 import com.dp.logcatapp.fragments.shared.dialogs.CopyToClipboardDialogFragment
@@ -188,7 +188,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
 
         val maxLogs = activity!!.getDefaultSharedPreferences()
                 .getString(PreferenceKeys.Logcat.KEY_MAX_LOGS,
-                        PreferenceKeys.Logcat.Default.MAX_LOGS).trim().toInt()
+                        PreferenceKeys.Logcat.Default.MAX_LOGS)!!.trim().toInt()
         adapter = MyRecyclerViewAdapter(activity!!, maxLogs)
         activity!!.getDefaultSharedPreferences().registerOnSharedPreferenceChangeListener(adapter)
 
@@ -456,7 +456,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
 
     private fun usingCustomSaveLocation() =
             activity!!.getDefaultSharedPreferences().getString(
-                    PreferenceKeys.Logcat.KEY_SAVE_LOCATION, "").isNotEmpty()
+                    PreferenceKeys.Logcat.KEY_SAVE_LOCATION, "")!!.isNotEmpty()
 
     private fun saveToFile(logs: List<Log>) {
         val timeStamp = SimpleDateFormat("MM-dd-yyyy_HH-mm-ss", Locale.getDefault())
@@ -472,7 +472,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
         val saveLocationPref = activity!!.getDefaultSharedPreferences().getString(
                 PreferenceKeys.Logcat.KEY_SAVE_LOCATION,
                 PreferenceKeys.Logcat.Default.SAVE_LOCATION
-        )
+        )!!
 
         val uri = if (saveLocationPref.isEmpty()) {
             val file = File(context!!.filesDir, LOGCAT_DIR)
@@ -581,10 +581,10 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
                         for (filter in it) {
                             if (filter.exclude) {
                                 logcat.addExclusion("${filter.id}",
-                                        MyLogcatFilter(filter))
+                                        MyLogFilter(filter))
                             } else {
                                 logcat.addFilter("${filter.id}",
-                                        MyLogcatFilter(filter))
+                                        MyLogFilter(filter))
                             }
                         }
 
@@ -654,7 +654,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
 
         override fun onPreExecute() {
             logcat.pause()
-            logcat.addFilter(SEARCH_FILTER_TAG, object : LogcatFilter {
+            logcat.addFilter(SEARCH_FILTER_TAG, object : LogFilter {
                 override fun filter(log: Log): Boolean {
                     return log.tag.containsIgnoreCase(searchText) ||
                             log.msg.containsIgnoreCase(searchText)
@@ -680,13 +680,13 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
         }
     }
 
-    private class MyLogcatFilter(logcatFilterRow: LogcatFilterRow) : LogcatFilter {
-        val keyword = logcatFilterRow.keyword
-        val tag = logcatFilterRow.tag
+    private class MyLogFilter(logFilterInfo: LogFilterInfo) : LogFilter {
+        val keyword = logFilterInfo.keyword
+        val tag = logFilterInfo.tag
         val priorities = mutableSetOf<String>()
 
         init {
-            logcatFilterRow.logPriorities.split(",")
+            logFilterInfo.logPriorities.split(",")
                     .filter { it.isNotEmpty() }
                     .forEach {
                         priorities.add(it)

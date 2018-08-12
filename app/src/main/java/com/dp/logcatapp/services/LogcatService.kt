@@ -150,13 +150,13 @@ class LogcatService : BaseService() {
         when (key) {
             PreferenceKeys.Logcat.KEY_POLL_INTERVAL -> {
                 val pollInterval = sharedPreferences.getString(key,
-                        PreferenceKeys.Logcat.Default.POLL_INTERVAL).trim().toLong()
+                        PreferenceKeys.Logcat.Default.POLL_INTERVAL)!!.trim().toLong()
                 logcat.setPollInterval(pollInterval)
             }
             PreferenceKeys.Logcat.KEY_BUFFERS -> handleBufferUpdate(sharedPreferences, key)
             PreferenceKeys.Logcat.KEY_MAX_LOGS -> {
                 val newCapacity = sharedPreferences.getString(PreferenceKeys.Logcat.KEY_MAX_LOGS,
-                        PreferenceKeys.Logcat.Default.MAX_LOGS).trim().toInt()
+                        PreferenceKeys.Logcat.Default.MAX_LOGS)!!.trim().toInt()
 
                 showToast(getString(R.string.restarting_logcat))
 
@@ -170,7 +170,7 @@ class LogcatService : BaseService() {
 
     private fun handleBufferUpdate(sharedPreferences: SharedPreferences, key: String) {
         val bufferValues = sharedPreferences.getStringSet(key,
-                PreferenceKeys.Logcat.Default.BUFFERS)
+                PreferenceKeys.Logcat.Default.BUFFERS)!!
         val buffers = Logcat.AVAILABLE_BUFFERS
 
         showToast(getString(R.string.restarting_logcat))
@@ -183,11 +183,11 @@ class LogcatService : BaseService() {
     private fun initLogcat() {
         val sharedPreferences = getDefaultSharedPreferences()
         val bufferValues = sharedPreferences.getStringSet(PreferenceKeys.Logcat.KEY_BUFFERS,
-                PreferenceKeys.Logcat.Default.BUFFERS)
+                PreferenceKeys.Logcat.Default.BUFFERS)!!
         val pollInterval = sharedPreferences.getString(PreferenceKeys.Logcat.KEY_POLL_INTERVAL,
-                PreferenceKeys.Logcat.Default.POLL_INTERVAL).trim().toLong()
+                PreferenceKeys.Logcat.Default.POLL_INTERVAL)!!.trim().toLong()
         val maxLogs = sharedPreferences.getString(PreferenceKeys.Logcat.KEY_MAX_LOGS,
-                PreferenceKeys.Logcat.Default.MAX_LOGS).trim().toInt()
+                PreferenceKeys.Logcat.Default.MAX_LOGS)!!.trim().toInt()
 
         logcat = Logcat(maxLogs)
         logcat.setPollInterval(pollInterval)

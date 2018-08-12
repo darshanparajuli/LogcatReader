@@ -41,7 +41,7 @@ class CopyToClipboardDialogFragment : BaseDialogFragment(), DialogInterface.OnCl
     }
 
     override fun onClick(dialog: DialogInterface, which: Int) {
-        val log = arguments!!.getParcelable<Log>(KEY_LOG)
+        val log = arguments!!.getParcelable<Log>(KEY_LOG)!!
         val cm = activity!!.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         val clip = when (which) {
             LogContentType.TAG.ordinal -> ClipData.newPlainText("Log Tag", log.tag)

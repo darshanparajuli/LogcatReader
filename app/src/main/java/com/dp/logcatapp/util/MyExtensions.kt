@@ -116,7 +116,7 @@ private class ToastViewContextWrapper(base: Context) : ContextWrapper(base) {
 }
 
 private class ToastViewApplicationContextWrapper(base: Context) : ContextWrapper(base) {
-    override fun getSystemService(name: String?): Any {
+    override fun getSystemService(name: String): Any {
         return if (name == Context.WINDOW_SERVICE) {
             ToastWindowManager(baseContext.getSystemService(name) as WindowManager)
         } else {

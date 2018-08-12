@@ -5,11 +5,11 @@ import android.content.Context
 import io.reactivex.Flowable
 
 @Entity(tableName = "filters")
-data class LogcatFilterRow(@PrimaryKey(autoGenerate = true) var id: Long?,
-                           @ColumnInfo(name = "keyword") var keyword: String,
-                           @ColumnInfo(name = "tag") var tag: String,
-                           @ColumnInfo(name = "log_priorities") var logPriorities: String,
-                           @ColumnInfo(name = "exclude") var exclude: Boolean) {
+data class LogFilterInfo(@PrimaryKey(autoGenerate = true) var id: Long?,
+                         @ColumnInfo(name = "keyword") var keyword: String,
+                         @ColumnInfo(name = "tag") var tag: String,
+                         @ColumnInfo(name = "log_priorities") var logPriorities: String,
+                         @ColumnInfo(name = "exclude") var exclude: Boolean) {
 
     @Ignore
     constructor(keyword: String, tag: String, logPriorities: String, exclude: Boolean) :
@@ -20,22 +20,22 @@ data class LogcatFilterRow(@PrimaryKey(autoGenerate = true) var id: Long?,
 interface FilterDAO {
 
     @Query("SELECT * FROM filters WHERE `exclude` = 0")
-    fun getFilters(): Flowable<List<LogcatFilterRow>>
+    fun getFilters(): Flowable<List<LogFilterInfo>>
 
     @Query("SELECT * FROM filters WHERE `exclude` = 1")
-    fun getExclusions(): Flowable<List<LogcatFilterRow>>
+    fun getExclusions(): Flowable<List<LogFilterInfo>>
 
     @Query("SELECT * FROM filters")
-    fun getAll(): Flowable<List<LogcatFilterRow>>
+    fun getAll(): Flowable<List<LogFilterInfo>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun insert(vararg row: LogcatFilterRow)
+    fun insert(vararg info: LogFilterInfo)
 
     @Delete
-    fun delete(vararg row: LogcatFilterRow)
+    fun delete(vararg info: LogFilterInfo)
 }
 
-@Database(entities = [LogcatFilterRow::class], exportSchema = false, version = 1)
+@Database(entities = [LogFilterInfo::class], exportSchema = false, version = 1)
 abstract class MyDB : RoomDatabase() {
     abstract fun filterDAO(): FilterDAO
 

@@ -107,7 +107,7 @@ internal class MyViewModel(application: Application) : AndroidViewModel(applicat
         val path = application.getDefaultSharedPreferences().getString(
                 PreferenceKeys.Logcat.KEY_SAVE_LOCATION,
                 ""
-        )
+        )!!
 
         val file = if (path.isEmpty()) {
             Environment.getExternalStorageDirectory()
@@ -128,7 +128,7 @@ internal class MyViewModel(application: Application) : AndroidViewModel(applicat
         file.listFiles()
                 ?.map { FileHolder(it) }
                 ?.sortedBy { it.file.name }
-                ?.forEach({ files.add(it) })
+                ?.forEach { files.add(it) }
 
         this.files.value = files
     }

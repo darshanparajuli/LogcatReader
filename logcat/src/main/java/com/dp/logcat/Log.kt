@@ -35,13 +35,13 @@ data class Log(val id: Int,
         val CREATOR = object : Parcelable.Creator<Log> {
             override fun createFromParcel(source: Parcel): Log {
                 return Log(source.readInt(),
-                        source.readString(),
-                        source.readString(),
-                        source.readString(),
-                        source.readString(),
-                        source.readString(),
-                        source.readString(),
-                        source.readString())
+                        source.readString()!!,
+                        source.readString()!!,
+                        source.readString()!!,
+                        source.readString()!!,
+                        source.readString()!!,
+                        source.readString()!!,
+                        source.readString()!!)
             }
 
             override fun newArray(size: Int) = arrayOfNulls<Log>(size)

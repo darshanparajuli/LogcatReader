@@ -1,6 +1,6 @@
 package com.dp.logcat
 
-interface LogcatFilter {
+interface LogFilter {
 
     fun filter(log: Log): Boolean
 }

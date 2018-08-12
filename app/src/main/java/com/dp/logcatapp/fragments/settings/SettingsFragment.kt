@@ -52,7 +52,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
         val useBlackThemePref = findPreference(PreferenceKeys.Appearance.KEY_USE_BLACK_THEME)
 
         val currTheme = sharedPrefs.getString(PreferenceKeys.Appearance.KEY_THEME,
-                PreferenceKeys.Appearance.Default.THEME)
+                PreferenceKeys.Appearance.Default.THEME)!!
 
         when (currTheme) {
             PreferenceKeys.Appearance.Theme.AUTO,
@@ -87,7 +87,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
         prefPollInterval.summary = preferenceScreen.sharedPreferences
                 .getString(PreferenceKeys.Logcat.KEY_POLL_INTERVAL,
-                        PreferenceKeys.Logcat.Default.POLL_INTERVAL) + " ms"
+                        PreferenceKeys.Logcat.Default.POLL_INTERVAL)!! + " ms"
 
         prefPollInterval.onPreferenceChangeListener = Preference
                 .OnPreferenceChangeListener { preference, newValue ->
@@ -111,7 +111,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
         val defaultBuffers = PreferenceKeys.Logcat.Default.BUFFERS
         if (availableBuffers.isNotEmpty() && defaultBuffers.isNotEmpty()) {
             val bufferValues = preferenceScreen.sharedPreferences
-                    .getStringSet(PreferenceKeys.Logcat.KEY_BUFFERS, defaultBuffers)
+                    .getStringSet(PreferenceKeys.Logcat.KEY_BUFFERS, defaultBuffers)!!
 
             val toSummary = { values: Set<String> ->
                 values.map { e -> availableBuffers[e.toInt()] }
@@ -147,7 +147,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
         val maxLogs = preferenceScreen.sharedPreferences.getString(
                 PreferenceKeys.Logcat.KEY_MAX_LOGS,
                 PreferenceKeys.Logcat.Default.MAX_LOGS
-        ).trim().toInt()
+        )!!.trim().toInt()
 
         prefMaxLogs.summary = NumberFormat.getInstance().format(maxLogs)
         prefMaxLogs.onPreferenceChangeListener = Preference
@@ -156,7 +156,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
                         val oldValue = preferenceScreen.sharedPreferences.getString(
                                 PreferenceKeys.Logcat.KEY_MAX_LOGS,
                                 PreferenceKeys.Logcat.Default.MAX_LOGS
-                        ).trim().toInt()
+                        )!!.trim().toInt()
 
                         val newMaxLogs = (newValue as String).trim().toInt()
                         if (newMaxLogs == oldValue) {
@@ -184,7 +184,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
         val saveLocation = preferenceScreen.sharedPreferences.getString(
                 PreferenceKeys.Logcat.KEY_SAVE_LOCATION,
                 PreferenceKeys.Logcat.Default.SAVE_LOCATION
-        ).trim()
+        )!!.trim()
         if (saveLocation.isEmpty()) {
             prefSaveLocation.summary = getString(R.string.save_location_internal)
         } else {

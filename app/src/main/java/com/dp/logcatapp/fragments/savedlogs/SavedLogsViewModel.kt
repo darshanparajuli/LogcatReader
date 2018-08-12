@@ -52,7 +52,7 @@ internal class SavedLogsLiveData(private val application: Application) :
         val customLocation = application.getDefaultSharedPreferences().getString(
                 PreferenceKeys.Logcat.KEY_SAVE_LOCATION,
                 ""
-        )
+        )!!
 
         if (customLocation.isNotEmpty()) {
             if (Build.VERSION.SDK_INT >= 21) {
@@ -184,7 +184,7 @@ internal class SavedLogsLiveData(private val application: Application) :
 
             return try {
                 val inputStream = context.contentResolver.openInputStream(file.uri)
-                val reader = LogcatStreamReader(inputStream)
+                val reader = LogcatStreamReader(inputStream!!)
                 val logs = reader.asSequence().toList()
 
                 if (!Logcat.writeToFile(context, logs, file.uri)) {

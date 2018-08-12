@@ -92,7 +92,7 @@ internal class MyRecyclerViewAdapter(context: Context, initialCapacity: Int) :
         when (key) {
             PreferenceKeys.Logcat.KEY_MAX_LOGS -> {
                 val newCapacity = sharedPreferences.getString(PreferenceKeys.Logcat.KEY_MAX_LOGS,
-                        PreferenceKeys.Logcat.Default.MAX_LOGS).trim().toInt()
+                        PreferenceKeys.Logcat.Default.MAX_LOGS)!!.trim().toInt()
                 val newData = FixedCircularArray<Log>(newCapacity, Logcat.INITIAL_LOG_SIZE)
                 newData.add(data)
                 data = newData

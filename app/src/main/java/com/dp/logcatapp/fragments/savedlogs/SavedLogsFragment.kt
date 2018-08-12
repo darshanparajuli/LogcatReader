@@ -336,7 +336,7 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
         try {
             val src = FileInputStream(file)
             val dest = context!!.contentResolver.openOutputStream(uri)
-            SaveFileTask(this, src, dest).execute()
+            SaveFileTask(this, src, dest!!).execute()
         } catch (e: IOException) {
             activity!!.showToast(getString(R.string.error_saving))
         }
@@ -348,7 +348,7 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
             SAVE_REQ -> {
                 if (resultCode == Activity.RESULT_OK) {
                     if (data != null) {
-                        onSaveCallback(data.data)
+                        onSaveCallback(data.data!!)
                     }
                 }
             }

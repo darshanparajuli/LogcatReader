@@ -22,10 +22,10 @@ class SavedLogsViewerActivity : BaseActivityWithToolbar() {
             return
         }
 
-        toolbar.title = getFileNameFromUri(intent.data)
+        toolbar.title = getFileNameFromUri(intent.data!!)
 
         if (savedInstanceState == null) {
-            val frag = SavedLogsViewerFragment.newInstance(intent.data)
+            val frag = SavedLogsViewerFragment.newInstance(intent.data!!)
             supportFragmentManager.beginTransaction()
                     .replace(R.id.content_frame, frag, SavedLogsViewerFragment.TAG)
                     .commit()

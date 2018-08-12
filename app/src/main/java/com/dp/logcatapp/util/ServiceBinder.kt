@@ -15,7 +15,7 @@ class ServiceBinder(private val mClass: Class<*>,
             throw IllegalStateException("This ServiceBinder has already been closed.")
         }
 
-        context.bindService(Intent(context, mClass), mServiceConnection, Context.BIND_ABOVE_CLIENT)
+        context.bindService(Intent(context, mClass), mServiceConnection!!, Context.BIND_ABOVE_CLIENT)
         isBound = true
     }
 

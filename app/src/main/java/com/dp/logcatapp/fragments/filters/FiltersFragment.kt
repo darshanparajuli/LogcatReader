@@ -11,7 +11,7 @@ import android.widget.TextView
 import com.dp.logcat.LogPriority
 import com.dp.logcatapp.R
 import com.dp.logcatapp.db.MyDB
-import com.dp.logcatapp.db.LogcatFilterRow
+import com.dp.logcatapp.db.LogFilterInfo
 import com.dp.logcatapp.fragments.base.BaseFragment
 import com.dp.logcatapp.fragments.filters.dialogs.FilterDialogFragment
 import com.dp.logcatapp.fragments.logcatlive.LogcatLiveViewModel
@@ -140,7 +140,7 @@ class FiltersFragment : BaseFragment() {
         Flowable.just(MyDB.getInstance(context!!))
                 .subscribeOn(Schedulers.io())
                 .subscribe {
-                    it.filterDAO().insert(LogcatFilterRow(keyword, tag,
+                    it.filterDAO().insert(LogFilterInfo(keyword, tag,
                             logLevels.sorted().joinToString(","), exclude))
                 }
     }
@@ -149,7 +149,7 @@ class FiltersFragment : BaseFragment() {
 internal data class FilterListItem(val keyword: String,
                                    val tag: String,
                                    val logLevelsStr: String,
-                                   val filter: LogcatFilterRow? = null)
+                                   val filter: LogFilterInfo? = null)
 
 internal class MyRecyclerViewAdapter(private val onRemoveListener: (View) -> Unit) :
         RecyclerView.Adapter<MyRecyclerViewAdapter.MyViewHolder>() {
