@@ -1,5 +1,6 @@
 package com.dp.logcatapp.fragments.savedlogs
 
+import android.annotation.SuppressLint
 import android.app.Application
 import android.arch.lifecycle.AndroidViewModel
 import android.arch.lifecycle.LiveData
@@ -8,29 +9,27 @@ import android.net.Uri
 import android.os.AsyncTask
 import android.os.Build
 import android.support.v4.provider.DocumentFile
-import androidx.core.net.toUri
+import androidx.core.net.toFile
 import com.dp.logcat.Logcat
 import com.dp.logcat.LogcatStreamReader
+import com.dp.logcatapp.db.MyDB
+import com.dp.logcatapp.db.SavedLogInfo
 import com.dp.logcatapp.fragments.logcatlive.LogcatLiveFragment
-import com.dp.logcatapp.util.PreferenceKeys
 import com.dp.logcatapp.util.Utils
-import com.dp.logcatapp.util.getDefaultSharedPreferences
 import com.dp.logger.Logger
 import java.io.File
 import java.io.FileInputStream
 import java.io.IOException
-import java.lang.ref.WeakReference
 
 internal class SavedLogsViewModel(application: Application) : AndroidViewModel(application) {
     val fileNames: SavedLogsLiveData = SavedLogsLiveData(application)
     val selectedItems = mutableSetOf<Int>()
 }
 
-data class LogFileInfo(val name: String,
+data class LogFileInfo(val info: SavedLogInfo,
                        val size: Long,
                        val sizeStr: String,
-                       val count: Long,
-                       val uri: Uri)
+                       val count: Long)
 
 internal class SavedLogsResult {
     var totalSize = ""
@@ -41,64 +40,64 @@ internal class SavedLogsResult {
 internal class SavedLogsLiveData(private val application: Application) :
         LiveData<SavedLogsResult>() {
 
+    private var loaderTask: Loader? = null
+
     init {
-        load()
+        reload()
     }
 
-    internal fun load() {
-        val folders = arrayListOf<String>()
-        folders.add(File(application.filesDir, LogcatLiveFragment.LOGCAT_DIR).absolutePath)
-
-        val customLocation = application.getDefaultSharedPreferences().getString(
-                PreferenceKeys.Logcat.KEY_SAVE_LOCATION,
-                ""
-        )!!
-
-        if (customLocation.isNotEmpty()) {
-            if (Build.VERSION.SDK_INT >= 21) {
-                folders.add(customLocation)
-            } else {
-                folders.add(File(customLocation, LogcatLiveFragment.LOGCAT_DIR).absolutePath)
-            }
-        }
-
-        Loader(this).execute(*folders.toTypedArray())
+    fun reload() {
+        loaderTask?.cancel(true)
+        loaderTask = Loader()
+        loaderTask!!.execute()
     }
 
-    fun update(fileInfos: List<LogFileInfo>) {
+    fun update(fileInfoList: List<LogFileInfo>) {
         val savedLogsResult = SavedLogsResult()
-        savedLogsResult.logFiles += fileInfos
-        savedLogsResult.totalLogCount = fileInfos.foldRight(0L) { logFileInfo, acc ->
+        savedLogsResult.logFiles += fileInfoList
+        savedLogsResult.totalLogCount = fileInfoList.foldRight(0L) { logFileInfo, acc ->
             acc + logFileInfo.count
         }
 
         val folder = File(application.filesDir, LogcatLiveFragment.LOGCAT_DIR)
-        val totalSize = fileInfos.sumByDouble { File(folder, it.name).length().toDouble() }
+        val totalSize = fileInfoList.map { File(folder, it.info.fileName).length() }.sum()
         if (totalSize > 0) {
-            savedLogsResult.totalSize = Utils.sizeToString(totalSize)
+            savedLogsResult.totalSize = Utils.bytesToString(totalSize)
         }
 
         value = savedLogsResult
     }
 
+    @SuppressLint("StaticFieldLeak")
+    inner class Loader : AsyncTask<String, Void, SavedLogsResult?>() {
 
-    class Loader(savedLogsLiveData: SavedLogsLiveData) : AsyncTask<String, Void, SavedLogsResult>() {
+        private val db = MyDB.getInstance(application)
 
-        private val ref: WeakReference<SavedLogsLiveData> = WeakReference(savedLogsLiveData)
-
-        override fun doInBackground(vararg params: String): SavedLogsResult {
+        override fun doInBackground(vararg params: String): SavedLogsResult? {
             val savedLogsResult = SavedLogsResult()
-            var totalSize = collectFiles(savedLogsResult, params[0])
+            var totalSize = 0L
 
-            if (params.size == 2) {
-                if (Build.VERSION.SDK_INT >= 21) {
-                    val savedLogsLiveData = ref.get()
-                    if (savedLogsLiveData != null) {
-                        totalSize += collectFilesFromCustomLocation(savedLogsLiveData.application,
-                                savedLogsResult, params[1])
+            val savedLogInfoList = db.savedLogsDao().getAllSync()
+            for (info in savedLogInfoList) {
+                if (info.isCustom && Build.VERSION.SDK_INT >= 21) {
+                    val file = DocumentFile.fromSingleUri(application, Uri.parse(info.path))
+                    if (file == null || file.name == null) {
+                        Logger.logDebug(this::class, "file name is null")
+                        continue
                     }
+
+                    val size = file.length()
+                    val count = countLogs(application, file)
+                    val fileInfo = LogFileInfo(info, size, Utils.bytesToString(size), count)
+                    savedLogsResult.logFiles += fileInfo
+                    totalSize += fileInfo.size
                 } else {
-                    totalSize += collectFiles(savedLogsResult, params[1])
+                    val file = Uri.parse(info.path).toFile()
+                    val size = file.length()
+                    val count = countLogs(file)
+                    val fileInfo = LogFileInfo(info, size, Utils.bytesToString(size), count)
+                    savedLogsResult.logFiles += fileInfo
+                    totalSize += fileInfo.size
                 }
             }
 
@@ -106,54 +105,13 @@ internal class SavedLogsLiveData(private val application: Application) :
                     .foldRight(0L) { logFileInfo, acc ->
                         acc + logFileInfo.count
                     }
-            savedLogsResult.logFiles.sortBy { it.name }
+            savedLogsResult.logFiles.sortBy { it.info.fileName }
 
             if (totalSize > 0) {
-                savedLogsResult.totalSize = Utils.sizeToString(totalSize)
+                savedLogsResult.totalSize = Utils.bytesToString(totalSize)
             }
 
             return savedLogsResult
-        }
-
-        private fun collectFiles(savedLogsResult: SavedLogsResult, path: String): Double {
-            val files = File(path).listFiles()
-            var totalSize = 0.toDouble()
-            if (files != null) {
-                for (f in files) {
-                    val size = f.length()
-                    val count = countLogs(f)
-                    val fileInfo = LogFileInfo(f.name, size, Utils.sizeToString(size.toDouble()),
-                            count, f.toUri())
-                    savedLogsResult.logFiles += fileInfo
-                    totalSize += fileInfo.size
-                }
-            }
-            return totalSize
-        }
-
-        private fun collectFilesFromCustomLocation(context: Context,
-                                                   savedLogsResult: SavedLogsResult,
-                                                   path: String): Double {
-            var totalSize = 0.0
-            val uri = path.toUri()
-            val folder = DocumentFile.fromTreeUri(context, uri)
-            val files = folder?.listFiles()
-            if (files != null) {
-                for (f in files) {
-                    if (f.name == null) {
-                        Logger.logDebug(this::class, "file name is null")
-                        continue
-                    }
-
-                    val size = f.length()
-                    val count = countLogs(context, f)
-                    val fileInfo = LogFileInfo(f.name!!, size, Utils.sizeToString(size.toDouble()),
-                            count, f.uri)
-                    savedLogsResult.logFiles += fileInfo
-                    totalSize += fileInfo.size
-                }
-            }
-            return totalSize
         }
 
         private fun countLogs(file: File): Long {
@@ -197,11 +155,8 @@ internal class SavedLogsLiveData(private val application: Application) :
             }
         }
 
-        override fun onPostExecute(result: SavedLogsResult) {
-            val savedLogsLiveData = ref.get()
-            if (savedLogsLiveData != null) {
-                savedLogsLiveData.value = result
-            }
+        override fun onPostExecute(result: SavedLogsResult?) {
+            value = result
         }
     }
 }

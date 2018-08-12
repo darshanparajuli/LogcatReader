@@ -38,19 +38,19 @@ interface FilterDao {
 @Entity(tableName = "saved_logs_info")
 data class SavedLogInfo(@PrimaryKey(autoGenerate = true) val id: Long?,
                         @ColumnInfo(name = "name") val fileName: String,
-                        @ColumnInfo(name = "uri") val uri: String,
+                        @ColumnInfo(name = "path") val path: String,
                         @ColumnInfo(name = "is_custom") val isCustom: Boolean) {
 
     @Ignore
-    constructor(fileName: String, uri: String, isCustom: Boolean) :
-            this(null, fileName, uri, isCustom)
+    constructor(fileName: String, path: String, isCustom: Boolean) :
+            this(null, fileName, path, isCustom)
 }
 
 @Dao
 interface SavedLogsDao {
 
     @Query("SELECT * FROM saved_logs_info")
-    fun getAll(): Flowable<List<SavedLogInfo>>
+    fun getAllSync(): List<SavedLogInfo>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insert(vararg savedLogInfo: SavedLogInfo)
@@ -63,7 +63,7 @@ interface SavedLogsDao {
 abstract class MyDB : RoomDatabase() {
     abstract fun filterDao(): FilterDao
 
-    abstract fun SavedLogsDao(): SavedLogsDao
+    abstract fun savedLogsDao(): SavedLogsDao
 
     companion object {
         private const val DB_NAME = "logcat_reader_db"

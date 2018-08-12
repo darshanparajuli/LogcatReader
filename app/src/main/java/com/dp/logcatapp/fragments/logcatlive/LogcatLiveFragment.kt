@@ -23,17 +23,18 @@ import android.support.v7.widget.SearchView
 import android.view.*
 import androidx.core.net.toFile
 import androidx.core.net.toUri
+import com.dp.logcat.Filter
 import com.dp.logcat.Log
 import com.dp.logcat.Logcat
 import com.dp.logcat.LogcatEventListener
-import com.dp.logcat.Filter
 import com.dp.logcatapp.R
 import com.dp.logcatapp.activities.BaseActivityWithToolbar
 import com.dp.logcatapp.activities.FiltersActivity
 import com.dp.logcatapp.activities.SavedLogsActivity
 import com.dp.logcatapp.activities.SavedLogsViewerActivity
-import com.dp.logcatapp.db.MyDB
 import com.dp.logcatapp.db.FilterInfo
+import com.dp.logcatapp.db.MyDB
+import com.dp.logcatapp.db.SavedLogInfo
 import com.dp.logcatapp.fragments.base.BaseFragment
 import com.dp.logcatapp.fragments.logcatlive.dialogs.InstructionToGrantPermissionDialogFragment
 import com.dp.logcatapp.fragments.shared.dialogs.CopyToClipboardDialogFragment
@@ -461,7 +462,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
         viewModel.stopRecording = false
     }
 
-    private fun usingCustomSaveLocation() =
+    private fun isUsingCustomSaveLocation() =
             activity!!.getDefaultSharedPreferences().getString(
                     PreferenceKeys.Logcat.KEY_SAVE_LOCATION, "")!!.isNotEmpty()
 
@@ -728,39 +729,55 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
 
     class SaveFileTask(frag: LogcatLiveFragment,
                        private val uri: Uri?,
-                       private val logs: List<Log>) : AsyncTask<Void, Void, Boolean>() {
+                       private val logs: List<Log>) : AsyncTask<Void, Void, String?>() {
 
         private val ref = WeakReference(frag)
         private val snackBarProgress = IndeterminateProgressSnackBar(frag.view!!,
                 frag.getString(R.string.saving))
+        private val db = MyDB.getInstance(frag.context!!)
+        private val isUsingCustomLocation = frag.isUsingCustomSaveLocation()
 
         override fun onPreExecute() {
             snackBarProgress.show()
         }
 
-        override fun doInBackground(vararg params: Void?): Boolean {
+        override fun doInBackground(vararg params: Void?): String? {
+            var fileName: String? = null
             val frag = ref.get()
             if (frag != null && uri != null) {
                 val context = frag.context!!
-                if (frag.usingCustomSaveLocation() && Build.VERSION.SDK_INT >= 21) {
-                    return Logcat.writeToFile(context, logs, uri)
+                val result: Boolean
+                if (isUsingCustomLocation && Build.VERSION.SDK_INT >= 21) {
+                    result = Logcat.writeToFile(context, logs, uri)
                 } else {
-                    return Logcat.writeToFile(logs, uri.toFile())
+                    result = Logcat.writeToFile(logs, uri.toFile())
+                }
+
+
+                if (result && frag.activity != null) {
+                    fileName = if (isUsingCustomLocation && Build.VERSION.SDK_INT >= 21) {
+                        DocumentFile.fromSingleUri(frag.activity!!, uri)?.name
+                    } else {
+                        uri.toFile().name
+                    }
+                    if (fileName != null) {
+                        db.savedLogsDao().insert(SavedLogInfo(fileName, uri.toString(),
+                                isUsingCustomLocation))
+                    }
                 }
             }
 
-            return false
+            return fileName
         }
 
-        override fun onPostExecute(result: Boolean) {
+        override fun onPostExecute(fileName: String?) {
             snackBarProgress.dismiss()
             val frag = ref.get() ?: return
             if (frag.activity == null) {
                 return
             }
 
-            if (result) {
-                val fileName = uri!!.toFile().name
+            if (fileName != null && uri != null) {
                 newSnakcbar(frag.view, frag.getString(R.string.saved_as_filename).format(fileName),
                         Snackbar.LENGTH_LONG)
                         ?.setAction(frag.getString(R.string.view_log)) {

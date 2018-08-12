@@ -32,10 +32,16 @@ import com.dp.logcatapp.activities.BaseActivityWithToolbar
 import com.dp.logcatapp.activities.CabToolbarCallback
 import com.dp.logcatapp.activities.SavedLogsActivity
 import com.dp.logcatapp.activities.SavedLogsViewerActivity
+import com.dp.logcatapp.db.MyDB
 import com.dp.logcatapp.fragments.base.BaseDialogFragment
 import com.dp.logcatapp.fragments.base.BaseFragment
 import com.dp.logcatapp.fragments.logcatlive.LogcatLiveFragment
-import com.dp.logcatapp.util.*
+import com.dp.logcatapp.util.closeQuietly
+import com.dp.logcatapp.util.inflateLayout
+import com.dp.logcatapp.util.showToast
+import io.reactivex.Flowable
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.schedulers.Schedulers
 import java.io.*
 import java.lang.ref.WeakReference
 
@@ -134,7 +140,7 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
                     } else {
                         val fileInfo = recyclerViewAdapter.getItem(pos)
                         val intent = Intent(context, SavedLogsViewerActivity::class.java)
-                        intent.setDataAndType(fileInfo.uri, "text/plain")
+                        intent.setDataAndType(Uri.parse(fileInfo.info.path), "text/plain")
                         startActivity(intent)
                     }
                 }
@@ -185,7 +191,7 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
             R.id.action_rename -> {
                 val fileInfo = recyclerViewAdapter.getItem(viewModel.selectedItems.toIntArray()[0])
                 val folder = File(context!!.filesDir, LogcatLiveFragment.LOGCAT_DIR)
-                val file = File(folder, fileInfo.name)
+                val file = File(folder, fileInfo.info.fileName)
                 val frag = RenameDialogFragment.newInstance(file.absolutePath)
                 frag.setTargetFragment(this, 0)
                 frag.show(fragmentManager, RenameDialogFragment.TAG)
@@ -202,7 +208,7 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
             R.id.action_share -> {
                 val fileInfo = recyclerViewAdapter.getItem(viewModel.selectedItems.toIntArray()[0])
                 val folder = File(context!!.filesDir, LogcatLiveFragment.LOGCAT_DIR)
-                val file = File(folder, fileInfo.name)
+                val file = File(folder, fileInfo.info.fileName)
 
                 try {
                     val intent = Intent(Intent.ACTION_SEND)
@@ -230,61 +236,38 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
         }
     }
 
-    private fun getCustomLocation(): String =
-            context!!.getDefaultSharedPreferences().getString(PreferenceKeys.Logcat.KEY_SAVE_LOCATION, "")!!
-
     private fun deleteSelectedLogFiles() {
-        val deleted = mutableListOf<String>()
-
-        val deleteHelper = { folder: File ->
-            viewModel.selectedItems
-                    .map {
-                        File(folder, recyclerViewAdapter.data[it].name)
+        val deleted = viewModel.selectedItems
+                .map { recyclerViewAdapter.data[it] }
+                .filter {
+                    if (it.info.isCustom && Build.VERSION.SDK_INT >= 21) {
+                        val file = DocumentFile.fromSingleUri(context!!, Uri.parse(it.info.path))
+                        file != null && file.delete()
+                    } else {
+                        File(it.info.path).delete()
                     }
-                    .filter { it.delete() }
-                    .map { it.name }
-                    .forEach { deleted += it }
-        }
+                }
+                .map { it.info.fileName }
+                .toList()
 
-        // delete internal
-        val folder = File(context!!.filesDir, LogcatLiveFragment.LOGCAT_DIR)
-        deleteHelper(folder)
+        Flowable.just(MyDB.getInstance(context!!))
+                .subscribeOn(Schedulers.io())
+                .map { db ->
+                    val deletedSavedLogInfoList = viewModel.selectedItems
+                            .map { recyclerViewAdapter.data[it].info }
+                            .filter { it.fileName in deleted }
+                            .toTypedArray()
+                    db.savedLogsDao().delete(*deletedSavedLogInfoList)
+                }
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe { _ ->
+                    val updatedList = recyclerViewAdapter.data
+                            .filter { it.info.fileName !in deleted }.toList()
+                    viewModel.selectedItems.clear()
+                    viewModel.fileNames.update(updatedList)
 
-        val customLocation = getCustomLocation()
-        if (customLocation.isNotEmpty()) {
-            if (Build.VERSION.SDK_INT >= 21) {
-                val customFolder = DocumentFile.fromTreeUri(context!!, Uri.parse(customLocation))
-                viewModel.selectedItems
-                        .mapNotNull {
-                            customFolder?.findFile(recyclerViewAdapter.data[it].name)
-                        }
-                        .forEach {
-                            val name = it.name
-                            if (it.delete()) {
-                                if (name != null) {
-                                    deleted += name
-                                }
-                            }
-                        }
-            } else {
-                val customFolder = File(customLocation)
-                viewModel.selectedItems
-                        .map {
-                            File(customFolder, recyclerViewAdapter.data[it].name)
-                        }
-                        .filter { it.delete() }
-                        .map { it.name }
-                        .forEach { deleted += it }
-            }
-        }
-
-        val updatedList = recyclerViewAdapter.data
-                .filter { it.name !in deleted }.toList()
-
-        viewModel.selectedItems.clear()
-        viewModel.fileNames.update(updatedList)
-
-        (activity as SavedLogsActivity).closeCabToolbar()
+                    (activity as SavedLogsActivity).closeCabToolbar()
+                }
     }
 
     private fun saveToDeviceFallback() {
@@ -294,7 +277,7 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
         }
 
         val fileInfo = recyclerViewAdapter.getItem(viewModel.selectedItems.toIntArray()[0])
-        val fileName = fileInfo.name
+        val fileName = fileInfo.info.fileName
         val srcFolder = File(context!!.filesDir, LogcatLiveFragment.LOGCAT_DIR)
         val src = File(srcFolder, fileName)
 
@@ -331,7 +314,7 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
     private fun onSaveCallback(uri: Uri) {
         val fileInfo = recyclerViewAdapter.getItem(viewModel.selectedItems.toIntArray()[0])
         val folder = File(context!!.filesDir, LogcatLiveFragment.LOGCAT_DIR)
-        val file = File(folder, fileInfo.name)
+        val file = File(folder, fileInfo.info.fileName)
 
         try {
             val src = FileInputStream(file)
@@ -397,7 +380,7 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
 
         override fun onBindViewHolder(holder: MyViewHolder, position: Int) {
             val fileInfo = data[position]
-            holder.fileName.text = fileInfo.name
+            holder.fileName.text = fileInfo.info.fileName
             holder.fileSize.text = fileInfo.sizeStr
 
             // no need to check for 0 as the app does not allow for saving empty logs
@@ -493,7 +476,7 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
                         val newName = editText.text.toString()
                         if (newName.isNotEmpty()) {
                             if (file.renameTo(File(file.parent, newName))) {
-                                (targetFragment as SavedLogsFragment).viewModel.fileNames.load()
+                                (targetFragment as SavedLogsFragment).viewModel.fileNames.reload()
                             } else {
                                 activity!!.showToast(getString(R.string.error))
                             }
