@@ -5,11 +5,11 @@ import android.content.Context
 import io.reactivex.Flowable
 
 @Entity(tableName = "filters")
-data class FilterInfo(@PrimaryKey(autoGenerate = true) var id: Long?,
-                      @ColumnInfo(name = "keyword") var keyword: String,
-                      @ColumnInfo(name = "tag") var tag: String,
-                      @ColumnInfo(name = "log_priorities") var logPriorities: String,
-                      @ColumnInfo(name = "exclude") var exclude: Boolean) {
+data class FilterInfo(@PrimaryKey(autoGenerate = true) val id: Long?,
+                      @ColumnInfo(name = "keyword") val keyword: String,
+                      @ColumnInfo(name = "tag") val tag: String,
+                      @ColumnInfo(name = "log_priorities") val logPriorities: String,
+                      @ColumnInfo(name = "exclude") val exclude: Boolean) {
 
     @Ignore
     constructor(keyword: String, tag: String, logPriorities: String, exclude: Boolean) :
@@ -17,7 +17,7 @@ data class FilterInfo(@PrimaryKey(autoGenerate = true) var id: Long?,
 }
 
 @Dao
-interface FilterDAO {
+interface FilterDao {
 
     @Query("SELECT * FROM filters WHERE `exclude` = 0")
     fun getFilters(): Flowable<List<FilterInfo>>
@@ -35,9 +35,35 @@ interface FilterDAO {
     fun delete(vararg info: FilterInfo)
 }
 
-@Database(entities = [FilterInfo::class], exportSchema = false, version = 1)
+@Entity(tableName = "saved_logs_info")
+data class SavedLogInfo(@PrimaryKey(autoGenerate = true) val id: Long?,
+                        @ColumnInfo(name = "name") val fileName: String,
+                        @ColumnInfo(name = "uri") val uri: String,
+                        @ColumnInfo(name = "is_custom") val isCustom: Boolean) {
+
+    @Ignore
+    constructor(fileName: String, uri: String, isCustom: Boolean) :
+            this(null, fileName, uri, isCustom)
+}
+
+@Dao
+interface SavedLogsDao {
+
+    @Query("SELECT * FROM saved_logs_info")
+    fun getAll(): Flowable<List<SavedLogInfo>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    fun insert(vararg savedLogInfo: SavedLogInfo)
+
+    @Delete
+    fun delete(vararg savedLogInfo: SavedLogInfo)
+}
+
+@Database(entities = [FilterInfo::class, SavedLogInfo::class], exportSchema = false, version = 1)
 abstract class MyDB : RoomDatabase() {
-    abstract fun filterDAO(): FilterDAO
+    abstract fun filterDao(): FilterDao
+
+    abstract fun SavedLogsDao(): SavedLogsDao
 
     companion object {
         private const val DB_NAME = "logcat_reader_db"

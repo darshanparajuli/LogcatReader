@@ -568,7 +568,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
 
     private fun updateFilters() {
         filterSubscription = MyDB.getInstance(activity!!)
-                .filterDAO()
+                .filterDao()
                 .getAll()
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe {

@@ -49,7 +49,7 @@ class FiltersFragment : BaseFragment() {
             onRemoveClicked(it)
         }
 
-        val dao = MyDB.getInstance(activity!!).filterDAO()
+        val dao = MyDB.getInstance(activity!!).filterDao()
         val flowable = if (isExclusions()) {
             dao.getExclusions()
         } else {
@@ -93,7 +93,7 @@ class FiltersFragment : BaseFragment() {
             Flowable.just(MyDB.getInstance(context!!))
                     .subscribeOn(Schedulers.io())
                     .subscribe {
-                        it.filterDAO().delete(item.filter!!)
+                        it.filterDao().delete(item.filter!!)
                     }
         }
     }
@@ -140,7 +140,7 @@ class FiltersFragment : BaseFragment() {
         Flowable.just(MyDB.getInstance(context!!))
                 .subscribeOn(Schedulers.io())
                 .subscribe {
-                    it.filterDAO().insert(FilterInfo(keyword, tag,
+                    it.filterDao().insert(FilterInfo(keyword, tag,
                             logLevels.sorted().joinToString(","), exclude))
                 }
     }
