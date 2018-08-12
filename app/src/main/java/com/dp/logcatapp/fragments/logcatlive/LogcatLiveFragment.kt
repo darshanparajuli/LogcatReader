@@ -33,7 +33,7 @@ import com.dp.logcatapp.activities.FiltersActivity
 import com.dp.logcatapp.activities.SavedLogsActivity
 import com.dp.logcatapp.activities.SavedLogsViewerActivity
 import com.dp.logcatapp.db.MyDB
-import com.dp.logcatapp.db.LogFilterInfo
+import com.dp.logcatapp.db.FilterInfo
 import com.dp.logcatapp.fragments.base.BaseFragment
 import com.dp.logcatapp.fragments.logcatlive.dialogs.InstructionToGrantPermissionDialogFragment
 import com.dp.logcatapp.fragments.shared.dialogs.CopyToClipboardDialogFragment
@@ -680,13 +680,13 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
         }
     }
 
-    private class LogFilter(logFilterInfo: LogFilterInfo) : Filter {
-        val keyword = logFilterInfo.keyword
-        val tag = logFilterInfo.tag
+    private class LogFilter(filterInfo: FilterInfo) : Filter {
+        val keyword = filterInfo.keyword
+        val tag = filterInfo.tag
         val priorities = mutableSetOf<String>()
 
         init {
-            logFilterInfo.logPriorities.split(",")
+            filterInfo.logPriorities.split(",")
                     .filter { it.isNotEmpty() }
                     .forEach {
                         priorities.add(it)

@@ -5,11 +5,11 @@ import android.content.Context
 import io.reactivex.Flowable
 
 @Entity(tableName = "filters")
-data class LogFilterInfo(@PrimaryKey(autoGenerate = true) var id: Long?,
-                         @ColumnInfo(name = "keyword") var keyword: String,
-                         @ColumnInfo(name = "tag") var tag: String,
-                         @ColumnInfo(name = "log_priorities") var logPriorities: String,
-                         @ColumnInfo(name = "exclude") var exclude: Boolean) {
+data class FilterInfo(@PrimaryKey(autoGenerate = true) var id: Long?,
+                      @ColumnInfo(name = "keyword") var keyword: String,
+                      @ColumnInfo(name = "tag") var tag: String,
+                      @ColumnInfo(name = "log_priorities") var logPriorities: String,
+                      @ColumnInfo(name = "exclude") var exclude: Boolean) {
 
     @Ignore
     constructor(keyword: String, tag: String, logPriorities: String, exclude: Boolean) :
@@ -20,22 +20,22 @@ data class LogFilterInfo(@PrimaryKey(autoGenerate = true) var id: Long?,
 interface FilterDAO {
 
     @Query("SELECT * FROM filters WHERE `exclude` = 0")
-    fun getFilters(): Flowable<List<LogFilterInfo>>
+    fun getFilters(): Flowable<List<FilterInfo>>
 
     @Query("SELECT * FROM filters WHERE `exclude` = 1")
-    fun getExclusions(): Flowable<List<LogFilterInfo>>
+    fun getExclusions(): Flowable<List<FilterInfo>>
 
     @Query("SELECT * FROM filters")
-    fun getAll(): Flowable<List<LogFilterInfo>>
+    fun getAll(): Flowable<List<FilterInfo>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun insert(vararg info: LogFilterInfo)
+    fun insert(vararg info: FilterInfo)
 
     @Delete
-    fun delete(vararg info: LogFilterInfo)
+    fun delete(vararg info: FilterInfo)
 }
 
-@Database(entities = [LogFilterInfo::class], exportSchema = false, version = 1)
+@Database(entities = [FilterInfo::class], exportSchema = false, version = 1)
 abstract class MyDB : RoomDatabase() {
     abstract fun filterDAO(): FilterDAO
 
