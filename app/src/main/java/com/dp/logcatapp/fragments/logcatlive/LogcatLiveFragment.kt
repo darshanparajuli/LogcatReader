@@ -403,6 +403,13 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
                 }
                 true
             }
+            R.id.clear_action -> {
+                logcatService?.logcat?.clearLogs {
+                    adapter.clear()
+                    updateToolbarSubtitle(adapter.itemCount)
+                }
+                true
+            }
             R.id.filters_action -> {
                 val intent = Intent(activity!!, FiltersActivity::class.java)
                 startActivity(intent)

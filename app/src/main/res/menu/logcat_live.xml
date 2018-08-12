@@ -19,6 +19,10 @@
         app:showAsAction="always" />
 
     <item
+        android:id="@+id/clear_action"
+        android:title="@string/clear" />
+
+    <item
         android:id="@+id/filters_action"
         android:title="@string/filters" />
 

@@ -146,6 +146,24 @@ class Logcat(initialCapacity: Int = INITIAL_LOG_CAPACITY) : Closeable {
         }
     }
 
+    fun clearLogs(onClear: (() -> Unit)? = null) {
+        val wasPaused = paused
+        pause()
+
+        lockedBlock(logsLock) {
+            logs.clear()
+            pendingLogs.clear()
+        }
+
+        if (onClear != null) {
+            onClear()
+        }
+
+        if (!wasPaused) {
+            resume()
+        }
+    }
+
     fun restart() {
         stop()
         start()

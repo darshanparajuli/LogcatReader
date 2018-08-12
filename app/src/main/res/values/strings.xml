@@ -85,4 +85,5 @@
     <string name="exclusions">Exclusions</string>
     <string name="restart_logcat">Restart logcat</string>
     <string name="exclusion">Exclusion</string>
+    <string name="clear">Clear</string>
 </resources>
