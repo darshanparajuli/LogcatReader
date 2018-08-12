@@ -26,7 +26,7 @@ import androidx.core.net.toUri
 import com.dp.logcat.Log
 import com.dp.logcat.Logcat
 import com.dp.logcat.LogcatEventListener
-import com.dp.logcat.LogFilter
+import com.dp.logcat.Filter
 import com.dp.logcatapp.R
 import com.dp.logcatapp.activities.BaseActivityWithToolbar
 import com.dp.logcatapp.activities.FiltersActivity
@@ -581,10 +581,10 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
                         for (filter in it) {
                             if (filter.exclude) {
                                 logcat.addExclusion("${filter.id}",
-                                        MyLogFilter(filter))
+                                        LogFilter(filter))
                             } else {
                                 logcat.addFilter("${filter.id}",
-                                        MyLogFilter(filter))
+                                        LogFilter(filter))
                             }
                         }
 
@@ -654,8 +654,8 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
 
         override fun onPreExecute() {
             logcat.pause()
-            logcat.addFilter(SEARCH_FILTER_TAG, object : LogFilter {
-                override fun filter(log: Log): Boolean {
+            logcat.addFilter(SEARCH_FILTER_TAG, object : Filter {
+                override fun apply(log: Log): Boolean {
                     return log.tag.containsIgnoreCase(searchText) ||
                             log.msg.containsIgnoreCase(searchText)
                 }
@@ -680,7 +680,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
         }
     }
 
-    private class MyLogFilter(logFilterInfo: LogFilterInfo) : LogFilter {
+    private class LogFilter(logFilterInfo: LogFilterInfo) : Filter {
         val keyword = logFilterInfo.keyword
         val tag = logFilterInfo.tag
         val priorities = mutableSetOf<String>()
@@ -714,7 +714,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
             return priorities.contains(log.priority)
         }
 
-        override fun filter(log: Log): Boolean {
+        override fun apply(log: Log): Boolean {
             return filterPriorities(log) && filterTag(log) && filterKeyword(log)
         }
     }
