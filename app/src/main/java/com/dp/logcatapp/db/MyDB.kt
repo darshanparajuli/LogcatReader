@@ -36,15 +36,9 @@ interface FilterDao {
 }
 
 @Entity(tableName = "saved_logs_info")
-data class SavedLogInfo(@PrimaryKey(autoGenerate = true) val id: Long?,
-                        @ColumnInfo(name = "name") val fileName: String,
-                        @ColumnInfo(name = "path") val path: String,
-                        @ColumnInfo(name = "is_custom") val isCustom: Boolean) {
-
-    @Ignore
-    constructor(fileName: String, path: String, isCustom: Boolean) :
-            this(null, fileName, path, isCustom)
-}
+data class SavedLogInfo(@ColumnInfo(name = "name") val fileName: String,
+                        @PrimaryKey @ColumnInfo(name = "path") val path: String,
+                        @ColumnInfo(name = "is_custom") val isCustom: Boolean)
 
 @Dao
 interface SavedLogsDao {
