@@ -73,9 +73,21 @@ internal class SavedLogsLiveData(private val application: Application) :
 
         private val db = MyDB.getInstance(application)
 
+        private fun updateDBWithExistingInternalLogFiles() {
+            val files = File(application.cacheDir, LogcatLiveFragment.LOGCAT_DIR).listFiles()
+            if (files != null) {
+                val savedLogInfoArray = files.map {
+                    SavedLogInfo(it.name, it.absolutePath, false)
+                }.toTypedArray()
+                db.savedLogsDao().insert(*savedLogInfoArray)
+            }
+        }
+
         override fun doInBackground(vararg params: String): SavedLogsResult? {
             val savedLogsResult = SavedLogsResult()
             var totalSize = 0L
+
+            updateDBWithExistingInternalLogFiles()
 
             val savedLogInfoList = db.savedLogsDao().getAllSync()
             for (info in savedLogInfoList) {
