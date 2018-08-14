@@ -53,7 +53,7 @@ interface SavedLogsDao {
     fun delete(vararg savedLogInfo: SavedLogInfo)
 }
 
-@Database(entities = [FilterInfo::class, SavedLogInfo::class], exportSchema = false, version = 1)
+@Database(entities = [FilterInfo::class, SavedLogInfo::class], exportSchema = false, version = 2)
 abstract class MyDB : RoomDatabase() {
     abstract fun filterDao(): FilterDao
 
