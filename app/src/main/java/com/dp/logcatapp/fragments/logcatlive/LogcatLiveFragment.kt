@@ -36,6 +36,7 @@ import com.dp.logcatapp.db.FilterInfo
 import com.dp.logcatapp.db.MyDB
 import com.dp.logcatapp.db.SavedLogInfo
 import com.dp.logcatapp.fragments.base.BaseFragment
+import com.dp.logcatapp.fragments.filters.FilterType
 import com.dp.logcatapp.fragments.logcatlive.dialogs.InstructionToGrantPermissionDialogFragment
 import com.dp.logcatapp.fragments.shared.dialogs.CopyToClipboardDialogFragment
 import com.dp.logcatapp.services.LogcatService
@@ -689,41 +690,46 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
     }
 
     private class LogFilter(filterInfo: FilterInfo) : Filter {
-        val keyword = filterInfo.keyword
-        val tag = filterInfo.tag
-        val priorities = mutableSetOf<String>()
+        val type = filterInfo.type
+        val content = filterInfo.content
+        lateinit var logLevels: MutableSet<String>
 
         init {
-            filterInfo.logPriorities.split(",")
-                    .filter { it.isNotEmpty() }
-                    .forEach {
-                        priorities.add(it)
-                    }
-        }
-
-        private fun filterKeyword(log: Log): Boolean {
-            if (keyword.isEmpty()) {
-                return true
+            if (filterInfo.type == FilterType.LOG_LEVELS) {
+                logLevels = mutableSetOf()
+                filterInfo.content.split(",")
+                        .filter { it.isNotEmpty() }
+                        .forEach {
+                            logLevels.add(it)
+                        }
             }
-            return log.msg.containsIgnoreCase(keyword)
-        }
-
-        private fun filterTag(log: Log): Boolean {
-            if (tag.isEmpty()) {
-                return true
-            }
-            return log.tag.containsIgnoreCase(tag)
-        }
-
-        private fun filterPriorities(log: Log): Boolean {
-            if (priorities.isEmpty()) {
-                return true
-            }
-            return priorities.contains(log.priority)
         }
 
         override fun apply(log: Log): Boolean {
-            return filterPriorities(log) && filterTag(log) && filterKeyword(log)
+            if (content.isEmpty()) {
+                return true
+            }
+
+            when (type) {
+                FilterType.LOG_LEVELS -> {
+                    return content.contains(log.priority)
+                }
+                FilterType.KEYWORD -> {
+                    return log.msg.containsIgnoreCase(content)
+                }
+                FilterType.TAG -> {
+                    return log.tag.containsIgnoreCase(content)
+                }
+                FilterType.PID -> {
+                    return log.pid.containsIgnoreCase(content)
+                }
+                FilterType.TID -> {
+                    return log.tid.containsIgnoreCase(content)
+                }
+                else -> {
+                    return false
+                }
+            }
         }
     }
 

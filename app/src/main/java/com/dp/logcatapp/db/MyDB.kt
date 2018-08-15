@@ -4,16 +4,15 @@ import android.arch.persistence.room.*
 import android.content.Context
 import io.reactivex.Flowable
 
-@Entity(tableName = "filters")
+@Entity(tableName = "filters", indices = [Index(name = "index_filters", value = ["exclude"])])
 data class FilterInfo(@PrimaryKey(autoGenerate = true) val id: Long?,
-                      @ColumnInfo(name = "keyword") val keyword: String,
-                      @ColumnInfo(name = "tag") val tag: String,
-                      @ColumnInfo(name = "log_priorities") val logPriorities: String,
+                      @ColumnInfo(name = "type") val type: Int,
+                      @ColumnInfo(name = "value") val content: String,
                       @ColumnInfo(name = "exclude") val exclude: Boolean) {
 
     @Ignore
-    constructor(keyword: String, tag: String, logPriorities: String, exclude: Boolean) :
-            this(null, keyword, tag, logPriorities, exclude)
+    constructor(type: Int, content: String, exclude: Boolean) :
+            this(null, type, content, exclude)
 }
 
 @Dao

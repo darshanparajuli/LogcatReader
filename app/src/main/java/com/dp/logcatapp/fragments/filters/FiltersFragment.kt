@@ -10,8 +10,8 @@ import android.widget.ImageButton
 import android.widget.TextView
 import com.dp.logcat.LogPriority
 import com.dp.logcatapp.R
-import com.dp.logcatapp.db.MyDB
 import com.dp.logcatapp.db.FilterInfo
+import com.dp.logcatapp.db.MyDB
 import com.dp.logcatapp.fragments.base.BaseFragment
 import com.dp.logcatapp.fragments.filters.dialogs.FilterDialogFragment
 import com.dp.logcatapp.fragments.logcatlive.LogcatLiveViewModel
@@ -59,21 +59,39 @@ class FiltersFragment : BaseFragment() {
         flowable.observeOn(AndroidSchedulers.mainThread())
                 .subscribe {
                     val data = it.map {
-                        val logPriorities = it.logPriorities.split(",")
-                                .joinToString(", ") {
-                                    when (it) {
-                                        LogPriority.ASSERT -> "Assert"
-                                        LogPriority.ERROR -> "Error"
-                                        LogPriority.DEBUG -> "Debug"
-                                        LogPriority.FATAL -> "Fatal"
-                                        LogPriority.INFO -> "Info"
-                                        LogPriority.VERBOSE -> "Verbose"
-                                        LogPriority.WARNING -> "warning"
-                                        else -> ""
-                                    }
+                        val displayText: String
+                        val type: String
+                        when (it.type) {
+                            FilterType.LOG_LEVELS -> {
+                                type = "Log level"
+                                displayText = it.content.split(",")
+                                        .joinToString(", ") {
+                                            when (it) {
+                                                LogPriority.ASSERT -> "Assert"
+                                                LogPriority.ERROR -> "Error"
+                                                LogPriority.DEBUG -> "Debug"
+                                                LogPriority.FATAL -> "Fatal"
+                                                LogPriority.INFO -> "Info"
+                                                LogPriority.VERBOSE -> "Verbose"
+                                                LogPriority.WARNING -> "warning"
+                                                else -> ""
+                                            }
+                                        }
+                            }
+                            else -> {
+                                displayText = it.content
+                                when (it.type) {
+                                    FilterType.KEYWORD -> type = "Keyword"
+                                    FilterType.TAG -> type = "Tag"
+                                    FilterType.PID -> type = "Pid"
+                                    FilterType.TID -> type = "Tid"
+                                    else -> throw IllegalStateException("invalid type: ${it.type}")
                                 }
-                        FilterListItem(it.keyword, it.tag, logPriorities, it)
+                            }
+                        }
+                        FilterListItem(type, displayText, it)
                     }
+
                     if (data.isEmpty()) {
                         emptyMessage.visibility = View.VISIBLE
                     } else {
@@ -93,7 +111,7 @@ class FiltersFragment : BaseFragment() {
             Flowable.just(MyDB.getInstance(context!!))
                     .subscribeOn(Schedulers.io())
                     .subscribe {
-                        it.filterDao().delete(item.filter!!)
+                        it.filterDao().delete(item.info)
                     }
         }
     }
@@ -131,25 +149,44 @@ class FiltersFragment : BaseFragment() {
         }
     }
 
-    fun addFilter(keyword: String, tag: String, logLevels: Set<String>) {
-        if (keyword.isEmpty() && tag.isEmpty() && logLevels.isEmpty()) {
-            return
+    fun addFilter(keyword: String, tag: String, pid: String, tid: String, logLevels: Set<String>) {
+        val list = mutableListOf<FilterInfo>()
+        val exclude = isExclusions()
+
+        if (keyword.isNotEmpty()) {
+            list.add(FilterInfo(FilterType.KEYWORD, keyword, exclude))
         }
 
-        val exclude = isExclusions()
-        Flowable.just(MyDB.getInstance(context!!))
-                .subscribeOn(Schedulers.io())
-                .subscribe {
-                    it.filterDao().insert(FilterInfo(keyword, tag,
-                            logLevels.sorted().joinToString(","), exclude))
-                }
+        if (tag.isNotEmpty()) {
+            list.add(FilterInfo(FilterType.TAG, tag, exclude))
+        }
+
+        if (pid.isNotEmpty()) {
+            list.add(FilterInfo(FilterType.PID, pid, exclude))
+        }
+
+        if (tid.isNotEmpty()) {
+            list.add(FilterInfo(FilterType.TID, tid, exclude))
+        }
+
+        if (logLevels.isNotEmpty()) {
+            list.add(FilterInfo(FilterType.LOG_LEVELS,
+                    logLevels.sorted().joinToString(","), exclude))
+        }
+
+        if (list.isNotEmpty()) {
+            Flowable.just(MyDB.getInstance(context!!))
+                    .subscribeOn(Schedulers.io())
+                    .subscribe {
+                        it.filterDao().insert(*list.toTypedArray())
+                    }
+        }
     }
 }
 
-internal data class FilterListItem(val keyword: String,
-                                   val tag: String,
-                                   val logLevelsStr: String,
-                                   val filter: FilterInfo? = null)
+internal data class FilterListItem(val type: String,
+                                   val content: String,
+                                   val info: FilterInfo)
 
 internal class MyRecyclerViewAdapter(private val onRemoveListener: (View) -> Unit) :
         RecyclerView.Adapter<MyRecyclerViewAdapter.MyViewHolder>() {
@@ -183,32 +220,12 @@ internal class MyRecyclerViewAdapter(private val onRemoveListener: (View) -> Uni
 
     override fun onBindViewHolder(holder: MyViewHolder, position: Int) {
         val item = data[position]
-
-        if (item.keyword.isEmpty()) {
-            holder.keyword.visibility = View.GONE
-        } else {
-            holder.keyword.text = item.keyword
-            holder.keyword.visibility = View.VISIBLE
-        }
-
-        if (item.tag.isEmpty()) {
-            holder.tag.visibility = View.GONE
-        } else {
-            holder.tag.text = item.tag
-            holder.tag.visibility = View.VISIBLE
-        }
-
-        if (item.logLevelsStr.isEmpty()) {
-            holder.logLevels.visibility = View.GONE
-        } else {
-            holder.logLevels.text = item.logLevelsStr
-            holder.logLevels.visibility = View.VISIBLE
-        }
+        holder.content.text = item.content
+        holder.type.text = item.type
     }
 
     class MyViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val keyword: TextView = itemView.findViewById(R.id.filterKeyword)
-        val tag: TextView = itemView.findViewById(R.id.tag)
-        val logLevels: TextView = itemView.findViewById(R.id.logLevels)
+        val content: TextView = itemView.findViewById(R.id.content)
+        val type: TextView = itemView.findViewById(R.id.type)
     }
 }

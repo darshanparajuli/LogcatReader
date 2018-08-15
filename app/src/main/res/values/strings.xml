@@ -86,4 +86,6 @@
     <string name="restart_logcat">Restart logcat</string>
     <string name="exclusion">Exclusion</string>
     <string name="clear">Clear</string>
+    <string name="process_id">Process ID</string>
+    <string name="thread_id">Thread ID</string>
 </resources>

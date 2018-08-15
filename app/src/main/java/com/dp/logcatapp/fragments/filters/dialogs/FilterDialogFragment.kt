@@ -4,7 +4,6 @@ import android.app.Dialog
 import android.arch.lifecycle.ViewModel
 import android.arch.lifecycle.ViewModelProviders
 import android.os.Bundle
-import android.support.v4.app.DialogFragment
 import android.support.v7.app.AlertDialog
 import android.text.Editable
 import android.text.TextWatcher
@@ -61,6 +60,34 @@ class FilterDialogFragment : BaseDialogFragment() {
             }
         })
 
+        val editTextPid = rootView.findViewById<EditText>(R.id.pid)
+        editTextPid.setText(viewModel.pid)
+        editTextPid.addTextChangedListener(object : TextWatcher {
+            override fun afterTextChanged(s: Editable) {
+                viewModel.pid = s.toString()
+            }
+
+            override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int) {
+            }
+
+            override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {
+            }
+        })
+
+        val editTextTid = rootView.findViewById<EditText>(R.id.tid)
+        editTextTid.setText(viewModel.tid)
+        editTextTid.addTextChangedListener(object : TextWatcher {
+            override fun afterTextChanged(s: Editable) {
+                viewModel.tid = s.toString()
+            }
+
+            override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int) {
+            }
+
+            override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {
+            }
+        })
+
         val checkBoxMap = mutableMapOf<CheckBox, String>()
         checkBoxMap[rootView.findViewById(R.id.checkboxAssert)] = LogPriority.ASSERT
         checkBoxMap[rootView.findViewById(R.id.checkboxDebug)] = LogPriority.DEBUG
@@ -91,20 +118,22 @@ class FilterDialogFragment : BaseDialogFragment() {
         return AlertDialog.Builder(activity!!)
                 .setTitle(title)
                 .setView(rootView)
-                .setPositiveButton(android.R.string.ok, { _, _ ->
+                .setPositiveButton(android.R.string.ok) { _, _ ->
                     val prioritySet = mutableSetOf<String>()
                     val keyword = editTextKeyword.text.toString().trim()
                     val tag = editTextTag.text.toString().trim()
+                    val pid = editTextPid.text.toString().trim()
+                    val tid = editTextTid.text.toString().trim()
                     for ((k, v) in checkBoxMap) {
                         if (k.isChecked) {
                             prioritySet.add(v)
                         }
                     }
-                    (targetFragment as FiltersFragment).addFilter(keyword, tag, prioritySet)
-                })
-                .setNegativeButton(android.R.string.cancel, { _, _ ->
+                    (targetFragment as FiltersFragment).addFilter(keyword, tag, pid, tid, prioritySet)
+                }
+                .setNegativeButton(android.R.string.cancel) { _, _ ->
                     dismiss()
-                })
+                }
                 .create()
     }
 }
@@ -112,5 +141,7 @@ class FilterDialogFragment : BaseDialogFragment() {
 internal class MyViewModel : ViewModel() {
     var keyword = ""
     var tag = ""
+    var pid = ""
+    var tid = ""
     val logPriorities = mutableSetOf<String>()
 }

@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/listItemRoot"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
@@ -12,58 +11,41 @@
     android:paddingTop="8dp">
 
     <com.dp.logcatapp.views.CustomTextView
-        android:id="@+id/filterKeyword"
+        android:id="@+id/content"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginEnd="16dp"
         android:layout_marginLeft="16dp"
         android:layout_marginRight="16dp"
         android:layout_marginStart="16dp"
-        android:text="Keyword"
-        android:textColor="?attr/primary_text_color"
+        android:layout_marginTop="8dp"
+        android:text="Some keyword"
         android:textSize="@dimen/text_size_medium"
-        app:layout_constraintBottom_toTopOf="@+id/tag"
+        android:textColor="?attr/primary_text_color"
         app:layout_constraintEnd_toStartOf="@+id/removeFilterIcon"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:useFont="@string/font_Roboto_Regular" />
 
     <com.dp.logcatapp.views.CustomTextView
-        android:id="@+id/tag"
+        android:id="@+id/type"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
         android:layout_marginEnd="16dp"
         android:layout_marginLeft="16dp"
         android:layout_marginRight="16dp"
         android:layout_marginStart="16dp"
-        android:text="Tag"
+        android:text="Log level"
+        android:textAllCaps="true"
         android:textColor="?attr/secondary_text_color"
-        android:textSize="@dimen/text_size_small"
-        android:visibility="visible"
-        app:layout_constraintBottom_toTopOf="@+id/logLevels"
-        app:layout_constraintEnd_toStartOf="@+id/removeFilterIcon"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/filterKeyword"
-        app:useFont="@string/font_Roboto_Medium" />
-
-    <com.dp.logcatapp.views.CustomTextView
-        android:id="@+id/logLevels"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="16dp"
-        android:layout_marginLeft="16dp"
-        android:layout_marginRight="16dp"
-        android:layout_marginStart="16dp"
-        android:text="Assert, Debug"
-        android:textColor="?attr/secondary_text_color"
-        android:textSize="@dimen/text_size_small"
+        android:textSize="@dimen/text_size_smaller"
         android:visibility="visible"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/removeFilterIcon"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/tag"
-        app:useFont="@string/font_Roboto_Regular" />
+        app:layout_constraintTop_toBottomOf="@+id/content"
+        app:useFont="@string/font_Roboto_Medium" />
 
     <android.support.v7.widget.AppCompatImageButton
         android:id="@+id/removeFilterIcon"
@@ -77,4 +59,6 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+
 </android.support.constraint.ConstraintLayout>

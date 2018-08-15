@@ -15,15 +15,29 @@
 
         <android.support.v7.widget.AppCompatEditText
             android:id="@+id/keyword"
-            android:hint="@string/keyword"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content"
+            android:hint="@string/keyword" />
 
         <android.support.v7.widget.AppCompatEditText
             android:id="@+id/tag"
-            android:hint="@string/tag"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content"
+            android:hint="@string/tag" />
+
+        <android.support.v7.widget.AppCompatEditText
+            android:id="@+id/pid"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/process_id"
+            android:inputType="number" />
+
+        <android.support.v7.widget.AppCompatEditText
+            android:id="@+id/tid"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/thread_id"
+            android:inputType="number" />
 
         <android.support.v7.widget.AppCompatCheckBox
             android:id="@+id/checkboxAssert"
