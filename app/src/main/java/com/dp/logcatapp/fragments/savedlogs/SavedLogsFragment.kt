@@ -15,6 +15,7 @@ import android.os.Environment
 import android.support.v4.content.FileProvider
 import android.support.v4.provider.DocumentFile
 import android.support.v7.app.AlertDialog
+import android.support.v7.util.DiffUtil
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.Toolbar
@@ -26,6 +27,7 @@ import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
 import android.widget.ProgressBar
 import android.widget.TextView
+import androidx.core.net.toFile
 import com.dp.logcatapp.BuildConfig
 import com.dp.logcatapp.R
 import com.dp.logcatapp.activities.BaseActivityWithToolbar
@@ -240,11 +242,13 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
         val deleted = viewModel.selectedItems
                 .map { recyclerViewAdapter.data[it] }
                 .filter {
-                    if (it.info.isCustom && Build.VERSION.SDK_INT >= 21) {
-                        val file = DocumentFile.fromSingleUri(context!!, Uri.parse(it.info.path))
-                        file != null && file.delete()
-                    } else {
-                        File(it.info.path).delete()
+                    with(Uri.parse(it.info.path)) {
+                        if (it.info.isCustom && Build.VERSION.SDK_INT >= 21) {
+                            val file = DocumentFile.fromSingleUri(context!!, this)
+                            file != null && file.delete()
+                        } else {
+                            this.toFile().delete()
+                        }
                     }
                 }
                 .map { it.info.fileName }
@@ -395,18 +399,39 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
 
         fun getItem(index: Int) = data[index]
 
-        fun setItems(items: List<LogFileInfo>) {
-            val previousSize = data.size
-            data.clear()
-            notifyItemRangeRemoved(0, previousSize)
-            data += items
-            notifyItemRangeInserted(0, items.size)
+        fun setItems(data: List<LogFileInfo>) {
+            val callback = DataDiffCallback(this.data, data)
+            val result = DiffUtil.calculateDiff(callback)
+
+            this.data.clear()
+            this.data += data
+            result.dispatchUpdatesTo(this)
         }
 
         class MyViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
             val fileName: TextView = itemView.findViewById(R.id.fileName)
             val fileSize: TextView = itemView.findViewById(R.id.fileSize)
             val logCount: TextView = itemView.findViewById(R.id.logCount)
+        }
+
+        private class DataDiffCallback(private val old: List<LogFileInfo>,
+                                       private val new: List<LogFileInfo>) : DiffUtil.Callback() {
+
+            override fun areItemsTheSame(p0: Int, p1: Int): Boolean {
+                return old[p0].info.path == new[p1].info.path
+            }
+
+            override fun getOldListSize(): Int {
+                return old.size
+            }
+
+            override fun getNewListSize(): Int {
+                return new.size
+            }
+
+            override fun areContentsTheSame(p0: Int, p1: Int): Boolean {
+                return old[p0] == new[p1]
+            }
         }
     }
 
