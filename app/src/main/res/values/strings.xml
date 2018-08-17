@@ -80,8 +80,8 @@
     <string name="select">Select</string>
     <string name="filters">Filters</string>
     <string name="add">Add</string>
-    <string name="keyword">keyword</string>
-    <string name="tag">tag</string>
+    <string name="keyword">Keyword</string>
+    <string name="tag">Tag</string>
     <string name="exclusions">Exclusions</string>
     <string name="restart_logcat">Restart logcat</string>
     <string name="exclusion">Exclusion</string>
