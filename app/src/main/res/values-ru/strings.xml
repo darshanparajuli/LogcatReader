@@ -87,4 +87,5 @@
     <string name="restart_logcat">Перезапустить logcat</string>
     <string name="exclusion">исключение</string>
     <string name="clear">убирать</string>
+    <string name="log_level">Уровень журнала</string>
 </resources>

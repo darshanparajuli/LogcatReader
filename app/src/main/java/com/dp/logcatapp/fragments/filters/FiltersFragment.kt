@@ -64,7 +64,7 @@ class FiltersFragment : BaseFragment() {
                         val type: String
                         when (it.type) {
                             FilterType.LOG_LEVELS -> {
-                                type = "Log level"
+                                type = getString(R.string.log_level)
                                 displayText = it.content.split(",")
                                         .joinToString(", ") { s ->
                                             when (s) {
@@ -82,10 +82,10 @@ class FiltersFragment : BaseFragment() {
                             else -> {
                                 displayText = it.content
                                 when (it.type) {
-                                    FilterType.KEYWORD -> type = "Keyword"
-                                    FilterType.TAG -> type = "Tag"
-                                    FilterType.PID -> type = "Pid"
-                                    FilterType.TID -> type = "Tid"
+                                    FilterType.KEYWORD -> type = getString(R.string.keyword)
+                                    FilterType.TAG -> type = getString(R.string.tag)
+                                    FilterType.PID -> type = getString(R.string.process_id)
+                                    FilterType.TID -> type = getString(R.string.thread_id)
                                     else -> throw IllegalStateException("invalid type: ${it.type}")
                                 }
                             }
