@@ -1,7 +1,10 @@
 package com.dp.logcatapp.db
 
+import android.arch.persistence.db.SupportSQLiteDatabase
 import android.arch.persistence.room.*
+import android.arch.persistence.room.migration.Migration
 import android.content.Context
+import com.dp.logcatapp.fragments.filters.FilterType
 import io.reactivex.Flowable
 
 @Entity(tableName = "filters", indices = [Index(name = "index_filters", value = ["exclude"])])
@@ -70,11 +73,24 @@ abstract class MyDB : RoomDatabase() {
                 synchronized(MyDB::class) {
                     instance = Room.databaseBuilder(context.applicationContext,
                             MyDB::class.java, DB_NAME)
+                            .addMigrations(MIGRATION_1_2)
                             .fallbackToDestructiveMigration()
                             .build()
                 }
             }
             return instance!!
+        }
+
+        private val MIGRATION_1_2 = object : Migration(1, 2) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("CREATE TABLE `filters_new` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `type` INTEGER NOT NULL, `value` TEXT NOT NULL, `exclude` INTEGER NOT NULL)")
+                db.execSQL("INSERT INTO `filters_new` (`type`, `value`, `exclude`) VALUES (`${FilterType.KEYWORD}`, SELECT (`keyword`, `exclude`) FROM `filters`)")
+                db.execSQL("INSERT INTO `filters_new` (`type`, `value`, `exclude`) VALUES (`${FilterType.TAG}`, SELECT (`tag`, `exclude`) FROM `filters`)")
+                db.execSQL("INSERT INTO `filters_new` (`type`, `value`, `exclude`) VALUES (`${FilterType.LOG_LEVELS}`, SELECT (`log_priorities`, `exclude`) FROM `filters`)")
+
+                db.execSQL("DROP TABLE `filters`")
+                db.execSQL("ALTER TABLE `filters_new` RENAME TO `filters`")
+            }
         }
     }
 }
