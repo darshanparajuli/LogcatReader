@@ -57,16 +57,16 @@ class FiltersFragment : BaseFragment() {
         }
 
         flowable.observeOn(AndroidSchedulers.mainThread())
-                .subscribe {
-                    val data = it.map {
+                .subscribe { list ->
+                    val data = list.map {
                         val displayText: String
                         val type: String
                         when (it.type) {
                             FilterType.LOG_LEVELS -> {
                                 type = "Log level"
                                 displayText = it.content.split(",")
-                                        .joinToString(", ") {
-                                            when (it) {
+                                        .joinToString(", ") { s ->
+                                            when (s) {
                                                 LogPriority.ASSERT -> "Assert"
                                                 LogPriority.ERROR -> "Error"
                                                 LogPriority.DEBUG -> "Debug"
