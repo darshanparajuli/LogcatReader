@@ -45,11 +45,11 @@ class CopyToClipboardDialogFragment : BaseDialogFragment(), DialogInterface.OnCl
         val cm = activity!!.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         val clip = when (which) {
             LogContentType.TAG.ordinal -> ClipData.newPlainText("Log Tag", log.tag)
-            LogContentType.MESSAGE.ordinal -> ClipData.newPlainText("Log Tag", log.msg)
-            LogContentType.DATE.ordinal -> ClipData.newPlainText("Log Tag", log.date)
-            LogContentType.TIME.ordinal -> ClipData.newPlainText("Log Tag", log.time)
-            LogContentType.PID.ordinal -> ClipData.newPlainText("Log Tag", log.pid)
-            else -> ClipData.newPlainText("Log Tag", log.tid)
+            LogContentType.MESSAGE.ordinal -> ClipData.newPlainText("Log Msg", log.msg)
+            LogContentType.DATE.ordinal -> ClipData.newPlainText("Log Date", log.date)
+            LogContentType.TIME.ordinal -> ClipData.newPlainText("Log Time", log.time)
+            LogContentType.PID.ordinal -> ClipData.newPlainText("Log PID", log.pid)
+            else -> ClipData.newPlainText("Log TID", log.tid)
         }
         cm.primaryClip = clip
         activity!!.showToast(getString(R.string.copied_to_clipboard))
