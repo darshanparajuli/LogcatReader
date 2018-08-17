@@ -146,6 +146,14 @@ class FiltersFragment : BaseFragment() {
                 frag.show(fragmentManager, FilterDialogFragment.TAG)
                 true
             }
+            R.id.clear_action -> {
+                Flowable.just(MyDB.getInstance(context!!))
+                        .subscribeOn(Schedulers.io())
+                        .subscribe {
+                            it.filterDao().deleteAll(isExclusions())
+                        }
+                true
+            }
             else -> super.onOptionsItemSelected(item)
         }
     }
