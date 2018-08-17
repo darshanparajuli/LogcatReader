@@ -89,4 +89,7 @@
     <string name="process_id">PID</string>
     <string name="thread_id">TID</string>
     <string name="log_level">Log level</string>
+    <string name="message">Message</string>
+    <string name="date">Date</string>
+    <string name="time">Time</string>
 </resources>

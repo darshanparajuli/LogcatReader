@@ -1,17 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string-array name="log_content_types">
-        <item>Tag</item>
-        <item>Message</item>
-        <item>Date</item>
-        <item>Time</item>
-        <item>Process ID</item>
-        <item>Thread ID</item>
+        <item>@string/tag</item>
+        <item>@string/message</item>
+        <item>@string/date</item>
+        <item>@string/time</item>
+        <item>@string/process_id</item>
+        <item>@string/thread_id</item>
     </string-array>
+
     <string-array name="save_location_options">
         <item>@string/save_location_internal</item>
         <item>@string/save_location_custom</item>
     </string-array>
+
     <string-array name="log_levels">
         <item>ASSERT</item>
         <item>DEBUG</item>

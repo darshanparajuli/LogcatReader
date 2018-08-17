@@ -88,4 +88,7 @@
     <string name="exclusion">исключение</string>
     <string name="clear">убирать</string>
     <string name="log_level">Уровень журнала</string>
+    <string name="message">Сообщение</string>
+    <string name="date">Дата</string>
+    <string name="time">Время</string>
 </resources>
