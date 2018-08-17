@@ -2,6 +2,7 @@ package com.dp.logcatapp.fragments.filters
 
 import android.arch.lifecycle.ViewModelProviders
 import android.os.Bundle
+import android.support.v7.util.DiffUtil
 import android.support.v7.widget.DividerItemDecoration
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
@@ -211,11 +212,12 @@ internal class MyRecyclerViewAdapter(private val onRemoveListener: (View) -> Uni
     }
 
     fun setData(data: List<FilterListItem>) {
-        val size = this.data.size
+        val diffCallback = DataDiffCallback(this.data, data)
+        val diffResult = DiffUtil.calculateDiff(diffCallback)
+
         this.data.clear()
-        notifyItemRangeRemoved(0, size)
         this.data.addAll(data)
-        notifyItemRangeInserted(0, data.size)
+        diffResult.dispatchUpdatesTo(this)
     }
 
     override fun onBindViewHolder(holder: MyViewHolder, position: Int) {
@@ -227,5 +229,25 @@ internal class MyRecyclerViewAdapter(private val onRemoveListener: (View) -> Uni
     class MyViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val content: TextView = itemView.findViewById(R.id.content)
         val type: TextView = itemView.findViewById(R.id.type)
+    }
+
+    class DataDiffCallback(private val old: List<FilterListItem>,
+                           private val new: List<FilterListItem>) : DiffUtil.Callback() {
+
+        override fun areItemsTheSame(p0: Int, p1: Int): Boolean {
+            return old[p0].info.id == new[p1].info.id
+        }
+
+        override fun getOldListSize(): Int {
+            return old.size
+        }
+
+        override fun getNewListSize(): Int {
+            return new.size
+        }
+
+        override fun areContentsTheSame(p0: Int, p1: Int): Boolean {
+            return old[p0] == new[p1]
+        }
     }
 }
