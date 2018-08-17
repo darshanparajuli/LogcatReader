@@ -239,8 +239,8 @@ internal class MyRecyclerViewAdapter(private val onRemoveListener: (View) -> Uni
         val type: TextView = itemView.findViewById(R.id.type)
     }
 
-    class DataDiffCallback(private val old: List<FilterListItem>,
-                           private val new: List<FilterListItem>) : DiffUtil.Callback() {
+    private class DataDiffCallback(private val old: List<FilterListItem>,
+                                   private val new: List<FilterListItem>) : DiffUtil.Callback() {
 
         override fun areItemsTheSame(p0: Int, p1: Int): Boolean {
             return old[p0].info.id == new[p1].info.id
