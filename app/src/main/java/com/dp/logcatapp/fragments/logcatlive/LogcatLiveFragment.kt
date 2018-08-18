@@ -589,10 +589,10 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
 
                         for (filter in it) {
                             if (filter.exclude) {
-                                logcat.addExclusion("${filter.id}",
+                                logcat.addExclusion("${filter.hashCode()}",
                                         LogFilter(filter))
                             } else {
-                                logcat.addFilter("${filter.id}",
+                                logcat.addFilter("${filter.hashCode()}",
                                         LogFilter(filter))
                             }
                         }

@@ -7,16 +7,10 @@ import android.content.Context
 import com.dp.logcatapp.fragments.filters.FilterType
 import io.reactivex.Flowable
 
-@Entity(tableName = "filters", indices = [Index(name = "index_filters", value = ["exclude"])])
-data class FilterInfo(@PrimaryKey(autoGenerate = true) val id: Long?,
-                      @ColumnInfo(name = "type") val type: Int,
+@Entity(primaryKeys = ["type", "value", "exclude"], tableName = "filters", indices = [Index(name = "index_filters", value = ["exclude"])])
+data class FilterInfo(@ColumnInfo(name = "type") val type: Int,
                       @ColumnInfo(name = "value") val content: String,
-                      @ColumnInfo(name = "exclude") val exclude: Boolean) {
-
-    @Ignore
-    constructor(type: Int, content: String, exclude: Boolean) :
-            this(null, type, content, exclude)
-}
+                      @ColumnInfo(name = "exclude") val exclude: Boolean)
 
 @Dao
 interface FilterDao {
@@ -83,13 +77,15 @@ abstract class MyDB : RoomDatabase() {
 
         private val MIGRATION_1_2 = object : Migration(1, 2) {
             override fun migrate(db: SupportSQLiteDatabase) {
-                db.execSQL("CREATE TABLE `filters_new` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `type` INTEGER NOT NULL, `value` TEXT NOT NULL, `exclude` INTEGER NOT NULL)")
-                db.execSQL("INSERT INTO `filters_new` (`type`, `value`, `exclude`) VALUES (`${FilterType.KEYWORD}`, SELECT (`keyword`, `exclude`) FROM `filters`)")
-                db.execSQL("INSERT INTO `filters_new` (`type`, `value`, `exclude`) VALUES (`${FilterType.TAG}`, SELECT (`tag`, `exclude`) FROM `filters`)")
-                db.execSQL("INSERT INTO `filters_new` (`type`, `value`, `exclude`) VALUES (`${FilterType.LOG_LEVELS}`, SELECT (`log_priorities`, `exclude`) FROM `filters`)")
+                db.execSQL("CREATE TABLE `filters_new` (`type` INTEGER NOT NULL, `value` TEXT NOT NULL, `exclude` INTEGER NOT NULL, PRIMARY KEY (`type`, `value`, `exclude`))")
+                db.execSQL("INSERT INTO `filters_new` (`type`, `value`, `exclude`) SELECT ${FilterType.KEYWORD}, `keyword`, `exclude` FROM `filters`")
+                db.execSQL("INSERT INTO `filters_new` (`type`, `value`, `exclude`) SELECT ${FilterType.TAG}, `tag`, `exclude` FROM `filters`")
+                db.execSQL("INSERT INTO `filters_new` (`type`, `value`, `exclude`) SELECT ${FilterType.LOG_LEVELS}, `log_priorities`, `exclude` FROM `filters`")
 
                 db.execSQL("DROP TABLE `filters`")
                 db.execSQL("ALTER TABLE `filters_new` RENAME TO `filters`")
+                db.execSQL("CREATE INDEX `index_filters` ON `filters` (`exclude`)")
+                db.execSQL("CREATE TABLE `saved_logs_info` (`name` TEXT NOT NULL, `path` TEXT NOT NULL PRIMARY KEY, `is_custom` INTEGER NOT NULL)")
             }
         }
     }

@@ -243,7 +243,7 @@ internal class MyRecyclerViewAdapter(private val onRemoveListener: (View) -> Uni
                                    private val new: List<FilterListItem>) : DiffUtil.Callback() {
 
         override fun areItemsTheSame(p0: Int, p1: Int): Boolean {
-            return old[p0].info.id == new[p1].info.id
+            return old[p0].info == new[p1].info
         }
 
         override fun getOldListSize(): Int {
