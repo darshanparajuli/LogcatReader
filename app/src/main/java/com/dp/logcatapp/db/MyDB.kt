@@ -78,9 +78,9 @@ abstract class MyDB : RoomDatabase() {
         private val MIGRATION_1_2 = object : Migration(1, 2) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("CREATE TABLE `filters_new` (`type` INTEGER NOT NULL, `value` TEXT NOT NULL, `exclude` INTEGER NOT NULL, PRIMARY KEY (`type`, `value`, `exclude`))")
-                db.execSQL("INSERT INTO `filters_new` (`type`, `value`, `exclude`) SELECT ${FilterType.KEYWORD}, `keyword`, `exclude` FROM `filters`")
-                db.execSQL("INSERT INTO `filters_new` (`type`, `value`, `exclude`) SELECT ${FilterType.TAG}, `tag`, `exclude` FROM `filters`")
-                db.execSQL("INSERT INTO `filters_new` (`type`, `value`, `exclude`) SELECT ${FilterType.LOG_LEVELS}, `log_priorities`, `exclude` FROM `filters`")
+                db.execSQL("INSERT OR IGNORE INTO `filters_new` (`type`, `value`, `exclude`) SELECT ${FilterType.KEYWORD}, `keyword`, `exclude` FROM `filters` WHERE `keyword` != ''")
+                db.execSQL("INSERT OR IGNORE INTO `filters_new` (`type`, `value`, `exclude`) SELECT ${FilterType.TAG}, `tag`, `exclude` FROM `filters` WHERE `tag` != ''")
+                db.execSQL("INSERT OR IGNORE INTO `filters_new` (`type`, `value`, `exclude`) SELECT ${FilterType.LOG_LEVELS}, `log_priorities`, `exclude` FROM `filters` WHERE `log_priorities` != ''")
 
                 db.execSQL("DROP TABLE `filters`")
                 db.execSQL("ALTER TABLE `filters_new` RENAME TO `filters`")
