@@ -42,7 +42,7 @@ class FiltersFragment : BaseFragment() {
     private lateinit var recyclerViewAdapter: MyRecyclerViewAdapter
     private lateinit var linearLayoutManager: LinearLayoutManager
     private lateinit var emptyMessage: TextView
-    private var filterObserver: Disposable? = null
+    private var filterSubscription: Disposable? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -61,7 +61,7 @@ class FiltersFragment : BaseFragment() {
         } else {
             dao.getFilters()
         }
-        filterObserver = flowable.observeOn(AndroidSchedulers.mainThread())
+        filterSubscription = flowable.observeOn(AndroidSchedulers.mainThread())
                 .subscribe { list ->
                     val data = list.map {
                         val displayText: String
@@ -107,12 +107,7 @@ class FiltersFragment : BaseFragment() {
     }
 
     private fun stopObservingFilters() {
-        filterObserver?.let {
-            if (!it.isDisposed) {
-                it.dispose()
-            }
-        }
-        filterObserver = null
+        filterSubscription?.dispose()
     }
 
     override fun onResume() {
