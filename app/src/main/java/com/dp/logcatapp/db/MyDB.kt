@@ -63,16 +63,16 @@ abstract class MyDB : RoomDatabase() {
         private var instance: MyDB? = null
 
         fun getInstance(context: Context): MyDB {
-            if (instance == null) {
-                synchronized(MyDB::class) {
+            synchronized(MyDB::class) {
+                if (instance == null) {
                     instance = Room.databaseBuilder(context.applicationContext,
                             MyDB::class.java, DB_NAME)
                             .addMigrations(MIGRATION_1_2)
                             .fallbackToDestructiveMigration()
                             .build()
                 }
+                return instance!!
             }
-            return instance!!
         }
 
         private val MIGRATION_1_2 = object : Migration(1, 2) {
