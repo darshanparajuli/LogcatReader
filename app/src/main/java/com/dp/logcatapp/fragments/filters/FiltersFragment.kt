@@ -1,5 +1,6 @@
 package com.dp.logcatapp.fragments.filters
 
+import android.annotation.SuppressLint
 import android.arch.lifecycle.ViewModelProviders
 import android.os.Bundle
 import android.support.v7.util.DiffUtil
@@ -19,6 +20,7 @@ import com.dp.logcatapp.fragments.logcatlive.LogcatLiveViewModel
 import com.dp.logcatapp.util.inflateLayout
 import io.reactivex.Flowable
 import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
 
 class FiltersFragment : BaseFragment() {
@@ -40,6 +42,7 @@ class FiltersFragment : BaseFragment() {
     private lateinit var recyclerViewAdapter: MyRecyclerViewAdapter
     private lateinit var linearLayoutManager: LinearLayoutManager
     private lateinit var emptyMessage: TextView
+    private var filterSubscription: Disposable? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -49,15 +52,16 @@ class FiltersFragment : BaseFragment() {
         recyclerViewAdapter = MyRecyclerViewAdapter {
             onRemoveClicked(it)
         }
+    }
 
-        val dao = MyDB.getInstance(activity!!).filterDao()
+    private fun startObservingFilters() {
+        val dao = MyDB.getInstance(context!!).filterDao()
         val flowable = if (isExclusions()) {
             dao.getExclusions()
         } else {
             dao.getFilters()
         }
-
-        flowable.observeOn(AndroidSchedulers.mainThread())
+        filterSubscription = flowable.observeOn(AndroidSchedulers.mainThread())
                 .subscribe { list ->
                     val data = list.map {
                         val displayText: String
@@ -102,8 +106,23 @@ class FiltersFragment : BaseFragment() {
                 }
     }
 
+    private fun stopObservingFilters() {
+        filterSubscription?.dispose()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        startObservingFilters()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        stopObservingFilters()
+    }
+
     fun isExclusions() = arguments?.getBoolean(KEY_EXCLUSIONS) ?: false
 
+    @SuppressLint("CheckResult")
     private fun onRemoveClicked(v: View) {
         val pos = linearLayoutManager.getPosition(v)
         if (pos != RecyclerView.NO_POSITION) {
@@ -158,6 +177,7 @@ class FiltersFragment : BaseFragment() {
         }
     }
 
+    @SuppressLint("CheckResult")
     fun addFilter(keyword: String, tag: String, pid: String, tid: String, logLevels: Set<String>) {
         val list = mutableListOf<FilterInfo>()
         val exclude = isExclusions()
