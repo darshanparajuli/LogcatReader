@@ -1,6 +1,5 @@
 package com.dp.logcat
 
-import com.dp.logger.Logger
 import java.io.*
 
 class LogcatStreamReader(inputStream: InputStream) : Iterator<Log>, Closeable {
