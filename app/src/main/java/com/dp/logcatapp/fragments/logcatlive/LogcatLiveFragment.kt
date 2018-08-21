@@ -608,7 +608,10 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
 
     override fun onLogEvents(logs: List<Log>) {
         adapter.addItems(logs)
-        updateUIOnLogEvent(adapter.itemCount)
+        updateToolbarSubtitle(adapter.itemCount)
+        if (viewModel.autoScroll) {
+            linearLayoutManager.scrollToPosition(adapter.itemCount - 1)
+        }
     }
 
     private fun addAllLogs(logs: List<Log>) {
@@ -635,13 +638,6 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
     private fun resumeLogcat() {
         if (logcatService != null && !logcatService!!.paused) {
             logcatService?.logcat?.resume()
-        }
-    }
-
-    private fun updateUIOnLogEvent(count: Int) {
-        updateToolbarSubtitle(count)
-        if (viewModel.autoScroll) {
-            linearLayoutManager.scrollToPosition(count - 1)
         }
     }
 
