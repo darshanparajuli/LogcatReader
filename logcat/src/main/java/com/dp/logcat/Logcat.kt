@@ -404,21 +404,20 @@ class Logcat(initialCapacity: Int = INITIAL_LOG_CAPACITY) : Closeable {
     }
 
     private fun processStdout(inputStream: InputStream?) {
-        var reader: LogcatStreamReader? = null
         try {
-            reader = LogcatStreamReader(inputStream!!)
-            for (log in reader) {
-                lockedBlock(logsLock) {
-                    pendingLogs.add(log)
+            LogcatStreamReader(inputStream!!).use {
+                for (log in it) {
+                    lockedBlock(logsLock) {
+                        pendingLogs.add(log)
 
-                    if (pendingLogs.isFull()) {
-                        pendingLogsFullCondition.awaitUninterruptibly()
+                        if (pendingLogs.isFull()) {
+                            pendingLogsFullCondition.awaitUninterruptibly()
+                        }
                     }
                 }
             }
         } catch (e: Exception) {
-        } finally {
-            reader?.close()
+            // do nothing
         }
     }
 
