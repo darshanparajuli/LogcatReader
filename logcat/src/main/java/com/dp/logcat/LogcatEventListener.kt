@@ -5,9 +5,5 @@ import android.support.annotation.MainThread
 interface LogcatEventListener {
 
     @MainThread
-    fun onLogEvent(log: Log)
-
-    @MainThread
     fun onLogEvents(logs: List<Log>)
-
 }

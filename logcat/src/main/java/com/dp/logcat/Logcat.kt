@@ -98,19 +98,12 @@ class Logcat(initialCapacity: Int = INITIAL_LOG_CAPACITY) : Closeable {
             if (pendingLogs.isNotEmpty()) {
                 logs.add(pendingLogs)
 
-                if (pendingLogs.size == 1) {
-                    val log = pendingLogs[0]
-                    if (!exclusions.values.any { it.apply(log) } && filters.values.all { it.apply(log) }) {
-                        handler.post { listener?.onLogEvent(log) }
-                    }
-                } else {
-                    val filteredLogs = pendingLogs.filter { e ->
-                        !exclusions.values.any { it.apply(e) } && filters.values.all { it.apply(e) }
-                    }
+                val filteredLogs = pendingLogs.filter { e ->
+                    !exclusions.values.any { it.apply(e) } && filters.values.all { it.apply(e) }
+                }
 
-                    if (filteredLogs.isNotEmpty()) {
-                        handler.post { listener?.onLogEvents(filteredLogs) }
-                    }
+                if (filteredLogs.isNotEmpty()) {
+                    handler.post { listener?.onLogEvents(filteredLogs) }
                 }
 
                 pendingLogs.clear()
