@@ -14,9 +14,9 @@ import com.dp.logger.Logger
 import com.logcat.collections.FixedCircularArray
 import java.io.*
 import java.util.*
-import java.util.concurrent.locks.Lock
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.thread
+import kotlin.concurrent.withLock
 
 class Logcat(initialCapacity: Int = INITIAL_LOG_CAPACITY) : Closeable {
     var logcatBuffers = DEFAULT_BUFFERS
@@ -75,7 +75,7 @@ class Logcat(initialCapacity: Int = INITIAL_LOG_CAPACITY) : Closeable {
                 postPendingLogs()
             }
 
-            lockedBlock(logsLock) {
+            logsLock.withLock {
                 activityInBackground = false
             }
             activityInBackgroundCondition.open()
@@ -84,7 +84,7 @@ class Logcat(initialCapacity: Int = INITIAL_LOG_CAPACITY) : Closeable {
         @OnLifecycleEvent(Lifecycle.Event.ON_PAUSE)
         private fun onActivityInBackground() {
             Logger.logDebug(Logcat::class, "onActivityInBackground")
-            lockedBlock(logsLock) {
+            logsLock.withLock {
                 activityInBackground = true
             }
         }
@@ -94,7 +94,7 @@ class Logcat(initialCapacity: Int = INITIAL_LOG_CAPACITY) : Closeable {
     private var isProcessAlive = false
 
     private fun postPendingLogs() {
-        lockedBlock(logsLock) {
+        logsLock.withLock {
             if (pendingLogs.isNotEmpty()) {
                 logs.add(pendingLogs)
 
@@ -140,7 +140,7 @@ class Logcat(initialCapacity: Int = INITIAL_LOG_CAPACITY) : Closeable {
         threadLogcat = null
         logcatProcess = null
 
-        lockedBlock(logsLock) {
+        logsLock.withLock {
             logs.clear()
             pendingLogs.clear()
         }
@@ -150,7 +150,7 @@ class Logcat(initialCapacity: Int = INITIAL_LOG_CAPACITY) : Closeable {
         val wasPaused = paused
         pause()
 
-        lockedBlock(logsLock) {
+        logsLock.withLock {
             logs.clear()
             pendingLogs.clear()
         }
@@ -177,7 +177,7 @@ class Logcat(initialCapacity: Int = INITIAL_LOG_CAPACITY) : Closeable {
         val wasPaused = paused
         pause()
 
-        lockedBlock(logsLock) {
+        logsLock.withLock {
             this.listener = listener
         }
 
@@ -187,7 +187,7 @@ class Logcat(initialCapacity: Int = INITIAL_LOG_CAPACITY) : Closeable {
     }
 
     fun getLogsFiltered(): List<Log> {
-        lockedBlock(logsLock) {
+        logsLock.withLock {
             if (exclusions.isEmpty() && filters.isEmpty()) {
                 return logs.toList()
             } else {
@@ -199,37 +199,37 @@ class Logcat(initialCapacity: Int = INITIAL_LOG_CAPACITY) : Closeable {
     }
 
     fun addExclusion(name: String, filter: Filter) {
-        lockedBlock(logsLock) {
+        logsLock.withLock {
             exclusions[name] = filter
         }
     }
 
     fun removeExclusion(name: String) {
-        lockedBlock(logsLock) {
+        logsLock.withLock {
             exclusions.remove(name)
         }
     }
 
     fun clearExclusions() {
-        lockedBlock(logsLock) {
+        logsLock.withLock {
             exclusions.clear()
         }
     }
 
     fun addFilter(name: String, filter: Filter) {
-        lockedBlock(logsLock) {
+        logsLock.withLock {
             filters[name] = filter
         }
     }
 
     fun removeFilter(name: String) {
-        lockedBlock(logsLock) {
+        logsLock.withLock {
             filters.remove(name)
         }
     }
 
     fun clearFilters() {
-        lockedBlock(logsLock) {
+        logsLock.withLock {
             filters.clear()
         }
     }
@@ -247,13 +247,13 @@ class Logcat(initialCapacity: Int = INITIAL_LOG_CAPACITY) : Closeable {
     }
 
     fun startRecording() {
-        lockedBlock(logsLock) {
+        logsLock.withLock {
             recordStartIndex = logs.size - 1
         }
     }
 
     fun stopRecording(): List<Log> {
-        lockedBlock(logsLock) {
+        logsLock.withLock {
             val result = mutableListOf<Log>()
             if (recordStartIndex >= 0) {
                 for (i in recordStartIndex until logs.size) {
@@ -275,7 +275,7 @@ class Logcat(initialCapacity: Int = INITIAL_LOG_CAPACITY) : Closeable {
 
     override fun close() {
         stop()
-        lockedBlock(logsLock) {
+        logsLock.withLock {
             listener = null
         }
     }
@@ -338,24 +338,16 @@ class Logcat(initialCapacity: Int = INITIAL_LOG_CAPACITY) : Closeable {
     }
 
     fun setMaxLogsCount(maxLogsCount: Int) {
-        lockedBlock(logsLock) {
+        logsLock.withLock {
             logs = FixedCircularArray(maxLogsCount, INITIAL_LOG_SIZE)
             pendingLogs = FixedCircularArray(maxLogsCount, INITIAL_LOG_SIZE)
         }
     }
 
-    private inline fun <R> lockedBlock(lock: Lock, block: () -> R): R {
-        lock.lock()
-        try {
-            return block()
-        } finally {
-            lock.unlock()
-        }
-    }
 
     override fun toString(): String {
         val stringBuilder = StringBuilder()
-        lockedBlock(logsLock) {
+        logsLock.withLock {
             logs.forEach { log -> stringBuilder.append(log) }
         }
         return stringBuilder.toString()
@@ -408,7 +400,7 @@ class Logcat(initialCapacity: Int = INITIAL_LOG_CAPACITY) : Closeable {
         try {
             LogcatStreamReader(inputStream!!).use {
                 for (log in it) {
-                    lockedBlock(logsLock) {
+                    logsLock.withLock {
                         pendingLogs.add(log)
 
                         if (pendingLogs.isFull()) {
@@ -603,5 +595,3 @@ class Logcat(initialCapacity: Int = INITIAL_LOG_CAPACITY) : Closeable {
         }
     }
 }
-
-
