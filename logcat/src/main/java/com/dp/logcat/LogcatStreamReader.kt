@@ -27,7 +27,7 @@ class LogcatStreamReader(inputStream: InputStream) : Iterator<Log>, Closeable {
                     log = LogFactory.createNewLog(metadata, msgBuffer.toString())
                     true
                 } catch (e: Exception) {
-                    Logger.logDebug(Logcat::class, "${e.message}: $metadata")
+//                    Logger.logDebug(Logcat::class, "${e.message}: $metadata")
                     false
                 } finally {
                     msgBuffer.setLength(0)
