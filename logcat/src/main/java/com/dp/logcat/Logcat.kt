@@ -106,7 +106,7 @@ class Logcat(initialCapacity: Int = INITIAL_LOG_CAPACITY) : Closeable {
                 } else {
                     val filteredLogs = pendingLogs.filter { e ->
                         !exclusions.values.any { it.apply(e) } && filters.values.all { it.apply(e) }
-                    }.toList()
+                    }
 
                     if (filteredLogs.isNotEmpty()) {
                         handler.post { listener?.onLogEvents(filteredLogs) }
