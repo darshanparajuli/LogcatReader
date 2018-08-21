@@ -46,7 +46,7 @@ class LogcatService : BaseService() {
         initLogcat()
     }
 
-    override fun onBasePostSuperCreate() {
+    override fun onPreRegisterSharedPreferenceChangeListener() {
         val defaultBuffers = PreferenceKeys.Logcat.Default.BUFFERS
         if (defaultBuffers.isNotEmpty() && Logcat.AVAILABLE_BUFFERS.isNotEmpty()) {
             val buffers = getDefaultSharedPreferences()
