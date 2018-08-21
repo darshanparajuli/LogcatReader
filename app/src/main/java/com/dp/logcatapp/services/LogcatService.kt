@@ -25,8 +25,8 @@ class LogcatService : BaseService() {
 
     companion object {
         val TAG = LogcatService::class.qualifiedName
-        private const val NOTIFICAION_CHANNEL = "logcat_channel_01"
-        private const val NOTIFICAION_ID = 1
+        private const val NOTIFICATION_CHANNEL = "logcat_channel_01"
+        private const val NOTIFICATION_ID = 1
     }
 
     private val localBinder = LocalBinder()
@@ -60,13 +60,13 @@ class LogcatService : BaseService() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        startForeground(NOTIFICAION_ID, createNotification(recording))
+        startForeground(NOTIFICATION_ID, createNotification(recording))
         return START_STICKY
     }
 
     fun updateNotification(showStopRecording: Boolean) {
         val nm = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        nm.notify(NOTIFICAION_ID, createNotification(showStopRecording))
+        nm.notify(NOTIFICATION_ID, createNotification(showStopRecording))
     }
 
     private fun createNotification(addStopRecordingAction: Boolean): Notification {
@@ -85,7 +85,7 @@ class LogcatService : BaseService() {
                 getString(R.string.exit), exitPendingIntent)
                 .build()
 
-        val builder = NotificationCompat.Builder(this, NOTIFICAION_CHANNEL)
+        val builder = NotificationCompat.Builder(this, NOTIFICATION_CHANNEL)
                 .setSmallIcon(R.drawable.ic_perm_device_information_white_24dp)
                 .setColor(ContextCompat.getColor(applicationContext, R.color.color_primary))
                 .setContentTitle(getString(R.string.app_name))
@@ -121,7 +121,7 @@ class LogcatService : BaseService() {
     @TargetApi(26)
     private fun createNotificationChannel() {
         val nm = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        val nc = NotificationChannel(NOTIFICAION_CHANNEL,
+        val nc = NotificationChannel(NOTIFICATION_CHANNEL,
                 getString(R.string.logcat_service_channel_name), NotificationManager.IMPORTANCE_LOW)
         nc.enableLights(false)
         nc.enableVibration(false)
@@ -131,7 +131,7 @@ class LogcatService : BaseService() {
     @TargetApi(26)
     private fun deleteNotificationChannel() {
         val nm = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        nm.deleteNotificationChannel(NOTIFICAION_CHANNEL)
+        nm.deleteNotificationChannel(NOTIFICATION_CHANNEL)
     }
 
     override fun onBind(intent: Intent?) = localBinder
