@@ -362,13 +362,14 @@ class Logcat(initialCapacity: Int = INITIAL_LOG_CAPACITY) : Closeable {
     }
 
     private fun processStderr(errStream: InputStream?) {
-        val reader: BufferedReader
         try {
-            reader = BufferedReader(InputStreamReader(errStream))
-            while (isProcessAlive) {
-                reader.readLine() ?: break
+            BufferedReader(InputStreamReader(errStream)).use {
+                while (isProcessAlive) {
+                    it.readLine() ?: break
+                }
             }
         } catch (e: Exception) {
+            // do nothing
         }
     }
 
