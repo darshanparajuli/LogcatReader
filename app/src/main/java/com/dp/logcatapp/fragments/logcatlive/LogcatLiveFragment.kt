@@ -8,21 +8,17 @@ import android.content.ServiceConnection
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.AsyncTask
-import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
 import android.support.design.widget.FloatingActionButton
 import android.support.design.widget.Snackbar
 import android.support.v4.content.ContextCompat
-import android.support.v4.provider.DocumentFile
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.DividerItemDecoration
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.SearchView
 import android.view.*
-import androidx.core.net.toFile
-import androidx.core.net.toUri
 import com.dp.logcat.Filter
 import com.dp.logcat.Log
 import com.dp.logcat.Logcat
@@ -34,7 +30,6 @@ import com.dp.logcatapp.activities.SavedLogsActivity
 import com.dp.logcatapp.activities.SavedLogsViewerActivity
 import com.dp.logcatapp.db.FilterInfo
 import com.dp.logcatapp.db.MyDB
-import com.dp.logcatapp.db.SavedLogInfo
 import com.dp.logcatapp.fragments.base.BaseFragment
 import com.dp.logcatapp.fragments.filters.FilterType
 import com.dp.logcatapp.fragments.logcatlive.dialogs.InstructionToGrantPermissionDialogFragment
@@ -45,10 +40,7 @@ import com.dp.logcatapp.views.IndeterminateProgressSnackBar
 import com.dp.logger.Logger
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
-import java.io.File
 import java.lang.ref.WeakReference
-import java.text.SimpleDateFormat
-import java.util.*
 
 class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListener {
     companion object {
@@ -75,6 +67,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
     private lateinit var adapter: MyRecyclerViewAdapter
     private lateinit var fabUp: FloatingActionButton
     private lateinit var fabDown: FloatingActionButton
+    private lateinit var snackBarProgress: IndeterminateProgressSnackBar
     private var logcatService: LogcatService? = null
     private var ignoreScrollEvent = false
     private var searchViewActive = false
@@ -196,6 +189,35 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
 
         viewModel = ViewModelProviders.of(activity!!)
                 .get(LogcatLiveViewModel::class.java)
+        viewModel.getFileSaveNotifier().observe(this, android.arch.lifecycle.Observer {
+            if (it != null) {
+                when (it.result) {
+                    SaveInfo.IN_PROGRESS -> {
+                        snackBarProgress.show()
+                    }
+                    else -> {
+                        snackBarProgress.dismiss()
+                        when (it.result) {
+                            SaveInfo.SUCCESS -> {
+                                newSnakcbar(view, getString(R.string.saved_as_filename).format(it.fileName!!),
+                                        Snackbar.LENGTH_LONG)
+                                        ?.setAction(getString(R.string.view_log)) { _ ->
+                                            if (!viewSavedLog(it.uri!!)) {
+                                                showSnackbar(view, getString(R.string.could_not_open_log_file))
+                                            }
+                                        }?.show()
+                            }
+                            SaveInfo.ERROR_EMPTY_LOGS -> {
+                                showSnackbar(view, getString(R.string.nothing_to_save))
+                            }
+                            else -> {
+                                showSnackbar(view, getString(R.string.failed_to_save_logs))
+                            }
+                        }
+                    }
+                }
+            }
+        })
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
@@ -224,6 +246,8 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
             linearLayoutManager.scrollToPosition(adapter.itemCount - 1)
             resumeLogcat()
         }
+
+        snackBarProgress = IndeterminateProgressSnackBar(view, getString(R.string.saving))
 
         fabUp = view.findViewById(R.id.fabUp)
         fabUp.setOnClickListener {
@@ -397,8 +421,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
                                 .show()
                         logcat.startRecording()
                     } else {
-                        val logs = logcat.stopRecording()
-                        saveToFile(logs)
+                        saveToFile(true)
                     }
                     logcatService!!.recording = recording
                     activity?.invalidateOptionsMenu()
@@ -424,7 +447,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
                 true
             }
             R.id.action_save -> {
-                trySaveToFile()
+                saveToFile(false)
                 true
             }
             R.id.action_view_saved_logs -> {
@@ -450,13 +473,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
     private fun stopRecording() {
         if (logcatService?.recording == true) {
             logcatService?.updateNotification(false)
-
-            val logcat = logcatService?.logcat
-            if (logcat != null) {
-                val logs = logcat.stopRecording()
-                saveToFile(logs)
-            }
-
+            saveToFile(true)
             logcatService!!.recording = false
             activity?.invalidateOptionsMenu()
         }
@@ -467,39 +484,14 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
             activity!!.getDefaultSharedPreferences().getString(
                     PreferenceKeys.Logcat.KEY_SAVE_LOCATION, "")!!.isNotEmpty()
 
-    private fun saveToFile(logs: List<Log>) {
-        val timeStamp = SimpleDateFormat("MM-dd-yyyy_HH-mm-ss", Locale.getDefault())
-                .format(Date())
-        val fileName = "logcat_$timeStamp"
-
-        if (logs.isEmpty()) {
-            Logger.logDebug(LogcatLiveFragment::class, "Nothing to save")
-            showSnackbar(view, getString(R.string.nothing_to_save))
-            return
-        }
-
-        val saveLocationPref = activity!!.getDefaultSharedPreferences().getString(
-                PreferenceKeys.Logcat.KEY_SAVE_LOCATION,
-                PreferenceKeys.Logcat.Default.SAVE_LOCATION
-        )!!
-
-        val uri = if (saveLocationPref.isEmpty()) {
-            val file = File(context!!.filesDir, LOGCAT_DIR)
-            file.mkdirs()
-            File(file, "$fileName.txt").toUri()
-        } else {
-            if (Build.VERSION.SDK_INT >= 21) {
-                val documentFile = DocumentFile.fromTreeUri(context!!, Uri.parse(saveLocationPref))
-                val file = documentFile?.createFile("text/plain", fileName)
-                file?.uri
+    private fun saveToFile(recorded: Boolean) {
+        viewModel.save {
+            if (recorded) {
+                logcatService?.logcat?.stopRecording()
             } else {
-                val file = File(saveLocationPref, LOGCAT_DIR)
-                file.mkdirs()
-                File(file, "$fileName.txt").toUri()
+                logcatService?.logcat?.getLogsFiltered()
             }
         }
-
-        SaveFileTask(this, uri, logs).execute()
     }
 
     private fun viewSavedLog(uri: Uri): Boolean {
@@ -507,13 +499,6 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
         intent.setDataAndType(uri, "text/plain")
         startActivity(intent)
         return true
-    }
-
-    private fun trySaveToFile() {
-        val logcat = logcatService?.logcat
-        if (logcat != null) {
-            saveToFile(logcat.getLogsFiltered())
-        }
     }
 
     override fun onStart() {
@@ -720,70 +705,6 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
                 else -> {
                     return false
                 }
-            }
-        }
-    }
-
-    class SaveFileTask(frag: LogcatLiveFragment,
-                       private val uri: Uri?,
-                       private val logs: List<Log>) : AsyncTask<Void, Void, String?>() {
-
-        private val ref = WeakReference(frag)
-        private val snackBarProgress = IndeterminateProgressSnackBar(frag.view!!,
-                frag.getString(R.string.saving))
-        private val db = MyDB.getInstance(frag.context!!)
-        private val isUsingCustomLocation = frag.isUsingCustomSaveLocation()
-
-        override fun onPreExecute() {
-            snackBarProgress.show()
-        }
-
-        override fun doInBackground(vararg params: Void?): String? {
-            var fileName: String? = null
-            val frag = ref.get()
-            if (frag != null && uri != null) {
-                val context = frag.context!!
-                val result: Boolean
-                if (isUsingCustomLocation && Build.VERSION.SDK_INT >= 21) {
-                    result = Logcat.writeToFile(context, logs, uri)
-                } else {
-                    result = Logcat.writeToFile(logs, uri.toFile())
-                }
-
-
-                if (result && frag.activity != null) {
-                    fileName = if (isUsingCustomLocation && Build.VERSION.SDK_INT >= 21) {
-                        DocumentFile.fromSingleUri(frag.activity!!, uri)?.name
-                    } else {
-                        uri.toFile().name
-                    }
-                    if (fileName != null) {
-                        db.savedLogsDao().insert(SavedLogInfo(fileName, uri.toString(),
-                                isUsingCustomLocation))
-                    }
-                }
-            }
-
-            return fileName
-        }
-
-        override fun onPostExecute(fileName: String?) {
-            snackBarProgress.dismiss()
-            val frag = ref.get() ?: return
-            if (frag.activity == null) {
-                return
-            }
-
-            if (fileName != null && uri != null) {
-                newSnakcbar(frag.view, frag.getString(R.string.saved_as_filename).format(fileName),
-                        Snackbar.LENGTH_LONG)
-                        ?.setAction(frag.getString(R.string.view_log)) {
-                            if (!frag.viewSavedLog(uri)) {
-                                showSnackbar(frag.view, frag.getString(R.string.could_not_open_log_file))
-                            }
-                        }?.show()
-            } else {
-                showSnackbar(frag.view, frag.getString(R.string.failed_to_save_logs))
             }
         }
     }
