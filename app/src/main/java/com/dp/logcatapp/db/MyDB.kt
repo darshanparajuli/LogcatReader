@@ -85,7 +85,7 @@ abstract class MyDB : RoomDatabase() {
                 db.execSQL("DROP TABLE `filters`")
                 db.execSQL("ALTER TABLE `filters_new` RENAME TO `filters`")
                 db.execSQL("CREATE INDEX `index_filters` ON `filters` (`exclude`)")
-                db.execSQL("CREATE TABLE `saved_logs_info` (`name` TEXT NOT NULL, `path` TEXT NOT NULL, `is_custom` INTEGER NOT NULL, PRIMARY KEY (`path`))")
+                db.execSQL("CREATE TABLE IF NOT EXISTS `saved_logs_info` (`name` TEXT NOT NULL, `path` TEXT NOT NULL, `is_custom` INTEGER NOT NULL, PRIMARY KEY (`path`))")
             }
         }
     }
