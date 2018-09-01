@@ -7,15 +7,13 @@ class FixedCircularArray<E>(val capacity: Int, initialSize: Int = INITIAL_SIZE) 
     }
 
     private var array = arrayOfNulls<Any>(Math.min(capacity, initialSize))
-    private var head = 0
+    private var head = -1
     private var next = 0
 
     init {
         if (capacity <= 0) {
             throw IllegalStateException("capacity (= $capacity) must be > 0")
         }
-
-        resetHead()
     }
 
     val size: Int
