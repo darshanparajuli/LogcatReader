@@ -42,6 +42,7 @@ import com.dp.logcatapp.util.inflateLayout
 import com.dp.logcatapp.util.showToast
 import io.reactivex.Flowable
 import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
 import java.io.*
 import java.lang.ref.WeakReference
@@ -59,6 +60,8 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
     private lateinit var recyclerViewAdapter: MyRecyclerViewAdapter
     private lateinit var linearLayoutManager: LinearLayoutManager
     private lateinit var progressBar: ProgressBar
+
+    private var deleteSubscriptionHandler: Disposable? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -244,7 +247,7 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
                 .map { it.info.fileName }
                 .toList()
 
-        Flowable.just(MyDB.getInstance(context!!))
+        deleteSubscriptionHandler = Flowable.just(MyDB.getInstance(context!!))
                 .subscribeOn(Schedulers.io())
                 .map { db ->
                     val deletedSavedLogInfoList = viewModel.selectedItems
@@ -254,7 +257,7 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
                     db.savedLogsDao().delete(*deletedSavedLogInfoList)
                 }
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe { _ ->
+                .subscribe {
                     val updatedList = recyclerViewAdapter.data
                             .filter { it.info.fileName !in deleted }.toList()
                     viewModel.selectedItems.clear()
@@ -349,6 +352,12 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
     override fun onCabToolbarClose(toolbar: Toolbar) {
         viewModel.selectedItems.clear()
         recyclerViewAdapter.notifyDataSetChanged()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        deleteSubscriptionHandler?.dispose()
+        deleteSubscriptionHandler = null
     }
 
     private class MyRecyclerViewAdapter(
