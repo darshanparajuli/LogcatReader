@@ -480,10 +480,6 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
         viewModel.stopRecording = false
     }
 
-    private fun isUsingCustomSaveLocation() =
-            activity!!.getDefaultSharedPreferences().getString(
-                    PreferenceKeys.Logcat.KEY_SAVE_LOCATION, "")!!.isNotEmpty()
-
     private fun saveToFile(recorded: Boolean) {
         viewModel.save {
             if (recorded) {
