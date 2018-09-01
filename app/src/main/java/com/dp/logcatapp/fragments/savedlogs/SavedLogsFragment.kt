@@ -12,7 +12,6 @@ import android.os.AsyncTask
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
-import android.support.v4.content.FileProvider
 import android.support.v4.provider.DocumentFile
 import android.support.v7.app.AlertDialog
 import android.support.v7.util.DiffUtil
@@ -28,7 +27,6 @@ import android.widget.EditText
 import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.core.net.toFile
-import com.dp.logcatapp.BuildConfig
 import com.dp.logcatapp.R
 import com.dp.logcatapp.activities.BaseActivityWithToolbar
 import com.dp.logcatapp.activities.CabToolbarCallback
@@ -38,6 +36,7 @@ import com.dp.logcatapp.db.MyDB
 import com.dp.logcatapp.fragments.base.BaseDialogFragment
 import com.dp.logcatapp.fragments.base.BaseFragment
 import com.dp.logcatapp.fragments.logcatlive.LogcatLiveFragment
+import com.dp.logcatapp.util.ShareUtils
 import com.dp.logcatapp.util.closeQuietly
 import com.dp.logcatapp.util.inflateLayout
 import com.dp.logcatapp.util.showToast
@@ -209,18 +208,9 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
             }
             R.id.action_share -> {
                 val fileInfo = recyclerViewAdapter.getItem(viewModel.selectedItems.toIntArray()[0])
-                val folder = File(context!!.filesDir, LogcatLiveFragment.LOGCAT_DIR)
-                val file = File(folder, fileInfo.info.fileName)
-
                 try {
-                    val intent = Intent(Intent.ACTION_SEND)
-                    val uri = FileProvider.getUriForFile(context!!,
-                            "${context!!.packageName}.${BuildConfig.FILE_PROVIDER}", file)
-                    intent.setDataAndType(uri, "text/*")
-                    intent.putExtra(Intent.EXTRA_STREAM, uri)
-                    intent.flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
-
-                    startActivity(Intent.createChooser(intent, getString(R.string.share)))
+                    ShareUtils.shareSavedLogs(context!!, Uri.parse(fileInfo.info.path),
+                            fileInfo.info.isCustom)
                 } catch (e: Exception) {
                     context?.showToast("Unable to share")
                 }
