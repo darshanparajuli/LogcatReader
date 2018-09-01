@@ -7,23 +7,25 @@ import android.content.ContextWrapper
 import android.content.Intent
 import android.content.SharedPreferences
 import android.graphics.Typeface
+import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.os.Build
 import android.provider.OpenableColumns
+import android.support.annotation.AttrRes
 import android.support.annotation.LayoutRes
 import android.support.design.widget.Snackbar
 import android.support.v4.app.Fragment
 import android.support.v4.app.FragmentManager
 import android.support.v4.app.FragmentTransaction
-import android.support.v4.content.FileProvider
+import android.support.v4.content.ContextCompat
 import android.support.v7.preference.PreferenceManager
+import android.util.TypedValue
 import android.view.*
 import android.widget.Toast
 import com.dp.logcatapp.R
 import com.dp.logcatapp.activities.MainActivity
 import com.dp.logcatapp.activities.SettingsActivity
 import com.dp.logger.Logger
-import java.io.File
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
@@ -154,6 +156,12 @@ fun Context.getTypeface(name: String): Typeface? {
     return typeface
 }
 
+fun Context.getAttributeDrawable(@AttrRes attrId: Int): Drawable? {
+    val tv = TypedValue()
+    theme.resolveAttribute(attrId, tv, true)
+    return ContextCompat.getDrawable(this, tv.resourceId)
+}
+
 fun Context.getDefaultSharedPreferences(): SharedPreferences =
         PreferenceManager.getDefaultSharedPreferences(this)
 
@@ -198,9 +206,6 @@ fun Context.setTheme() {
         PreferenceKeys.Appearance.Theme.LIGHT -> setThemeLight()
     }
 }
-
-fun Context.getUriFromFile(file: File): Uri = FileProvider.getUriForFile(this,
-        "$packageName.file_provider", file)
 
 fun Context.getFileNameFromUri(uri: Uri): String {
     var name: String? = null

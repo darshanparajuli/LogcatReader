@@ -10,6 +10,7 @@ import android.net.Uri
 import android.os.AsyncTask
 import android.os.Bundle
 import android.os.IBinder
+import android.support.design.widget.BottomSheetDialogFragment
 import android.support.design.widget.FloatingActionButton
 import android.support.design.widget.Snackbar
 import android.support.v4.content.ContextCompat
@@ -19,6 +20,7 @@ import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.SearchView
 import android.view.*
+import android.widget.TextView
 import com.dp.logcat.Filter
 import com.dp.logcat.Log
 import com.dp.logcat.Logcat
@@ -176,6 +178,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
         fabDown.hide()
     }
 
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setHasOptionsMenu(true)
@@ -199,13 +202,8 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
                         snackBarProgress.dismiss()
                         when (it.result) {
                             SaveInfo.SUCCESS -> {
-                                newSnakcbar(view, getString(R.string.saved_as_filename).format(it.fileName!!),
-                                        Snackbar.LENGTH_LONG)
-                                        ?.setAction(getString(R.string.view_log)) { _ ->
-                                            if (!viewSavedLog(it.uri!!)) {
-                                                showSnackbar(view, getString(R.string.could_not_open_log_file))
-                                            }
-                                        }?.show()
+                                OnSavedBottomSheetDialogFragment.newInstance(it.fileName!!, it.uri!!)
+                                        .show(fragmentManager, OnSavedBottomSheetDialogFragment.TAG)
                             }
                             SaveInfo.ERROR_EMPTY_LOGS -> {
                                 showSnackbar(view, getString(R.string.nothing_to_save))
@@ -490,12 +488,6 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
         }
     }
 
-    private fun viewSavedLog(uri: Uri): Boolean {
-        val intent = Intent(context, SavedLogsViewerActivity::class.java)
-        intent.setDataAndType(uri, "text/plain")
-        startActivity(intent)
-        return true
-    }
 
     override fun onStart() {
         super.onStart()
@@ -703,5 +695,54 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
                 }
             }
         }
+    }
+}
+
+class OnSavedBottomSheetDialogFragment : BottomSheetDialogFragment() {
+    companion object {
+        val TAG = OnSavedBottomSheetDialogFragment::class.qualifiedName
+
+        private val KEY_URI = TAG + "_uri"
+        private val KEY_FILE_NAME = TAG + "_file_name"
+
+        fun newInstance(fileName: String, uri: Uri): OnSavedBottomSheetDialogFragment {
+            val fragment = OnSavedBottomSheetDialogFragment()
+            val bundle = Bundle()
+            bundle.putString(KEY_URI, uri.toString())
+            bundle.putString(KEY_FILE_NAME, fileName)
+            fragment.arguments = bundle
+            return fragment
+        }
+    }
+
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
+                              savedInstanceState: Bundle?): View {
+        val rootView = inflater.inflate(R.layout.saved_log_bottom_sheet, container, false)
+
+        val arguments = arguments!!
+        val fileName = arguments.getString(KEY_FILE_NAME)
+        val uri = Uri.parse(arguments.getString(KEY_URI))
+
+        rootView.findViewById<TextView>(R.id.savedFileName).text = fileName
+        rootView.findViewById<TextView>(R.id.actionView).setOnClickListener {
+            if (!viewSavedLog(uri)) {
+                showSnackbar(view, getString(R.string.could_not_open_log_file))
+            }
+            dismiss()
+        }
+
+        rootView.findViewById<TextView>(R.id.actionShare).setOnClickListener {
+            ShareUtils.shareSavedLogs(context!!, uri, Utils.isUsingCustomSaveLocation(context!!))
+            dismiss()
+        }
+
+        return rootView
+    }
+
+    private fun viewSavedLog(uri: Uri): Boolean {
+        val intent = Intent(context, SavedLogsViewerActivity::class.java)
+        intent.setDataAndType(uri, "text/plain")
+        startActivity(intent)
+        return true
     }
 }

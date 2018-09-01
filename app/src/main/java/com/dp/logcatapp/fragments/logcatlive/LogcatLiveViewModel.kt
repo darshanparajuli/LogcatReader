@@ -17,6 +17,7 @@ import com.dp.logcatapp.db.MyDB
 import com.dp.logcatapp.db.SavedLogInfo
 import com.dp.logcatapp.fragments.logcatlive.LogcatLiveFragment.Companion.LOGCAT_DIR
 import com.dp.logcatapp.util.PreferenceKeys
+import com.dp.logcatapp.util.Utils
 import com.dp.logcatapp.util.getDefaultSharedPreferences
 import java.io.File
 import java.text.SimpleDateFormat
@@ -66,13 +67,12 @@ private class FileSaveNotifier(private val context: Context) : LiveData<SaveInfo
                 } else {
                     getUri()?.let { uri ->
                         saveInfo.uri = uri
-                        val isUsingCustomLocation = isUsingCustomSaveLocation()
 
-                        val result: Boolean
-                        if (isUsingCustomLocation && Build.VERSION.SDK_INT >= 21) {
-                            result = Logcat.writeToFile(context, logs, uri)
+                        val isUsingCustomLocation = Utils.isUsingCustomSaveLocation(context)
+                        val result = if (isUsingCustomLocation && Build.VERSION.SDK_INT >= 21) {
+                            Logcat.writeToFile(context, logs, uri)
                         } else {
-                            result = Logcat.writeToFile(logs, uri.toFile())
+                            Logcat.writeToFile(logs, uri.toFile())
                         }
 
                         saveInfo.result = SaveInfo.ERROR_SAVING
@@ -106,10 +106,6 @@ private class FileSaveNotifier(private val context: Context) : LiveData<SaveInfo
             }
         }.execute()
     }
-
-    private fun isUsingCustomSaveLocation() =
-            context.getDefaultSharedPreferences().getString(
-                    PreferenceKeys.Logcat.KEY_SAVE_LOCATION, "")!!.isNotEmpty()
 
     private fun getUri(): Uri? {
         val timeStamp = SimpleDateFormat("MM-dd-yyyy_HH-mm-ss", Locale.getDefault())

@@ -13,4 +13,9 @@
     <attr name="ripple_mask_color" format="color|reference" />
     <attr name="toolbar_shadow" format="reference" />
     <attr name="icon_tint" format="color|reference" />
+
+    <attr name="ic_view_list" format="reference" />
+    <attr name="ic_share" format="reference" />
+    <attr name="ic_folder" format="reference" />
+    <attr name="ic_insert_drive_file" format="reference" />
 </resources>

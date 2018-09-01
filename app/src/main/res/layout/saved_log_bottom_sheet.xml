@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/bottom_sheet"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="?attr/background_color"
+    android:orientation="vertical">
+
+    <com.dp.logcatapp.views.CustomTextView
+        android:id="@+id/savedFileName"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:gravity="center_vertical"
+        android:paddingLeft="16dp"
+        android:paddingRight="16dp"
+        android:text="Log file"
+        android:textColor="?attr/secondary_text_color"
+        app:useFont="@string/font_Roboto_Regular" />
+
+    <com.dp.logcatapp.views.CustomTextView
+        android:id="@+id/actionView"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:background="?attr/list_item_selector"
+        android:drawableStart="?attr/ic_view_list"
+        android:drawableLeft="?attr/ic_view_list"
+        android:drawablePadding="32dp"
+        android:gravity="center_vertical"
+        android:paddingLeft="16dp"
+        android:paddingRight="16dp"
+        android:text="@string/view_log"
+        android:textColor="?attr/primary_text_color"
+        app:useFont="@string/font_Roboto_Regular" />
+
+    <com.dp.logcatapp.views.CustomTextView
+        android:id="@+id/actionShare"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:background="?attr/list_item_selector"
+        android:clickable="true"
+        android:drawableStart="?attr/ic_share"
+        android:drawableLeft="?attr/ic_share"
+        android:drawablePadding="32dp"
+        android:focusable="true"
+        android:gravity="center_vertical"
+        android:paddingLeft="16dp"
+        android:paddingRight="16dp"
+        android:text="@string/share"
+        android:textColor="?attr/primary_text_color"
+        app:useFont="@string/font_Roboto_Regular" />
+
+</LinearLayout>

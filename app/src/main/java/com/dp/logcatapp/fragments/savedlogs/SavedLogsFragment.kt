@@ -211,12 +211,8 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
             }
             R.id.action_share -> {
                 val fileInfo = recyclerViewAdapter.getItem(viewModel.selectedItems.toIntArray()[0])
-                try {
-                    ShareUtils.shareSavedLogs(context!!, Uri.parse(fileInfo.info.path),
-                            fileInfo.info.isCustom)
-                } catch (e: Exception) {
-                    context?.showToast("Unable to share")
-                }
+                ShareUtils.shareSavedLogs(context!!, Uri.parse(fileInfo.info.path),
+                        fileInfo.info.isCustom)
                 true
             }
             R.id.action_select_all -> {

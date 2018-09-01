@@ -6,6 +6,7 @@ import android.arch.lifecycle.AndroidViewModel
 import android.arch.lifecycle.MutableLiveData
 import android.arch.lifecycle.Observer
 import android.arch.lifecycle.ViewModelProviders
+import android.content.Context
 import android.os.Bundle
 import android.os.Environment
 import android.support.v7.app.AlertDialog
@@ -20,6 +21,7 @@ import com.dp.logcatapp.R
 import com.dp.logcatapp.fragments.base.BaseDialogFragment
 import com.dp.logcatapp.fragments.settings.SettingsFragment
 import com.dp.logcatapp.util.PreferenceKeys
+import com.dp.logcatapp.util.getAttributeDrawable
 import com.dp.logcatapp.util.getDefaultSharedPreferences
 import com.dp.logcatapp.util.inflateLayout
 import java.io.File
@@ -31,12 +33,14 @@ class FolderChooserDialogFragment : BaseDialogFragment(), View.OnClickListener {
         val TAG = FolderChooserDialogFragment::class.qualifiedName
     }
 
-    private val recyclerViewAdapter = MyRecyclerViewAdapter(this)
+    private lateinit var recyclerViewAdapter: MyRecyclerViewAdapter
     private lateinit var layoutManager: LinearLayoutManager
     private lateinit var viewModel: MyViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        recyclerViewAdapter = MyRecyclerViewAdapter(context!!, this)
+
         viewModel = ViewModelProviders.of(this)
                 .get(MyViewModel::class.java)
         viewModel.files.observe(this, Observer<List<FileHolder>> {
@@ -136,10 +140,13 @@ internal class MyViewModel(application: Application) : AndroidViewModel(applicat
 
 internal data class FileHolder(val file: File, val isParent: Boolean = false)
 
-private class MyRecyclerViewAdapter(private val onClickListener: View.OnClickListener) :
+private class MyRecyclerViewAdapter(context: Context, private val onClickListener: View.OnClickListener) :
         RecyclerView.Adapter<MyRecyclerViewAdapter.MyViewHolder>() {
 
     private var data = listOf<FileHolder>()
+
+    private val drawableFolder = context.getAttributeDrawable(R.attr.ic_folder)!!
+    private val drawableFile = context.getAttributeDrawable(R.attr.ic_insert_drive_file)!!
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MyViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(R.layout.folder_chooser_list_item,
@@ -165,9 +172,9 @@ private class MyRecyclerViewAdapter(private val onClickListener: View.OnClickLis
             holder.fileName.text = fileHolder.file.name
         }
         if (fileHolder.file.isDirectory) {
-            holder.fileIcon.setImageResource(R.drawable.ic_folder_grey_300_24dp)
+            holder.fileIcon.setImageDrawable(drawableFolder)
         } else {
-            holder.fileIcon.setImageResource(R.drawable.ic_insert_drive_file_grey_300_24dp)
+            holder.fileIcon.setImageDrawable(drawableFile)
         }
     }
 

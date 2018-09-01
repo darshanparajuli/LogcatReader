@@ -1,5 +1,7 @@
 package com.dp.logcatapp.util
 
+import android.content.Context
+
 object Utils {
     fun bytesToString(bytes: Long): String {
         val units = arrayOf("B", "KB", "MB", "GB", "TB")
@@ -16,4 +18,8 @@ object Utils {
 
         return "%.2f %s".format(totalSize, unit)
     }
+
+    fun isUsingCustomSaveLocation(context: Context) =
+            context.getDefaultSharedPreferences().getString(
+                    PreferenceKeys.Logcat.KEY_SAVE_LOCATION, "")!!.isNotEmpty()
 }

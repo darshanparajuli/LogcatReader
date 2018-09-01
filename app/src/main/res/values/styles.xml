@@ -19,6 +19,10 @@
         <item name="ripple_mask_color">@color/light_window_bg</item>
         <item name="toolbar_popup_theme">@style/LightToolbarPopupTheme</item>
         <item name="icon_tint">@color/icon_tint_light</item>
+        <item name="ic_view_list">@drawable/ic_view_list_grey_600_24dp</item>
+        <item name="ic_share">@drawable/ic_share_grey_600_24dp</item>
+        <item name="ic_folder">@drawable/ic_folder_grey_600_24dp</item>
+        <item name="ic_insert_drive_file">@drawable/ic_insert_drive_file_grey_600_24dp</item>
     </style>
 
     <style name="DarkThemeCommon" parent="Theme.AppCompat.NoActionBar">
@@ -38,6 +42,10 @@
         <item name="secondary_text_color">@color/secondary_text_color_dark</item>
         <item name="ripple_mask_color">@color/dark_window_bg</item>
         <item name="toolbar_popup_theme">@style/DarkToolbarPopupTheme</item>
+        <item name="ic_view_list">@drawable/ic_view_list_grey_300_24dp</item>
+        <item name="ic_share">@drawable/ic_share_grey_300_24dp</item>
+        <item name="ic_folder">@drawable/ic_folder_grey_300_24dp</item>
+        <item name="ic_insert_drive_file">@drawable/ic_insert_drive_file_grey_300_24dp</item>
     </style>
 
     <style name="BlackThemeCommon" parent="DarkThemeCommon">

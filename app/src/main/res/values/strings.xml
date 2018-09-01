@@ -92,4 +92,5 @@
     <string name="message">Message</string>
     <string name="date">Date</string>
     <string name="time">Time</string>
+    <string name="unable_to_share">Unable to share</string>
 </resources>
