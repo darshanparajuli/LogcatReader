@@ -1,6 +1,6 @@
 package com.logcat.collections
 
-import junit.framework.Assert.*
+import org.junit.Assert.*
 import org.junit.Test
 
 class FixedCircularArrayTest {
