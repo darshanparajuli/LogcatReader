@@ -9,6 +9,7 @@ import android.view.View
 import android.view.animation.DecelerateInterpolator
 import com.dp.logcatapp.R
 import com.dp.logcatapp.fragments.savedlogs.SavedLogsFragment
+import com.dp.logcatapp.util.transaction
 
 class SavedLogsActivity : BaseActivityWithToolbar() {
 
@@ -35,7 +36,9 @@ class SavedLogsActivity : BaseActivityWithToolbar() {
         }
 
         if (savedInstanceState == null) {
-            addFragment()
+            supportFragmentManager.transaction {
+                replace(R.id.content_frame, SavedLogsFragment(), SavedLogsFragment.TAG)
+            }
         }
     }
 
@@ -96,12 +99,6 @@ class SavedLogsActivity : BaseActivityWithToolbar() {
 
     fun setCabToolbarTitle(title: String) {
         cabToolbar.title = title
-    }
-
-    private fun addFragment() {
-        supportFragmentManager.beginTransaction()
-                .replace(R.id.content_frame, SavedLogsFragment(), SavedLogsFragment.TAG)
-                .commit()
     }
 
     override fun getToolbarIdRes(): Int = R.id.toolbar
