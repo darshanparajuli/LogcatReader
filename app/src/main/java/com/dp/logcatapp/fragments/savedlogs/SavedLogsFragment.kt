@@ -27,19 +27,18 @@ import android.widget.EditText
 import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.core.net.toFile
+import androidx.core.net.toUri
 import com.dp.logcatapp.R
 import com.dp.logcatapp.activities.BaseActivityWithToolbar
 import com.dp.logcatapp.activities.CabToolbarCallback
 import com.dp.logcatapp.activities.SavedLogsActivity
 import com.dp.logcatapp.activities.SavedLogsViewerActivity
 import com.dp.logcatapp.db.MyDB
+import com.dp.logcatapp.db.SavedLogInfo
 import com.dp.logcatapp.fragments.base.BaseDialogFragment
 import com.dp.logcatapp.fragments.base.BaseFragment
 import com.dp.logcatapp.fragments.logcatlive.LogcatLiveFragment
-import com.dp.logcatapp.util.ShareUtils
-import com.dp.logcatapp.util.closeQuietly
-import com.dp.logcatapp.util.inflateLayout
-import com.dp.logcatapp.util.showToast
+import com.dp.logcatapp.util.*
 import io.reactivex.Flowable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
@@ -62,6 +61,7 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
     private lateinit var progressBar: ProgressBar
 
     private var deleteSubscriptionHandler: Disposable? = null
+    private var renameSubscriptionHandler: Disposable? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -350,10 +350,26 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
         recyclerViewAdapter.notifyDataSetChanged()
     }
 
+    private fun onRename(newName: String, newPath: Uri) {
+        val fileInfo = recyclerViewAdapter.getItem(viewModel.selectedItems.toIntArray()[0])
+        renameSubscriptionHandler = Flowable.just(MyDB.getInstance(context!!))
+                .subscribeOn(Schedulers.io())
+                .map { db ->
+                    db.savedLogsDao().delete(fileInfo.info)
+                    db.savedLogsDao().insert(SavedLogInfo(newName, newPath.toString(), fileInfo.info.isCustom))
+                }
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe {
+                    viewModel.fileNames.reload()
+                }
+    }
+
     override fun onDestroy() {
         super.onDestroy()
         deleteSubscriptionHandler?.dispose()
         deleteSubscriptionHandler = null
+        renameSubscriptionHandler?.dispose()
+        renameSubscriptionHandler = null
     }
 
     private class MyRecyclerViewAdapter(
@@ -483,10 +499,8 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
             val view = inflateLayout(R.layout.rename_dialog)
             val editText = view.findViewById<EditText>(R.id.editText)
 
-            val path = arguments!!.getString(KEY_PATH)
-            val file = File(path)
-
-            editText.setText(file.name)
+            val path = arguments!!.getString(KEY_PATH)!!
+            editText.setText(getName(path))
             editText.selectAll()
 
             val dialog = AlertDialog.Builder(activity!!)
@@ -495,9 +509,7 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
                     .setPositiveButton(android.R.string.ok) { _, _ ->
                         val newName = editText.text.toString()
                         if (newName.isNotEmpty()) {
-                            if (file.renameTo(File(file.parent, newName))) {
-                                (targetFragment as SavedLogsFragment).viewModel.fileNames.reload()
-                            } else {
+                            if (!doRename(path, newName)) {
                                 activity!!.showToast(getString(R.string.error))
                             }
                             (activity as SavedLogsActivity).closeCabToolbar()
@@ -517,6 +529,33 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
             }
 
             return dialog
+        }
+
+        private fun getName(path: String): String {
+            if (Utils.isUsingCustomSaveLocation(context!!) && Build.VERSION.SDK_INT >= 21) {
+                return DocumentFile.fromSingleUri(context!!, path.toUri())!!.name!!
+            } else {
+                return File(path).name
+            }
+        }
+
+        private fun doRename(path: String, newName: String): Boolean {
+            if (Utils.isUsingCustomSaveLocation(context!!) && Build.VERSION.SDK_INT >= 21) {
+                val file = DocumentFile.fromSingleUri(context!!, path.toUri())!!
+                if (file.renameTo(newName)) {
+                    (targetFragment as SavedLogsFragment).onRename(newName, file.uri)
+                    return true
+                }
+            } else {
+                val file = File(path)
+                val newFile = File(file.parent, newName)
+                if (file.renameTo(newFile)) {
+                    (targetFragment as SavedLogsFragment).onRename(newName, newFile.toUri())
+                    return true
+                }
+            }
+
+            return false
         }
     }
 }
