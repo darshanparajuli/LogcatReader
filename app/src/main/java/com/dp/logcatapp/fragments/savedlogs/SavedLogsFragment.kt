@@ -38,7 +38,10 @@ import com.dp.logcatapp.db.SavedLogInfo
 import com.dp.logcatapp.fragments.base.BaseDialogFragment
 import com.dp.logcatapp.fragments.base.BaseFragment
 import com.dp.logcatapp.fragments.logcatlive.LogcatLiveFragment
-import com.dp.logcatapp.util.*
+import com.dp.logcatapp.util.ShareUtils
+import com.dp.logcatapp.util.closeQuietly
+import com.dp.logcatapp.util.inflateLayout
+import com.dp.logcatapp.util.showToast
 import io.reactivex.Flowable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
@@ -194,9 +197,7 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
         return when (item.itemId) {
             R.id.action_rename -> {
                 val fileInfo = recyclerViewAdapter.getItem(viewModel.selectedItems.toIntArray()[0])
-                val folder = File(context!!.filesDir, LogcatLiveFragment.LOGCAT_DIR)
-                val file = File(folder, fileInfo.info.fileName)
-                val frag = RenameDialogFragment.newInstance(file.absolutePath)
+                val frag = RenameDialogFragment.newInstance(fileInfo.info.fileName, fileInfo.info.path)
                 frag.setTargetFragment(this, 0)
                 frag.show(fragmentManager, RenameDialogFragment.TAG)
                 true
@@ -339,10 +340,16 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
         val save = toolbar.menu.findItem(R.id.action_save)
         val rename = toolbar.menu.findItem(R.id.action_rename)
 
-        val visible = viewModel.selectedItems.size <= 1
+        val visible = viewModel.selectedItems.size == 1
         share.isVisible = visible
         save.isVisible = visible
-        rename.isVisible = visible
+
+        if (visible) {
+            val info = recyclerViewAdapter.getItem(viewModel.selectedItems.toIntArray()[0])
+            rename.isVisible = !info.info.isCustom
+        } else {
+            rename.isVisible = false
+        }
     }
 
     override fun onCabToolbarClose(toolbar: Toolbar) {
@@ -362,6 +369,8 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
                 .subscribe {
                     viewModel.fileNames.reload()
                 }
+
+        (activity as SavedLogsActivity).closeCabToolbar()
     }
 
     override fun onDestroy() {
@@ -484,10 +493,12 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
         companion object {
             val TAG = RenameDialogFragment::class.qualifiedName
 
+            private val KEY_FILENAME = TAG + "_key_filename"
             private val KEY_PATH = TAG + "_key_path"
 
-            fun newInstance(path: String): RenameDialogFragment {
+            fun newInstance(fileName: String, path: String): RenameDialogFragment {
                 val bundle = Bundle()
+                bundle.putString(KEY_FILENAME, fileName)
                 bundle.putString(KEY_PATH, path)
                 val frag = RenameDialogFragment()
                 frag.arguments = bundle
@@ -498,9 +509,7 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
         override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
             val view = inflateLayout(R.layout.rename_dialog)
             val editText = view.findViewById<EditText>(R.id.editText)
-
-            val path = arguments!!.getString(KEY_PATH)!!
-            editText.setText(getName(path))
+            editText.setText(arguments!!.getString(KEY_FILENAME))
             editText.selectAll()
 
             val dialog = AlertDialog.Builder(activity!!)
@@ -509,10 +518,13 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
                     .setPositiveButton(android.R.string.ok) { _, _ ->
                         val newName = editText.text.toString()
                         if (newName.isNotEmpty()) {
-                            if (!doRename(path, newName)) {
+                            val file = arguments!!.getString(KEY_PATH)!!.toUri().toFile()
+                            val newFile = File(file.parent, newName)
+                            if (file.renameTo(newFile)) {
+                                (targetFragment as SavedLogsFragment).onRename(newName, newFile.toUri())
+                            } else {
                                 activity!!.showToast(getString(R.string.error))
                             }
-                            (activity as SavedLogsActivity).closeCabToolbar()
                         }
                         dismiss()
                     }
@@ -529,33 +541,6 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
             }
 
             return dialog
-        }
-
-        private fun getName(path: String): String {
-            if (Utils.isUsingCustomSaveLocation(context!!) && Build.VERSION.SDK_INT >= 21) {
-                return DocumentFile.fromSingleUri(context!!, path.toUri())!!.name!!
-            } else {
-                return File(path).name
-            }
-        }
-
-        private fun doRename(path: String, newName: String): Boolean {
-            if (Utils.isUsingCustomSaveLocation(context!!) && Build.VERSION.SDK_INT >= 21) {
-                val file = DocumentFile.fromSingleUri(context!!, path.toUri())!!
-                if (file.renameTo(newName)) {
-                    (targetFragment as SavedLogsFragment).onRename(newName, file.uri)
-                    return true
-                }
-            } else {
-                val file = File(path)
-                val newFile = File(file.parent, newName)
-                if (file.renameTo(newFile)) {
-                    (targetFragment as SavedLogsFragment).onRename(newName, newFile.toUri())
-                    return true
-                }
-            }
-
-            return false
         }
     }
 }
