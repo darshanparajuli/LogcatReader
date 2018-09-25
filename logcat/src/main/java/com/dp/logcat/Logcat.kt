@@ -1,15 +1,15 @@
 package com.dp.logcat
 
-import android.arch.lifecycle.Lifecycle
-import android.arch.lifecycle.LifecycleObserver
-import android.arch.lifecycle.OnLifecycleEvent
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleObserver
+import androidx.lifecycle.OnLifecycleEvent
 import android.content.Context
 import android.net.Uri
 import android.os.ConditionVariable
 import android.os.Handler
 import android.os.Looper
-import android.support.v4.provider.DocumentFile
-import android.support.v7.app.AppCompatActivity
+import androidx.documentfile.provider.DocumentFile
+import androidx.appcompat.app.AppCompatActivity
 import com.dp.logger.Logger
 import com.logcat.collections.FixedCircularArray
 import java.io.*
@@ -432,7 +432,7 @@ class Logcat(initialCapacity: Int = INITIAL_LOG_CAPACITY) : Closeable {
             return -1L
         }
 
-        fun getLogCountFromHeader(context: Context, file: DocumentFile): Long {
+        fun getLogCountFromHeader(context: Context, file: androidx.documentfile.provider.DocumentFile): Long {
             try {
                 val fis = context.contentResolver.openInputStream(file.uri)
                 return getLogCountFromHeader(fis!!)

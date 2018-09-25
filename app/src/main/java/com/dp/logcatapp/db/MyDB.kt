@@ -1,8 +1,8 @@
 package com.dp.logcatapp.db
 
-import android.arch.persistence.db.SupportSQLiteDatabase
-import android.arch.persistence.room.*
-import android.arch.persistence.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
+import androidx.room.*
+import androidx.room.migration.Migration
 import android.content.Context
 import com.dp.logcatapp.fragments.filters.FilterType
 import io.reactivex.Flowable

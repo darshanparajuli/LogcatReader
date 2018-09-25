@@ -3,9 +3,9 @@ package com.dp.logcatapp.fragments.base
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.support.v4.app.Fragment
+import androidx.fragment.app.Fragment
 
-open class BaseFragment : Fragment() {
+open class BaseFragment : androidx.fragment.app.Fragment() {
     protected lateinit var handler: Handler
         private set
 

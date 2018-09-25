@@ -1,6 +1,6 @@
 package com.dp.logcat
 
-import android.support.annotation.MainThread
+import androidx.annotation.MainThread
 
 interface LogcatEventListener {
 

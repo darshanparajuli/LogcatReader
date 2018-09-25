@@ -2,16 +2,16 @@ package com.dp.logcatapp.fragments.settings.dialogs
 
 import android.app.Application
 import android.app.Dialog
-import android.arch.lifecycle.AndroidViewModel
-import android.arch.lifecycle.MutableLiveData
-import android.arch.lifecycle.Observer
-import android.arch.lifecycle.ViewModelProviders
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProviders
 import android.content.Context
 import android.os.Bundle
 import android.os.Environment
-import android.support.v7.app.AlertDialog
-import android.support.v7.widget.LinearLayoutManager
-import android.support.v7.widget.RecyclerView
+import androidx.appcompat.app.AlertDialog
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -34,7 +34,7 @@ class FolderChooserDialogFragment : BaseDialogFragment(), View.OnClickListener {
     }
 
     private lateinit var recyclerViewAdapter: MyRecyclerViewAdapter
-    private lateinit var layoutManager: LinearLayoutManager
+    private lateinit var layoutManager: androidx.recyclerview.widget.LinearLayoutManager
     private lateinit var viewModel: MyViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -52,9 +52,9 @@ class FolderChooserDialogFragment : BaseDialogFragment(), View.OnClickListener {
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         val rootView = inflateLayout(R.layout.folder_chooser)
-        val recyclerView = rootView.findViewById<RecyclerView>(R.id.recyclerView)
+        val recyclerView = rootView.findViewById<androidx.recyclerview.widget.RecyclerView>(R.id.recyclerView)
 
-        layoutManager = LinearLayoutManager(activity!!)
+        layoutManager = androidx.recyclerview.widget.LinearLayoutManager(activity!!)
 
         recyclerView.layoutManager = layoutManager
         recyclerView.adapter = recyclerViewAdapter
@@ -86,7 +86,7 @@ class FolderChooserDialogFragment : BaseDialogFragment(), View.OnClickListener {
         when (v.id) {
             R.id.folderChooserListItem -> {
                 val pos = layoutManager.getPosition(v)
-                if (pos != RecyclerView.NO_POSITION) {
+                if (pos != androidx.recyclerview.widget.RecyclerView.NO_POSITION) {
                     val fileHolder = recyclerViewAdapter[pos]
                     if (fileHolder.isParent) {
                         if (fileHolder.file.parentFile != null) {
@@ -141,7 +141,7 @@ internal class MyViewModel(application: Application) : AndroidViewModel(applicat
 internal data class FileHolder(val file: File, val isParent: Boolean = false)
 
 private class MyRecyclerViewAdapter(context: Context, private val onClickListener: View.OnClickListener) :
-        RecyclerView.Adapter<MyRecyclerViewAdapter.MyViewHolder>() {
+        androidx.recyclerview.widget.RecyclerView.Adapter<MyRecyclerViewAdapter.MyViewHolder>() {
 
     private var data = listOf<FileHolder>()
 
@@ -178,7 +178,7 @@ private class MyRecyclerViewAdapter(context: Context, private val onClickListene
         }
     }
 
-    class MyViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+    class MyViewHolder(itemView: View) : androidx.recyclerview.widget.RecyclerView.ViewHolder(itemView) {
         val fileIcon: ImageView = itemView.findViewById(R.id.fileIcon)
         val fileName: TextView = itemView.findViewById(R.id.fileName)
     }

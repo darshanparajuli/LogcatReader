@@ -3,7 +3,7 @@ package com.dp.logcatapp.util
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import android.support.v4.content.FileProvider
+import androidx.core.content.FileProvider
 import androidx.core.net.toFile
 import com.dp.logcatapp.BuildConfig
 import com.dp.logcatapp.R

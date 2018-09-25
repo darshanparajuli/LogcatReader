@@ -2,8 +2,8 @@ package com.dp.logcatapp.fragments.logcatlive
 
 import android.content.Context
 import android.content.SharedPreferences
-import android.support.v4.content.ContextCompat
-import android.support.v7.widget.RecyclerView
+import androidx.core.content.ContextCompat
+import androidx.recyclerview.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -16,7 +16,7 @@ import com.dp.logcatapp.util.PreferenceKeys
 import com.logcat.collections.FixedCircularArray
 
 internal class MyRecyclerViewAdapter(context: Context, initialCapacity: Int) :
-        RecyclerView.Adapter<MyRecyclerViewAdapter.MyViewHolder>(),
+        androidx.recyclerview.widget.RecyclerView.Adapter<MyRecyclerViewAdapter.MyViewHolder>(),
         View.OnClickListener,
         SharedPreferences.OnSharedPreferenceChangeListener {
 
@@ -105,7 +105,7 @@ internal class MyRecyclerViewAdapter(context: Context, initialCapacity: Int) :
         this.onClickListener = onClickListener
     }
 
-    class MyViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+    class MyViewHolder(itemView: View) : androidx.recyclerview.widget.RecyclerView.ViewHolder(itemView) {
         val date: TextView = itemView.findViewById(R.id.date)
         val time: TextView = itemView.findViewById(R.id.time)
         val pid: TextView = itemView.findViewById(R.id.pid)

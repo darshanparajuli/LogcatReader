@@ -3,7 +3,7 @@ package com.dp.logcatapp.activities
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
-import android.support.v4.app.ActivityCompat
+import androidx.core.app.ActivityCompat
 import android.view.Menu
 import android.view.MenuItem
 import com.dp.logcatapp.R

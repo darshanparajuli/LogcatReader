@@ -11,14 +11,14 @@ import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.os.Build
 import android.provider.OpenableColumns
-import android.support.annotation.AttrRes
-import android.support.annotation.LayoutRes
-import android.support.design.widget.Snackbar
-import android.support.v4.app.Fragment
-import android.support.v4.app.FragmentManager
-import android.support.v4.app.FragmentTransaction
-import android.support.v4.content.ContextCompat
-import android.support.v7.preference.PreferenceManager
+import androidx.annotation.AttrRes
+import androidx.annotation.LayoutRes
+import com.google.android.material.snackbar.Snackbar
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentManager
+import androidx.fragment.app.FragmentTransaction
+import androidx.core.content.ContextCompat
+import androidx.preference.PreferenceManager
 import android.util.TypedValue
 import android.view.*
 import android.widget.Toast
@@ -62,8 +62,8 @@ fun newSnakcbar(view: View?, msg: String, length: Int = Snackbar.LENGTH_SHORT): 
 
 //// BEGIN Fragment
 
-fun Fragment.inflateLayout(@LayoutRes layoutResId: Int, root: ViewGroup? = null,
-                           attachToRoot: Boolean = false): View =
+fun androidx.fragment.app.Fragment.inflateLayout(@LayoutRes layoutResId: Int, root: ViewGroup? = null,
+                                                 attachToRoot: Boolean = false): View =
         activity!!.inflateLayout(layoutResId, root, attachToRoot)
 
 //// END Fragment
@@ -71,9 +71,9 @@ fun Fragment.inflateLayout(@LayoutRes layoutResId: Int, root: ViewGroup? = null,
 
 //// BEGIN FragmentManager
 
-inline fun FragmentManager.transaction(allowStateLoss: Boolean = false,
-                                       now: Boolean = false,
-                                       body: FragmentTransaction.() -> Unit) {
+inline fun androidx.fragment.app.FragmentManager.transaction(allowStateLoss: Boolean = false,
+                                                             now: Boolean = false,
+                                                             body: androidx.fragment.app.FragmentTransaction.() -> Unit) {
     val transaction = beginTransaction()
     transaction.body()
     if (allowStateLoss) {

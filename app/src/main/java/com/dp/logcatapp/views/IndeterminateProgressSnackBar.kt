@@ -1,6 +1,6 @@
 package com.dp.logcatapp.views
 
-import android.support.design.widget.Snackbar
+import com.google.android.material.snackbar.Snackbar
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.ProgressBar

@@ -2,12 +2,12 @@ package com.dp.logcatapp.fragments.base
 
 import android.os.Handler
 import android.os.Looper
-import android.support.v4.app.DialogFragment
+import androidx.fragment.app.DialogFragment
 import android.view.View
 import android.view.animation.Animation
 import android.view.animation.AnimationUtils
 
-open class BaseDialogFragment : DialogFragment() {
+open class BaseDialogFragment : androidx.fragment.app.DialogFragment() {
     private val handler = Handler()
 
     override fun onCreateAnimation(transit: Int, enter: Boolean, nextAnim: Int): Animation? {

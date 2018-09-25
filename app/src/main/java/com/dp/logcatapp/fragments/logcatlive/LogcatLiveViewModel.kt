@@ -2,13 +2,13 @@ package com.dp.logcatapp.fragments.logcatlive
 
 import android.annotation.SuppressLint
 import android.app.Application
-import android.arch.lifecycle.AndroidViewModel
-import android.arch.lifecycle.LiveData
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.LiveData
 import android.content.Context
 import android.net.Uri
 import android.os.AsyncTask
 import android.os.Build
-import android.support.v4.provider.DocumentFile
+import androidx.documentfile.provider.DocumentFile
 import androidx.core.net.toFile
 import androidx.core.net.toUri
 import com.dp.logcat.Log
@@ -78,7 +78,7 @@ private class FileSaveNotifier(private val context: Context) : LiveData<SaveInfo
                         saveInfo.result = SaveInfo.ERROR_SAVING
                         if (result) {
                             val fileName = if (isUsingCustomLocation && Build.VERSION.SDK_INT >= 21) {
-                                DocumentFile.fromSingleUri(context, uri)?.name
+                                androidx.documentfile.provider.DocumentFile.fromSingleUri(context, uri)?.name
                             } else {
                                 uri.toFile().name
                             }
@@ -123,7 +123,7 @@ private class FileSaveNotifier(private val context: Context) : LiveData<SaveInfo
             File(file, "$fileName.txt").toUri()
         } else {
             if (Build.VERSION.SDK_INT >= 21) {
-                val documentFile = DocumentFile.fromTreeUri(context, Uri.parse(saveLocationPref))
+                val documentFile = androidx.documentfile.provider.DocumentFile.fromTreeUri(context, Uri.parse(saveLocationPref))
                 val file = documentFile?.createFile("text/plain", fileName)
                 file?.uri
             } else {

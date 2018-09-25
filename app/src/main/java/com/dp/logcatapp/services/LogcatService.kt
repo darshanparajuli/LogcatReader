@@ -11,8 +11,8 @@ import android.content.SharedPreferences
 import android.graphics.BitmapFactory
 import android.os.Binder
 import android.os.Build
-import android.support.v4.app.NotificationCompat
-import android.support.v4.content.ContextCompat
+import androidx.core.app.NotificationCompat
+import androidx.core.content.ContextCompat
 import androidx.core.content.edit
 import com.dp.logcat.Logcat
 import com.dp.logcatapp.R
