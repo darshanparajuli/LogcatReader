@@ -296,9 +296,11 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
     @TargetApi(19)
     private fun saveToDeviceKitkat() {
         try {
+            val fileInfo = recyclerViewAdapter.getItem(viewModel.selectedItems.toIntArray()[0])
             val intent = Intent(Intent.ACTION_CREATE_DOCUMENT)
             intent.addCategory(Intent.CATEGORY_OPENABLE)
             intent.type = "text/plain"
+            intent.putExtra(Intent.EXTRA_TITLE, fileInfo.info.fileName)
             startActivityForResult(intent, SAVE_REQ)
         } catch (e: Exception) {
             context?.showToast(getString(R.string.error))
