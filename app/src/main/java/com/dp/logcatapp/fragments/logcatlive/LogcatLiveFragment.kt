@@ -189,8 +189,8 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
 
         viewModel = ViewModelProviders.of(activity!!)
                 .get(LogcatLiveViewModel::class.java)
-        viewModel.getFileSaveNotifier().observe(this, androidx.lifecycle.Observer {
-            if (it != null) {
+        viewModel.getFileSaveNotifier().observe(this, androidx.lifecycle.Observer { saveInfo ->
+            saveInfo?.let {
                 when (it.result) {
                     SaveInfo.IN_PROGRESS -> {
                         snackBarProgress.show()
@@ -337,22 +337,23 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
     }
 
     private fun onSearchViewClose() {
-        val logcat = logcatService?.logcat ?: return
-        logcat.pause()
-        logcat.removeFilter(SEARCH_FILTER_TAG)
+        logcatService?.logcat?.let {
+            it.pause()
+            it.removeFilter(SEARCH_FILTER_TAG)
 
-        adapter.clear()
-        addAllLogs(logcat.getLogsFiltered())
-        if (lastLogId == -1) {
-            scrollRecyclerView()
-        } else {
-            viewModel.autoScroll = linearLayoutManager.findLastCompletelyVisibleItemPosition() ==
-                    adapter.itemCount - 1
-            if (!viewModel.autoScroll) {
-                viewModel.scrollPosition = lastLogId
-                linearLayoutManager.scrollToPositionWithOffset(lastLogId, 0)
+            adapter.clear()
+            addAllLogs(it.getLogsFiltered())
+            if (lastLogId == -1) {
+                scrollRecyclerView()
+            } else {
+                viewModel.autoScroll = linearLayoutManager.findLastCompletelyVisibleItemPosition() ==
+                        adapter.itemCount - 1
+                if (!viewModel.autoScroll) {
+                    viewModel.scrollPosition = lastLogId
+                    linearLayoutManager.scrollToPositionWithOffset(lastLogId, 0)
+                }
+                lastLogId = -1
             }
-            lastLogId = -1
         }
 
         resumeLogcat()
@@ -606,8 +607,10 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
     }
 
     private fun resumeLogcat() {
-        if (logcatService != null && !logcatService!!.paused) {
-            logcatService?.logcat?.resume()
+        logcatService?.let {
+            if (!it.paused) {
+                it.logcat.resume()
+            }
         }
     }
 
@@ -643,12 +646,13 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
         }
 
         override fun onPostExecute(result: List<Log>?) {
-            val frag = fragRef.get() ?: return
-            if (result != null) {
-                frag.adapter.clear()
-                frag.adapter.addItems(result)
-                frag.viewModel.autoScroll = false
-                frag.linearLayoutManager.scrollToPositionWithOffset(0, 0)
+            fragRef.get()?.apply {
+                result?.let {
+                    adapter.clear()
+                    adapter.addItems(it)
+                    viewModel.autoScroll = false
+                    linearLayoutManager.scrollToPositionWithOffset(0, 0)
+                }
             }
         }
     }
