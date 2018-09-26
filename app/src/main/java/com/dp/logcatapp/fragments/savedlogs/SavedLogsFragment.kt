@@ -3,8 +3,6 @@ package com.dp.logcatapp.fragments.savedlogs
 import android.annotation.TargetApi
 import android.app.Activity
 import android.app.Dialog
-import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProviders
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -12,12 +10,6 @@ import android.os.AsyncTask
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
-import androidx.documentfile.provider.DocumentFile
-import androidx.appcompat.app.AlertDialog
-import androidx.recyclerview.widget.DiffUtil
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
-import androidx.appcompat.widget.Toolbar
 import android.view.LayoutInflater
 import android.view.MenuItem
 import android.view.View
@@ -26,8 +18,16 @@ import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
 import android.widget.ProgressBar
 import android.widget.TextView
+import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.widget.Toolbar
 import androidx.core.net.toFile
 import androidx.core.net.toUri
+import androidx.documentfile.provider.DocumentFile
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProviders
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.dp.logcatapp.R
 import com.dp.logcatapp.activities.BaseActivityWithToolbar
 import com.dp.logcatapp.activities.CabToolbarCallback
@@ -57,10 +57,10 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
     }
 
     private lateinit var viewModel: SavedLogsViewModel
-    private lateinit var recyclerView: androidx.recyclerview.widget.RecyclerView
+    private lateinit var recyclerView: RecyclerView
     private lateinit var emptyView: View
     private lateinit var recyclerViewAdapter: MyRecyclerViewAdapter
-    private lateinit var linearLayoutManager: androidx.recyclerview.widget.LinearLayoutManager
+    private lateinit var linearLayoutManager: LinearLayoutManager
     private lateinit var progressBar: ProgressBar
 
     private var deleteSubscriptionHandler: Disposable? = null
@@ -125,7 +125,7 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
         progressBar = view.findViewById(R.id.progressBar)
 
         recyclerView = view.findViewById(R.id.recyclerView)
-        linearLayoutManager = androidx.recyclerview.widget.LinearLayoutManager(context)
+        linearLayoutManager = LinearLayoutManager(context)
         recyclerView.itemAnimator = null
         recyclerView.layoutManager = linearLayoutManager
         recyclerView.adapter = recyclerViewAdapter
@@ -138,7 +138,7 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
         when (v.id) {
             R.id.list_item_root -> {
                 val pos = linearLayoutManager.getPosition(v)
-                if (pos != androidx.recyclerview.widget.RecyclerView.NO_POSITION) {
+                if (pos != RecyclerView.NO_POSITION) {
                     if ((activity as SavedLogsActivity).isCabToolbarActive()) {
                         onSelect(pos)
                         if (viewModel.selectedItems.isEmpty()) {
@@ -175,7 +175,7 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
                 }
 
                 val pos = linearLayoutManager.getPosition(v)
-                if (pos != androidx.recyclerview.widget.RecyclerView.NO_POSITION) {
+                if (pos != RecyclerView.NO_POSITION) {
                     viewModel.selectedItems.clear()
                     onSelect(pos)
                     return (activity as SavedLogsActivity).openCabToolbar(this,
@@ -234,7 +234,7 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
                 .filter {
                     with(Uri.parse(it.info.path)) {
                         if (it.info.isCustom && Build.VERSION.SDK_INT >= 21) {
-                            val file = androidx.documentfile.provider.DocumentFile.fromSingleUri(context!!, this)
+                            val file = DocumentFile.fromSingleUri(context!!, this)
                             file != null && file.delete()
                         } else {
                             this.toFile().delete()
@@ -388,7 +388,7 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
             val onClickListener: View.OnClickListener,
             val onLongClickListener: View.OnLongClickListener,
             val selectedItems: Set<Int>
-    ) : androidx.recyclerview.widget.RecyclerView.Adapter<MyRecyclerViewAdapter.MyViewHolder>() {
+    ) : RecyclerView.Adapter<MyRecyclerViewAdapter.MyViewHolder>() {
 
         val data = mutableListOf<LogFileInfo>()
         val logFormat: String = context.resources.getString(R.string.log_count_fmt)
@@ -430,7 +430,7 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
             result.dispatchUpdatesTo(this)
         }
 
-        class MyViewHolder(itemView: View) : androidx.recyclerview.widget.RecyclerView.ViewHolder(itemView) {
+        class MyViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
             val fileName: TextView = itemView.findViewById(R.id.fileName)
             val fileSize: TextView = itemView.findViewById(R.id.fileSize)
             val logCount: TextView = itemView.findViewById(R.id.logCount)

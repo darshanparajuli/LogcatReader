@@ -5,7 +5,7 @@ import android.os.Handler
 import android.os.Looper
 import androidx.fragment.app.Fragment
 
-open class BaseFragment : androidx.fragment.app.Fragment() {
+open class BaseFragment : Fragment() {
     protected lateinit var handler: Handler
         private set
 

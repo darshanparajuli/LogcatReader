@@ -6,6 +6,7 @@ import android.os.ConditionVariable
 import android.os.Handler
 import android.os.Looper
 import androidx.appcompat.app.AppCompatActivity
+import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleObserver
 import androidx.lifecycle.OnLifecycleEvent
@@ -435,7 +436,7 @@ class Logcat(initialCapacity: Int = INITIAL_LOG_CAPACITY) : Closeable {
             return -1L
         }
 
-        fun getLogCountFromHeader(context: Context, file: androidx.documentfile.provider.DocumentFile): Long {
+        fun getLogCountFromHeader(context: Context, file: DocumentFile): Long {
             try {
                 val fis = context.contentResolver.openInputStream(file.uri)
                 return getLogCountFromHeader(fis!!)

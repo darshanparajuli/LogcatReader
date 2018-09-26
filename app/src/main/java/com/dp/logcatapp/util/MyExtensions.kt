@@ -11,21 +11,19 @@ import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.os.Build
 import android.provider.OpenableColumns
-import androidx.annotation.AttrRes
-import androidx.annotation.LayoutRes
-import com.google.android.material.snackbar.Snackbar
-import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentManager
-import androidx.fragment.app.FragmentTransaction
-import androidx.core.content.ContextCompat
-import androidx.preference.PreferenceManager
 import android.util.TypedValue
 import android.view.*
 import android.widget.Toast
+import androidx.annotation.AttrRes
+import androidx.annotation.LayoutRes
+import androidx.core.content.ContextCompat
+import androidx.fragment.app.Fragment
+import androidx.preference.PreferenceManager
 import com.dp.logcatapp.R
 import com.dp.logcatapp.activities.MainActivity
 import com.dp.logcatapp.activities.SettingsActivity
 import com.dp.logger.Logger
+import com.google.android.material.snackbar.Snackbar
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
@@ -62,36 +60,11 @@ fun newSnakcbar(view: View?, msg: String, length: Int = Snackbar.LENGTH_SHORT): 
 
 //// BEGIN Fragment
 
-fun androidx.fragment.app.Fragment.inflateLayout(@LayoutRes layoutResId: Int, root: ViewGroup? = null,
+fun Fragment.inflateLayout(@LayoutRes layoutResId: Int, root: ViewGroup? = null,
                                                  attachToRoot: Boolean = false): View =
         activity!!.inflateLayout(layoutResId, root, attachToRoot)
 
 //// END Fragment
-
-
-//// BEGIN FragmentManager
-
-inline fun androidx.fragment.app.FragmentManager.transaction(allowStateLoss: Boolean = false,
-                                                             now: Boolean = false,
-                                                             body: androidx.fragment.app.FragmentTransaction.() -> Unit) {
-    val transaction = beginTransaction()
-    transaction.body()
-    if (allowStateLoss) {
-        if (now) {
-            transaction.commitNowAllowingStateLoss()
-        } else {
-            transaction.commitAllowingStateLoss()
-        }
-    } else {
-        if (now) {
-            transaction.commitNow()
-        } else {
-            transaction.commit()
-        }
-    }
-}
-
-//// END FragmentManager
 
 
 //// BEGIN Context

@@ -1,9 +1,9 @@
 package com.dp.logcatapp.activities
 
 import android.os.Bundle
+import androidx.fragment.app.transaction
 import com.dp.logcatapp.R
 import com.dp.logcatapp.fragments.filters.FiltersFragment
-import com.dp.logcatapp.util.transaction
 
 class FiltersActivity : BaseActivityWithToolbar() {
 

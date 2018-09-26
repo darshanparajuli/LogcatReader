@@ -2,14 +2,14 @@ package com.dp.logcatapp.fragments.savedlogs
 
 import android.annotation.SuppressLint
 import android.app.Application
-import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.LiveData
 import android.content.Context
 import android.net.Uri
 import android.os.AsyncTask
 import android.os.Build
-import androidx.documentfile.provider.DocumentFile
 import androidx.core.net.toFile
+import androidx.documentfile.provider.DocumentFile
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.LiveData
 import com.dp.logcat.Logcat
 import com.dp.logcat.LogcatStreamReader
 import com.dp.logcatapp.db.MyDB
@@ -92,7 +92,7 @@ internal class SavedLogsLiveData(private val application: Application) :
             val savedLogInfoList = db.savedLogsDao().getAllSync()
             for (info in savedLogInfoList) {
                 if (info.isCustom && Build.VERSION.SDK_INT >= 21) {
-                    val file = androidx.documentfile.provider.DocumentFile.fromSingleUri(application, Uri.parse(info.path))
+                    val file = DocumentFile.fromSingleUri(application, Uri.parse(info.path))
                     if (file == null || file.name == null) {
                         Logger.logDebug(this::class, "file name is null")
                         continue
@@ -146,7 +146,7 @@ internal class SavedLogsLiveData(private val application: Application) :
             }
         }
 
-        private fun countLogs(context: Context, file: androidx.documentfile.provider.DocumentFile): Long {
+        private fun countLogs(context: Context, file: DocumentFile): Long {
             val logCount = Logcat.getLogCountFromHeader(context, file)
             if (logCount != -1L) {
                 return logCount

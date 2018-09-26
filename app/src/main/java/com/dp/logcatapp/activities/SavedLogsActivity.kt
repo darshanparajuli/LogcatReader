@@ -3,13 +3,13 @@ package com.dp.logcatapp.activities
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.os.Bundle
-import androidx.annotation.NonNull
-import androidx.appcompat.widget.Toolbar
 import android.view.View
 import android.view.animation.DecelerateInterpolator
+import androidx.annotation.NonNull
+import androidx.appcompat.widget.Toolbar
+import androidx.fragment.app.transaction
 import com.dp.logcatapp.R
 import com.dp.logcatapp.fragments.savedlogs.SavedLogsFragment
-import com.dp.logcatapp.util.transaction
 
 class SavedLogsActivity : BaseActivityWithToolbar() {
 

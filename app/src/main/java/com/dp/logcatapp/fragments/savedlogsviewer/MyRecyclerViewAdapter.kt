@@ -1,17 +1,17 @@
 package com.dp.logcatapp.fragments.savedlogsviewer
 
 import android.content.Context
-import androidx.core.content.ContextCompat
-import androidx.recyclerview.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.core.content.ContextCompat
+import androidx.recyclerview.widget.RecyclerView
 import com.dp.logcat.Log
 import com.dp.logcat.LogPriority
 import com.dp.logcatapp.R
 
-internal class MyRecyclerViewAdapter(context: Context) : androidx.recyclerview.widget.RecyclerView.Adapter<MyRecyclerViewAdapter.MyViewHolder>(),
+internal class MyRecyclerViewAdapter(context: Context) : RecyclerView.Adapter<MyRecyclerViewAdapter.MyViewHolder>(),
         View.OnClickListener {
     private val data = mutableListOf<Log>()
     private var onClickListener: ((View) -> Unit)? = null
@@ -82,7 +82,7 @@ internal class MyRecyclerViewAdapter(context: Context) : androidx.recyclerview.w
         this.onClickListener = onClickListener
     }
 
-    class MyViewHolder(itemView: View) : androidx.recyclerview.widget.RecyclerView.ViewHolder(itemView) {
+    class MyViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val date: TextView = itemView.findViewById(R.id.date)
         val time: TextView = itemView.findViewById(R.id.time)
         val pid: TextView = itemView.findViewById(R.id.pid)

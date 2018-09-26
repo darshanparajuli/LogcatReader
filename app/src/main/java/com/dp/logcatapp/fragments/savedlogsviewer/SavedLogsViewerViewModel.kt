@@ -1,10 +1,10 @@
 package com.dp.logcatapp.fragments.savedlogsviewer
 
 import android.app.Application
-import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.LiveData
 import android.net.Uri
 import android.os.AsyncTask
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.LiveData
 import com.dp.logcat.Log
 import com.dp.logcat.LogcatStreamReader
 import java.io.FileNotFoundException

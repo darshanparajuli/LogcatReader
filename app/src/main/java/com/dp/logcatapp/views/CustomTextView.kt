@@ -2,8 +2,8 @@ package com.dp.logcatapp.views
 
 import android.content.Context
 import android.graphics.Paint
-import androidx.appcompat.widget.AppCompatTextView
 import android.util.AttributeSet
+import androidx.appcompat.widget.AppCompatTextView
 import com.dp.logcatapp.R
 import com.dp.logcatapp.util.getTypeface
 

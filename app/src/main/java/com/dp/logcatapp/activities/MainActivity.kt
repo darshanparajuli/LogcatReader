@@ -3,9 +3,9 @@ package com.dp.logcatapp.activities
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
-import androidx.core.app.ActivityCompat
 import android.view.Menu
 import android.view.MenuItem
+import androidx.core.app.ActivityCompat
 import com.dp.logcatapp.R
 import com.dp.logcatapp.fragments.logcatlive.LogcatLiveFragment
 import com.dp.logcatapp.services.LogcatService

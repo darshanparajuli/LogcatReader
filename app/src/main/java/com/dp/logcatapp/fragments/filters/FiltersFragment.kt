@@ -1,15 +1,15 @@
 package com.dp.logcatapp.fragments.filters
 
 import android.annotation.SuppressLint
-import androidx.lifecycle.ViewModelProviders
 import android.os.Bundle
+import android.view.*
+import android.widget.ImageButton
+import android.widget.TextView
+import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import android.view.*
-import android.widget.ImageButton
-import android.widget.TextView
 import com.dp.logcat.LogPriority
 import com.dp.logcatapp.R
 import com.dp.logcatapp.db.FilterInfo
@@ -40,7 +40,7 @@ class FiltersFragment : BaseFragment() {
 
     private lateinit var viewModel: LogcatLiveViewModel
     private lateinit var recyclerViewAdapter: MyRecyclerViewAdapter
-    private lateinit var linearLayoutManager: androidx.recyclerview.widget.LinearLayoutManager
+    private lateinit var linearLayoutManager: LinearLayoutManager
     private lateinit var emptyMessage: TextView
     private var filterSubscription: Disposable? = null
 
@@ -125,7 +125,7 @@ class FiltersFragment : BaseFragment() {
     @SuppressLint("CheckResult")
     private fun onRemoveClicked(v: View) {
         val pos = linearLayoutManager.getPosition(v)
-        if (pos != androidx.recyclerview.widget.RecyclerView.NO_POSITION) {
+        if (pos != RecyclerView.NO_POSITION) {
             val item = recyclerViewAdapter[pos]
             recyclerViewAdapter.remove(pos)
             Flowable.just(MyDB.getInstance(context!!))
@@ -142,10 +142,10 @@ class FiltersFragment : BaseFragment() {
 
         emptyMessage = rootView.findViewById(R.id.textViewEmpty)
 
-        val recyclerView = rootView.findViewById<androidx.recyclerview.widget.RecyclerView>(R.id.recyclerView)
-        recyclerView.addItemDecoration(androidx.recyclerview.widget.DividerItemDecoration(activity!!,
-                androidx.recyclerview.widget.DividerItemDecoration.VERTICAL))
-        linearLayoutManager = androidx.recyclerview.widget.LinearLayoutManager(activity!!)
+        val recyclerView = rootView.findViewById<RecyclerView>(R.id.recyclerView)
+        recyclerView.addItemDecoration(DividerItemDecoration(activity!!,
+                DividerItemDecoration.VERTICAL))
+        linearLayoutManager = LinearLayoutManager(activity!!)
         recyclerView.layoutManager = linearLayoutManager
         recyclerView.adapter = recyclerViewAdapter
 
@@ -218,7 +218,7 @@ internal data class FilterListItem(val type: String,
                                    val info: FilterInfo)
 
 internal class MyRecyclerViewAdapter(private val onRemoveListener: (View) -> Unit) :
-        androidx.recyclerview.widget.RecyclerView.Adapter<MyRecyclerViewAdapter.MyViewHolder>() {
+        RecyclerView.Adapter<MyRecyclerViewAdapter.MyViewHolder>() {
 
     private val data = mutableListOf<FilterListItem>()
 
@@ -254,7 +254,7 @@ internal class MyRecyclerViewAdapter(private val onRemoveListener: (View) -> Uni
         holder.type.text = item.type
     }
 
-    class MyViewHolder(itemView: View) : androidx.recyclerview.widget.RecyclerView.ViewHolder(itemView) {
+    class MyViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val content: TextView = itemView.findViewById(R.id.content)
         val type: TextView = itemView.findViewById(R.id.type)
     }

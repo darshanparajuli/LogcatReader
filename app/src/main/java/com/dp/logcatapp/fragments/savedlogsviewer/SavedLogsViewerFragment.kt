@@ -1,18 +1,17 @@
 package com.dp.logcatapp.fragments.savedlogsviewer
 
-import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProviders
 import android.net.Uri
 import android.os.AsyncTask
 import android.os.Bundle
-import com.google.android.material.floatingactionbutton.FloatingActionButton
-import androidx.recyclerview.widget.DividerItemDecoration
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
-import androidx.appcompat.widget.SearchView
 import android.view.*
 import android.widget.ProgressBar
 import android.widget.TextView
+import androidx.appcompat.widget.SearchView
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProviders
+import androidx.recyclerview.widget.DividerItemDecoration
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.dp.logcat.Log
 import com.dp.logcatapp.R
 import com.dp.logcatapp.activities.BaseActivityWithToolbar
@@ -21,6 +20,7 @@ import com.dp.logcatapp.fragments.shared.dialogs.CopyToClipboardDialogFragment
 import com.dp.logcatapp.util.containsIgnoreCase
 import com.dp.logcatapp.util.inflateLayout
 import com.dp.logger.Logger
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import java.lang.ref.WeakReference
 
 class SavedLogsViewerFragment : BaseFragment() {
@@ -38,8 +38,8 @@ class SavedLogsViewerFragment : BaseFragment() {
         }
     }
 
-    private lateinit var recyclerView: androidx.recyclerview.widget.RecyclerView
-    private lateinit var linearLayoutManager: androidx.recyclerview.widget.LinearLayoutManager
+    private lateinit var recyclerView: RecyclerView
+    private lateinit var linearLayoutManager: LinearLayoutManager
     private lateinit var viewModel: SavedLogsViewerViewModel
     private lateinit var adapter: MyRecyclerViewAdapter
     private lateinit var fabUp: FloatingActionButton
@@ -60,10 +60,10 @@ class SavedLogsViewerFragment : BaseFragment() {
         fabDown.hide()
     }
 
-    private val onScrollListener = object : androidx.recyclerview.widget.RecyclerView.OnScrollListener() {
+    private val onScrollListener = object : RecyclerView.OnScrollListener() {
         var lastDy = 0
 
-        override fun onScrolled(recyclerView: androidx.recyclerview.widget.RecyclerView, dx: Int, dy: Int) {
+        override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
             if (dy > 0 && lastDy <= 0) {
                 hideFabUp()
                 showFabDown()
@@ -74,7 +74,7 @@ class SavedLogsViewerFragment : BaseFragment() {
             lastDy = dy
         }
 
-        override fun onScrollStateChanged(recyclerView: androidx.recyclerview.widget.RecyclerView, newState: Int) {
+        override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
             when (newState) {
                 androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_DRAGGING -> {
                     viewModel.autoScroll = false
@@ -89,16 +89,16 @@ class SavedLogsViewerFragment : BaseFragment() {
                 else -> {
                     var firstPos = -1
                     if (searchViewActive && !viewModel.autoScroll &&
-                            newState == androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_IDLE) {
+                            newState == RecyclerView.SCROLL_STATE_IDLE) {
                         firstPos = linearLayoutManager.findFirstCompletelyVisibleItemPosition()
-                        if (firstPos != androidx.recyclerview.widget.RecyclerView.NO_POSITION) {
+                        if (firstPos != RecyclerView.NO_POSITION) {
                             val log = adapter[firstPos]
                             lastLogId = log.id
                         }
                     }
 
                     val pos = linearLayoutManager.findLastCompletelyVisibleItemPosition()
-                    if (pos == androidx.recyclerview.widget.RecyclerView.NO_POSITION) {
+                    if (pos == RecyclerView.NO_POSITION) {
                         viewModel.autoScroll = false
                         return
                     }
@@ -186,10 +186,10 @@ class SavedLogsViewerFragment : BaseFragment() {
         textViewEmpty = view.findViewById(R.id.textViewEmpty)
 
         recyclerView = view.findViewById(R.id.recyclerView)
-        linearLayoutManager = androidx.recyclerview.widget.LinearLayoutManager(activity)
+        linearLayoutManager = LinearLayoutManager(activity)
         recyclerView.layoutManager = linearLayoutManager
         recyclerView.itemAnimator = null
-        recyclerView.addItemDecoration(androidx.recyclerview.widget.DividerItemDecoration(activity,
+        recyclerView.addItemDecoration(DividerItemDecoration(activity,
                 linearLayoutManager.orientation))
         recyclerView.adapter = adapter
 
