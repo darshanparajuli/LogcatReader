@@ -1,7 +1,6 @@
 package com.dp.logcatapp.fragments.logcatlive
 
 import android.Manifest
-import androidx.lifecycle.ViewModelProviders
 import android.content.ComponentName
 import android.content.Intent
 import android.content.ServiceConnection
@@ -10,17 +9,12 @@ import android.net.Uri
 import android.os.AsyncTask
 import android.os.Bundle
 import android.os.IBinder
-import com.google.android.material.bottomsheet.BottomSheetDialogFragment
-import com.google.android.material.floatingactionbutton.FloatingActionButton
-import com.google.android.material.snackbar.Snackbar
-import androidx.core.content.ContextCompat
-import androidx.appcompat.app.AppCompatActivity
-import androidx.recyclerview.widget.DividerItemDecoration
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
-import androidx.appcompat.widget.SearchView
 import android.view.*
 import android.widget.TextView
+import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.SearchView
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.ViewModelProviders
 import com.dp.logcat.Filter
 import com.dp.logcat.Log
 import com.dp.logcat.Logcat
@@ -40,6 +34,9 @@ import com.dp.logcatapp.services.LogcatService
 import com.dp.logcatapp.util.*
 import com.dp.logcatapp.views.IndeterminateProgressSnackBar
 import com.dp.logger.Logger
+import com.google.android.material.bottomsheet.BottomSheetDialogFragment
+import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.google.android.material.snackbar.Snackbar
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import java.lang.ref.WeakReference
@@ -557,7 +554,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
                     val logcat = logcatService?.logcat
                     if (logcat != null) {
                         logcat.pause()
-                        logcat.clearFilters()
+                        logcat.clearFilters(exclude = SEARCH_FILTER_TAG)
                         logcat.clearExclusions()
 
                         for (filter in it) {
@@ -619,6 +616,14 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
         logcatService = null
     }
 
+    private class SearchFilter(private val searchText: String) : Filter {
+        override fun apply(log: Log): Boolean {
+            return log.tag.containsIgnoreCase(searchText) ||
+                    log.msg.containsIgnoreCase(searchText)
+        }
+
+    }
+
     private class SearchTask(fragment: LogcatLiveFragment,
                              val logcat: Logcat, val searchText: String) :
             AsyncTask<String, Void, List<Log>>() {
@@ -627,12 +632,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
 
         override fun onPreExecute() {
             logcat.pause()
-            logcat.addFilter(SEARCH_FILTER_TAG, object : Filter {
-                override fun apply(log: Log): Boolean {
-                    return log.tag.containsIgnoreCase(searchText) ||
-                            log.msg.containsIgnoreCase(searchText)
-                }
-            })
+            logcat.addFilter(SEARCH_FILTER_TAG, SearchFilter(searchText))
         }
 
         override fun doInBackground(vararg params: String?): List<Log> =

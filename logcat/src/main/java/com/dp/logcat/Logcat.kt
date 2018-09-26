@@ -1,15 +1,14 @@
 package com.dp.logcat
 
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleObserver
-import androidx.lifecycle.OnLifecycleEvent
 import android.content.Context
 import android.net.Uri
 import android.os.ConditionVariable
 import android.os.Handler
 import android.os.Looper
-import androidx.documentfile.provider.DocumentFile
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleObserver
+import androidx.lifecycle.OnLifecycleEvent
 import com.dp.logger.Logger
 import com.logcat.collections.FixedCircularArray
 import java.io.*
@@ -221,9 +220,13 @@ class Logcat(initialCapacity: Int = INITIAL_LOG_CAPACITY) : Closeable {
         }
     }
 
-    fun clearFilters() {
+    fun clearFilters(exclude: String? = null) {
         logsLock.withLock {
-            filters.clear()
+            for ((k, _) in filters) {
+                if (k != exclude) {
+                    filters.remove(k)
+                }
+            }
         }
     }
 
