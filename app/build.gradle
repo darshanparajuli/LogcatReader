@@ -17,8 +17,8 @@ android {
         applicationId "com.dp.logcatapp"
         minSdkVersion 16
         targetSdkVersion 28
-        versionCode 24
-        versionName "1.5.4"
+        versionCode 25
+        versionName "1.5.5"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
     }
