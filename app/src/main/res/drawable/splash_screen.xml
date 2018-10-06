@@ -4,13 +4,13 @@
         <shape
             android:dither="true"
             android:shape="rectangle">
-            <solid android:color="@color/color_primary_dark" />
+            <solid android:color="@color/color_primary" />
         </shape>
     </item>
     <item>
         <bitmap
             android:antialias="true"
             android:gravity="center"
-            android:src="@drawable/splash_screen_img" />
+            android:src="@drawable/splash_screen_logo" />
     </item>
 </layer-list>
