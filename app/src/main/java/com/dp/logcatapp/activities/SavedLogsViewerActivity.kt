@@ -3,7 +3,10 @@ package com.dp.logcatapp.activities
 import android.os.Bundle
 import com.dp.logcatapp.R
 import com.dp.logcatapp.fragments.savedlogsviewer.SavedLogsViewerFragment
+import com.dp.logcatapp.util.PreferenceKeys
+import com.dp.logcatapp.util.getDefaultSharedPreferences
 import com.dp.logcatapp.util.getFileNameFromUri
+import com.dp.logcatapp.util.setKeepScreenOn
 
 class SavedLogsViewerActivity : BaseActivityWithToolbar() {
 
@@ -35,4 +38,10 @@ class SavedLogsViewerActivity : BaseActivityWithToolbar() {
     override fun getToolbarIdRes(): Int = R.id.toolbar
 
     override fun getToolbarTitle(): String = getString(R.string.saved_logs)
+
+    override fun onResume() {
+        super.onResume()
+        setKeepScreenOn(getDefaultSharedPreferences().getBoolean(PreferenceKeys.General.KEY_KEEP_SCREEN_ON,
+                PreferenceKeys.General.Default.KEY_KEEP_SCREEN_ON))
+    }
 }

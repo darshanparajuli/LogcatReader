@@ -4,6 +4,14 @@ object PreferenceKeys {
 
     const val MAIN_PREF_SCREEN = "pref_key_main_screen"
 
+    object General {
+        const val KEY_KEEP_SCREEN_ON = "pref_key_general_keep_screen_on"
+
+        object Default {
+            const val KEY_KEEP_SCREEN_ON = false
+        }
+    }
+
     object Appearance {
 
         const val KEY_THEME = "pref_key_appearance_theme"

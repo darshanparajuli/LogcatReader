@@ -10,6 +10,8 @@
     <string name="logcat_service_channel_name">Logcat service</string>
     <string name="logcat_service">Logcat service</string>
     <string name="press_back_again_to_exit">Press back again to exit</string>
+    <string name="pref_cat_general">General</string>
+    <string name="pref_general_keep_screen_on">Keep screen on</string>
     <string name="pref_cat_appearance">Appearance</string>
     <string name="pref_theme_title">Theme</string>
     <string name="pref_theme_black_theme">Super Dark Theme</string>

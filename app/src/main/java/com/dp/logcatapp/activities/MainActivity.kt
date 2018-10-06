@@ -9,6 +9,9 @@ import androidx.core.app.ActivityCompat
 import com.dp.logcatapp.R
 import com.dp.logcatapp.fragments.logcatlive.LogcatLiveFragment
 import com.dp.logcatapp.services.LogcatService
+import com.dp.logcatapp.util.PreferenceKeys
+import com.dp.logcatapp.util.getDefaultSharedPreferences
+import com.dp.logcatapp.util.setKeepScreenOn
 import com.dp.logcatapp.util.showToast
 
 class MainActivity : BaseActivityWithToolbar() {
@@ -70,6 +73,12 @@ class MainActivity : BaseActivityWithToolbar() {
         super.onNewIntent(intent)
         checkShouldTheAppExit(intent)
         handleStopRecordingIntent(intent)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        setKeepScreenOn(getDefaultSharedPreferences().getBoolean(PreferenceKeys.General.KEY_KEEP_SCREEN_ON,
+                PreferenceKeys.General.Default.KEY_KEEP_SCREEN_ON))
     }
 
     override fun onDestroy() {

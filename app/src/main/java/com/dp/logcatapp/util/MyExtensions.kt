@@ -40,6 +40,14 @@ fun Activity.restartApp() {
     taskBuilder.startActivities()
 }
 
+fun Activity.setKeepScreenOn(enabled: Boolean) {
+    if (enabled) {
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+    } else {
+        window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+    }
+}
+
 //// END Activity
 
 
