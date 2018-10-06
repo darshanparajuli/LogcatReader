@@ -91,4 +91,7 @@
     <string name="message">Сообщение</string>
     <string name="date">Дата</string>
     <string name="time">Время</string>
+    <string name="unable_to_share">Не удалось поделиться</string>
+    <string name="pref_cat_general">Генеральная</string>
+    <string name="pref_general_keep_screen_on">Оставьте экран включенным</string>
 </resources>
