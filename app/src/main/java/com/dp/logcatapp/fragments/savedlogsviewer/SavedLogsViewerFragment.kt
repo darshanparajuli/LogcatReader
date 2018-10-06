@@ -359,11 +359,12 @@ class SavedLogsViewerFragment : BaseFragment() {
         }
 
         override fun onPostExecute(result: List<Log>?) {
-            val frag = fragRef.get() ?: return
-            if (result != null) {
-                frag.adapter.setItems(result)
-                frag.viewModel.autoScroll = false
-                frag.linearLayoutManager.scrollToPositionWithOffset(0, 0)
+            fragRef.get()?.apply {
+                result?.let {
+                    adapter.setItems(it)
+                    viewModel.autoScroll = false
+                    linearLayoutManager.scrollToPositionWithOffset(0, 0)
+                }
             }
         }
     }

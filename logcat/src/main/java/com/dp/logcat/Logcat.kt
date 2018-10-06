@@ -148,9 +148,7 @@ class Logcat(initialCapacity: Int = INITIAL_LOG_CAPACITY) : Closeable {
             pendingLogs.clear()
         }
 
-        if (onClear != null) {
-            onClear()
-        }
+        onClear?.invoke()
 
         if (!wasPaused) {
             resume()
@@ -181,10 +179,10 @@ class Logcat(initialCapacity: Int = INITIAL_LOG_CAPACITY) : Closeable {
 
     fun getLogsFiltered(): List<Log> {
         logsLock.withLock {
-            if (exclusions.isEmpty() && filters.isEmpty()) {
-                return logs.toList()
+            return if (exclusions.isEmpty() && filters.isEmpty()) {
+                logs.toList()
             } else {
-                return logs.filter { log ->
+                logs.filter { log ->
                     !exclusions.values.any { it.apply(log) } && filters.values.all { it.apply(log) }
                 }
             }

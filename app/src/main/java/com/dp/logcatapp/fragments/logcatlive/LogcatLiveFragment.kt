@@ -397,24 +397,24 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
                 true
             }
             R.id.action_play_pause -> {
-                val logcat = logcatService?.logcat
-                if (logcat != null) {
-                    val newPausedState = !logcatService!!.paused
+                logcatService?.let {
+                    val newPausedState = it.paused
                     if (newPausedState) {
-                        logcat.pause()
+                        it.logcat.pause()
                     } else {
-                        logcat.resume()
+                        it.logcat.resume()
                     }
-                    logcatService!!.paused = newPausedState
+                    it.paused = newPausedState
                     activity?.invalidateOptionsMenu()
                 }
                 true
             }
             R.id.action_record_toggle -> {
-                val recording = !logcatService!!.recording
-                logcatService?.updateNotification(recording)
-                val logcat = logcatService?.logcat
-                if (logcat != null) {
+                logcatService?.let {
+                    val recording = !it.recording
+                    it.updateNotification(recording)
+
+                    val logcat = it.logcat
                     if (recording) {
                         Snackbar.make(view!!, getString(R.string.started_recording),
                                 Snackbar.LENGTH_SHORT)
@@ -423,7 +423,8 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
                     } else {
                         saveToFile(true)
                     }
-                    logcatService!!.recording = recording
+
+                    it.recording = recording
                     activity?.invalidateOptionsMenu()
                 }
                 true
@@ -471,11 +472,13 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
     }
 
     private fun stopRecording() {
-        if (logcatService?.recording == true) {
-            logcatService?.updateNotification(false)
-            saveToFile(true)
-            logcatService!!.recording = false
-            activity?.invalidateOptionsMenu()
+        logcatService?.let {
+            if (it.recording) {
+                it.updateNotification(false)
+                saveToFile(true)
+                it.recording = false
+                activity?.invalidateOptionsMenu()
+            }
         }
         viewModel.stopRecording = false
     }
@@ -517,8 +520,10 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
         searchTask?.cancel(true)
 
         recyclerView.removeOnScrollListener(onScrollListener)
-        logcatService?.logcat?.setEventListener(null)
-        logcatService?.logcat?.unbind(activity as AppCompatActivity)
+        logcatService?.let {
+            it.logcat.setEventListener(null)
+            it.logcat.unbind(activity as AppCompatActivity)
+        }
         serviceBinder.close()
     }
 
@@ -555,14 +560,14 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
                 .filterDao()
                 .getAll()
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe {
-                    val logcat = logcatService?.logcat
-                    if (logcat != null) {
+                .subscribe { filterInfoList ->
+                    logcatService?.let {
+                        val logcat = it.logcat
                         logcat.pause()
                         logcat.clearFilters(exclude = SEARCH_FILTER_TAG)
                         logcat.clearExclusions()
 
-                        for (filter in it) {
+                        for (filter in filterInfoList) {
                             if (filter.exclude) {
                                 logcat.addExclusion("${filter.hashCode()}",
                                         LogFilter(filter))
