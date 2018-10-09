@@ -55,6 +55,7 @@ internal class LogsLiveData(private val application: Application) : LiveData<Lis
 
                 logs
             }.await()
+
             value = logs
         }
     }
