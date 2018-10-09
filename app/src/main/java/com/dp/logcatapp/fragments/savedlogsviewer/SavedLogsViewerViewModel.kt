@@ -7,11 +7,11 @@ import androidx.lifecycle.LiveData
 import com.dp.logcat.Log
 import com.dp.logcat.LogcatStreamReader
 import com.dp.logcatapp.util.closeQuietly
-import kotlinx.coroutines.experimental.Dispatchers.IO
-import kotlinx.coroutines.experimental.Dispatchers.Main
-import kotlinx.coroutines.experimental.GlobalScope
-import kotlinx.coroutines.experimental.async
-import kotlinx.coroutines.experimental.launch
+import kotlinx.coroutines.Dispatchers.IO
+import kotlinx.coroutines.Dispatchers.Main
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 import java.io.IOException
 
 internal class SavedLogsViewerViewModel(application: Application) : AndroidViewModel(application) {

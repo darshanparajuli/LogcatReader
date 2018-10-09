@@ -42,9 +42,12 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.snackbar.Snackbar
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
-import kotlinx.coroutines.experimental.*
-import kotlinx.coroutines.experimental.Dispatchers.Default
-import kotlinx.coroutines.experimental.Dispatchers.Main
+import kotlinx.coroutines.Dispatchers.Default
+import kotlinx.coroutines.Dispatchers.Main
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 
 class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListener {
     companion object {

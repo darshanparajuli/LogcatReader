@@ -17,11 +17,11 @@ import com.dp.logcatapp.fragments.logcatlive.LogcatLiveFragment.Companion.LOGCAT
 import com.dp.logcatapp.util.PreferenceKeys
 import com.dp.logcatapp.util.Utils
 import com.dp.logcatapp.util.getDefaultSharedPreferences
-import kotlinx.coroutines.experimental.Dispatchers.IO
-import kotlinx.coroutines.experimental.Dispatchers.Main
-import kotlinx.coroutines.experimental.GlobalScope
-import kotlinx.coroutines.experimental.async
-import kotlinx.coroutines.experimental.launch
+import kotlinx.coroutines.Dispatchers.IO
+import kotlinx.coroutines.Dispatchers.Main
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
