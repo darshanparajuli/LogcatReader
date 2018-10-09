@@ -398,7 +398,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
             }
             R.id.action_play_pause -> {
                 logcatService?.let {
-                    val newPausedState = it.paused
+                    val newPausedState = !it.paused
                     if (newPausedState) {
                         it.logcat.pause()
                     } else {
