@@ -1,7 +1,6 @@
 package com.dp.logcatapp.fragments.savedlogsviewer
 
 import android.net.Uri
-import android.os.AsyncTask
 import android.os.Bundle
 import android.view.*
 import android.widget.ProgressBar
@@ -19,9 +18,13 @@ import com.dp.logcatapp.fragments.base.BaseFragment
 import com.dp.logcatapp.fragments.shared.dialogs.CopyToClipboardDialogFragment
 import com.dp.logcatapp.util.containsIgnoreCase
 import com.dp.logcatapp.util.inflateLayout
-import com.dp.logger.Logger
 import com.google.android.material.floatingactionbutton.FloatingActionButton
-import java.lang.ref.WeakReference
+import kotlinx.coroutines.experimental.Dispatchers.Default
+import kotlinx.coroutines.experimental.Dispatchers.Main
+import kotlinx.coroutines.experimental.GlobalScope
+import kotlinx.coroutines.experimental.Job
+import kotlinx.coroutines.experimental.async
+import kotlinx.coroutines.experimental.launch
 
 class SavedLogsViewerFragment : BaseFragment() {
     companion object {
@@ -50,7 +53,7 @@ class SavedLogsViewerFragment : BaseFragment() {
     private var searchViewActive = false
     private var lastLogId = -1
     private var lastSearchRunnable: Runnable? = null
-    private var searchTask: SearchTask? = null
+    private var searchTask: Job? = null
 
     private val hideFabUpRunnable: Runnable = Runnable {
         fabUp.hide()
@@ -243,7 +246,9 @@ class SavedLogsViewerFragment : BaseFragment() {
                 } else {
                     reachedBlank = false
                     lastSearchRunnable = Runnable {
-                        onSearchAction(newText)
+                        viewModel.logs.value?.let {
+                            runSearchTask(it, newText)
+                        }
                     }
 
                     handler.postDelayed(lastSearchRunnable, 300)
@@ -262,19 +267,6 @@ class SavedLogsViewerFragment : BaseFragment() {
             }
             false
         }
-    }
-
-    private fun onSearchAction(newText: String) {
-        Logger.logDebug(SavedLogsViewerFragment::class, "onSearchAction: $newText")
-        searchTask?.cancel(true)
-
-        var logs = viewModel.logs.value
-        if (logs == null) {
-            logs = emptyList()
-        }
-
-        searchTask = SearchTask(this, logs, newText)
-        searchTask!!.execute()
     }
 
     private fun onSearchViewClose() {
@@ -317,7 +309,7 @@ class SavedLogsViewerFragment : BaseFragment() {
         super.onDestroy()
         (activity as BaseActivityWithToolbar).toolbar.subtitle = null
         removeLastSearchRunnableCallback()
-        searchTask?.cancel(true)
+        searchTask?.cancel()
         recyclerView.removeOnScrollListener(onScrollListener)
     }
 
@@ -343,29 +335,18 @@ class SavedLogsViewerFragment : BaseFragment() {
         }
     }
 
-    private class SearchTask(fragment: SavedLogsViewerFragment,
-                             val logs: List<Log>, val searchText: String) :
-            AsyncTask<String, Void, List<Log>>() {
-
-        private var fragRef: WeakReference<SavedLogsViewerFragment> = WeakReference(fragment)
-
-        override fun doInBackground(vararg params: String?): List<Log> =
+    private fun runSearchTask(logs: List<Log>, searchText: String) {
+        searchTask?.cancel()
+        searchTask = GlobalScope.launch(Main) {
+            val filteredLogs = async(Default) {
                 logs.filter {
                     it.tag.containsIgnoreCase(searchText) ||
                             it.msg.containsIgnoreCase(searchText)
                 }
-
-        override fun onCancelled(result: List<Log>?) {
-        }
-
-        override fun onPostExecute(result: List<Log>?) {
-            fragRef.get()?.apply {
-                result?.let {
-                    adapter.setItems(it)
-                    viewModel.autoScroll = false
-                    linearLayoutManager.scrollToPositionWithOffset(0, 0)
-                }
-            }
+            }.await()
+            adapter.setItems(filteredLogs)
+            viewModel.autoScroll = false
+            linearLayoutManager.scrollToPositionWithOffset(0, 0)
         }
     }
 }

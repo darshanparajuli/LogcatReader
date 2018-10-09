@@ -19,22 +19,19 @@ internal class SavedLogsViewerViewModel(application: Application) : AndroidViewM
     var autoScroll = true
     var scrollPosition = 0
 
-    lateinit var logs: LogsLiveData
+    var logs = LogsLiveData(application)
 
     fun init(uri: Uri) {
-        if (!::logs.isInitialized) {
-            logs = LogsLiveData(getApplication(), uri)
-        }
+        logs.load(uri)
     }
 }
 
-internal class LogsLiveData(application: Application, uri: Uri) : LiveData<List<Log>>() {
-
+internal class LogsLiveData(private val application: Application) : LiveData<List<Log>>() {
     init {
-        load(application, uri)
+        value = emptyList()
     }
 
-    private fun load(application: Application, uri: Uri) {
+    internal fun load(uri: Uri) {
         try {
             GlobalScope.launch(Main) {
                 val logs = async(IO) {
