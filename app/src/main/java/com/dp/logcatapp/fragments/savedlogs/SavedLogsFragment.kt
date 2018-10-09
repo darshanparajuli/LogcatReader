@@ -6,7 +6,6 @@ import android.app.Dialog
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import android.os.AsyncTask
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
@@ -46,8 +45,11 @@ import io.reactivex.Flowable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
+import kotlinx.coroutines.experimental.Dispatchers
+import kotlinx.coroutines.experimental.GlobalScope
+import kotlinx.coroutines.experimental.async
+import kotlinx.coroutines.experimental.launch
 import java.io.*
-import java.lang.ref.WeakReference
 
 class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListener,
         Toolbar.OnMenuItemClickListener, CabToolbarCallback {
@@ -285,12 +287,7 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
         }
 
         val dest = File(destFolder, fileName)
-
-        try {
-            SaveFileTask(this, FileInputStream(src), FileOutputStream(dest)).execute()
-        } catch (e: IOException) {
-            activity!!.showToast(getString(R.string.error_saving))
-        }
+        runSaveFileTask(FileInputStream(src), FileOutputStream(dest))
     }
 
     @TargetApi(19)
@@ -315,7 +312,7 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
         try {
             val src = FileInputStream(file)
             val dest = context!!.contentResolver.openOutputStream(uri)
-            SaveFileTask(this, src, dest!!).execute()
+            runSaveFileTask(src, dest!!)
         } catch (e: IOException) {
             activity!!.showToast(getString(R.string.error_saving))
         }
@@ -457,35 +454,26 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
         }
     }
 
-    class SaveFileTask(frag: SavedLogsFragment,
-                       private val src: InputStream,
-                       private val dest: OutputStream) :
-            AsyncTask<Void, Void, Boolean>() {
+    private fun runSaveFileTask(src: InputStream, dest: OutputStream) {
+        GlobalScope.launch(Dispatchers.Main) {
+            val result = async(Dispatchers.IO) {
+                try {
+                    src.copyTo(dest)
+                    true
+                } catch (e: IOException) {
+                    false
+                } finally {
+                    src.closeQuietly()
+                    dest.closeQuietly()
+                }
+            }.await()
 
-        private val ref = WeakReference(frag)
-
-        override fun doInBackground(vararg params: Void?): Boolean {
-            return try {
-                src.copyTo(dest)
-                true
-            } catch (e: IOException) {
-                false
-            } finally {
-                src.closeQuietly()
-                dest.closeQuietly()
-            }
-        }
-
-        override fun onPostExecute(result: Boolean) {
-            val frag = ref.get() ?: return
-            if (frag.activity == null) {
-                return
-            }
-
-            if (result) {
-                frag.activity!!.showToast(frag.getString(R.string.saved))
-            } else {
-                frag.activity!!.showToast(frag.getString(R.string.error_saving))
+            activity?.let {
+                if (result) {
+                    it.showToast(it.getString(R.string.saved))
+                } else {
+                    it.showToast(it.getString(R.string.error_saving))
+                }
             }
         }
     }
