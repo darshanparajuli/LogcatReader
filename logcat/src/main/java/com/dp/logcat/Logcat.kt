@@ -221,9 +221,10 @@ class Logcat(initialCapacity: Int = INITIAL_LOG_CAPACITY) : Closeable {
 
     fun clearFilters(exclude: String? = null) {
         logsLock.withLock {
-            for ((k, _) in filters) {
-                if (k != exclude) {
-                    filters.remove(k)
+            val it = filters.iterator()
+            while (it.hasNext()) {
+                if (it.next().key != exclude) {
+                    it.remove()
                 }
             }
         }
