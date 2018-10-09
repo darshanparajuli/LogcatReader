@@ -6,7 +6,6 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.content.pm.PackageManager
 import android.net.Uri
-import android.os.AsyncTask
 import android.os.Bundle
 import android.os.IBinder
 import android.view.*
@@ -43,7 +42,7 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.snackbar.Snackbar
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
-import java.lang.ref.WeakReference
+import kotlinx.coroutines.experimental.*
 
 class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListener {
     companion object {
@@ -76,7 +75,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
     private var searchViewActive = false
     private var lastLogId = -1
     private var lastSearchRunnable: Runnable? = null
-    private var searchTask: SearchTask? = null
+    private var searchTask: Job? = null
     private var filterSubscription: Disposable? = null
 
     private val hideFabUpRunnable: Runnable = Runnable {
@@ -299,13 +298,14 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
                     onSearchViewClose()
                 } else {
                     reachedBlank = false
-                    val logcat = logcatService?.logcat ?: return true
+                    logcatService?.logcat?.let {
+                        lastSearchRunnable = Runnable {
+                            runSearchTask(it, newText)
+                        }
 
-                    lastSearchRunnable = Runnable {
-                        onSearchAction(logcat, newText)
+                        handler.postDelayed(lastSearchRunnable, 100)
                     }
 
-                    handler.postDelayed(lastSearchRunnable, 300)
                 }
                 return true
             }
@@ -331,13 +331,6 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
             recordToggleItem.isVisible = true
             false
         }
-    }
-
-    private fun onSearchAction(logcat: Logcat, newText: String) {
-        Logger.logDebug(LogcatLiveFragment::class, "onSearchAction: $newText")
-        searchTask?.cancel(true)
-        searchTask = SearchTask(this, logcat, newText)
-        searchTask!!.execute()
     }
 
     private fun onSearchViewClose() {
@@ -517,7 +510,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
         activity!!.getDefaultSharedPreferences().unregisterOnSharedPreferenceChangeListener(adapter)
 
         removeLastSearchRunnableCallback()
-        searchTask?.cancel(true)
+        searchTask?.cancel()
 
         recyclerView.removeOnScrollListener(onScrollListener)
         logcatService?.let {
@@ -636,33 +629,17 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
 
     }
 
-    private class SearchTask(fragment: LogcatLiveFragment,
-                             val logcat: Logcat, val searchText: String) :
-            AsyncTask<String, Void, List<Log>>() {
-
-        private var fragRef: WeakReference<LogcatLiveFragment> = WeakReference(fragment)
-
-        override fun onPreExecute() {
+    private fun runSearchTask(logcat: Logcat, searchText: String) {
+        searchTask?.cancel()
+        searchTask = GlobalScope.launch(Dispatchers.Main) {
             logcat.pause()
             logcat.addFilter(SEARCH_FILTER_TAG, SearchFilter(searchText))
-        }
 
-        override fun doInBackground(vararg params: String?): List<Log> =
-                logcat.getLogsFiltered()
-
-        override fun onCancelled(result: List<Log>?) {
-            fragRef.get()?.resumeLogcat()
-        }
-
-        override fun onPostExecute(result: List<Log>?) {
-            fragRef.get()?.apply {
-                result?.let {
-                    adapter.clear()
-                    adapter.addItems(it)
-                    viewModel.autoScroll = false
-                    linearLayoutManager.scrollToPositionWithOffset(0, 0)
-                }
-            }
+            val filteredLogs = async(Dispatchers.Default) { logcat.getLogsFiltered() }.await()
+            adapter.clear()
+            adapter.addItems(filteredLogs)
+            viewModel.autoScroll = false
+            linearLayoutManager.scrollToPositionWithOffset(0, 0)
         }
     }
 
