@@ -32,10 +32,11 @@ internal class LogsLiveData(private val application: Application) : LiveData<Lis
     }
 
     internal fun load(uri: Uri) {
-        try {
-            GlobalScope.launch(Main) {
-                val logs = async(IO) {
-                    val logs = mutableListOf<Log>()
+        GlobalScope.launch(Main) {
+            val logs = async(IO) {
+                val logs = mutableListOf<Log>()
+
+                try {
                     application.contentResolver.openInputStream(uri)?.let {
                         try {
                             val reader = LogcatStreamReader(it)
@@ -48,13 +49,13 @@ internal class LogsLiveData(private val application: Application) : LiveData<Lis
                             it.closeQuietly()
                         }
                     }
+                } catch (e: FileNotFoundException) {
+                    // ignore
+                }
 
-                    logs
-                }.await()
-                value = logs
-            }
-        } catch (e: FileNotFoundException) {
-            value = emptyList()
+                logs
+            }.await()
+            value = logs
         }
     }
 }
