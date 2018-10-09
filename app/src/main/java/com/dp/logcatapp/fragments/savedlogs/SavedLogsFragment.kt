@@ -45,7 +45,8 @@ import io.reactivex.Flowable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
-import kotlinx.coroutines.experimental.Dispatchers
+import kotlinx.coroutines.experimental.Dispatchers.IO
+import kotlinx.coroutines.experimental.Dispatchers.Main
 import kotlinx.coroutines.experimental.GlobalScope
 import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.launch
@@ -455,8 +456,8 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
     }
 
     private fun runSaveFileTask(src: InputStream, dest: OutputStream) {
-        GlobalScope.launch(Dispatchers.Main) {
-            val result = async(Dispatchers.IO) {
+        GlobalScope.launch(Main) {
+            val result = async(IO) {
                 try {
                     src.copyTo(dest)
                     true

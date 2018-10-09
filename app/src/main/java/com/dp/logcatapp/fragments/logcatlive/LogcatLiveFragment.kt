@@ -43,6 +43,8 @@ import com.google.android.material.snackbar.Snackbar
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import kotlinx.coroutines.experimental.*
+import kotlinx.coroutines.experimental.Dispatchers.Default
+import kotlinx.coroutines.experimental.Dispatchers.Main
 
 class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListener {
     companion object {
@@ -631,11 +633,11 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
 
     private fun runSearchTask(logcat: Logcat, searchText: String) {
         searchTask?.cancel()
-        searchTask = GlobalScope.launch(Dispatchers.Main) {
+        searchTask = GlobalScope.launch(Main) {
             logcat.pause()
             logcat.addFilter(SEARCH_FILTER_TAG, SearchFilter(searchText))
 
-            val filteredLogs = async(Dispatchers.Default) { logcat.getLogsFiltered() }.await()
+            val filteredLogs = async(Default) { logcat.getLogsFiltered() }.await()
             adapter.clear()
             adapter.addItems(filteredLogs)
             viewModel.autoScroll = false

@@ -17,7 +17,8 @@ import com.dp.logcatapp.fragments.logcatlive.LogcatLiveFragment.Companion.LOGCAT
 import com.dp.logcatapp.util.PreferenceKeys
 import com.dp.logcatapp.util.Utils
 import com.dp.logcatapp.util.getDefaultSharedPreferences
-import kotlinx.coroutines.experimental.Dispatchers
+import kotlinx.coroutines.experimental.Dispatchers.IO
+import kotlinx.coroutines.experimental.Dispatchers.Main
 import kotlinx.coroutines.experimental.GlobalScope
 import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.launch
@@ -53,9 +54,9 @@ internal data class SaveInfo(var result: Int, var fileName: String? = null,
 private class FileSaveNotifier(private val context: Context) : LiveData<SaveInfo>() {
 
     fun save(f: () -> List<Log>?) {
-        GlobalScope.launch(Dispatchers.Main) {
+        GlobalScope.launch(Main) {
             value = SaveInfo(SaveInfo.IN_PROGRESS)
-            value = async(Dispatchers.IO) { saveAsync(f) }.await()
+            value = async(IO) { saveAsync(f) }.await()
         }
     }
 

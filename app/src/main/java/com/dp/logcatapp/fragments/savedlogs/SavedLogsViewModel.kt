@@ -15,7 +15,12 @@ import com.dp.logcatapp.db.SavedLogInfo
 import com.dp.logcatapp.fragments.logcatlive.LogcatLiveFragment
 import com.dp.logcatapp.util.Utils
 import com.dp.logger.Logger
-import kotlinx.coroutines.experimental.*
+import kotlinx.coroutines.experimental.Dispatchers.IO
+import kotlinx.coroutines.experimental.Dispatchers.Main
+import kotlinx.coroutines.experimental.GlobalScope
+import kotlinx.coroutines.experimental.Job
+import kotlinx.coroutines.experimental.async
+import kotlinx.coroutines.experimental.launch
 import java.io.File
 import java.io.FileInputStream
 import java.io.IOException
@@ -63,9 +68,9 @@ internal class SavedLogsLiveData(private val application: Application) :
 
     fun load() {
         job?.cancel()
-        job = GlobalScope.launch(Dispatchers.Main) {
+        job = GlobalScope.launch(Main) {
             val db = MyDB.getInstance(application)
-            val result = async(Dispatchers.IO) { loadAsync(db) }.await()
+            val result = async(IO) { loadAsync(db) }.await()
             value = result
         }
     }
