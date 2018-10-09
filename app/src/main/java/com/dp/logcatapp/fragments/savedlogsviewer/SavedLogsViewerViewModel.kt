@@ -12,7 +12,6 @@ import kotlinx.coroutines.experimental.Dispatchers.Main
 import kotlinx.coroutines.experimental.GlobalScope
 import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.launch
-import java.io.FileNotFoundException
 import java.io.IOException
 
 internal class SavedLogsViewerViewModel(application: Application) : AndroidViewModel(application) {
@@ -27,10 +26,6 @@ internal class SavedLogsViewerViewModel(application: Application) : AndroidViewM
 }
 
 internal class LogsLiveData(private val application: Application) : LiveData<List<Log>>() {
-    init {
-        value = emptyList()
-    }
-
     internal fun load(uri: Uri) {
         GlobalScope.launch(Main) {
             val logs = async(IO) {
@@ -49,7 +44,8 @@ internal class LogsLiveData(private val application: Application) : LiveData<Lis
                             it.closeQuietly()
                         }
                     }
-                } catch (e: FileNotFoundException) {
+                } catch (e: Exception) {
+                    e.printStackTrace()
                     // ignore
                 }
 
