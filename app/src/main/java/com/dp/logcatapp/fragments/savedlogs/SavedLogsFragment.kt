@@ -366,7 +366,7 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
                 }
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe {
-                    viewModel.fileNames.reload()
+                    viewModel.fileNames.load()
                 }
 
         (activity as SavedLogsActivity).closeCabToolbar()
