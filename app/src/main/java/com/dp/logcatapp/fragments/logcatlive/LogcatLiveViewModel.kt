@@ -1,10 +1,8 @@
 package com.dp.logcatapp.fragments.logcatlive
 
-import android.annotation.SuppressLint
 import android.app.Application
 import android.content.Context
 import android.net.Uri
-import android.os.AsyncTask
 import android.os.Build
 import androidx.core.net.toFile
 import androidx.core.net.toUri
@@ -19,6 +17,10 @@ import com.dp.logcatapp.fragments.logcatlive.LogcatLiveFragment.Companion.LOGCAT
 import com.dp.logcatapp.util.PreferenceKeys
 import com.dp.logcatapp.util.Utils
 import com.dp.logcatapp.util.getDefaultSharedPreferences
+import kotlinx.coroutines.experimental.Dispatchers
+import kotlinx.coroutines.experimental.GlobalScope
+import kotlinx.coroutines.experimental.async
+import kotlinx.coroutines.experimental.launch
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
@@ -50,61 +52,51 @@ internal data class SaveInfo(var result: Int, var fileName: String? = null,
 
 private class FileSaveNotifier(private val context: Context) : LiveData<SaveInfo>() {
 
-    @SuppressLint("StaticFieldLeak")
     fun save(f: () -> List<Log>?) {
-        object : AsyncTask<Void, Void, SaveInfo>() {
+        GlobalScope.launch(Dispatchers.Main) {
+            value = SaveInfo(SaveInfo.IN_PROGRESS)
+            value = async(Dispatchers.IO) { saveAsync(f) }.await()
+        }
+    }
 
-            override fun onPreExecute() {
-                value = SaveInfo(SaveInfo.IN_PROGRESS)
-            }
+    private fun saveAsync(f: () -> List<Log>?): SaveInfo {
+        val saveInfo = SaveInfo(SaveInfo.ERROR_SAVING)
 
-            override fun doInBackground(vararg params: Void?): SaveInfo {
-                val saveInfo = SaveInfo(SaveInfo.ERROR_SAVING)
+        val logs = f().orEmpty()
+        if (logs.isEmpty()) {
+            saveInfo.result = SaveInfo.ERROR_EMPTY_LOGS
+        } else {
+            getUri()?.let { uri ->
+                saveInfo.uri = uri
 
-                val logs = f().orEmpty()
-                if (logs.isEmpty()) {
-                    saveInfo.result = SaveInfo.ERROR_EMPTY_LOGS
+                val isUsingCustomLocation = Utils.isUsingCustomSaveLocation(context)
+                val result = if (isUsingCustomLocation && Build.VERSION.SDK_INT >= 21) {
+                    Logcat.writeToFile(context, logs, uri)
                 } else {
-                    getUri()?.let { uri ->
-                        saveInfo.uri = uri
-
-                        val isUsingCustomLocation = Utils.isUsingCustomSaveLocation(context)
-                        val result = if (isUsingCustomLocation && Build.VERSION.SDK_INT >= 21) {
-                            Logcat.writeToFile(context, logs, uri)
-                        } else {
-                            Logcat.writeToFile(logs, uri.toFile())
-                        }
-
-                        saveInfo.result = SaveInfo.ERROR_SAVING
-                        if (result) {
-                            val fileName = if (isUsingCustomLocation && Build.VERSION.SDK_INT >= 21) {
-                                DocumentFile.fromSingleUri(context, uri)?.name
-                            } else {
-                                uri.toFile().name
-                            }
-
-                            if (fileName != null) {
-                                val db = MyDB.getInstance(context)
-                                db.savedLogsDao().insert(SavedLogInfo(fileName,
-                                        uri.toString(), isUsingCustomLocation))
-
-                                saveInfo.result = SaveInfo.SUCCESS
-                                saveInfo.fileName = fileName
-                            }
-                        }
-                    }
+                    Logcat.writeToFile(logs, uri.toFile())
                 }
 
-                return saveInfo
-            }
+                saveInfo.result = SaveInfo.ERROR_SAVING
+                if (result) {
+                    val fileName = if (isUsingCustomLocation && Build.VERSION.SDK_INT >= 21) {
+                        DocumentFile.fromSingleUri(context, uri)?.name
+                    } else {
+                        uri.toFile().name
+                    }
 
-            override fun onCancelled(result: SaveInfo) {
-            }
+                    if (fileName != null) {
+                        val db = MyDB.getInstance(context)
+                        db.savedLogsDao().insert(SavedLogInfo(fileName,
+                                uri.toString(), isUsingCustomLocation))
 
-            override fun onPostExecute(result: SaveInfo) {
-                value = result
+                        saveInfo.result = SaveInfo.SUCCESS
+                        saveInfo.fileName = fileName
+                    }
+                }
             }
-        }.execute()
+        }
+
+        return saveInfo
     }
 
     private fun getUri(): Uri? {
