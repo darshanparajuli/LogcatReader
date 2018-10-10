@@ -79,8 +79,9 @@ internal class MyRecyclerViewAdapter(context: Context, initialCapacity: Int) :
     operator fun get(index: Int) = list[index]
 
     internal fun clear() {
+        val count = list.size
         list.clear()
-        notifyDataSetChanged()
+        notifyItemRangeRemoved(0, count)
     }
 
     override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences, key: String) {
