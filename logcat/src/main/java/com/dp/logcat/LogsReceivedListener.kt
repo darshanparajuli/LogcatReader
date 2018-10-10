@@ -2,8 +2,8 @@ package com.dp.logcat
 
 import androidx.annotation.MainThread
 
-interface LogcatEventListener {
+interface LogsReceivedListener {
 
     @MainThread
-    fun onLogEvent(logs: List<Log>)
+    fun onReceivedLogs(logs: List<Log>)
 }

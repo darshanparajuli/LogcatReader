@@ -22,7 +22,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.dp.logcat.Filter
 import com.dp.logcat.Log
 import com.dp.logcat.Logcat
-import com.dp.logcat.LogcatEventListener
+import com.dp.logcat.LogsReceivedListener
 import com.dp.logcatapp.R
 import com.dp.logcatapp.activities.BaseActivityWithToolbar
 import com.dp.logcatapp.activities.FiltersActivity
@@ -45,7 +45,7 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import java.lang.ref.WeakReference
 
-class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListener {
+class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListener {
     companion object {
         val TAG = LogcatLiveFragment::class.qualifiedName
         const val LOGCAT_DIR = "logcat"
@@ -586,7 +586,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
                 }
     }
 
-    override fun onLogEvent(logs: List<Log>) {
+    override fun onReceivedLogs(logs: List<Log>) {
         adapter.addItems(logs)
         updateToolbarSubtitle(adapter.itemCount)
         if (viewModel.autoScroll) {

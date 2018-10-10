@@ -29,7 +29,7 @@ class Logcat(initialCapacity: Int = INITIAL_LOG_CAPACITY) : Closeable {
     private var recordStartIndex = -1
 
     @Volatile
-    private var listener: LogcatEventListener? = null
+    private var listener: LogsReceivedListener? = null
 
     private var pollCondition = ConditionVariable()
 
@@ -103,7 +103,7 @@ class Logcat(initialCapacity: Int = INITIAL_LOG_CAPACITY) : Closeable {
                 }
 
                 if (filteredLogs.isNotEmpty()) {
-                    handler.post { listener?.onLogEvent(filteredLogs) }
+                    handler.post { listener?.onReceivedLogs(filteredLogs) }
                 }
 
                 pendingLogs.clear()
@@ -164,7 +164,7 @@ class Logcat(initialCapacity: Int = INITIAL_LOG_CAPACITY) : Closeable {
 
     fun isRunning() = isProcessAlive
 
-    fun setEventListener(listener: LogcatEventListener?) {
+    fun setEventListener(listener: LogsReceivedListener?) {
         val wasPaused = paused
         pause()
 
