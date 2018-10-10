@@ -586,7 +586,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
                 }
     }
 
-    override fun onLogEvents(logs: List<Log>) {
+    override fun onLogEvent(logs: List<Log>) {
         adapter.addItems(logs)
         updateToolbarSubtitle(adapter.itemCount)
         if (viewModel.autoScroll) {

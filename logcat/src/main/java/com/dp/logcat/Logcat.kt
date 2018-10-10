@@ -103,7 +103,7 @@ class Logcat(initialCapacity: Int = INITIAL_LOG_CAPACITY) : Closeable {
                 }
 
                 if (filteredLogs.isNotEmpty()) {
-                    handler.post { listener?.onLogEvents(filteredLogs) }
+                    handler.post { listener?.onLogEvent(filteredLogs) }
                 }
 
                 pendingLogs.clear()
