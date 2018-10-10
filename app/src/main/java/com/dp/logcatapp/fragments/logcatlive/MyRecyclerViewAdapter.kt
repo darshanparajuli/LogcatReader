@@ -19,7 +19,7 @@ internal class MyRecyclerViewAdapter(context: Context, initialCapacity: Int) :
         RecyclerView.Adapter<MyRecyclerViewAdapter.MyViewHolder>(),
         View.OnClickListener, SharedPreferences.OnSharedPreferenceChangeListener {
 
-    private var data = FixedCircularArray<Log>(initialCapacity, Logcat.INITIAL_LOG_SIZE)
+    private var list = FixedCircularArray<Log>(initialCapacity, Logcat.INITIAL_LOG_SIZE)
     private var onClickListener: ((View) -> Unit)? = null
 
     private val priorityColorAssert = ContextCompat.getColor(context, R.color.priority_assert)
@@ -43,7 +43,7 @@ internal class MyRecyclerViewAdapter(context: Context, initialCapacity: Int) :
     }
 
     override fun onBindViewHolder(holder: MyViewHolder, position: Int) {
-        val log = data[position]
+        val log = list[position]
         holder.date.text = log.date
         holder.time.text = log.time
         holder.pid.text = log.pid
@@ -68,18 +68,18 @@ internal class MyRecyclerViewAdapter(context: Context, initialCapacity: Int) :
         }
     }
 
-    override fun getItemCount() = data.size
+    override fun getItemCount() = list.size
 
     internal fun addItems(items: List<Log>) {
-        val startPosition = data.size
-        data.add(items)
+        val startPosition = list.size
+        list.add(items)
         notifyItemRangeInserted(startPosition, items.size)
     }
 
-    operator fun get(index: Int) = data[index]
+    operator fun get(index: Int) = list[index]
 
     internal fun clear() {
-        data.clear()
+        list.clear()
         notifyDataSetChanged()
     }
 
@@ -89,8 +89,8 @@ internal class MyRecyclerViewAdapter(context: Context, initialCapacity: Int) :
                 val newCapacity = sharedPreferences.getString(PreferenceKeys.Logcat.KEY_MAX_LOGS,
                         PreferenceKeys.Logcat.Default.MAX_LOGS)!!.trim().toInt()
                 val newData = FixedCircularArray<Log>(newCapacity, Logcat.INITIAL_LOG_SIZE)
-                newData.add(data)
-                data = newData
+                newData.add(list)
+                list = newData
                 notifyDataSetChanged()
             }
         }
