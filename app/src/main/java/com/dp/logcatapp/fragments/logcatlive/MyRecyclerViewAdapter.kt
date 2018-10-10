@@ -70,14 +70,10 @@ internal class MyRecyclerViewAdapter(context: Context, initialCapacity: Int) :
 
     override fun getItemCount() = data.size
 
-    internal fun addItem(item: Log) {
-        data.add(item)
-        notifyDataSetChanged()
-    }
-
     internal fun addItems(items: List<Log>) {
+        val startPosition = data.size
         data.add(items)
-        notifyDataSetChanged()
+        notifyItemRangeInserted(startPosition, items.size)
     }
 
     operator fun get(index: Int) = data[index]
