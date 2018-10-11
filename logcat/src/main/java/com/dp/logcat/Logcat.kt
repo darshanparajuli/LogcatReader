@@ -414,7 +414,7 @@ class Logcat(initialCapacity: Int = INITIAL_LOG_CAPACITY) : Closeable {
         val DEFAULT_BUFFERS: Set<String>
         val AVAILABLE_BUFFERS: Array<String>
         const val INITIAL_LOG_CAPACITY = 250_000
-        const val INITIAL_LOG_SIZE = 10_000
+        const val INITIAL_LOG_SIZE = 25_000
         private const val LOG_FILE_HEADER_FMT = "<<< log_count = %d >>>"
 
         init {
