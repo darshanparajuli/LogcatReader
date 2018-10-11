@@ -365,21 +365,22 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
 
     override fun onPrepareOptionsMenu(menu: Menu) {
         super.onPrepareOptionsMenu(menu)
-        // do nothing
 
         val playPauseItem = menu.findItem(R.id.action_play_pause)
         val recordToggleItem = menu.findItem(R.id.action_record_toggle)
 
-        if (logcatService?.paused == true) {
-            playPauseItem.icon = ContextCompat.getDrawable(activity!!,
-                    R.drawable.ic_play_arrow_white_24dp)
-            playPauseItem.title = getString(R.string.resume)
-        } else {
-            playPauseItem.icon = ContextCompat.getDrawable(activity!!,
-                    R.drawable.ic_pause_white_24dp)
-            playPauseItem.title = getString(R.string.pause)
+        logcatService?.let {
+            if (it.paused) {
+                playPauseItem.icon = ContextCompat.getDrawable(activity!!,
+                        R.drawable.ic_play_arrow_white_24dp)
+                playPauseItem.title = getString(R.string.resume)
+            } else {
+                playPauseItem.icon = ContextCompat.getDrawable(activity!!,
+                        R.drawable.ic_pause_white_24dp)
+                playPauseItem.title = getString(R.string.pause)
+            }
 
-            if (logcatService?.recording == true) {
+            if (it.recording) {
                 recordToggleItem.icon = ContextCompat.getDrawable(activity!!,
                         R.drawable.ic_stop_white_24dp)
                 recordToggleItem.title = getString(R.string.stop_recording)
@@ -389,6 +390,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
                 recordToggleItem.title = getString(R.string.start_recording)
             }
         }
+
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -412,6 +414,11 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
             R.id.action_record_toggle -> {
                 logcatService?.let {
                     val recording = !it.recording
+
+                    if (recording && it.paused) {
+                        return@let
+                    }
+
                     it.updateNotification(recording)
 
                     val logcat = it.logcat
