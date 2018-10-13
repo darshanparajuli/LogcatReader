@@ -2,7 +2,7 @@
 
 # Logcat Reader 
 
-A simple app to view logs on an android device.
+A simple app for viewing logs on an android device.
 
 <a href="https://f-droid.org/packages/com.dp.logcatapp/" target="_blank">
 <img src="https://f-droid.org/badge/get-it-on.png" alt="Get it on F-Droid" height="80"/></a>
