@@ -1,110 +1,86 @@
 package com.dp.logcatapp.fragments.logcatlive
 
-import android.annotation.SuppressLint
 import android.app.Application
-import android.content.Context
 import android.net.Uri
-import android.os.AsyncTask
 import android.os.Build
 import androidx.core.net.toFile
 import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
-import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import com.dp.logcat.Log
 import com.dp.logcat.Logcat
 import com.dp.logcatapp.db.MyDB
 import com.dp.logcatapp.db.SavedLogInfo
 import com.dp.logcatapp.fragments.logcatlive.LogcatLiveFragment.Companion.LOGCAT_DIR
 import com.dp.logcatapp.util.PreferenceKeys
+import com.dp.logcatapp.util.ScopedAndroidViewModel
 import com.dp.logcatapp.util.Utils
 import com.dp.logcatapp.util.getDefaultSharedPreferences
+import kotlinx.coroutines.Dispatchers.IO
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
 
-internal class LogcatLiveViewModel(application: Application) : AndroidViewModel(application) {
+internal class LogcatLiveViewModel(application: Application) : ScopedAndroidViewModel(application) {
     var autoScroll = true
     var scrollPosition = 0
     var showedGrantPermissionInstruction = false
     var stopRecording = false
 
-    private val fileSaveNotifier = FileSaveNotifier(application)
+    private val fileSaveNotifier = MutableLiveData<SaveInfo>()
 
     fun getFileSaveNotifier(): LiveData<SaveInfo> = fileSaveNotifier
 
     fun save(f: () -> List<Log>?) {
-        fileSaveNotifier.save(f)
+        launch {
+            fileSaveNotifier.value = SaveInfo(SaveInfo.IN_PROGRESS)
+            fileSaveNotifier.value = async(IO) { saveAsync(f) }.await()
+        }
     }
-}
 
-internal data class SaveInfo(var result: Int, var fileName: String? = null,
-                             var uri: Uri? = null) {
-    companion object {
-        const val SUCCESS = 0
-        const val ERROR_EMPTY_LOGS = 1
-        const val ERROR_SAVING = 2
-        const val IN_PROGRESS = 4
-    }
-}
+    private suspend fun saveAsync(f: () -> List<Log>?): SaveInfo = coroutineScope {
+        val saveInfo = SaveInfo(SaveInfo.ERROR_SAVING)
 
-private class FileSaveNotifier(private val context: Context) : LiveData<SaveInfo>() {
+        val logs = f().orEmpty()
+        if (logs.isEmpty()) {
+            saveInfo.result = SaveInfo.ERROR_EMPTY_LOGS
+        } else {
+            getUri()?.let { uri ->
+                saveInfo.uri = uri
 
-    @SuppressLint("StaticFieldLeak")
-    fun save(f: () -> List<Log>?) {
-        object : AsyncTask<Void, Void, SaveInfo>() {
-
-            override fun onPreExecute() {
-                value = SaveInfo(SaveInfo.IN_PROGRESS)
-            }
-
-            override fun doInBackground(vararg params: Void?): SaveInfo {
-                val saveInfo = SaveInfo(SaveInfo.ERROR_SAVING)
-
-                val logs = f().orEmpty()
-                if (logs.isEmpty()) {
-                    saveInfo.result = SaveInfo.ERROR_EMPTY_LOGS
+                val context = getApplication<Application>()
+                val isUsingCustomLocation = Utils.isUsingCustomSaveLocation(context)
+                val result = if (isUsingCustomLocation && Build.VERSION.SDK_INT >= 21) {
+                    Logcat.writeToFile(context, logs, uri)
                 } else {
-                    getUri()?.let { uri ->
-                        saveInfo.uri = uri
-
-                        val isUsingCustomLocation = Utils.isUsingCustomSaveLocation(context)
-                        val result = if (isUsingCustomLocation && Build.VERSION.SDK_INT >= 21) {
-                            Logcat.writeToFile(context, logs, uri)
-                        } else {
-                            Logcat.writeToFile(logs, uri.toFile())
-                        }
-
-                        saveInfo.result = SaveInfo.ERROR_SAVING
-                        if (result) {
-                            val fileName = if (isUsingCustomLocation && Build.VERSION.SDK_INT >= 21) {
-                                DocumentFile.fromSingleUri(context, uri)?.name
-                            } else {
-                                uri.toFile().name
-                            }
-
-                            if (fileName != null) {
-                                val db = MyDB.getInstance(context)
-                                db.savedLogsDao().insert(SavedLogInfo(fileName,
-                                        uri.toString(), isUsingCustomLocation))
-
-                                saveInfo.result = SaveInfo.SUCCESS
-                                saveInfo.fileName = fileName
-                            }
-                        }
-                    }
+                    Logcat.writeToFile(logs, uri.toFile())
                 }
 
-                return saveInfo
-            }
+                saveInfo.result = SaveInfo.ERROR_SAVING
+                if (result) {
+                    val fileName = if (isUsingCustomLocation && Build.VERSION.SDK_INT >= 21) {
+                        DocumentFile.fromSingleUri(context, uri)?.name
+                    } else {
+                        uri.toFile().name
+                    }
 
-            override fun onCancelled(result: SaveInfo) {
-            }
+                    if (fileName != null) {
+                        val db = MyDB.getInstance(context)
+                        db.savedLogsDao().insert(SavedLogInfo(fileName,
+                                uri.toString(), isUsingCustomLocation))
 
-            override fun onPostExecute(result: SaveInfo) {
-                value = result
+                        saveInfo.result = SaveInfo.SUCCESS
+                        saveInfo.fileName = fileName
+                    }
+                }
             }
-        }.execute()
+        }
+
+        saveInfo
     }
 
     private fun getUri(): Uri? {
@@ -112,6 +88,7 @@ private class FileSaveNotifier(private val context: Context) : LiveData<SaveInfo
                 .format(Date())
         val fileName = "logcat_$timeStamp"
 
+        val context = getApplication<Application>()
         val saveLocationPref = context.getDefaultSharedPreferences().getString(
                 PreferenceKeys.Logcat.KEY_SAVE_LOCATION,
                 PreferenceKeys.Logcat.Default.SAVE_LOCATION
@@ -132,5 +109,15 @@ private class FileSaveNotifier(private val context: Context) : LiveData<SaveInfo
                 File(file, "$fileName.txt").toUri()
             }
         }
+    }
+}
+
+internal data class SaveInfo(var result: Int, var fileName: String? = null,
+                             var uri: Uri? = null) {
+    companion object {
+        const val SUCCESS = 0
+        const val ERROR_EMPTY_LOGS = 1
+        const val ERROR_SAVING = 2
+        const val IN_PROGRESS = 4
     }
 }

@@ -6,7 +6,6 @@ import android.app.Dialog
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import android.os.AsyncTask
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
@@ -38,16 +37,15 @@ import com.dp.logcatapp.db.SavedLogInfo
 import com.dp.logcatapp.fragments.base.BaseDialogFragment
 import com.dp.logcatapp.fragments.base.BaseFragment
 import com.dp.logcatapp.fragments.logcatlive.LogcatLiveFragment
-import com.dp.logcatapp.util.ShareUtils
-import com.dp.logcatapp.util.closeQuietly
-import com.dp.logcatapp.util.inflateLayout
-import com.dp.logcatapp.util.showToast
+import com.dp.logcatapp.util.*
 import io.reactivex.Flowable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
+import kotlinx.coroutines.Dispatchers.IO
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 import java.io.*
-import java.lang.ref.WeakReference
 
 class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListener,
         Toolbar.OnMenuItemClickListener, CabToolbarCallback {
@@ -66,6 +64,8 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
     private var deleteSubscriptionHandler: Disposable? = null
     private var renameSubscriptionHandler: Disposable? = null
 
+    private val scope = LifeCycleScope()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         viewModel = ViewModelProviders.of(this)
@@ -73,7 +73,7 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
 
         recyclerViewAdapter = MyRecyclerViewAdapter(activity!!, this,
                 this, viewModel.selectedItems)
-        viewModel.fileNames.observe(this, Observer {
+        viewModel.getFileNames().observe(this, Observer {
             progressBar.visibility = View.GONE
             if (it != null) {
                 if (it.logFiles.isNotEmpty()) {
@@ -120,6 +120,8 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        viewLifecycleOwner.lifecycle.addObserver(scope)
 
         emptyView = view.findViewById(R.id.textViewEmpty)
         progressBar = view.findViewById(R.id.progressBar)
@@ -258,7 +260,7 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
                     val updatedList = recyclerViewAdapter.data
                             .filter { it.info.fileName !in deleted }.toList()
                     viewModel.selectedItems.clear()
-                    viewModel.fileNames.update(updatedList)
+                    viewModel.update(updatedList)
 
                     (activity as SavedLogsActivity).closeCabToolbar()
                 }
@@ -285,12 +287,7 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
         }
 
         val dest = File(destFolder, fileName)
-
-        try {
-            SaveFileTask(this, FileInputStream(src), FileOutputStream(dest)).execute()
-        } catch (e: IOException) {
-            activity!!.showToast(getString(R.string.error_saving))
-        }
+        runSaveFileTask(FileInputStream(src), FileOutputStream(dest))
     }
 
     @TargetApi(19)
@@ -315,7 +312,7 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
         try {
             val src = FileInputStream(file)
             val dest = context!!.contentResolver.openOutputStream(uri)
-            SaveFileTask(this, src, dest!!).execute()
+            runSaveFileTask(src, dest!!)
         } catch (e: IOException) {
             activity!!.showToast(getString(R.string.error_saving))
         }
@@ -369,10 +366,15 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
                 }
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe {
-                    viewModel.fileNames.reload()
+                    viewModel.load()
                 }
 
         (activity as SavedLogsActivity).closeCabToolbar()
+    }
+
+    override fun onDestroyView() {
+        viewLifecycleOwner.lifecycle.removeObserver(scope)
+        super.onDestroyView()
     }
 
     override fun onDestroy() {
@@ -457,35 +459,26 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
         }
     }
 
-    class SaveFileTask(frag: SavedLogsFragment,
-                       private val src: InputStream,
-                       private val dest: OutputStream) :
-            AsyncTask<Void, Void, Boolean>() {
+    private fun runSaveFileTask(src: InputStream, dest: OutputStream) {
+        scope.launch {
+            val result = async(IO) {
+                try {
+                    src.copyTo(dest)
+                    true
+                } catch (e: IOException) {
+                    false
+                } finally {
+                    src.closeQuietly()
+                    dest.closeQuietly()
+                }
+            }.await()
 
-        private val ref = WeakReference(frag)
-
-        override fun doInBackground(vararg params: Void?): Boolean {
-            return try {
-                src.copyTo(dest)
-                true
-            } catch (e: IOException) {
-                false
-            } finally {
-                src.closeQuietly()
-                dest.closeQuietly()
-            }
-        }
-
-        override fun onPostExecute(result: Boolean) {
-            val frag = ref.get() ?: return
-            if (frag.activity == null) {
-                return
-            }
-
-            if (result) {
-                frag.activity!!.showToast(frag.getString(R.string.saved))
-            } else {
-                frag.activity!!.showToast(frag.getString(R.string.error_saving))
+            activity?.let {
+                if (result) {
+                    it.showToast(it.getString(R.string.saved))
+                } else {
+                    it.showToast(it.getString(R.string.error_saving))
+                }
             }
         }
     }

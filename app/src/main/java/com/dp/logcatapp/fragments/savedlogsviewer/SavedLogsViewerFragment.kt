@@ -1,7 +1,6 @@
 package com.dp.logcatapp.fragments.savedlogsviewer
 
 import android.net.Uri
-import android.os.AsyncTask
 import android.os.Bundle
 import android.view.*
 import android.widget.ProgressBar
@@ -17,11 +16,14 @@ import com.dp.logcatapp.R
 import com.dp.logcatapp.activities.BaseActivityWithToolbar
 import com.dp.logcatapp.fragments.base.BaseFragment
 import com.dp.logcatapp.fragments.shared.dialogs.CopyToClipboardDialogFragment
+import com.dp.logcatapp.util.LifeCycleScope
 import com.dp.logcatapp.util.containsIgnoreCase
 import com.dp.logcatapp.util.inflateLayout
-import com.dp.logger.Logger
 import com.google.android.material.floatingactionbutton.FloatingActionButton
-import java.lang.ref.WeakReference
+import kotlinx.coroutines.Dispatchers.IO
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 
 class SavedLogsViewerFragment : BaseFragment() {
     companion object {
@@ -38,6 +40,8 @@ class SavedLogsViewerFragment : BaseFragment() {
         }
     }
 
+    private val scope = LifeCycleScope()
+
     private lateinit var recyclerView: RecyclerView
     private lateinit var linearLayoutManager: LinearLayoutManager
     private lateinit var viewModel: SavedLogsViewerViewModel
@@ -50,7 +54,7 @@ class SavedLogsViewerFragment : BaseFragment() {
     private var searchViewActive = false
     private var lastLogId = -1
     private var lastSearchRunnable: Runnable? = null
-    private var searchTask: SearchTask? = null
+    private var searchTask: Job? = null
 
     private val hideFabUpRunnable: Runnable = Runnable {
         fabUp.hide()
@@ -159,7 +163,7 @@ class SavedLogsViewerFragment : BaseFragment() {
         viewModel = ViewModelProviders.of(this)
                 .get(SavedLogsViewerViewModel::class.java)
         viewModel.init(Uri.parse(arguments!!.getString(KEY_FILE_URI)))
-        viewModel.logs.observe(this, Observer {
+        viewModel.getLogs().observe(this, Observer {
             progressBar.visibility = View.GONE
             if (it != null) {
                 if (it.isEmpty()) {
@@ -181,6 +185,8 @@ class SavedLogsViewerFragment : BaseFragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        viewLifecycleOwner.lifecycle.addObserver(scope)
 
         progressBar = view.findViewById(R.id.progressBar)
         textViewEmpty = view.findViewById(R.id.textViewEmpty)
@@ -243,7 +249,9 @@ class SavedLogsViewerFragment : BaseFragment() {
                 } else {
                     reachedBlank = false
                     lastSearchRunnable = Runnable {
-                        onSearchAction(newText)
+                        viewModel.getLogs().value?.let {
+                            runSearchTask(it, newText)
+                        }
                     }
 
                     handler.postDelayed(lastSearchRunnable, 300)
@@ -264,21 +272,8 @@ class SavedLogsViewerFragment : BaseFragment() {
         }
     }
 
-    private fun onSearchAction(newText: String) {
-        Logger.logDebug(SavedLogsViewerFragment::class, "onSearchAction: $newText")
-        searchTask?.cancel(true)
-
-        var logs = viewModel.logs.value
-        if (logs == null) {
-            logs = emptyList()
-        }
-
-        searchTask = SearchTask(this, logs, newText)
-        searchTask!!.execute()
-    }
-
     private fun onSearchViewClose() {
-        var logs = viewModel.logs.value
+        var logs = viewModel.getLogs().value
         if (logs == null) {
             logs = emptyList()
         }
@@ -313,11 +308,16 @@ class SavedLogsViewerFragment : BaseFragment() {
         }
     }
 
+    override fun onDestroyView() {
+        viewLifecycleOwner.lifecycle.removeObserver(scope)
+        super.onDestroyView()
+    }
+
     override fun onDestroy() {
         super.onDestroy()
         (activity as BaseActivityWithToolbar).toolbar.subtitle = null
         removeLastSearchRunnableCallback()
-        searchTask?.cancel(true)
+        searchTask?.cancel()
         recyclerView.removeOnScrollListener(onScrollListener)
     }
 
@@ -343,29 +343,18 @@ class SavedLogsViewerFragment : BaseFragment() {
         }
     }
 
-    private class SearchTask(fragment: SavedLogsViewerFragment,
-                             val logs: List<Log>, val searchText: String) :
-            AsyncTask<String, Void, List<Log>>() {
-
-        private var fragRef: WeakReference<SavedLogsViewerFragment> = WeakReference(fragment)
-
-        override fun doInBackground(vararg params: String?): List<Log> =
+    private fun runSearchTask(logs: List<Log>, searchText: String) {
+        searchTask?.cancel()
+        searchTask = scope.launch {
+            val filteredLogs = async(IO) {
                 logs.filter {
                     it.tag.containsIgnoreCase(searchText) ||
                             it.msg.containsIgnoreCase(searchText)
                 }
-
-        override fun onCancelled(result: List<Log>?) {
-        }
-
-        override fun onPostExecute(result: List<Log>?) {
-            fragRef.get()?.apply {
-                result?.let {
-                    adapter.setItems(it)
-                    viewModel.autoScroll = false
-                    linearLayoutManager.scrollToPositionWithOffset(0, 0)
-                }
-            }
+            }.await()
+            adapter.setItems(filteredLogs)
+            viewModel.autoScroll = false
+            linearLayoutManager.scrollToPositionWithOffset(0, 0)
         }
     }
 }
