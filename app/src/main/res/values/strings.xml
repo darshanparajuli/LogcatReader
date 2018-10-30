@@ -94,7 +94,7 @@
     <string name="date">Date</string>
     <string name="time">Time</string>
     <string name="unable_to_share">Unable to share</string>
-    <string name="permission_instruction0">To view all of the logs, READ_LOGS permission is required. Please follow instructions below to grant the permission (needs to be done only once).</string>
+    <string name="permission_instruction0">To view all of the logs, READ_LOGS permission is required. Please follow the instructions below to grant the permission (needs to be done only once).</string>
     <string name="permission_instruction1">1. Connect the phone to a computer with ADB tools installed.</string>
     <string name="permission_instruction2">2. Run the following command:</string>
     <string name="permission_instruction3">adb shell pm grant com.dp.logcatapp android.permission.READ_LOGS</string>
