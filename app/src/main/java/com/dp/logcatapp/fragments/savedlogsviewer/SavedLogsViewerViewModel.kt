@@ -1,58 +1,55 @@
 package com.dp.logcatapp.fragments.savedlogsviewer
 
 import android.app.Application
+import android.content.Context
 import android.net.Uri
-import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import com.dp.logcat.Log
 import com.dp.logcat.LogcatStreamReader
+import com.dp.logcatapp.util.ScopedAndroidViewModel
 import com.dp.logcatapp.util.closeQuietly
 import kotlinx.coroutines.Dispatchers.IO
-import kotlinx.coroutines.Dispatchers.Main
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import java.io.IOException
 
-internal class SavedLogsViewerViewModel(application: Application) : AndroidViewModel(application) {
+internal class SavedLogsViewerViewModel(application: Application) : ScopedAndroidViewModel(application) {
     var autoScroll = true
     var scrollPosition = 0
 
-    var logs = LogsLiveData(application)
+    private var logs = MutableLiveData<List<Log>>()
 
     fun init(uri: Uri) {
-        logs.load(uri)
-    }
-}
-
-internal class LogsLiveData(private val application: Application) : LiveData<List<Log>>() {
-    internal fun load(uri: Uri) {
-        GlobalScope.launch(Main) {
-            val logs = async(IO) {
-                val logs = mutableListOf<Log>()
-
-                try {
-                    application.contentResolver.openInputStream(uri)?.let {
-                        try {
-                            val reader = LogcatStreamReader(it)
-                            for (log in reader) {
-                                logs += log
-                            }
-                        } catch (e: IOException) {
-                            // ignore
-                        } finally {
-                            it.closeQuietly()
-                        }
-                    }
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                    // ignore
-                }
-
-                logs
-            }.await()
-
-            value = logs
+        launch {
+            logs.value = async(IO) { load(getApplication(), uri) }.await()
         }
     }
+
+    private suspend fun load(context: Context, uri: Uri) = coroutineScope {
+        val logs = mutableListOf<Log>()
+
+        try {
+            context.contentResolver.openInputStream(uri)?.let {
+                try {
+                    val reader = LogcatStreamReader(it)
+                    for (log in reader) {
+                        logs += log
+                    }
+                } catch (e: IOException) {
+                    // ignore
+                } finally {
+                    it.closeQuietly()
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            // ignore
+        }
+
+        logs
+    }
+
+    fun getLogs(): LiveData<List<Log>> = logs
 }

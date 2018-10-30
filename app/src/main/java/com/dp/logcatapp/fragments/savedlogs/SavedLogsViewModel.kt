@@ -6,43 +6,29 @@ import android.net.Uri
 import android.os.Build
 import androidx.core.net.toFile
 import androidx.documentfile.provider.DocumentFile
-import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import com.dp.logcat.Logcat
 import com.dp.logcat.LogcatStreamReader
 import com.dp.logcatapp.db.MyDB
 import com.dp.logcatapp.db.SavedLogInfo
 import com.dp.logcatapp.fragments.logcatlive.LogcatLiveFragment
+import com.dp.logcatapp.util.ScopedAndroidViewModel
 import com.dp.logcatapp.util.Utils
 import com.dp.logger.Logger
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import java.io.File
 import java.io.FileInputStream
 import java.io.IOException
 
-internal class SavedLogsViewModel(application: Application) : AndroidViewModel(application) {
-    val fileNames: SavedLogsLiveData = SavedLogsLiveData(application)
+internal class SavedLogsViewModel(application: Application) : ScopedAndroidViewModel(application) {
+    private val fileNames = MutableLiveData<SavedLogsResult>()
     val selectedItems = mutableSetOf<Int>()
-}
-
-data class LogFileInfo(val info: SavedLogInfo,
-                       val size: Long,
-                       val sizeStr: String,
-                       val count: Long)
-
-internal class SavedLogsResult {
-    var totalSize = ""
-    var totalLogCount = 0L
-    val logFiles = mutableListOf<LogFileInfo>()
-}
-
-internal class SavedLogsLiveData(private val application: Application) :
-        LiveData<SavedLogsResult>() {
 
     private var job: Job? = null
 
@@ -57,30 +43,31 @@ internal class SavedLogsLiveData(private val application: Application) :
             acc + logFileInfo.count
         }
 
-        val folder = File(application.filesDir, LogcatLiveFragment.LOGCAT_DIR)
+        val folder = File(getApplication<Application>().filesDir, LogcatLiveFragment.LOGCAT_DIR)
         val totalSize = fileInfoList.map { File(folder, it.info.fileName).length() }.sum()
         if (totalSize > 0) {
             savedLogsResult.totalSize = Utils.bytesToString(totalSize)
         }
 
-        value = savedLogsResult
+        fileNames.value = savedLogsResult
     }
 
     fun load() {
         job?.cancel()
-        job = GlobalScope.launch(Main) {
-            val db = MyDB.getInstance(application)
+        job = launch {
+            val db = MyDB.getInstance(getApplication())
             val result = async(IO) { loadAsync(db) }.await()
-            value = result
+            fileNames.value = result
         }
     }
 
-    private fun loadAsync(db: MyDB): SavedLogsResult {
+    private suspend fun loadAsync(db: MyDB): SavedLogsResult = coroutineScope {
         val savedLogsResult = SavedLogsResult()
         var totalSize = 0L
 
         updateDBWithExistingInternalLogFiles(db)
 
+        val application = getApplication<Application>()
         val savedLogInfoList = db.savedLogsDao().getAllSync()
         for (info in savedLogInfoList) {
             if (info.isCustom && Build.VERSION.SDK_INT >= 21) {
@@ -115,11 +102,11 @@ internal class SavedLogsLiveData(private val application: Application) :
             savedLogsResult.totalSize = Utils.bytesToString(totalSize)
         }
 
-        return savedLogsResult
+        savedLogsResult
     }
 
     private fun updateDBWithExistingInternalLogFiles(db: MyDB) {
-        val files = File(application.cacheDir, LogcatLiveFragment.LOGCAT_DIR).listFiles()
+        val files = File(getApplication<Application>().cacheDir, LogcatLiveFragment.LOGCAT_DIR).listFiles()
         if (files != null) {
             val savedLogInfoArray = files.map {
                 SavedLogInfo(it.name, it.absolutePath, false)
@@ -168,4 +155,17 @@ internal class SavedLogsLiveData(private val application: Application) :
             0L
         }
     }
+
+    fun getFileNames(): LiveData<SavedLogsResult> = fileNames
+}
+
+data class LogFileInfo(val info: SavedLogInfo,
+                       val size: Long,
+                       val sizeStr: String,
+                       val count: Long)
+
+internal class SavedLogsResult {
+    var totalSize = ""
+    var totalLogCount = 0L
+    val logFiles = mutableListOf<LogFileInfo>()
 }

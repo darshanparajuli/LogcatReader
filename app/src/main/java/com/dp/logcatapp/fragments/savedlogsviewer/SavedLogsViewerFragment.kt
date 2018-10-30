@@ -16,12 +16,11 @@ import com.dp.logcatapp.R
 import com.dp.logcatapp.activities.BaseActivityWithToolbar
 import com.dp.logcatapp.fragments.base.BaseFragment
 import com.dp.logcatapp.fragments.shared.dialogs.CopyToClipboardDialogFragment
+import com.dp.logcatapp.util.LifeCycleScope
 import com.dp.logcatapp.util.containsIgnoreCase
 import com.dp.logcatapp.util.inflateLayout
 import com.google.android.material.floatingactionbutton.FloatingActionButton
-import kotlinx.coroutines.Dispatchers.Default
-import kotlinx.coroutines.Dispatchers.Main
-import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
@@ -40,6 +39,8 @@ class SavedLogsViewerFragment : BaseFragment() {
             return frag
         }
     }
+
+    private val scope = LifeCycleScope()
 
     private lateinit var recyclerView: RecyclerView
     private lateinit var linearLayoutManager: LinearLayoutManager
@@ -162,7 +163,7 @@ class SavedLogsViewerFragment : BaseFragment() {
         viewModel = ViewModelProviders.of(this)
                 .get(SavedLogsViewerViewModel::class.java)
         viewModel.init(Uri.parse(arguments!!.getString(KEY_FILE_URI)))
-        viewModel.logs.observe(this, Observer {
+        viewModel.getLogs().observe(this, Observer {
             progressBar.visibility = View.GONE
             if (it != null) {
                 if (it.isEmpty()) {
@@ -184,6 +185,8 @@ class SavedLogsViewerFragment : BaseFragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        viewLifecycleOwner.lifecycle.addObserver(scope)
 
         progressBar = view.findViewById(R.id.progressBar)
         textViewEmpty = view.findViewById(R.id.textViewEmpty)
@@ -246,7 +249,7 @@ class SavedLogsViewerFragment : BaseFragment() {
                 } else {
                     reachedBlank = false
                     lastSearchRunnable = Runnable {
-                        viewModel.logs.value?.let {
+                        viewModel.getLogs().value?.let {
                             runSearchTask(it, newText)
                         }
                     }
@@ -270,7 +273,7 @@ class SavedLogsViewerFragment : BaseFragment() {
     }
 
     private fun onSearchViewClose() {
-        var logs = viewModel.logs.value
+        var logs = viewModel.getLogs().value
         if (logs == null) {
             logs = emptyList()
         }
@@ -305,6 +308,11 @@ class SavedLogsViewerFragment : BaseFragment() {
         }
     }
 
+    override fun onDestroyView() {
+        viewLifecycleOwner.lifecycle.removeObserver(scope)
+        super.onDestroyView()
+    }
+
     override fun onDestroy() {
         super.onDestroy()
         (activity as BaseActivityWithToolbar).toolbar.subtitle = null
@@ -337,8 +345,8 @@ class SavedLogsViewerFragment : BaseFragment() {
 
     private fun runSearchTask(logs: List<Log>, searchText: String) {
         searchTask?.cancel()
-        searchTask = GlobalScope.launch(Main) {
-            val filteredLogs = async(Default) {
+        searchTask = scope.launch {
+            val filteredLogs = async(IO) {
                 logs.filter {
                     it.tag.containsIgnoreCase(searchText) ||
                             it.msg.containsIgnoreCase(searchText)

@@ -43,8 +43,6 @@ import com.google.android.material.snackbar.Snackbar
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import kotlinx.coroutines.Dispatchers.Default
-import kotlinx.coroutines.Dispatchers.Main
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
@@ -82,6 +80,11 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
     private var lastSearchRunnable: Runnable? = null
     private var searchTask: Job? = null
     private var filterSubscription: Disposable? = null
+
+    private val scope = LifeCycleScope()
+
+    init {
+    }
 
     private val hideFabUpRunnable: Runnable = Runnable {
         fabUp.hide()
@@ -229,6 +232,8 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        viewLifecycleOwner.lifecycle.addObserver(scope)
 
         recyclerView = view.findViewById(R.id.recyclerView)
         linearLayoutManager = LinearLayoutManager(activity)
@@ -510,6 +515,11 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
         }
     }
 
+    override fun onDestroyView() {
+        viewLifecycleOwner.lifecycle.removeObserver(scope)
+        super.onDestroyView()
+    }
+
     override fun onDestroy() {
         super.onDestroy()
         activity!!.getDefaultSharedPreferences().unregisterOnSharedPreferenceChangeListener(adapter)
@@ -636,7 +646,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogcatEventListene
 
     private fun runSearchTask(logcat: Logcat, searchText: String) {
         searchTask?.cancel()
-        searchTask = GlobalScope.launch(Main) {
+        searchTask = scope.launch {
             logcat.pause()
             logcat.addFilter(SEARCH_FILTER_TAG, SearchFilter(searchText))
 

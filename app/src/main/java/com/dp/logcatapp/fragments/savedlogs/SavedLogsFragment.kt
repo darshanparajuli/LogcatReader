@@ -37,17 +37,12 @@ import com.dp.logcatapp.db.SavedLogInfo
 import com.dp.logcatapp.fragments.base.BaseDialogFragment
 import com.dp.logcatapp.fragments.base.BaseFragment
 import com.dp.logcatapp.fragments.logcatlive.LogcatLiveFragment
-import com.dp.logcatapp.util.ShareUtils
-import com.dp.logcatapp.util.closeQuietly
-import com.dp.logcatapp.util.inflateLayout
-import com.dp.logcatapp.util.showToast
+import com.dp.logcatapp.util.*
 import io.reactivex.Flowable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.Dispatchers.IO
-import kotlinx.coroutines.Dispatchers.Main
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import java.io.*
@@ -69,6 +64,8 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
     private var deleteSubscriptionHandler: Disposable? = null
     private var renameSubscriptionHandler: Disposable? = null
 
+    private val scope = LifeCycleScope()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         viewModel = ViewModelProviders.of(this)
@@ -76,7 +73,7 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
 
         recyclerViewAdapter = MyRecyclerViewAdapter(activity!!, this,
                 this, viewModel.selectedItems)
-        viewModel.fileNames.observe(this, Observer {
+        viewModel.getFileNames().observe(this, Observer {
             progressBar.visibility = View.GONE
             if (it != null) {
                 if (it.logFiles.isNotEmpty()) {
@@ -123,6 +120,8 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        viewLifecycleOwner.lifecycle.addObserver(scope)
 
         emptyView = view.findViewById(R.id.textViewEmpty)
         progressBar = view.findViewById(R.id.progressBar)
@@ -261,7 +260,7 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
                     val updatedList = recyclerViewAdapter.data
                             .filter { it.info.fileName !in deleted }.toList()
                     viewModel.selectedItems.clear()
-                    viewModel.fileNames.update(updatedList)
+                    viewModel.update(updatedList)
 
                     (activity as SavedLogsActivity).closeCabToolbar()
                 }
@@ -367,10 +366,15 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
                 }
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe {
-                    viewModel.fileNames.load()
+                    viewModel.load()
                 }
 
         (activity as SavedLogsActivity).closeCabToolbar()
+    }
+
+    override fun onDestroyView() {
+        viewLifecycleOwner.lifecycle.removeObserver(scope)
+        super.onDestroyView()
     }
 
     override fun onDestroy() {
@@ -456,7 +460,7 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
     }
 
     private fun runSaveFileTask(src: InputStream, dest: OutputStream) {
-        GlobalScope.launch(Main) {
+        scope.launch {
             val result = async(IO) {
                 try {
                     src.copyTo(dest)
