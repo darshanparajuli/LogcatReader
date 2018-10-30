@@ -20,7 +20,7 @@
     <string name="pause">Pause</string>
     <string name="resume">Resume</string>
     <string name="about">About</string>
-    <string name="copy_to_clipboard">Copy to clipboard</string>
+    <string name="copy_to_clipboard">Copy ADB Command</string>
     <string name="copied_to_clipboard">Copied</string>
     <string name="save_to_file">Save</string>
     <string name="logcat">Logcat</string>
@@ -30,15 +30,14 @@
     <string name="failed_to_save_logs">Failed to save logs</string>
     <string name="nothing_to_save">Nothing to save</string>
     <string name="open_with">Open with</string>
-    <string name="read_logs_permission_required">READ_LOGS permission required</string>
+    <string name="read_logs_permission_required">Permission required</string>
     <string name="grant_read_logs_permission_instruction">To view all of the logs, 
-        READ_LOGS permission must be granted. If your device is rooted, please tap "Grant".
-        If that doesn\'t work or your device is not rooted, please connect your device to your
-        computer via usb and run command
-        \'adb shell pm grant com.dp.logcatapp android.permission.READ_LOGS\'. In either case, 
-        you mustexit the app afterwards and swipe it out of Recents (in that order). 
-        It should show all device logs next time you start the app. Please report if it still
-        doesn\'t work, thank you!
+        READ_LOGS permission must be granted.\n\n
+        1. Please connect your device to your computer via usb\n
+        2. Run command:\n\n
+        adb shell pm grant com.dp.logcatapp android.permission.READ_LOGS\n\n
+        3. Close the app (double back press), and swipe it out of Recents.\n\n
+        Please report if there are any issues, thank you!
     </string>
     <string name="grant_read_logs_permission_action_using_root">Grant</string>
     <string name="failed">Failed</string>
@@ -95,4 +94,11 @@
     <string name="date">Date</string>
     <string name="time">Time</string>
     <string name="unable_to_share">Unable to share</string>
+    <string name="permission_instruction0">To view all of the logs, READ_LOGS permission is required. Please follow instructions below to grant the permission (needs to be done only once).</string>
+    <string name="permission_instruction1">1. Connect the phone to a computer with ADB tools installed.</string>
+    <string name="permission_instruction2">2. Run the following command:</string>
+    <string name="permission_instruction3">adb shell pm grant com.dp.logcatapp android.permission.READ_LOGS</string>
+    <string name="permission_instruction4">3. Close the app by double pressing the back button and swiping it out from the Recents.</string>
+    <string name="permission_instruction5">4. Start the app again, and now you should see all of the logs.</string>
+    <string name="permission_instruction6">Please report if there are any issues, thank you!</string>
 </resources>
