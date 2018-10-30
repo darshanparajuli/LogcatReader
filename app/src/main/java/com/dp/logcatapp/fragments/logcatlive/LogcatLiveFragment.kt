@@ -202,6 +202,9 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
                 .get(LogcatLiveViewModel::class.java)
         viewModel.getFileSaveNotifier().observe(this, Observer { saveInfo ->
             saveInfo?.let {
+                if (viewModel.alreadySaved) {
+                    return@Observer
+                }
                 when (it.result) {
                     SaveInfo.IN_PROGRESS -> {
                         snackBarProgress.show()

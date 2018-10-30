@@ -32,13 +32,17 @@ internal class LogcatLiveViewModel(application: Application) : ScopedAndroidView
     var stopRecording = false
 
     private val fileSaveNotifier = MutableLiveData<SaveInfo>()
+    var alreadySaved = true
+        private set
 
     fun getFileSaveNotifier(): LiveData<SaveInfo> = fileSaveNotifier
 
     fun save(f: () -> List<Log>?) {
         launch {
+            alreadySaved = false
             fileSaveNotifier.value = SaveInfo(SaveInfo.IN_PROGRESS)
             fileSaveNotifier.value = async(IO) { saveAsync(f) }.await()
+            alreadySaved = true
         }
     }
 
