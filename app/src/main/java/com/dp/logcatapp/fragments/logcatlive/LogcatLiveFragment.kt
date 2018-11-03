@@ -595,8 +595,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
                             }
                         }
 
-                        adapter.clear()
-                        adapter.addItems(logcat.getLogsFiltered())
+                        adapter.setItems(logcat.getLogsFiltered())
                         updateToolbarSubtitle(adapter.itemCount)
                         scrollRecyclerView()
                         resumeLogcat()
@@ -661,10 +660,11 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
             logcat.addFilter(SEARCH_FILTER_TAG, SearchFilter(searchText))
 
             val filteredLogs = async(Default) { logcat.getLogsFiltered() }.await()
-            adapter.clear()
-            adapter.addItems(filteredLogs)
+            adapter.setItems(filteredLogs)
             viewModel.autoScroll = false
             linearLayoutManager.scrollToPositionWithOffset(0, 0)
+
+            resumeLogcat()
         }
     }
 

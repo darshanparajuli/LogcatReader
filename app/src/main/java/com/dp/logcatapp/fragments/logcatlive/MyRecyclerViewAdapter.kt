@@ -76,6 +76,11 @@ internal class MyRecyclerViewAdapter(context: Context, initialCapacity: Int) :
         notifyItemRangeInserted(startPosition, items.size)
     }
 
+    internal fun setItems(items: List<Log>) {
+        clear()
+        addItems(items)
+    }
+
     operator fun get(index: Int) = list[index]
 
     internal fun clear() {
