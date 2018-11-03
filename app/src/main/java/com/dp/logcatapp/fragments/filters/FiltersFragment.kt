@@ -85,11 +85,11 @@ class FiltersFragment : BaseFragment() {
                             }
                             else -> {
                                 displayText = it.content
-                                when (it.type) {
-                                    FilterType.KEYWORD -> type = getString(R.string.keyword)
-                                    FilterType.TAG -> type = getString(R.string.tag)
-                                    FilterType.PID -> type = getString(R.string.process_id)
-                                    FilterType.TID -> type = getString(R.string.thread_id)
+                                type = when (it.type) {
+                                    FilterType.KEYWORD -> getString(R.string.keyword)
+                                    FilterType.TAG -> getString(R.string.tag)
+                                    FilterType.PID -> getString(R.string.process_id)
+                                    FilterType.TID -> getString(R.string.thread_id)
                                     else -> throw IllegalStateException("invalid type: ${it.type}")
                                 }
                             }
