@@ -198,35 +198,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
         adapter = MyRecyclerViewAdapter(activity!!, maxLogs)
         activity!!.getDefaultSharedPreferences().registerOnSharedPreferenceChangeListener(adapter)
 
-        viewModel = ViewModelProviders.of(activity!!)
-                .get(LogcatLiveViewModel::class.java)
-        viewModel.getFileSaveNotifier().observe(this, Observer { saveInfo ->
-            saveInfo?.let {
-                if (viewModel.alreadySaved) {
-                    return@Observer
-                }
-                when (it.result) {
-                    SaveInfo.IN_PROGRESS -> {
-                        snackBarProgress.show()
-                    }
-                    else -> {
-                        snackBarProgress.dismiss()
-                        when (it.result) {
-                            SaveInfo.SUCCESS -> {
-                                OnSavedBottomSheetDialogFragment.newInstance(it.fileName!!, it.uri!!)
-                                        .show(fragmentManager, OnSavedBottomSheetDialogFragment.TAG)
-                            }
-                            SaveInfo.ERROR_EMPTY_LOGS -> {
-                                showSnackbar(view, getString(R.string.nothing_to_save))
-                            }
-                            else -> {
-                                showSnackbar(view, getString(R.string.failed_to_save_logs))
-                            }
-                        }
-                    }
-                }
-            }
-        })
+        viewModel = ViewModelProviders.of(activity!!).get(LogcatLiveViewModel::class.java)
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
@@ -287,6 +259,38 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
             InstructionToGrantPermissionDialogFragment().show(fragmentManager,
                     InstructionToGrantPermissionDialogFragment.TAG)
         }
+    }
+
+    override fun onActivityCreated(savedInstanceState: Bundle?) {
+        super.onActivityCreated(savedInstanceState)
+
+        viewModel.getFileSaveNotifier().observe(viewLifecycleOwner, Observer { saveInfo ->
+            saveInfo?.let {
+                if (viewModel.alreadySaved) {
+                    return@Observer
+                }
+                when (it.result) {
+                    SaveInfo.IN_PROGRESS -> {
+                        snackBarProgress.show()
+                    }
+                    else -> {
+                        snackBarProgress.dismiss()
+                        when (it.result) {
+                            SaveInfo.SUCCESS -> {
+                                OnSavedBottomSheetDialogFragment.newInstance(it.fileName!!, it.uri!!)
+                                        .show(fragmentManager, OnSavedBottomSheetDialogFragment.TAG)
+                            }
+                            SaveInfo.ERROR_EMPTY_LOGS -> {
+                                showSnackbar(view, getString(R.string.nothing_to_save))
+                            }
+                            else -> {
+                                showSnackbar(view, getString(R.string.failed_to_save_logs))
+                            }
+                        }
+                    }
+                }
+            }
+        })
     }
 
     private fun checkReadLogsPermission() =
