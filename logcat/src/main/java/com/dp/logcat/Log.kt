@@ -58,12 +58,6 @@ data class Log(val id: Int,
             val trimmed = metadata.substring(1, metadata.length - 1).trim()
             var startIndex = 0
 
-            val skipSpaces = {
-                while (trimmed[startIndex] == ' ') {
-                    startIndex++
-                }
-            }
-
             var index = trimmed.indexOf(' ', startIndex)
             date = trimmed.substring(startIndex, index)
             startIndex = index + 1
@@ -72,13 +66,19 @@ data class Log(val id: Int,
             time = trimmed.substring(startIndex, index)
             startIndex = index + 1
 
-            skipSpaces()
+            // NOTE(dparajuli): skip spaces
+            while (trimmed[startIndex] == ' ') {
+                startIndex++
+            }
 
             index = trimmed.indexOf(':', startIndex)
             pid = trimmed.substring(startIndex, index)
             startIndex = index + 1
 
-            skipSpaces()
+            // NOTE(dparajuli): skip spaces
+            while (trimmed[startIndex] == ' ') {
+                startIndex++
+            }
 
             index = trimmed.indexOf(' ', startIndex)
             tid = trimmed.substring(startIndex, index)
