@@ -46,6 +46,52 @@ data class Log(val id: Int,
 
             override fun newArray(size: Int) = arrayOfNulls<Log>(size)
         }
+
+        fun parse(metadata: String, msg: String): Log {
+            val date: String
+            val time: String
+            val pid: String
+            val tid: String
+            val priority: String
+            val tag: String
+
+            val trimmed = metadata.substring(1, metadata.length - 1).trim()
+            var startIndex = 0
+
+            val skipSpaces = {
+                while (trimmed[startIndex] == ' ') {
+                    startIndex++
+                }
+            }
+
+            var index = trimmed.indexOf(' ', startIndex)
+            date = trimmed.substring(startIndex, index)
+            startIndex = index + 1
+
+            index = trimmed.indexOf(' ', startIndex)
+            time = trimmed.substring(startIndex, index)
+            startIndex = index + 1
+
+            skipSpaces()
+
+            index = trimmed.indexOf(':', startIndex)
+            pid = trimmed.substring(startIndex, index)
+            startIndex = index + 1
+
+            skipSpaces()
+
+            index = trimmed.indexOf(' ', startIndex)
+            tid = trimmed.substring(startIndex, index)
+            startIndex = index + 1
+
+            index = trimmed.indexOf('/', startIndex)
+            priority = trimmed.substring(startIndex, index)
+            startIndex = index + 1
+
+            tag = trimmed.substring(startIndex, trimmed.length).trim()
+
+            return Log(logCounter++, date, time, pid, tid, priority, tag, msg)
+        }
     }
 }
 
@@ -57,52 +103,4 @@ object LogPriority {
     const val INFO = "I"
     const val VERBOSE = "V"
     const val WARNING = "W"
-}
-
-internal object LogFactory {
-    fun createNewLog(metadata: String, msg: String): Log {
-        val date: String
-        val time: String
-        val pid: String
-        val tid: String
-        val priority: String
-        val tag: String
-
-        val trimmed = metadata.substring(1, metadata.length - 1).trim()
-        var startIndex = 0
-
-        val skipSpaces = {
-            while (trimmed[startIndex] == ' ') {
-                startIndex++
-            }
-        }
-
-        var index = trimmed.indexOf(' ', startIndex)
-        date = trimmed.substring(startIndex, index)
-        startIndex = index + 1
-
-        index = trimmed.indexOf(' ', startIndex)
-        time = trimmed.substring(startIndex, index)
-        startIndex = index + 1
-
-        skipSpaces()
-
-        index = trimmed.indexOf(':', startIndex)
-        pid = trimmed.substring(startIndex, index)
-        startIndex = index + 1
-
-        skipSpaces()
-
-        index = trimmed.indexOf(' ', startIndex)
-        tid = trimmed.substring(startIndex, index)
-        startIndex = index + 1
-
-        index = trimmed.indexOf('/', startIndex)
-        priority = trimmed.substring(startIndex, index)
-        startIndex = index + 1
-
-        tag = trimmed.substring(startIndex, trimmed.length).trim()
-
-        return Log(logCounter++, date, time, pid, tid, priority, tag, msg)
-    }
 }
