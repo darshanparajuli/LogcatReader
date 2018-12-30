@@ -83,9 +83,6 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
 
     private val scope = LifeCycleScope()
 
-    init {
-    }
-
     private val hideFabUpRunnable: Runnable = Runnable {
         fabUp.hide()
     }
