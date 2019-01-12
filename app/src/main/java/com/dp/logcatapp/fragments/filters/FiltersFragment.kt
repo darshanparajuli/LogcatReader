@@ -275,7 +275,7 @@ internal class MyRecyclerViewAdapter(private val onRemoveListener: (View) -> Uni
         }
 
         override fun areContentsTheSame(p0: Int, p1: Int): Boolean {
-            return true
+            return old[p0] == new[p1]
         }
     }
 }
