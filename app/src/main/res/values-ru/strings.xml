@@ -21,7 +21,7 @@
     <string name="pause">Пауза</string>
     <string name="resume">Продолжить</string>
     <string name="about">О приложении</string>
-    <string name="copy_to_clipboard">Копировать</string>
+    <string name="copy_adb_command">Копировать</string>
     <string name="copied_to_clipboard">Cкопировано</string>
     <string name="save_to_file">Сохранить</string>
     <string name="logcat">Logcat</string>
@@ -83,4 +83,5 @@
     <string name="unable_to_share">Не удалось поделиться</string>
     <string name="pref_cat_general">Общие</string>
     <string name="pref_general_keep_screen_on">Оставить экран включенным</string>
+    <string name="copy_to_clipboard">Скопировать в буфер обмена</string>
 </resources>

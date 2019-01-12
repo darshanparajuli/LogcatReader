@@ -19,7 +19,7 @@ class InstructionToGrantPermissionDialogFragment : BaseDialogFragment() {
                 .setTitle(R.string.read_logs_permission_required)
                 .setView(view)
                 .setPositiveButton(android.R.string.ok, null)
-                .setNeutralButton(R.string.copy_to_clipboard) { _, _ ->
+                .setNeutralButton(R.string.copy_adb_command) { _, _ ->
                     val cmd = "adb shell pm grant ${activity!!.packageName} " +
                             Manifest.permission.READ_LOGS
                     val cm = activity!!.getSystemService(Context.CLIPBOARD_SERVICE)
