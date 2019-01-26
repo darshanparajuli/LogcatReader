@@ -3,7 +3,7 @@
     <dimen name="activity_horizontal_margin">5dp</dimen>
     <dimen name="activity_vertical_margin">5dp</dimen>
 
-    <dimen name="toolbar_shadow_height">8dp</dimen>
+    <dimen name="toolbar_shadow_height">4dp</dimen>
     <dimen name="toolbar_shadow_height_compat">@dimen/toolbar_shadow_height</dimen>
 
     <dimen name="text_size_huge">24sp</dimen>
