@@ -95,11 +95,17 @@
     <string name="date">Date</string>
     <string name="time">Time</string>
     <string name="unable_to_share">Unable to share</string>
-    <string name="permission_instruction0">To view all of the logs, READ_LOGS permission is required. Please follow the instructions below to grant the permission (needs to be done only once).</string>
+    <string name="permission_instruction0">Please follow the steps below to grant READ_LOGS permission (needs to be done only once):</string>
     <string name="permission_instruction1">1. Connect the phone to a computer with ADB tools installed.</string>
     <string name="permission_instruction2">2. Run the following command (single line):</string>
     <string name="permission_instruction3">adb shell pm grant com.dp.logcatapp android.permission.READ_LOGS</string>
     <string name="permission_instruction4">3. Close the app by double pressing the back button and swiping it out from the Recents.</string>
     <string name="permission_instruction5">4. Start the app again, and now you should see all of the logs.</string>
     <string name="permission_instruction6">Please report if there are any issues, thank you!</string>
+    <string name="success">Success</string>
+    <string name="fail">Fail</string>
+    <string name="manual_method">Manual method</string>
+    <string name="read_logs_permission_required_msg">"READ_LOGS permission is required.\n\nIf your device is rooted, please select 'Root method', otherwise, to grant the permission manually using ADB, please select 'Manual method'.\n\nThis needs to be done only once!"</string>
+    <string name="root_method">Root method</string>
+    <string name="asking_permission_for_root_access">Asking permission for ROOT access…</string>
 </resources>

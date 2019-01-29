@@ -1,6 +1,7 @@
 package com.dp.logcatapp.fragments.logcatlive
 
 import android.Manifest
+import android.app.Dialog
 import android.content.ComponentName
 import android.content.Intent
 import android.content.ServiceConnection
@@ -10,6 +11,7 @@ import android.os.Bundle
 import android.os.IBinder
 import android.view.*
 import android.widget.TextView
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
 import androidx.core.content.ContextCompat
@@ -22,6 +24,7 @@ import com.dp.logcat.Filter
 import com.dp.logcat.Log
 import com.dp.logcat.Logcat
 import com.dp.logcat.LogsReceivedListener
+import com.dp.logcatapp.BuildConfig
 import com.dp.logcatapp.R
 import com.dp.logcatapp.activities.BaseActivityWithToolbar
 import com.dp.logcatapp.activities.FiltersActivity
@@ -29,9 +32,13 @@ import com.dp.logcatapp.activities.SavedLogsActivity
 import com.dp.logcatapp.activities.SavedLogsViewerActivity
 import com.dp.logcatapp.db.FilterInfo
 import com.dp.logcatapp.db.MyDB
+import com.dp.logcatapp.fragments.base.BaseDialogFragment
 import com.dp.logcatapp.fragments.base.BaseFragment
 import com.dp.logcatapp.fragments.filters.FilterType
-import com.dp.logcatapp.fragments.logcatlive.dialogs.InstructionToGrantPermissionDialogFragment
+import com.dp.logcatapp.fragments.logcatlive.dialogs.AskingForRootAccessDialogFragment
+import com.dp.logcatapp.fragments.logcatlive.dialogs.ManualMethodToGrantPermissionDialogFragment
+import com.dp.logcatapp.fragments.logcatlive.dialogs.NeedPermissionDialogFragment
+import com.dp.logcatapp.fragments.logcatlive.dialogs.OnSavedBottomSheetDialogFragment
 import com.dp.logcatapp.fragments.shared.dialogs.CopyToClipboardDialogFragment
 import com.dp.logcatapp.services.LogcatService
 import com.dp.logcatapp.util.*
@@ -42,10 +49,8 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.snackbar.Snackbar
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
+import kotlinx.coroutines.*
 import kotlinx.coroutines.Dispatchers.Default
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.async
-import kotlinx.coroutines.launch
 
 class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListener {
     companion object {
@@ -253,8 +258,11 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
 
         if (!checkReadLogsPermission() && !viewModel.showedGrantPermissionInstruction) {
             viewModel.showedGrantPermissionInstruction = true
-            InstructionToGrantPermissionDialogFragment().show(fragmentManager,
-                    InstructionToGrantPermissionDialogFragment.TAG)
+            NeedPermissionDialogFragment().let {
+                it.setTargetFragment(this, 0)
+                it.show(fragmentManager,
+                        NeedPermissionDialogFragment.TAG)
+            }
         }
     }
 
@@ -669,6 +677,32 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
         }
     }
 
+    fun useRootToGrantPermission() {
+        scope.launch {
+            val dialog = AskingForRootAccessDialogFragment()
+            dialog.show(fragmentManager, AskingForRootAccessDialogFragment.TAG)
+
+            val result = withContext(Dispatchers.IO) {
+                val cmd = "pm grant ${BuildConfig.APPLICATION_ID} ${Manifest.permission.READ_LOGS}"
+                try {
+                    val process = Runtime.getRuntime().exec(arrayOf("su", "-c", cmd))
+                    process.waitFor()
+                } catch (e: Exception) {
+                    -1
+                }
+            }
+
+            dialog.dismissAllowingStateLoss()
+            if (result == 0) {
+                activity!!.showToast(getString(R.string.success))
+            } else {
+                activity!!.showToast(getString(R.string.fail))
+                ManualMethodToGrantPermissionDialogFragment().show(fragmentManager,
+                        ManualMethodToGrantPermissionDialogFragment.TAG)
+            }
+        }
+    }
+
     private class LogFilter(filterInfo: FilterInfo) : Filter {
         val type = filterInfo.type
         val content = filterInfo.content
@@ -711,54 +745,5 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
                 }
             }
         }
-    }
-}
-
-class OnSavedBottomSheetDialogFragment : BottomSheetDialogFragment() {
-    companion object {
-        val TAG = OnSavedBottomSheetDialogFragment::class.qualifiedName
-
-        private val KEY_URI = TAG + "_uri"
-        private val KEY_FILE_NAME = TAG + "_file_name"
-
-        fun newInstance(fileName: String, uri: Uri): OnSavedBottomSheetDialogFragment {
-            val fragment = OnSavedBottomSheetDialogFragment()
-            val bundle = Bundle()
-            bundle.putString(KEY_URI, uri.toString())
-            bundle.putString(KEY_FILE_NAME, fileName)
-            fragment.arguments = bundle
-            return fragment
-        }
-    }
-
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
-                              savedInstanceState: Bundle?): View {
-        val rootView = inflater.inflate(R.layout.saved_log_bottom_sheet, container, false)
-
-        val arguments = arguments!!
-        val fileName = arguments.getString(KEY_FILE_NAME)
-        val uri = Uri.parse(arguments.getString(KEY_URI))
-
-        rootView.findViewById<TextView>(R.id.savedFileName).text = fileName
-        rootView.findViewById<TextView>(R.id.actionView).setOnClickListener {
-            if (!viewSavedLog(uri)) {
-                showSnackbar(view, getString(R.string.could_not_open_log_file))
-            }
-            dismiss()
-        }
-
-        rootView.findViewById<TextView>(R.id.actionShare).setOnClickListener {
-            ShareUtils.shareSavedLogs(context!!, uri, Utils.isUsingCustomSaveLocation(context!!))
-            dismiss()
-        }
-
-        return rootView
-    }
-
-    private fun viewSavedLog(uri: Uri): Boolean {
-        val intent = Intent(context, SavedLogsViewerActivity::class.java)
-        intent.setDataAndType(uri, "text/plain")
-        startActivity(intent)
-        return true
     }
 }

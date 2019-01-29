@@ -11,15 +11,14 @@ import com.dp.logcatapp.R
 import com.dp.logcatapp.fragments.base.BaseDialogFragment
 import com.dp.logcatapp.util.inflateLayout
 
-class InstructionToGrantPermissionDialogFragment : BaseDialogFragment() {
+class ManualMethodToGrantPermissionDialogFragment : BaseDialogFragment() {
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-        val view = inflateLayout(R.layout.permission_instruction)
+        val view = inflateLayout(R.layout.manual_method_dialog_fragment)
         return AlertDialog.Builder(activity!!)
-                .setTitle(R.string.read_logs_permission_required)
+                .setTitle(getString(R.string.manual_method))
                 .setView(view)
-                .setPositiveButton(android.R.string.ok, null)
-                .setNeutralButton(R.string.copy_adb_command) { _, _ ->
+                .setPositiveButton(R.string.copy_adb_command) { _, _ ->
                     val cmd = "adb shell pm grant ${activity!!.packageName} " +
                             Manifest.permission.READ_LOGS
                     val cm = activity!!.getSystemService(Context.CLIPBOARD_SERVICE)
@@ -31,6 +30,6 @@ class InstructionToGrantPermissionDialogFragment : BaseDialogFragment() {
     }
 
     companion object {
-        val TAG = InstructionToGrantPermissionDialogFragment::class.qualifiedName
+        val TAG = ManualMethodToGrantPermissionDialogFragment::class.qualifiedName
     }
 }

@@ -1,1 +1,1 @@
-include ':app', ':logcat', ':logger', ':jshellsession', ':collections'
+include ':app', ':logcat', ':logger', ':collections'

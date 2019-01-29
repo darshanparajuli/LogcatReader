@@ -4,16 +4,14 @@ import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlin.coroutines.CoroutineContext
 
 class LifeCycleScope : DefaultLifecycleObserver, CoroutineScope {
     private val job = Job()
 
-    @ExperimentalCoroutinesApi
     override val coroutineContext: CoroutineContext
-        get() = job + Dispatchers.Main.immediate
+        get() = job + Dispatchers.Main
 
     override fun onDestroy(owner: LifecycleOwner) {
         job.cancel()
