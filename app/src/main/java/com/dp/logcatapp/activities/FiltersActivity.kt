@@ -2,6 +2,7 @@ package com.dp.logcatapp.activities
 
 import android.os.Bundle
 import androidx.fragment.app.transaction
+import com.dp.logcat.Log
 import com.dp.logcatapp.R
 import com.dp.logcatapp.fragments.filters.FiltersFragment
 
@@ -10,6 +11,7 @@ class FiltersActivity : BaseActivityWithToolbar() {
     companion object {
         val TAG = FiltersActivity::class.qualifiedName
         val EXTRA_EXCLUSIONS = TAG + "_exclusions"
+        val KEY_LOG = TAG + "_key_log"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -20,13 +22,15 @@ class FiltersActivity : BaseActivityWithToolbar() {
 
         if (savedInstanceState == null) {
             supportFragmentManager.transaction {
-                replace(R.id.content_frame, FiltersFragment.newInstance(isExclusions()),
+                replace(R.id.content_frame, FiltersFragment.newInstance(getLog(),isExclusions()),
                         FiltersFragment.TAG)
             }
         }
     }
 
     private fun isExclusions() = intent != null && intent.getBooleanExtra(EXTRA_EXCLUSIONS, false)
+
+    private fun getLog() = intent.getParcelableExtra<Log>(KEY_LOG)
 
     override fun getToolbarIdRes() = R.id.toolbar
 

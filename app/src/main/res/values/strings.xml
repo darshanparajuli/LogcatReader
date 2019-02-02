@@ -23,6 +23,7 @@
     <string name="copy_adb_command">Copy ADB Command</string>
     <string name="copy_to_clipboard">Copy To Clipboard</string>
     <string name="copied_to_clipboard">Copied</string>
+    <string name="filter_or_exclude">Filter or Exclude</string>
     <string name="save_to_file">Save</string>
     <string name="logcat">Logcat</string>
     <string name="pref_poll_interval_title">Poll Interval</string>
@@ -84,6 +85,7 @@
     <string name="add">Add</string>
     <string name="keyword">Keyword</string>
     <string name="tag">Tag</string>
+    <string name="exclude">Exclude</string>
     <string name="exclusions">Exclusions</string>
     <string name="restart_logcat">Restart logcat</string>
     <string name="exclusion">Exclusion</string>
