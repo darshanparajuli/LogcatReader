@@ -12,6 +12,7 @@ import androidx.lifecycle.ViewModelProviders
 import com.dp.logcat.Log
 import com.dp.logcat.LogPriority
 import com.dp.logcatapp.R
+import com.dp.logcatapp.activities.FiltersActivity.Companion.KEY_LOG
 
 import com.dp.logcatapp.fragments.base.BaseDialogFragment
 import com.dp.logcatapp.fragments.filters.FiltersFragment
@@ -40,7 +41,7 @@ class FilterDialogFragment : BaseDialogFragment() {
         super.onCreate(savedInstanceState)
         viewModel = ViewModelProviders.of(this)
                 .get(MyViewModel::class.java)
-        initViewModel(getLog());
+        initViewModel(getLog())
     }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
@@ -133,18 +134,18 @@ class FilterDialogFragment : BaseDialogFragment() {
                 .setTitle(title)
                 .setView(rootView)
                 .setPositiveButton(android.R.string.ok) { _, _ ->
-                    val logcatmsg = LogcatMsg()
-                    logcatmsg.logLevels = mutableSetOf<String>()
-                    logcatmsg.keyword = editTextKeyword.text.toString().trim()
-                    logcatmsg.tag = editTextTag.text.toString().trim()
-                    logcatmsg.pid = editTextPid.text.toString().trim()
-                    logcatmsg.tid = editTextTid.text.toString().trim()
+                    var logcatMsg = LogcatMsg()
+                    logcatMsg.logLevels = mutableSetOf<String>()
+                    logcatMsg.keyword = editTextKeyword.text.toString().trim()
+                    logcatMsg.tag = editTextTag.text.toString().trim()
+                    logcatMsg.pid = editTextPid.text.toString().trim()
+                    logcatMsg.tid = editTextTid.text.toString().trim()
                     for ((k, v) in checkBoxMap) {
                         if (k.isChecked) {
-                            logcatmsg.logLevels.plus(v)
+                            logcatMsg.logLevels.add(v)
                         }
                     }
-                    (targetFragment as FiltersFragment).addFilter(logcatmsg)
+                    (targetFragment as FiltersFragment).addFilter(logcatMsg)
                 }
                 .setNegativeButton(android.R.string.cancel) { _, _ ->
                     dismiss()
@@ -152,11 +153,12 @@ class FilterDialogFragment : BaseDialogFragment() {
                 .create()
     }
 
-    fun initViewModel(log: Log?){
-        if(log != null){
+    fun initViewModel(log: Log?) {
+        log?.let {
             viewModel.tag = log.tag
             viewModel.pid = log.pid
             viewModel.tid = log.tid
+            viewModel.logPriorities.add(log.priority)
         }
     }
 

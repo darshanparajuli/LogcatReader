@@ -17,7 +17,7 @@ import com.logcat.collections.FixedCircularArray
 
 internal class MyRecyclerViewAdapter(context: Context, initialCapacity: Int) :
         RecyclerView.Adapter<MyRecyclerViewAdapter.MyViewHolder>(),
-        View.OnClickListener,View.OnLongClickListener, SharedPreferences.OnSharedPreferenceChangeListener {
+        View.OnClickListener, View.OnLongClickListener, SharedPreferences.OnSharedPreferenceChangeListener {
 
 
     private var list = FixedCircularArray<Log>(initialCapacity, Logcat.INITIAL_LOG_SIZE)
@@ -71,11 +71,11 @@ internal class MyRecyclerViewAdapter(context: Context, initialCapacity: Int) :
         }
     }
 
-    override fun onLongClick(v: View?): Boolean {
-        when (v?.id) {
+    override fun onLongClick(v: View): Boolean {
+        when (v.id) {
             R.id.list_item_root -> onLongClickListener?.invoke(v)
         }
-        return true;
+        return true
     }
 
     override fun getItemCount() = list.size

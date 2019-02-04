@@ -22,7 +22,7 @@ class FiltersActivity : BaseActivityWithToolbar() {
 
         if (savedInstanceState == null) {
             supportFragmentManager.transaction {
-                replace(R.id.content_frame, FiltersFragment.newInstance(getLog(),isExclusions()),
+                replace(R.id.content_frame, FiltersFragment.newInstance(getLog(), isExclusions()),
                         FiltersFragment.TAG)
             }
         }

@@ -263,7 +263,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
                 viewModel.autoScroll = false
                 val log = adapter[pos]
                 FilterExclusionDialogFragment.newInstance(log)
-                        .show(fragmentManager,FilterExclusionDialogFragment.TAG)
+                        .show(fragmentManager, FilterExclusionDialogFragment.TAG)
             }
         }
 
@@ -470,7 +470,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
                 true
             }
             R.id.filters_action -> {
-                moveToFilterActivity(false);
+                moveToFilterActivity(false)
                 true
             }
             R.id.exclusions_action -> {
@@ -494,7 +494,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
         }
     }
 
-    fun moveToFilterActivity(isExclusion: Boolean){
+    fun moveToFilterActivity(isExclusion: Boolean) {
         val intent = Intent(activity!!, FiltersActivity::class.java)
         intent.putExtra(FiltersActivity.EXTRA_EXCLUSIONS, isExclusion)
         startActivity(intent)

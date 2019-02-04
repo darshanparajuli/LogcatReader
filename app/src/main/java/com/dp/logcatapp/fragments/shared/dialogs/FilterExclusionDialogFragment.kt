@@ -10,7 +10,6 @@ import com.dp.logcatapp.activities.FiltersActivity
 import com.dp.logcatapp.fragments.base.BaseDialogFragment
 
 
-
 class FilterExclusionDialogFragment : BaseDialogFragment(), DialogInterface.OnClickListener {
 
     companion object {
@@ -34,7 +33,6 @@ class FilterExclusionDialogFragment : BaseDialogFragment(), DialogInterface.OnCl
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         return AlertDialog.Builder(activity!!)
-                .setTitle(R.string.filter_or_exclude)
                 .setItems(R.array.filter_exclude, this)
                 .create()
     }
@@ -42,17 +40,17 @@ class FilterExclusionDialogFragment : BaseDialogFragment(), DialogInterface.OnCl
     override fun onClick(dialog: DialogInterface, which: Int) {
         val log = arguments!!.getParcelable<Log>(KEY_LOG)!!
         when (which) {
-            LogContentType.FILTER.ordinal -> moveToFilterActivity(log,false)
-            LogContentType.EXCLUDE.ordinal -> moveToFilterActivity(log,true)
+            LogContentType.FILTER.ordinal -> moveToFilterActivity(log, false)
+            LogContentType.EXCLUDE.ordinal -> moveToFilterActivity(log, true)
         }
-        dismiss();
+        dismiss()
     }
 
 
-    fun moveToFilterActivity(log: Log,isExclusion: Boolean){
+    fun moveToFilterActivity(log: Log, isExclusion: Boolean) {
         val intent = Intent(activity!!, FiltersActivity::class.java)
-        intent.putExtra(FiltersActivity.EXTRA_EXCLUSIONS, isExclusion);
-        intent.putExtra(FiltersActivity.KEY_LOG,log)
+        intent.putExtra(FiltersActivity.EXTRA_EXCLUSIONS, isExclusion)
+        intent.putExtra(FiltersActivity.KEY_LOG, log)
         startActivity(intent)
     }
 }
