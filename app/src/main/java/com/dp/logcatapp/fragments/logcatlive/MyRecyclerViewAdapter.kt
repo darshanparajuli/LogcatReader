@@ -17,10 +17,12 @@ import com.logcat.collections.FixedCircularArray
 
 internal class MyRecyclerViewAdapter(context: Context, initialCapacity: Int) :
         RecyclerView.Adapter<MyRecyclerViewAdapter.MyViewHolder>(),
-        View.OnClickListener, SharedPreferences.OnSharedPreferenceChangeListener {
+        View.OnClickListener, View.OnLongClickListener, SharedPreferences.OnSharedPreferenceChangeListener {
+
 
     private var list = FixedCircularArray<Log>(initialCapacity, Logcat.INITIAL_LOG_SIZE)
     private var onClickListener: ((View) -> Unit)? = null
+    private var onLongClickListener: ((View) -> Unit)? = null
 
     private val priorityColorAssert = ContextCompat.getColor(context, R.color.priority_assert)
     private val priorityColorDebug = ContextCompat.getColor(context, R.color.priority_debug)
@@ -59,6 +61,7 @@ internal class MyRecyclerViewAdapter(context: Context, initialCapacity: Int) :
         val view = LayoutInflater.from(parent.context)
                 .inflate(R.layout.fragment_logcat_live_list_item, parent, false)
         view.setOnClickListener(this)
+        view.setOnLongClickListener(this)
         return MyViewHolder(view)
     }
 
@@ -66,6 +69,13 @@ internal class MyRecyclerViewAdapter(context: Context, initialCapacity: Int) :
         when (v.id) {
             R.id.list_item_root -> onClickListener?.invoke(v)
         }
+    }
+
+    override fun onLongClick(v: View): Boolean {
+        when (v.id) {
+            R.id.list_item_root -> onLongClickListener?.invoke(v)
+        }
+        return true
     }
 
     override fun getItemCount() = list.size
@@ -104,6 +114,10 @@ internal class MyRecyclerViewAdapter(context: Context, initialCapacity: Int) :
 
     internal fun setOnClickListener(onClickListener: (View) -> Unit) {
         this.onClickListener = onClickListener
+    }
+
+    internal fun setOnLongClickListener(onLongClickListener: (View) -> Unit) {
+        this.onLongClickListener = onLongClickListener
     }
 
     class MyViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {

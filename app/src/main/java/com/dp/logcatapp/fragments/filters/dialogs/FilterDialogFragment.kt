@@ -9,16 +9,30 @@ import android.widget.EditText
 import androidx.appcompat.app.AlertDialog
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProviders
+import com.dp.logcat.Log
 import com.dp.logcat.LogPriority
 import com.dp.logcatapp.R
+import com.dp.logcatapp.activities.FiltersActivity.Companion.KEY_LOG
+
 import com.dp.logcatapp.fragments.base.BaseDialogFragment
 import com.dp.logcatapp.fragments.filters.FiltersFragment
+import com.dp.logcatapp.model.LogcatMsg
 import com.dp.logcatapp.util.inflateLayout
 
 class FilterDialogFragment : BaseDialogFragment() {
 
     companion object {
         val TAG = FilterDialogFragment::class.qualifiedName
+        private val KEY_LOG = TAG + "_key_log"
+
+        fun newInstance(log: Log?): FilterDialogFragment {
+            val bundle = Bundle()
+            bundle.putParcelable(KEY_LOG, log)
+
+            val fragment = FilterDialogFragment()
+            fragment.arguments = bundle
+            return fragment
+        }
     }
 
     private lateinit var viewModel: MyViewModel
@@ -27,6 +41,7 @@ class FilterDialogFragment : BaseDialogFragment() {
         super.onCreate(savedInstanceState)
         viewModel = ViewModelProviders.of(this)
                 .get(MyViewModel::class.java)
+        initViewModel(getLog())
     }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
@@ -119,23 +134,35 @@ class FilterDialogFragment : BaseDialogFragment() {
                 .setTitle(title)
                 .setView(rootView)
                 .setPositiveButton(android.R.string.ok) { _, _ ->
-                    val prioritySet = mutableSetOf<String>()
-                    val keyword = editTextKeyword.text.toString().trim()
-                    val tag = editTextTag.text.toString().trim()
-                    val pid = editTextPid.text.toString().trim()
-                    val tid = editTextTid.text.toString().trim()
+                    var logcatMsg = LogcatMsg()
+                    logcatMsg.logLevels = mutableSetOf<String>()
+                    logcatMsg.keyword = editTextKeyword.text.toString().trim()
+                    logcatMsg.tag = editTextTag.text.toString().trim()
+                    logcatMsg.pid = editTextPid.text.toString().trim()
+                    logcatMsg.tid = editTextTid.text.toString().trim()
                     for ((k, v) in checkBoxMap) {
                         if (k.isChecked) {
-                            prioritySet.add(v)
+                            logcatMsg.logLevels.add(v)
                         }
                     }
-                    (targetFragment as FiltersFragment).addFilter(keyword, tag, pid, tid, prioritySet)
+                    (targetFragment as FiltersFragment).addFilter(logcatMsg)
                 }
                 .setNegativeButton(android.R.string.cancel) { _, _ ->
                     dismiss()
                 }
                 .create()
     }
+
+    fun initViewModel(log: Log?) {
+        log?.let {
+            viewModel.tag = log.tag
+            viewModel.pid = log.pid
+            viewModel.tid = log.tid
+            viewModel.logPriorities.add(log.priority)
+        }
+    }
+
+    fun getLog() = arguments?.getParcelable<Log>(KEY_LOG)
 }
 
 internal class MyViewModel : ViewModel() {

@@ -72,6 +72,7 @@
     <string name="keyword">"дескриптор"</string>
     <string name="add">Добавить</string>
     <string name="tag">Тег</string>
+    <string name="exclude">исключать</string>
     <string name="exclusions">Исключения</string>
     <string name="restart_logcat">Перезапустить Logcat</string>
     <string name="exclusion">Исключения</string>
@@ -84,4 +85,5 @@
     <string name="pref_cat_general">Общие</string>
     <string name="pref_general_keep_screen_on">Оставить экран включенным</string>
     <string name="copy_to_clipboard">Скопировать в буфер обмена</string>
+
 </resources>

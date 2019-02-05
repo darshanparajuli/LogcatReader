@@ -10,6 +10,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.dp.logcat.Log
 import com.dp.logcat.LogPriority
 import com.dp.logcatapp.R
 import com.dp.logcatapp.db.FilterInfo
@@ -17,6 +18,7 @@ import com.dp.logcatapp.db.MyDB
 import com.dp.logcatapp.fragments.base.BaseFragment
 import com.dp.logcatapp.fragments.filters.dialogs.FilterDialogFragment
 import com.dp.logcatapp.fragments.logcatlive.LogcatLiveViewModel
+import com.dp.logcatapp.model.LogcatMsg
 import com.dp.logcatapp.util.inflateLayout
 import io.reactivex.Flowable
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -28,11 +30,13 @@ class FiltersFragment : BaseFragment() {
     companion object {
         val TAG = FiltersFragment::class.qualifiedName
         private val KEY_EXCLUSIONS = TAG + "_key_exclusions"
+        private val KEY_LOG = TAG + "_key_log"
 
-        fun newInstance(exclusions: Boolean): FiltersFragment {
+        fun newInstance(log: Log?,exclusions: Boolean): FiltersFragment {
             val frag = FiltersFragment()
             val bundle = Bundle()
             bundle.putBoolean(KEY_EXCLUSIONS, exclusions)
+            bundle.putParcelable(KEY_LOG,log)
             frag.arguments = bundle
             return frag
         }
@@ -113,6 +117,7 @@ class FiltersFragment : BaseFragment() {
     override fun onResume() {
         super.onResume()
         startObservingFilters()
+        if(getLog() != null) showAddFilter()
     }
 
     override fun onPause() {
@@ -121,6 +126,8 @@ class FiltersFragment : BaseFragment() {
     }
 
     fun isExclusions() = arguments?.getBoolean(KEY_EXCLUSIONS) ?: false
+
+    fun getLog() = arguments?.getParcelable<Log>(KEY_LOG)
 
     @SuppressLint("CheckResult")
     private fun onRemoveClicked(v: View) {
@@ -160,9 +167,7 @@ class FiltersFragment : BaseFragment() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.add_action -> {
-                val frag = FilterDialogFragment()
-                frag.setTargetFragment(this, 0)
-                frag.show(fragmentManager, FilterDialogFragment.TAG)
+                showAddFilter();
                 true
             }
             R.id.clear_action -> {
@@ -177,30 +182,36 @@ class FiltersFragment : BaseFragment() {
         }
     }
 
+    private fun showAddFilter() {
+        val frag = FilterDialogFragment.newInstance(getLog())
+        frag.setTargetFragment(this, 0)
+        frag.show(fragmentManager, FilterDialogFragment.TAG)
+    }
+
     @SuppressLint("CheckResult")
-    fun addFilter(keyword: String, tag: String, pid: String, tid: String, logLevels: Set<String>) {
+    fun addFilter(logcatMsg: LogcatMsg) {
         val list = mutableListOf<FilterInfo>()
         val exclude = isExclusions()
 
-        if (keyword.isNotEmpty()) {
-            list.add(FilterInfo(FilterType.KEYWORD, keyword, exclude))
+        if (logcatMsg.keyword.isNotEmpty()) {
+            list.add(FilterInfo(FilterType.KEYWORD, logcatMsg.keyword, exclude))
         }
 
-        if (tag.isNotEmpty()) {
-            list.add(FilterInfo(FilterType.TAG, tag, exclude))
+        if (logcatMsg.tag.isNotEmpty()) {
+            list.add(FilterInfo(FilterType.TAG, logcatMsg.tag, exclude))
         }
 
-        if (pid.isNotEmpty()) {
-            list.add(FilterInfo(FilterType.PID, pid, exclude))
+        if (logcatMsg.pid.isNotEmpty()) {
+            list.add(FilterInfo(FilterType.PID, logcatMsg.pid, exclude))
         }
 
-        if (tid.isNotEmpty()) {
-            list.add(FilterInfo(FilterType.TID, tid, exclude))
+        if (logcatMsg.tid.isNotEmpty()) {
+            list.add(FilterInfo(FilterType.TID, logcatMsg.tid, exclude))
         }
 
-        if (logLevels.isNotEmpty()) {
+        if (logcatMsg.logLevels.isNotEmpty()) {
             list.add(FilterInfo(FilterType.LOG_LEVELS,
-                    logLevels.sorted().joinToString(","), exclude))
+                    logcatMsg.logLevels.sorted().joinToString(","), exclude))
         }
 
         if (list.isNotEmpty()) {

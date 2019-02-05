@@ -9,6 +9,11 @@
         <item>@string/thread_id</item>
     </string-array>
 
+    <string-array name="filter_exclude">
+        <item>@string/filter</item>
+        <item>@string/exclude</item>
+    </string-array>
+
     <string-array name="save_location_options">
         <item>@string/save_location_internal</item>
         <item>@string/save_location_custom</item>

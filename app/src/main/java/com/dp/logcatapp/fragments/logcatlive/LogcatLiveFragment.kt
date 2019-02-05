@@ -40,6 +40,7 @@ import com.dp.logcatapp.fragments.logcatlive.dialogs.ManualMethodToGrantPermissi
 import com.dp.logcatapp.fragments.logcatlive.dialogs.NeedPermissionDialogFragment
 import com.dp.logcatapp.fragments.logcatlive.dialogs.OnSavedBottomSheetDialogFragment
 import com.dp.logcatapp.fragments.shared.dialogs.CopyToClipboardDialogFragment
+import com.dp.logcatapp.fragments.shared.dialogs.FilterExclusionDialogFragment
 import com.dp.logcatapp.services.LogcatService
 import com.dp.logcatapp.util.*
 import com.dp.logcatapp.views.IndeterminateProgressSnackBar
@@ -256,6 +257,16 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
             }
         }
 
+        adapter.setOnLongClickListener { v ->
+            val pos = linearLayoutManager.getPosition(v)
+            if (pos >= 0) {
+                viewModel.autoScroll = false
+                val log = adapter[pos]
+                FilterExclusionDialogFragment.newInstance(log)
+                        .show(fragmentManager, FilterExclusionDialogFragment.TAG)
+            }
+        }
+
         if (!checkReadLogsPermission() && !viewModel.showedGrantPermissionInstruction) {
             viewModel.showedGrantPermissionInstruction = true
             NeedPermissionDialogFragment().let {
@@ -459,14 +470,11 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
                 true
             }
             R.id.filters_action -> {
-                val intent = Intent(activity!!, FiltersActivity::class.java)
-                startActivity(intent)
+                moveToFilterActivity(false)
                 true
             }
             R.id.exclusions_action -> {
-                val intent = Intent(activity!!, FiltersActivity::class.java)
-                intent.putExtra(FiltersActivity.EXTRA_EXCLUSIONS, true)
-                startActivity(intent)
+                moveToFilterActivity(true)
                 true
             }
             R.id.action_save -> {
@@ -484,6 +492,12 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
             }
             else -> return super.onOptionsItemSelected(item)
         }
+    }
+
+    fun moveToFilterActivity(isExclusion: Boolean) {
+        val intent = Intent(activity!!, FiltersActivity::class.java)
+        intent.putExtra(FiltersActivity.EXTRA_EXCLUSIONS, isExclusion)
+        startActivity(intent)
     }
 
     fun tryStopRecording() {
