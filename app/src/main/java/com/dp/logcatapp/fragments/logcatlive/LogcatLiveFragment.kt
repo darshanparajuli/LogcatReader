@@ -1,17 +1,13 @@
 package com.dp.logcatapp.fragments.logcatlive
 
 import android.Manifest
-import android.app.Dialog
 import android.content.ComponentName
 import android.content.Intent
 import android.content.ServiceConnection
 import android.content.pm.PackageManager
-import android.net.Uri
 import android.os.Bundle
 import android.os.IBinder
 import android.view.*
-import android.widget.TextView
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
 import androidx.core.content.ContextCompat
@@ -29,10 +25,8 @@ import com.dp.logcatapp.R
 import com.dp.logcatapp.activities.BaseActivityWithToolbar
 import com.dp.logcatapp.activities.FiltersActivity
 import com.dp.logcatapp.activities.SavedLogsActivity
-import com.dp.logcatapp.activities.SavedLogsViewerActivity
 import com.dp.logcatapp.db.FilterInfo
 import com.dp.logcatapp.db.MyDB
-import com.dp.logcatapp.fragments.base.BaseDialogFragment
 import com.dp.logcatapp.fragments.base.BaseFragment
 import com.dp.logcatapp.fragments.filters.FilterType
 import com.dp.logcatapp.fragments.logcatlive.dialogs.AskingForRootAccessDialogFragment
@@ -45,7 +39,6 @@ import com.dp.logcatapp.services.LogcatService
 import com.dp.logcatapp.util.*
 import com.dp.logcatapp.views.IndeterminateProgressSnackBar
 import com.dp.logger.Logger
-import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.snackbar.Snackbar
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -494,7 +487,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
         }
     }
 
-    fun moveToFilterActivity(isExclusion: Boolean) {
+    private fun moveToFilterActivity(isExclusion: Boolean) {
         val intent = Intent(activity!!, FiltersActivity::class.java)
         intent.putExtra(FiltersActivity.EXTRA_EXCLUSIONS, isExclusion)
         startActivity(intent)
