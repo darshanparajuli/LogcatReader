@@ -4,6 +4,7 @@ import android.app.Application
 import android.content.Context
 import android.net.Uri
 import android.os.Build
+import android.telephony.mbms.FileInfo
 import androidx.core.net.toFile
 import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.LiveData
@@ -33,22 +34,6 @@ internal class SavedLogsViewModel(application: Application) : ScopedAndroidViewM
 
     init {
         load()
-    }
-
-    fun update(fileInfoList: List<LogFileInfo>) {
-        val savedLogsResult = SavedLogsResult()
-        savedLogsResult.logFiles += fileInfoList
-        savedLogsResult.totalLogCount = fileInfoList.foldRight(0L) { logFileInfo, acc ->
-            acc + logFileInfo.count
-        }
-
-        val folder = File(getApplication<Application>().filesDir, LogcatLiveFragment.LOGCAT_DIR)
-        val totalSize = fileInfoList.map { File(folder, it.info.fileName).length() }.sum()
-        if (totalSize > 0) {
-            savedLogsResult.totalSize = Utils.bytesToString(totalSize)
-        }
-
-        fileNames.value = savedLogsResult
     }
 
     fun load() {

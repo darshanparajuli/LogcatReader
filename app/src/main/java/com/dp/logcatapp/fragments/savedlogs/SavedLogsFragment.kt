@@ -38,13 +38,11 @@ import com.dp.logcatapp.fragments.base.BaseDialogFragment
 import com.dp.logcatapp.fragments.base.BaseFragment
 import com.dp.logcatapp.fragments.logcatlive.LogcatLiveFragment
 import com.dp.logcatapp.util.*
-import io.reactivex.Flowable
-import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.disposables.Disposable
-import io.reactivex.schedulers.Schedulers
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.*
 
 class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListener,
@@ -61,9 +59,6 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
     private lateinit var linearLayoutManager: LinearLayoutManager
     private lateinit var progressBar: ProgressBar
 
-    private var deleteSubscriptionHandler: Disposable? = null
-    private var renameSubscriptionHandler: Disposable? = null
-
     private val scope = LifecycleScope()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -73,7 +68,30 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
 
         recyclerViewAdapter = MyRecyclerViewAdapter(activity!!, this,
                 this, viewModel.selectedItems)
-        viewModel.getFileNames().observe(this, Observer {
+    }
+
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
+                              savedInstanceState: Bundle?): View? =
+            inflateLayout(R.layout.fragment_saved_logs)
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        viewLifecycleOwner.lifecycle.addObserver(scope)
+
+        emptyView = view.findViewById(R.id.textViewEmpty)
+        progressBar = view.findViewById(R.id.progressBar)
+
+        recyclerView = view.findViewById(R.id.recyclerView)
+        linearLayoutManager = LinearLayoutManager(context)
+        recyclerView.itemAnimator = null
+        recyclerView.layoutManager = linearLayoutManager
+        recyclerView.adapter = recyclerViewAdapter
+
+        fragmentManager?.findFragmentByTag(RenameDialogFragment.TAG)
+                ?.setTargetFragment(this, 0)
+
+        viewModel.getFileNames().observe(viewLifecycleOwner, Observer {
             progressBar.visibility = View.GONE
             if (it != null) {
                 if (it.logFiles.isNotEmpty()) {
@@ -112,28 +130,6 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
                 emptyView.visibility = View.VISIBLE
             }
         })
-    }
-
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
-                              savedInstanceState: Bundle?): View? =
-            inflateLayout(R.layout.fragment_saved_logs)
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-
-        viewLifecycleOwner.lifecycle.addObserver(scope)
-
-        emptyView = view.findViewById(R.id.textViewEmpty)
-        progressBar = view.findViewById(R.id.progressBar)
-
-        recyclerView = view.findViewById(R.id.recyclerView)
-        linearLayoutManager = LinearLayoutManager(context)
-        recyclerView.itemAnimator = null
-        recyclerView.layoutManager = linearLayoutManager
-        recyclerView.adapter = recyclerViewAdapter
-
-        fragmentManager?.findFragmentByTag(RenameDialogFragment.TAG)
-                ?.setTargetFragment(this, 0)
     }
 
     override fun onClick(v: View) {
@@ -231,39 +227,39 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
     }
 
     private fun deleteSelectedLogFiles() {
-        val deleted = viewModel.selectedItems
+        val deleteList = viewModel.selectedItems
                 .map { recyclerViewAdapter.data[it] }
-                .filter {
-                    with(Uri.parse(it.info.path)) {
-                        if (it.info.isCustom && Build.VERSION.SDK_INT >= 21) {
-                            val file = DocumentFile.fromSingleUri(context!!, this)
-                            file != null && file.delete()
-                        } else {
-                            this.toFile().delete()
-                        }
-                    }
-                }
-                .map { it.info.fileName }
                 .toList()
 
-        deleteSubscriptionHandler = Flowable.just(MyDB.getInstance(context!!))
-                .subscribeOn(Schedulers.io())
-                .map { db ->
-                    val deletedSavedLogInfoList = viewModel.selectedItems
-                            .map { recyclerViewAdapter.data[it].info }
-                            .filter { it.fileName in deleted }
-                            .toTypedArray()
-                    db.savedLogsDao().delete(*deletedSavedLogInfoList)
-                }
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe {
-                    val updatedList = recyclerViewAdapter.data
-                            .filter { it.info.fileName !in deleted }.toList()
-                    viewModel.selectedItems.clear()
-                    viewModel.update(updatedList)
+        val db = MyDB.getInstance(context!!)
+        scope.launch {
+            withContext(Dispatchers.IO) {
+                val deleted = deleteList
+                        .filter {
+                            with(Uri.parse(it.info.path)) {
+                                if (it.info.isCustom && Build.VERSION.SDK_INT >= 21) {
+                                    val file = DocumentFile.fromSingleUri(context!!, this)
+                                    file != null && file.delete()
+                                } else {
+                                    this.toFile().delete()
+                                }
+                            }
+                        }
+                        .map { it.info.fileName }
+                        .toList()
 
-                    (activity as SavedLogsActivity).closeCabToolbar()
-                }
+                val deletedSavedLogInfoList = deleteList
+                        .map { it.info }
+                        .filter { it.fileName in deleted }
+                        .toTypedArray()
+                db.savedLogsDao().delete(*deletedSavedLogInfoList)
+            }
+
+            viewModel.selectedItems.clear()
+            viewModel.load()
+        }
+
+        (activity as SavedLogsActivity).closeCabToolbar()
     }
 
     private fun saveToDeviceFallback() {
@@ -358,16 +354,16 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
 
     private fun onRename(newName: String, newPath: Uri) {
         val fileInfo = recyclerViewAdapter.getItem(viewModel.selectedItems.toIntArray()[0])
-        renameSubscriptionHandler = Flowable.just(MyDB.getInstance(context!!))
-                .subscribeOn(Schedulers.io())
-                .map { db ->
-                    db.savedLogsDao().delete(fileInfo.info)
-                    db.savedLogsDao().insert(SavedLogInfo(newName, newPath.toString(), fileInfo.info.isCustom))
-                }
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe {
-                    viewModel.load()
-                }
+
+        val db = MyDB.getInstance(context!!)
+        scope.launch {
+            withContext(Dispatchers.IO) {
+                db.savedLogsDao().delete(fileInfo.info)
+                db.savedLogsDao().insert(SavedLogInfo(newName, newPath.toString(), fileInfo.info.isCustom))
+            }
+
+            viewModel.load()
+        }
 
         (activity as SavedLogsActivity).closeCabToolbar()
     }
@@ -375,14 +371,6 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
     override fun onDestroyView() {
         viewLifecycleOwner.lifecycle.removeObserver(scope)
         super.onDestroyView()
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        deleteSubscriptionHandler?.dispose()
-        deleteSubscriptionHandler = null
-        renameSubscriptionHandler?.dispose()
-        renameSubscriptionHandler = null
     }
 
     private class MyRecyclerViewAdapter(
