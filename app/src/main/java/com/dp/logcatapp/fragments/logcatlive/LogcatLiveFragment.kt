@@ -607,7 +607,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
             stopRecording()
         }
 
-        viewModel.loadFilters()
+        viewModel.reloadFilters()
     }
 
     override fun onReceivedLogs(logs: List<Log>) {

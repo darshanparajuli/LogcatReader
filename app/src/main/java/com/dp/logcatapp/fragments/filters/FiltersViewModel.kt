@@ -9,6 +9,7 @@ import com.dp.logcatapp.db.FilterInfo
 import com.dp.logcatapp.db.MyDB
 import com.dp.logcatapp.util.ScopedAndroidViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -17,13 +18,15 @@ class FiltersViewModel(application: Application) : ScopedAndroidViewModel(applic
 
     private lateinit var filters: MutableLiveData<List<FilterListItem>>
 
+    private var loadFiltersJob: Job? = null
+
     fun getFilters(isExclusions: Boolean): LiveData<List<FilterListItem>> {
         if (this::filters.isInitialized) {
             return filters
         }
 
         filters = MutableLiveData()
-        loadFilters(isExclusions)
+        reloadFilters(isExclusions)
         return filters
     }
 
@@ -34,7 +37,7 @@ class FiltersViewModel(application: Application) : ScopedAndroidViewModel(applic
                 dao.insert(*filters.toTypedArray())
             }
 
-            loadFilters(isExclusions)
+            reloadFilters(isExclusions)
         }
     }
 
@@ -45,7 +48,7 @@ class FiltersViewModel(application: Application) : ScopedAndroidViewModel(applic
                 dao.delete(filter)
             }
 
-            loadFilters(isExclusions)
+            reloadFilters(isExclusions)
         }
     }
 
@@ -56,13 +59,15 @@ class FiltersViewModel(application: Application) : ScopedAndroidViewModel(applic
                 dao.deleteAll(isExclusions)
             }
 
-            loadFilters(isExclusions)
+            reloadFilters(isExclusions)
         }
     }
 
-    fun loadFilters(isExclusions: Boolean) {
+    private fun reloadFilters(isExclusions: Boolean) {
         val dao = MyDB.getInstance(context).filterDao()
-        launch {
+
+        loadFiltersJob?.cancel()
+        loadFiltersJob = launch {
             filters.value = withContext(Dispatchers.IO) {
                 val list = if (isExclusions) {
                     dao.getExclusions()

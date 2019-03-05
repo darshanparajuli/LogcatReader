@@ -18,11 +18,8 @@ import com.dp.logcatapp.util.PreferenceKeys
 import com.dp.logcatapp.util.ScopedAndroidViewModel
 import com.dp.logcatapp.util.Utils
 import com.dp.logcatapp.util.getDefaultSharedPreferences
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.*
 import kotlinx.coroutines.Dispatchers.IO
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
@@ -38,6 +35,7 @@ internal class LogcatLiveViewModel(application: Application) : ScopedAndroidView
         private set
 
     private lateinit var filters: MutableLiveData<List<FilterInfo>>
+    private var loadFiltersJob: Job? = null
 
     fun getFilters(): LiveData<List<FilterInfo>> {
         if (this::filters.isInitialized) {
@@ -45,12 +43,13 @@ internal class LogcatLiveViewModel(application: Application) : ScopedAndroidView
         }
 
         filters = MutableLiveData()
-        loadFilters()
+        reloadFilters()
         return filters
     }
 
-    fun loadFilters() {
-        launch {
+    fun reloadFilters() {
+        loadFiltersJob?.cancel()
+        loadFiltersJob = launch {
             val db = MyDB.getInstance(getApplication())
             filters.value = withContext(Dispatchers.IO) {
                 db.filterDao().getAll()
