@@ -16,10 +16,10 @@ data class FilterInfo(@ColumnInfo(name = "type") val type: Int,
 interface FilterDao {
 
     @Query("SELECT * FROM filters WHERE `exclude` = 0")
-    fun getFilters(): Flowable<List<FilterInfo>>
+    fun getFilters(): List<FilterInfo>
 
     @Query("SELECT * FROM filters WHERE `exclude` = 1")
-    fun getExclusions(): Flowable<List<FilterInfo>>
+    fun getExclusions(): List<FilterInfo>
 
     @Query("SELECT * FROM filters")
     fun getAll(): Flowable<List<FilterInfo>>

@@ -1,0 +1,109 @@
+package com.dp.logcatapp.fragments.filters
+
+import android.app.Application
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import com.dp.logcat.LogPriority
+import com.dp.logcatapp.R
+import com.dp.logcatapp.db.FilterInfo
+import com.dp.logcatapp.db.MyDB
+import com.dp.logcatapp.util.ScopedAndroidViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+
+class FiltersViewModel(application: Application) : ScopedAndroidViewModel(application) {
+    private val context = application
+
+    private lateinit var filters: MutableLiveData<List<FilterListItem>>
+
+    fun getFilters(isExclusions: Boolean): LiveData<List<FilterListItem>> {
+        if (this::filters.isInitialized) {
+            return filters
+        }
+
+        filters = MutableLiveData()
+        loadFilters(isExclusions)
+        return filters
+    }
+
+    fun addFilters(filters: List<FilterInfo>, isExclusions: Boolean) {
+        val dao = MyDB.getInstance(context).filterDao()
+        launch {
+            withContext(Dispatchers.IO) {
+                dao.insert(*filters.toTypedArray())
+            }
+
+            loadFilters(isExclusions)
+        }
+    }
+
+    fun deleteFilter(filter: FilterInfo, isExclusions: Boolean) {
+        val dao = MyDB.getInstance(context).filterDao()
+        launch {
+            withContext(Dispatchers.IO) {
+                dao.delete(filter)
+            }
+
+            loadFilters(isExclusions)
+        }
+    }
+
+    fun deleteAllFilters(isExclusions: Boolean) {
+        val dao = MyDB.getInstance(context).filterDao()
+        launch {
+            withContext(Dispatchers.IO) {
+                dao.deleteAll(isExclusions)
+            }
+
+            loadFilters(isExclusions)
+        }
+    }
+
+    fun loadFilters(isExclusions: Boolean) {
+        val dao = MyDB.getInstance(context).filterDao()
+        launch {
+            filters.value = withContext(Dispatchers.IO) {
+                val list = if (isExclusions) {
+                    dao.getExclusions()
+                } else {
+                    dao.getFilters()
+                }
+
+                list.map {
+                    val displayText: String
+                    val type: String
+                    when (it.type) {
+                        FilterType.LOG_LEVELS -> {
+                            type = context.getString(R.string.log_level)
+                            displayText = it.content.split(",")
+                                    .joinToString(", ") { s ->
+                                        when (s) {
+                                            LogPriority.ASSERT -> "Assert"
+                                            LogPriority.ERROR -> "Error"
+                                            LogPriority.DEBUG -> "Debug"
+                                            LogPriority.FATAL -> "Fatal"
+                                            LogPriority.INFO -> "Info"
+                                            LogPriority.VERBOSE -> "Verbose"
+                                            LogPriority.WARNING -> "warning"
+                                            else -> ""
+                                        }
+                                    }
+                        }
+                        else -> {
+                            displayText = it.content
+                            type = when (it.type) {
+                                FilterType.KEYWORD -> context.getString(R.string.keyword)
+                                FilterType.TAG -> context.getString(R.string.tag)
+                                FilterType.PID -> context.getString(R.string.process_id)
+                                FilterType.TID -> context.getString(R.string.thread_id)
+                                else -> throw IllegalStateException("invalid type: ${it.type}")
+                            }
+                        }
+                    }
+                    FilterListItem(type, displayText, it)
+                }
+            }
+        }
+    }
+}

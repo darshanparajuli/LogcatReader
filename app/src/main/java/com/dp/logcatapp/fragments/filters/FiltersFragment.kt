@@ -5,25 +5,19 @@ import android.os.Bundle
 import android.view.*
 import android.widget.ImageButton
 import android.widget.TextView
+import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.dp.logcat.Log
-import com.dp.logcat.LogPriority
 import com.dp.logcatapp.R
 import com.dp.logcatapp.db.FilterInfo
-import com.dp.logcatapp.db.MyDB
 import com.dp.logcatapp.fragments.base.BaseFragment
 import com.dp.logcatapp.fragments.filters.dialogs.FilterDialogFragment
-import com.dp.logcatapp.fragments.logcatlive.LogcatLiveViewModel
 import com.dp.logcatapp.model.LogcatMsg
 import com.dp.logcatapp.util.inflateLayout
-import io.reactivex.Flowable
-import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.disposables.Disposable
-import io.reactivex.schedulers.Schedulers
 
 class FiltersFragment : BaseFragment() {
 
@@ -32,114 +26,60 @@ class FiltersFragment : BaseFragment() {
         private val KEY_EXCLUSIONS = TAG + "_key_exclusions"
         private val KEY_LOG = TAG + "_key_log"
 
-        fun newInstance(log: Log?,exclusions: Boolean): FiltersFragment {
+        fun newInstance(log: Log?, exclusions: Boolean): FiltersFragment {
             val frag = FiltersFragment()
             val bundle = Bundle()
             bundle.putBoolean(KEY_EXCLUSIONS, exclusions)
-            bundle.putParcelable(KEY_LOG,log)
+            bundle.putParcelable(KEY_LOG, log)
             frag.arguments = bundle
             return frag
         }
     }
 
-    private lateinit var viewModel: LogcatLiveViewModel
+    private lateinit var viewModel: FiltersViewModel
     private lateinit var recyclerViewAdapter: MyRecyclerViewAdapter
     private lateinit var linearLayoutManager: LinearLayoutManager
     private lateinit var emptyMessage: TextView
-    private var filterSubscription: Disposable? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setHasOptionsMenu(true)
         viewModel = ViewModelProviders.of(activity!!)
-                .get(LogcatLiveViewModel::class.java)
+                .get(FiltersViewModel::class.java)
         recyclerViewAdapter = MyRecyclerViewAdapter {
             onRemoveClicked(it)
         }
     }
 
-    private fun startObservingFilters() {
-        val dao = MyDB.getInstance(context!!).filterDao()
-        val flowable = if (isExclusions()) {
-            dao.getExclusions()
-        } else {
-            dao.getFilters()
-        }
-        filterSubscription = flowable.observeOn(AndroidSchedulers.mainThread())
-                .subscribe { list ->
-                    val data = list.map {
-                        val displayText: String
-                        val type: String
-                        when (it.type) {
-                            FilterType.LOG_LEVELS -> {
-                                type = getString(R.string.log_level)
-                                displayText = it.content.split(",")
-                                        .joinToString(", ") { s ->
-                                            when (s) {
-                                                LogPriority.ASSERT -> "Assert"
-                                                LogPriority.ERROR -> "Error"
-                                                LogPriority.DEBUG -> "Debug"
-                                                LogPriority.FATAL -> "Fatal"
-                                                LogPriority.INFO -> "Info"
-                                                LogPriority.VERBOSE -> "Verbose"
-                                                LogPriority.WARNING -> "warning"
-                                                else -> ""
-                                            }
-                                        }
-                            }
-                            else -> {
-                                displayText = it.content
-                                type = when (it.type) {
-                                    FilterType.KEYWORD -> getString(R.string.keyword)
-                                    FilterType.TAG -> getString(R.string.tag)
-                                    FilterType.PID -> getString(R.string.process_id)
-                                    FilterType.TID -> getString(R.string.thread_id)
-                                    else -> throw IllegalStateException("invalid type: ${it.type}")
-                                }
-                            }
-                        }
-                        FilterListItem(type, displayText, it)
-                    }
-
-                    if (data.isEmpty()) {
-                        emptyMessage.visibility = View.VISIBLE
-                    } else {
-                        emptyMessage.visibility = View.GONE
-                    }
-                    recyclerViewAdapter.setData(data)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        viewModel.getFilters(isExclusions()).observe(viewLifecycleOwner, Observer {
+            if (it != null) {
+                if (it.isEmpty()) {
+                    emptyMessage.visibility = View.VISIBLE
+                } else {
+                    emptyMessage.visibility = View.GONE
                 }
-    }
-
-    private fun stopObservingFilters() {
-        filterSubscription?.dispose()
+                recyclerViewAdapter.setData(it)
+            }
+        })
     }
 
     override fun onResume() {
         super.onResume()
-        startObservingFilters()
-        if(getLog() != null) showAddFilter()
-    }
-
-    override fun onPause() {
-        super.onPause()
-        stopObservingFilters()
+        if (getLog() != null) showAddFilter()
     }
 
     fun isExclusions() = arguments?.getBoolean(KEY_EXCLUSIONS) ?: false
 
-    fun getLog() = arguments?.getParcelable<Log>(KEY_LOG)
+    private fun getLog() = arguments?.getParcelable<Log>(KEY_LOG)
 
     @SuppressLint("CheckResult")
     private fun onRemoveClicked(v: View) {
         val pos = linearLayoutManager.getPosition(v)
         if (pos != RecyclerView.NO_POSITION) {
             val item = recyclerViewAdapter[pos]
-            recyclerViewAdapter.remove(pos)
-            Flowable.just(MyDB.getInstance(context!!))
-                    .subscribeOn(Schedulers.io())
-                    .subscribe {
-                        it.filterDao().delete(item.info)
-                    }
+            viewModel.deleteFilter(item.info, isExclusions())
         }
     }
 
@@ -167,15 +107,11 @@ class FiltersFragment : BaseFragment() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.add_action -> {
-                showAddFilter();
+                showAddFilter()
                 true
             }
             R.id.clear_action -> {
-                Flowable.just(MyDB.getInstance(context!!))
-                        .subscribeOn(Schedulers.io())
-                        .subscribe {
-                            it.filterDao().deleteAll(isExclusions())
-                        }
+                viewModel.deleteAllFilters(isExclusions())
                 true
             }
             else -> super.onOptionsItemSelected(item)
@@ -183,7 +119,11 @@ class FiltersFragment : BaseFragment() {
     }
 
     private fun showAddFilter() {
-        val frag = FilterDialogFragment.newInstance(getLog())
+        var frag = fragmentManager?.findFragmentByTag(FilterDialogFragment.TAG) as? FilterDialogFragment
+        if (frag == null) {
+            frag = FilterDialogFragment.newInstance(getLog())
+        }
+
         frag.setTargetFragment(this, 0)
         frag.show(fragmentManager, FilterDialogFragment.TAG)
     }
@@ -215,18 +155,14 @@ class FiltersFragment : BaseFragment() {
         }
 
         if (list.isNotEmpty()) {
-            Flowable.just(MyDB.getInstance(context!!))
-                    .subscribeOn(Schedulers.io())
-                    .subscribe {
-                        it.filterDao().insert(*list.toTypedArray())
-                    }
+            viewModel.addFilters(list, isExclusions())
         }
     }
 }
 
-internal data class FilterListItem(val type: String,
-                                   val content: String,
-                                   val info: FilterInfo)
+data class FilterListItem(val type: String,
+                          val content: String,
+                          val info: FilterInfo)
 
 internal class MyRecyclerViewAdapter(private val onRemoveListener: (View) -> Unit) :
         RecyclerView.Adapter<MyRecyclerViewAdapter.MyViewHolder>() {
@@ -244,11 +180,6 @@ internal class MyRecyclerViewAdapter(private val onRemoveListener: (View) -> Uni
     override fun getItemCount() = data.size
 
     operator fun get(index: Int) = data[index]
-
-    fun remove(index: Int) {
-        data.removeAt(index)
-        notifyItemRemoved(index)
-    }
 
     fun setData(data: List<FilterListItem>) {
         val diffCallback = DataDiffCallback(this.data, data)
