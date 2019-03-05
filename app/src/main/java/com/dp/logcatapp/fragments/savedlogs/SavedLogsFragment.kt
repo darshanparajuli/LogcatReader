@@ -64,7 +64,7 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
     private var deleteSubscriptionHandler: Disposable? = null
     private var renameSubscriptionHandler: Disposable? = null
 
-    private val scope = LifeCycleScope()
+    private val scope = LifecycleScope()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

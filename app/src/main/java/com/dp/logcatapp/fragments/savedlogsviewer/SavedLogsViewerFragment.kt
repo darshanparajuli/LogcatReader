@@ -16,7 +16,7 @@ import com.dp.logcatapp.R
 import com.dp.logcatapp.activities.BaseActivityWithToolbar
 import com.dp.logcatapp.fragments.base.BaseFragment
 import com.dp.logcatapp.fragments.shared.dialogs.CopyToClipboardDialogFragment
-import com.dp.logcatapp.util.LifeCycleScope
+import com.dp.logcatapp.util.LifecycleScope
 import com.dp.logcatapp.util.containsIgnoreCase
 import com.dp.logcatapp.util.inflateLayout
 import com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -40,7 +40,7 @@ class SavedLogsViewerFragment : BaseFragment() {
         }
     }
 
-    private val scope = LifeCycleScope()
+    private val scope = LifecycleScope()
 
     private lateinit var recyclerView: RecyclerView
     private lateinit var linearLayoutManager: LinearLayoutManager

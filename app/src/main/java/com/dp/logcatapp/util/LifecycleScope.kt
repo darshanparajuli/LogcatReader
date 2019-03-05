@@ -7,7 +7,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlin.coroutines.CoroutineContext
 
-class LifeCycleScope : DefaultLifecycleObserver, CoroutineScope {
+class LifecycleScope : DefaultLifecycleObserver, CoroutineScope {
     private val job = Job()
 
     override val coroutineContext: CoroutineContext

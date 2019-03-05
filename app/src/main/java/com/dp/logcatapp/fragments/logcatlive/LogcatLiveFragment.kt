@@ -80,7 +80,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
     private var searchTask: Job? = null
     private var filterSubscription: Disposable? = null
 
-    private val scope = LifeCycleScope()
+    private val scope = LifecycleScope()
 
     private val hideFabUpRunnable: Runnable = Runnable {
         fabUp.hide()
