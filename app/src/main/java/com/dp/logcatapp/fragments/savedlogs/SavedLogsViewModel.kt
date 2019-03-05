@@ -17,11 +17,10 @@ import com.dp.logcatapp.util.ScopedAndroidViewModel
 import com.dp.logcatapp.util.Utils
 import com.dp.logger.Logger
 import kotlinx.coroutines.Dispatchers.IO
-import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileInputStream
 import java.io.IOException
@@ -56,7 +55,7 @@ internal class SavedLogsViewModel(application: Application) : ScopedAndroidViewM
         job?.cancel()
         job = launch {
             val db = MyDB.getInstance(getApplication())
-            val result = async(IO) { loadAsync(db) }.await()
+            val result = withContext(IO) { loadAsync(db) }
             fileNames.value = result
         }
     }

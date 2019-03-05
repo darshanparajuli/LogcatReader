@@ -10,9 +10,9 @@ import com.dp.logcat.LogcatStreamReader
 import com.dp.logcatapp.util.ScopedAndroidViewModel
 import com.dp.logcatapp.util.closeQuietly
 import kotlinx.coroutines.Dispatchers.IO
-import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.IOException
 
 internal class SavedLogsViewerViewModel(application: Application) : ScopedAndroidViewModel(application) {
@@ -23,7 +23,7 @@ internal class SavedLogsViewerViewModel(application: Application) : ScopedAndroi
 
     fun init(uri: Uri) {
         launch {
-            logs.value = async(IO) { load(getApplication(), uri) }.await()
+            logs.value = withContext(IO) { load(getApplication(), uri) }
         }
     }
 

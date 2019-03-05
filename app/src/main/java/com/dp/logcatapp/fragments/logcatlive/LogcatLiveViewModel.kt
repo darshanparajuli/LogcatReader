@@ -18,9 +18,9 @@ import com.dp.logcatapp.util.ScopedAndroidViewModel
 import com.dp.logcatapp.util.Utils
 import com.dp.logcatapp.util.getDefaultSharedPreferences
 import kotlinx.coroutines.Dispatchers.IO
-import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
@@ -41,7 +41,7 @@ internal class LogcatLiveViewModel(application: Application) : ScopedAndroidView
         launch {
             alreadySaved = false
             fileSaveNotifier.value = SaveInfo(SaveInfo.IN_PROGRESS)
-            fileSaveNotifier.value = async(IO) { saveAsync(f) }.await()
+            fileSaveNotifier.value = withContext(IO) { saveAsync(f) }
             alreadySaved = true
         }
     }
