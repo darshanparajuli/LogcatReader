@@ -28,10 +28,7 @@ import com.dp.logcatapp.activities.SavedLogsActivity
 import com.dp.logcatapp.db.FilterInfo
 import com.dp.logcatapp.fragments.base.BaseFragment
 import com.dp.logcatapp.fragments.filters.FilterType
-import com.dp.logcatapp.fragments.logcatlive.dialogs.AskingForRootAccessDialogFragment
-import com.dp.logcatapp.fragments.logcatlive.dialogs.ManualMethodToGrantPermissionDialogFragment
-import com.dp.logcatapp.fragments.logcatlive.dialogs.NeedPermissionDialogFragment
-import com.dp.logcatapp.fragments.logcatlive.dialogs.OnSavedBottomSheetDialogFragment
+import com.dp.logcatapp.fragments.logcatlive.dialogs.*
 import com.dp.logcatapp.fragments.shared.dialogs.CopyToClipboardDialogFragment
 import com.dp.logcatapp.fragments.shared.dialogs.FilterExclusionDialogFragment
 import com.dp.logcatapp.services.LogcatService
@@ -692,7 +689,8 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
 
             dialog.dismissAllowingStateLoss()
             if (result == 0) {
-                activity!!.showToast(getString(R.string.success))
+                RestartAppMessageDialogFragment.newInstance().show(fragmentManager,
+                        RestartAppMessageDialogFragment.TAG)
             } else {
                 activity!!.showToast(getString(R.string.fail))
                 ManualMethodToGrantPermissionDialogFragment().show(fragmentManager,

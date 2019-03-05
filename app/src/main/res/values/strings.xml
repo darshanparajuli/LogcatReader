@@ -110,4 +110,6 @@
     <string name="read_logs_permission_required_msg">"READ_LOGS permission is required.\n\nIf your device is rooted, please select 'Root method', otherwise, to grant the permission manually using ADB, please select 'Manual method'.\n\nThis needs to be done only once!"</string>
     <string name="root_method">Root method</string>
     <string name="asking_permission_for_root_access">Asking permission for ROOT access…</string>
+    <string name="app_restart_dialog_title">App restart required</string>
+    <string name="app_restart_dialog_msg_body">Tapping OK will kill the app. You should see a complete list of logs from now on.</string>
 </resources>
