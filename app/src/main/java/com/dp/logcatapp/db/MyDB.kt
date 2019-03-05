@@ -5,7 +5,6 @@ import androidx.room.*
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.dp.logcatapp.fragments.filters.FilterType
-import io.reactivex.Flowable
 
 @Entity(primaryKeys = ["type", "value", "exclude"], tableName = "filters", indices = [Index(name = "index_filters", value = ["exclude"])])
 data class FilterInfo(@ColumnInfo(name = "type") val type: Int,
@@ -22,7 +21,7 @@ interface FilterDao {
     fun getExclusions(): List<FilterInfo>
 
     @Query("SELECT * FROM filters")
-    fun getAll(): Flowable<List<FilterInfo>>
+    fun getAll(): List<FilterInfo>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insert(vararg info: FilterInfo)

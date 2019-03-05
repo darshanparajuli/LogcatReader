@@ -26,7 +26,6 @@ import com.dp.logcatapp.activities.BaseActivityWithToolbar
 import com.dp.logcatapp.activities.FiltersActivity
 import com.dp.logcatapp.activities.SavedLogsActivity
 import com.dp.logcatapp.db.FilterInfo
-import com.dp.logcatapp.db.MyDB
 import com.dp.logcatapp.fragments.base.BaseFragment
 import com.dp.logcatapp.fragments.filters.FilterType
 import com.dp.logcatapp.fragments.logcatlive.dialogs.AskingForRootAccessDialogFragment
@@ -41,8 +40,6 @@ import com.dp.logcatapp.views.IndeterminateProgressSnackBar
 import com.dp.logger.Logger
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.snackbar.Snackbar
-import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.disposables.Disposable
 import kotlinx.coroutines.*
 import kotlinx.coroutines.Dispatchers.Default
 
@@ -78,7 +75,6 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
     private var lastLogId = -1
     private var lastSearchRunnable: Runnable? = null
     private var searchTask: Job? = null
-    private var filterSubscription: Disposable? = null
 
     private val scope = LifecycleScope()
 
@@ -268,6 +264,32 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
                         NeedPermissionDialogFragment.TAG)
             }
         }
+
+        viewModel.getFilters().observe(viewLifecycleOwner, Observer { filters ->
+            if (filters != null) {
+                logcatService?.let {
+                    val logcat = it.logcat
+                    logcat.pause()
+                    logcat.clearFilters(exclude = SEARCH_FILTER_TAG)
+                    logcat.clearExclusions()
+
+                    for (filter in filters) {
+                        if (filter.exclude) {
+                            logcat.addExclusion("${filter.hashCode()}",
+                                    LogFilter(filter))
+                        } else {
+                            logcat.addFilter("${filter.hashCode()}",
+                                    LogFilter(filter))
+                        }
+                    }
+
+                    adapter.setItems(logcat.getLogsFiltered())
+                    updateToolbarSubtitle(adapter.itemCount)
+                    scrollRecyclerView()
+                    resumeLogcat()
+                }
+            }
+        })
     }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
@@ -530,7 +552,6 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
 
     override fun onStop() {
         super.onStop()
-        filterSubscription?.dispose()
         serviceBinder.unbind(activity!!)
     }
 
@@ -586,37 +607,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
             stopRecording()
         }
 
-        updateFilters()
-    }
-
-    private fun updateFilters() {
-        filterSubscription = MyDB.getInstance(activity!!)
-                .filterDao()
-                .getAll()
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe { filterInfoList ->
-                    logcatService?.let {
-                        val logcat = it.logcat
-                        logcat.pause()
-                        logcat.clearFilters(exclude = SEARCH_FILTER_TAG)
-                        logcat.clearExclusions()
-
-                        for (filter in filterInfoList) {
-                            if (filter.exclude) {
-                                logcat.addExclusion("${filter.hashCode()}",
-                                        LogFilter(filter))
-                            } else {
-                                logcat.addFilter("${filter.hashCode()}",
-                                        LogFilter(filter))
-                            }
-                        }
-
-                        adapter.setItems(logcat.getLogsFiltered())
-                        updateToolbarSubtitle(adapter.itemCount)
-                        scrollRecyclerView()
-                        resumeLogcat()
-                    }
-                }
+        viewModel.loadFilters()
     }
 
     override fun onReceivedLogs(logs: List<Log>) {

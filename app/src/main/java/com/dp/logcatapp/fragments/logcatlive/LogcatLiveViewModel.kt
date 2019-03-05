@@ -10,6 +10,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.dp.logcat.Log
 import com.dp.logcat.Logcat
+import com.dp.logcatapp.db.FilterInfo
 import com.dp.logcatapp.db.MyDB
 import com.dp.logcatapp.db.SavedLogInfo
 import com.dp.logcatapp.fragments.logcatlive.LogcatLiveFragment.Companion.LOGCAT_DIR
@@ -17,6 +18,7 @@ import com.dp.logcatapp.util.PreferenceKeys
 import com.dp.logcatapp.util.ScopedAndroidViewModel
 import com.dp.logcatapp.util.Utils
 import com.dp.logcatapp.util.getDefaultSharedPreferences
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
@@ -34,6 +36,27 @@ internal class LogcatLiveViewModel(application: Application) : ScopedAndroidView
     private val fileSaveNotifier = MutableLiveData<SaveInfo>()
     var alreadySaved = true
         private set
+
+    private lateinit var filters: MutableLiveData<List<FilterInfo>>
+
+    fun getFilters(): LiveData<List<FilterInfo>> {
+        if (this::filters.isInitialized) {
+            return filters
+        }
+
+        filters = MutableLiveData()
+        loadFilters()
+        return filters
+    }
+
+    fun loadFilters() {
+        launch {
+            val db = MyDB.getInstance(getApplication())
+            filters.value = withContext(Dispatchers.IO) {
+                db.filterDao().getAll()
+            }
+        }
+    }
 
     fun getFileSaveNotifier(): LiveData<SaveInfo> = fileSaveNotifier
 
