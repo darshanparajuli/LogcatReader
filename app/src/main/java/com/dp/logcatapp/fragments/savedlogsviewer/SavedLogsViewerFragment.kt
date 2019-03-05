@@ -163,20 +163,6 @@ class SavedLogsViewerFragment : BaseFragment() {
         viewModel = ViewModelProviders.of(this)
                 .get(SavedLogsViewerViewModel::class.java)
         viewModel.init(Uri.parse(arguments!!.getString(KEY_FILE_URI)))
-        viewModel.getLogs().observe(this, Observer {
-            progressBar.visibility = View.GONE
-            if (it != null) {
-                if (it.isEmpty()) {
-                    textViewEmpty.visibility = View.VISIBLE
-                } else {
-                    textViewEmpty.visibility = View.GONE
-                    setLogs(it)
-                    scrollRecyclerView()
-                }
-            } else {
-                textViewEmpty.visibility = View.VISIBLE
-            }
-        })
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
@@ -228,6 +214,21 @@ class SavedLogsViewerFragment : BaseFragment() {
                         .show(fragmentManager, CopyToClipboardDialogFragment.TAG)
             }
         }
+
+        viewModel.getLogs().observe(viewLifecycleOwner, Observer {
+            progressBar.visibility = View.GONE
+            if (it != null) {
+                if (it.isEmpty()) {
+                    textViewEmpty.visibility = View.VISIBLE
+                } else {
+                    textViewEmpty.visibility = View.GONE
+                    setLogs(it)
+                    scrollRecyclerView()
+                }
+            } else {
+                textViewEmpty.visibility = View.VISIBLE
+            }
+        })
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
