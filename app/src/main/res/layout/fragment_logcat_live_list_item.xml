@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/list_item_root"
     android:layout_width="match_parent"
@@ -14,7 +13,7 @@
     <com.dp.logcatapp.views.CustomTextView
         android:id="@+id/priority"
         android:layout_width="16dp"
-        android:layout_height="match_parent"
+        android:layout_height="0dp"
         android:background="@color/priority_debug"
         android:gravity="center"
         android:paddingTop="5dp"
@@ -22,98 +21,127 @@
         android:text="P"
         android:textColor="@android:color/white"
         android:textSize="@dimen/text_size_smaller"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
         app:useFont="@string/font_RobotoMono_Bold" />
 
-    <RelativeLayout
+
+    <HorizontalScrollView
+        android:id="@+id/tag_container"
         android:layout_width="0dp"
-        android:layout_height="match_parent"
-        android:layout_weight="1"
-        android:padding="5dp">
-
-        <HorizontalScrollView
-            android:id="@+id/tag_container"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_alignParentStart="true"
-            android:layout_alignParentLeft="true"
-            android:layout_alignParentTop="true"
-            android:scrollbars="none">
-
-            <com.dp.logcatapp.views.CustomTextView
-                android:id="@+id/tag"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="tag"
-                android:textColor="?attr/primary_text_color"
-                android:textSize="@dimen/text_size_smaller2"
-                app:useFont="@string/font_RobotoMono_Medium" />
-        </HorizontalScrollView>
-
+        android:layout_height="wrap_content"
+        android:layout_marginStart="5dp"
+        android:layout_marginLeft="5dp"
+        android:layout_marginTop="5dp"
+        android:layout_marginEnd="5dp"
+        android:layout_marginRight="5dp"
+        android:scrollbars="none"
+        app:layout_constraintLeft_toRightOf="@id/priority"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
 
         <com.dp.logcatapp.views.CustomTextView
-            android:id="@+id/message"
-            android:layout_width="match_parent"
+            android:id="@+id/tag"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_below="@+id/tag_container"
-            android:layout_alignParentStart="true"
-            android:layout_alignParentLeft="true"
-            android:text="Message"
+            android:text="tag"
             android:textColor="?attr/primary_text_color"
-            android:textSize="@dimen/text_size_smaller"
-            app:useFont="@string/font_RobotoMono_Regular" />
+            android:textSize="@dimen/text_size_smaller2"
+            app:useFont="@string/font_RobotoMono_Medium" />
+    </HorizontalScrollView>
 
-        <com.dp.logcatapp.views.CustomTextView
-            android:id="@+id/date"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@+id/message"
-            android:layout_alignParentStart="true"
-            android:layout_alignParentLeft="true"
-            android:layout_marginEnd="10dp"
-            android:layout_marginRight="10dp"
-            android:text="date"
-            android:textColor="?attr/secondary_text_color"
-            android:textSize="@dimen/text_size_smaller"
-            app:useFont="@string/font_RobotoMono_Bold" />
 
-        <com.dp.logcatapp.views.CustomTextView
-            android:id="@+id/time"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignBaseline="@+id/date"
-            android:layout_marginEnd="10dp"
-            android:layout_marginRight="10dp"
-            android:layout_toEndOf="@+id/date"
-            android:layout_toRightOf="@+id/date"
-            android:text="time"
-            android:textColor="?attr/secondary_text_color"
-            android:textSize="@dimen/text_size_smaller"
-            app:useFont="@string/font_RobotoMono_Bold" />
+    <com.dp.logcatapp.views.CustomTextView
+        android:id="@+id/message"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="5dp"
+        android:layout_marginLeft="5dp"
+        android:layout_marginEnd="5dp"
+        android:layout_marginRight="5dp"
+        android:text="Message"
+        android:textColor="?attr/primary_text_color"
+        android:textSize="@dimen/text_size_smaller"
+        app:layout_constraintLeft_toRightOf="@id/priority"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tag_container"
+        app:useFont="@string/font_RobotoMono_Regular" />
 
-        <com.dp.logcatapp.views.CustomTextView
-            android:id="@+id/pid"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignBaseline="@+id/date"
-            android:layout_marginEnd="10dp"
-            android:layout_marginRight="10dp"
-            android:layout_toEndOf="@+id/time"
-            android:layout_toRightOf="@+id/time"
-            android:text="pid"
-            android:textColor="?attr/secondary_text_color"
-            android:textSize="@dimen/text_size_smaller"
-            app:useFont="@string/font_RobotoMono_Bold" />
+    <com.dp.logcatapp.views.CustomTextView
+        android:id="@+id/date"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="5dp"
+        android:layout_marginLeft="5dp"
+        android:layout_marginBottom="5dp"
+        android:text="date"
+        android:textColor="?attr/secondary_text_color"
+        android:textSize="@dimen/text_size_smaller"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintHorizontal_chainStyle="packed"
+        app:layout_constraintLeft_toRightOf="@id/priority"
+        app:layout_constraintRight_toLeftOf="@id/time"
+        app:layout_constraintTop_toBottomOf="@id/message"
+        app:useFont="@string/font_RobotoMono_Bold" />
 
-        <com.dp.logcatapp.views.CustomTextView
-            android:id="@+id/tid"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignBaseline="@+id/date"
-            android:layout_toEndOf="@+id/pid"
-            android:layout_toRightOf="@+id/pid"
-            android:text="tid"
-            android:textColor="?attr/secondary_text_color"
-            android:textSize="@dimen/text_size_smaller"
-            app:useFont="@string/font_RobotoMono_Bold" />
-    </RelativeLayout>
-</LinearLayout>
+    <com.dp.logcatapp.views.CustomTextView
+        android:id="@+id/time"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginLeft="16dp"
+        android:layout_marginBottom="5dp"
+        android:text="time"
+        android:textColor="?attr/secondary_text_color"
+        android:textSize="@dimen/text_size_smaller"
+        app:layout_constraintBaseline_toBaselineOf="@id/date"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintHorizontal_chainStyle="packed"
+        app:layout_constraintLeft_toRightOf="@id/date"
+        app:layout_constraintRight_toLeftOf="@id/pid"
+        app:layout_constraintTop_toBottomOf="@id/message"
+        app:useFont="@string/font_RobotoMono_Bold" />
+
+    <com.dp.logcatapp.views.CustomTextView
+        android:id="@+id/pid"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginLeft="16dp"
+        android:layout_marginBottom="5dp"
+        android:text="pid"
+        android:textColor="?attr/secondary_text_color"
+        android:textSize="@dimen/text_size_smaller"
+        app:layout_constraintBaseline_toBaselineOf="@id/time"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintHorizontal_chainStyle="packed"
+        app:layout_constraintLeft_toRightOf="@id/time"
+        app:layout_constraintRight_toLeftOf="@id/tid"
+        app:layout_constraintTop_toBottomOf="@id/message"
+        app:useFont="@string/font_RobotoMono_Bold" />
+
+    <com.dp.logcatapp.views.CustomTextView
+        android:id="@+id/tid"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginLeft="16dp"
+        android:layout_marginEnd="5dp"
+        android:layout_marginRight="5dp"
+        android:layout_marginBottom="5dp"
+        android:text="tid"
+        android:textColor="?attr/secondary_text_color"
+        android:textSize="@dimen/text_size_smaller"
+        app:layout_constraintBaseline_toBaselineOf="@id/pid"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintHorizontal_chainStyle="packed"
+        app:layout_constraintLeft_toRightOf="@id/pid"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/message"
+        app:useFont="@string/font_RobotoMono_Bold" />
+</androidx.constraintlayout.widget.ConstraintLayout>
