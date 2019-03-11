@@ -40,7 +40,6 @@ import com.dp.logcatapp.fragments.logcatlive.LogcatLiveFragment
 import com.dp.logcatapp.util.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Dispatchers.IO
-import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.*
@@ -449,7 +448,7 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
 
     private fun runSaveFileTask(src: InputStream, dest: OutputStream) {
         scope.launch {
-            val result = async(IO) {
+            val result = withContext(IO) {
                 try {
                     src.copyTo(dest)
                     true
@@ -459,7 +458,7 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
                     src.closeQuietly()
                     dest.closeQuietly()
                 }
-            }.await()
+            }
 
             activity?.let {
                 if (result) {

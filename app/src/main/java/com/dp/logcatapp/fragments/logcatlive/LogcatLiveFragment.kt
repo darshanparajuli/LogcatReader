@@ -668,7 +668,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
             logcat.pause()
             logcat.addFilter(SEARCH_FILTER_TAG, SearchFilter(searchText))
 
-            val filteredLogs = async(Default) { logcat.getLogsFiltered() }.await()
+            val filteredLogs = withContext(Default) { logcat.getLogsFiltered() }
             adapter.setItems(filteredLogs)
             viewModel.autoScroll = false
             linearLayoutManager.scrollToPositionWithOffset(0, 0)

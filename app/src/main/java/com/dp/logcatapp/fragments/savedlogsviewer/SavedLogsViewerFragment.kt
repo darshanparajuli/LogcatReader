@@ -22,8 +22,8 @@ import com.dp.logcatapp.util.inflateLayout
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class SavedLogsViewerFragment : BaseFragment() {
     companion object {
@@ -347,12 +347,12 @@ class SavedLogsViewerFragment : BaseFragment() {
     private fun runSearchTask(logs: List<Log>, searchText: String) {
         searchTask?.cancel()
         searchTask = scope.launch {
-            val filteredLogs = async(IO) {
+            val filteredLogs = withContext(IO) {
                 logs.filter {
                     it.tag.containsIgnoreCase(searchText) ||
                             it.msg.containsIgnoreCase(searchText)
                 }
-            }.await()
+            }
             adapter.setItems(filteredLogs)
             viewModel.autoScroll = false
             linearLayoutManager.scrollToPositionWithOffset(0, 0)
