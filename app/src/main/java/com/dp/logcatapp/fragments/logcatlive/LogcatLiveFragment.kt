@@ -585,16 +585,16 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
     }
 
     override fun onServiceConnected(name: ComponentName, service: IBinder) {
-        Logger.logDebug(LogcatLiveFragment::class, "onServiceConnected")
+        Logger.debug(LogcatLiveFragment::class, "onServiceConnected")
         logcatService = (service as LogcatService.LocalBinder).getLogcatService()
         val logcat = logcatService!!.logcat
         logcat.pause() // resume on updateFilters callback
 
         if (adapter.itemCount == 0) {
-            Logger.logDebug(LogcatLiveFragment::class, "Added all logs")
+            Logger.debug(LogcatLiveFragment::class, "Added all logs")
             addAllLogs(logcat.getLogsFiltered())
         } else if (logcatService!!.restartedLogcat) {
-            Logger.logDebug(LogcatLiveFragment::class, "Logcat restarted")
+            Logger.debug(LogcatLiveFragment::class, "Logcat restarted")
             logcatService!!.restartedLogcat = false
             adapter.clear()
         }
@@ -650,7 +650,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
     }
 
     override fun onServiceDisconnected(name: ComponentName) {
-        Logger.logDebug(LogcatLiveFragment::class, "onServiceDisconnected")
+        Logger.debug(LogcatLiveFragment::class, "onServiceDisconnected")
         logcatService = null
     }
 

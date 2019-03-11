@@ -115,7 +115,7 @@ private class ToastWindowManager(val base: WindowManager) : WindowManager {
         try {
             base.addView(view, params)
         } catch (e: WindowManager.BadTokenException) {
-            Logger.logError("Toast", "caught BadTokenException crash")
+            Logger.error("Toast", "caught BadTokenException crash")
         }
     }
 

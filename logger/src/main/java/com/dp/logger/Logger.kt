@@ -19,51 +19,51 @@ object Logger {
 
     private fun KClass<*>.name(): String = simpleName ?: "N/A"
 
-    fun logDebug(type: KClass<*>, msg: String) {
-        logDebug(type.name(), msg)
+    fun debug(type: KClass<*>, msg: String) {
+        debug(type.name(), msg)
     }
 
-    fun logError(type: KClass<*>, msg: String) {
-        logError(type.name(), msg)
+    fun error(type: KClass<*>, msg: String) {
+        error(type.name(), msg)
     }
 
-    fun logInfo(type: KClass<*>, msg: String) {
-        logInfo(type.name(), msg)
+    fun info(type: KClass<*>, msg: String) {
+        info(type.name(), msg)
     }
 
-    fun logVerbose(type: KClass<*>, msg: String) {
-        logVerbose(type.name(), msg)
+    fun verbose(type: KClass<*>, msg: String) {
+        verbose(type.name(), msg)
     }
 
-    fun logWarning(type: KClass<*>, msg: String) {
-        logWarning(type.name(), msg)
+    fun warning(type: KClass<*>, msg: String) {
+        warning(type.name(), msg)
     }
 
-    fun logWtf(type: KClass<*>, msg: String) {
-        logWtf(type.name(), msg)
+    fun wtf(type: KClass<*>, msg: String) {
+        wtf(type.name(), msg)
     }
 
-    fun logDebug(tag: String, msg: String) {
+    fun debug(tag: String, msg: String) {
         log(DEBUG, "[$tag] $msg")
     }
 
-    fun logError(tag: String, msg: String) {
+    fun error(tag: String, msg: String) {
         log(ERROR, "[$tag] $msg")
     }
 
-    fun logInfo(tag: String, msg: String) {
+    fun info(tag: String, msg: String) {
         log(INFO, "[$tag] $msg")
     }
 
-    fun logVerbose(tag: String, msg: String) {
+    fun verbose(tag: String, msg: String) {
         log(VERBOSE, "[$tag] $msg")
     }
 
-    fun logWarning(tag: String, msg: String) {
+    fun warning(tag: String, msg: String) {
         log(WARNING, "[$tag] $msg")
     }
 
-    fun logWtf(tag: String, msg: String) {
+    fun wtf(tag: String, msg: String) {
         log(WTF, "[$tag] $msg")
     }
 

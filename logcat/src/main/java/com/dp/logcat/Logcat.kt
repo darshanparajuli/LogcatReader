@@ -68,10 +68,10 @@ class Logcat(initialCapacity: Int = INITIAL_LOG_CAPACITY) : Closeable {
     private val lifeCycleObserver = object : LifecycleObserver {
         @OnLifecycleEvent(Lifecycle.Event.ON_RESUME)
         private fun onActivityInForeground() {
-            Logger.logDebug(Logcat::class, "onActivityInForeground")
+            Logger.debug(Logcat::class, "onActivityInForeground")
 
             if (!paused) {
-                Logger.logDebug(Logcat::class, "Posting pending logs")
+                Logger.debug(Logcat::class, "Posting pending logs")
                 postPendingLogs()
             }
 
@@ -83,7 +83,7 @@ class Logcat(initialCapacity: Int = INITIAL_LOG_CAPACITY) : Closeable {
 
         @OnLifecycleEvent(Lifecycle.Event.ON_PAUSE)
         private fun onActivityInBackground() {
-            Logger.logDebug(Logcat::class, "onActivityInBackground")
+            Logger.debug(Logcat::class, "onActivityInBackground")
             logsLock.withLock {
                 activityInBackground = true
             }
@@ -118,7 +118,7 @@ class Logcat(initialCapacity: Int = INITIAL_LOG_CAPACITY) : Closeable {
             exitCode = -1
             threadLogcat = thread(block = { runLogcat() }, name = "logcat")
         } else {
-            Logger.logInfo(Logcat::class, "Logcat is already running!")
+            Logger.info(Logcat::class, "Logcat is already running!")
         }
     }
 
@@ -421,9 +421,9 @@ class Logcat(initialCapacity: Int = INITIAL_LOG_CAPACITY) : Closeable {
             DEFAULT_BUFFERS = getDefaultBuffers()
             AVAILABLE_BUFFERS = getAvailableBuffers()
 
-            Logger.logDebug(Logcat::class, "Available buffers: " +
+            Logger.debug(Logcat::class, "Available buffers: " +
                     Arrays.toString(AVAILABLE_BUFFERS))
-            Logger.logDebug(Logcat::class, "Default buffers: $DEFAULT_BUFFERS")
+            Logger.debug(Logcat::class, "Default buffers: $DEFAULT_BUFFERS")
         }
 
         fun getLogCountFromHeader(file: File): Long {

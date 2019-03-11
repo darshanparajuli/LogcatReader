@@ -4,7 +4,6 @@ import android.app.Application
 import android.content.Context
 import android.net.Uri
 import android.os.Build
-import android.telephony.mbms.FileInfo
 import androidx.core.net.toFile
 import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.LiveData
@@ -57,7 +56,7 @@ internal class SavedLogsViewModel(application: Application) : ScopedAndroidViewM
             if (info.isCustom && Build.VERSION.SDK_INT >= 21) {
                 val file = DocumentFile.fromSingleUri(application, Uri.parse(info.path))
                 if (file == null || file.name == null) {
-                    Logger.logDebug(this::class, "file name is null")
+                    Logger.debug(this::class, "file name is null")
                     continue
                 }
 
@@ -110,7 +109,7 @@ internal class SavedLogsViewModel(application: Application) : ScopedAndroidViewM
             val logs = reader.asSequence().toList()
 
             if (!Logcat.writeToFile(logs, file)) {
-                Logger.logDebug(SavedLogsViewModel::class, "Failed to write log header")
+                Logger.debug(SavedLogsViewModel::class, "Failed to write log header")
             }
 
             logs.size.toLong()
@@ -131,7 +130,7 @@ internal class SavedLogsViewModel(application: Application) : ScopedAndroidViewM
             val logs = reader.asSequence().toList()
 
             if (!Logcat.writeToFile(context, logs, file.uri)) {
-                Logger.logDebug(SavedLogsViewModel::class, "Failed to write log header")
+                Logger.debug(SavedLogsViewModel::class, "Failed to write log header")
             }
 
             logs.size.toLong()
