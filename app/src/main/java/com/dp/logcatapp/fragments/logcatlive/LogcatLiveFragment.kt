@@ -44,6 +44,7 @@ import java.io.BufferedWriter
 import java.io.InputStreamReader
 import java.io.OutputStreamWriter
 import java.util.*
+import java.util.concurrent.Executors
 
 class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListener {
     companion object {
@@ -714,7 +715,9 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
             val stderrReader = BufferedReader(InputStreamReader(process.errorStream))
 
             val marker = "RESULT>>>${UUID.randomUUID()}>>>"
-            val stdoutResult = async {
+
+            val stdoutStderrDispatcherContext = Executors.newFixedThreadPool(2).asCoroutineDispatcher()
+            val stdoutResult = async(stdoutStderrDispatcherContext) {
                 var result = false
 
                 try {
@@ -733,7 +736,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
                 result
             }
 
-            val stderrReaderResult = async {
+            val stderrReaderResult = async(stdoutStderrDispatcherContext) {
                 try {
                     while (true) {
                         stderrReader.readLine()?.trim() ?: break
