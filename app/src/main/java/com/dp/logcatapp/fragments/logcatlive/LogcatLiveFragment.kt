@@ -346,9 +346,9 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
                     logcatService?.logcat?.let {
                         lastSearchRunnable = Runnable {
                             runSearchTask(it, newText)
+                        }.also {
+                            handler.postDelayed(it, 100)
                         }
-
-                        handler.postDelayed(lastSearchRunnable, 100)
                     }
 
                 }
@@ -553,10 +553,10 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
     }
 
     private fun removeLastSearchRunnableCallback() {
-        if (lastSearchRunnable != null) {
-            handler.removeCallbacks(lastSearchRunnable)
-            lastSearchRunnable = null
+        lastSearchRunnable?.let {
+            handler.removeCallbacks(it)
         }
+        lastSearchRunnable = null
     }
 
     override fun onDestroyView() {

@@ -272,7 +272,9 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
         val srcFolder = File(context!!.filesDir, LogcatLiveFragment.LOGCAT_DIR)
         val src = File(srcFolder, fileName)
 
+        @Suppress("DEPRECATION")
         val documentsFolder = Environment.getExternalStoragePublicDirectory("Documents")
+
         val destFolder = File(documentsFolder, "LogcatReader")
         if (!destFolder.exists()) {
             if (!destFolder.mkdirs()) {

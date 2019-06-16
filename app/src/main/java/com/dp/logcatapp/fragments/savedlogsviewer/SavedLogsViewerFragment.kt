@@ -253,9 +253,10 @@ class SavedLogsViewerFragment : BaseFragment() {
                         viewModel.getLogs().value?.let {
                             runSearchTask(it, newText)
                         }
+                    }.also {
+                        handler.postDelayed(it, 300)
                     }
 
-                    handler.postDelayed(lastSearchRunnable, 300)
                 }
                 return true
             }
@@ -303,10 +304,10 @@ class SavedLogsViewerFragment : BaseFragment() {
     }
 
     private fun removeLastSearchRunnableCallback() {
-        if (lastSearchRunnable != null) {
-            handler.removeCallbacks(lastSearchRunnable)
-            lastSearchRunnable = null
+        lastSearchRunnable?.let {
+            handler.removeCallbacks(it)
         }
+        lastSearchRunnable = null
     }
 
     override fun onDestroyView() {

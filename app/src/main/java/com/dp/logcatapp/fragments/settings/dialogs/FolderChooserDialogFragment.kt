@@ -89,8 +89,8 @@ class FolderChooserDialogFragment : BaseDialogFragment(), View.OnClickListener {
                 if (pos != RecyclerView.NO_POSITION) {
                     val fileHolder = recyclerViewAdapter[pos]
                     if (fileHolder.isParent) {
-                        if (fileHolder.file.parentFile != null) {
-                            viewModel.update(fileHolder.file.parentFile)
+                        fileHolder.file.parentFile?.let {
+                            viewModel.update(it)
                         }
                     } else {
                         if (fileHolder.file.isDirectory) {
@@ -114,6 +114,7 @@ internal class MyViewModel(application: Application) : AndroidViewModel(applicat
         )!!
 
         val file = if (path.isEmpty()) {
+            @Suppress("DEPRECATION")
             Environment.getExternalStorageDirectory()
         } else {
             File(path)

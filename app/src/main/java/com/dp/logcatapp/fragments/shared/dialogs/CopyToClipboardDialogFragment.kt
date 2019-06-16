@@ -51,7 +51,7 @@ class CopyToClipboardDialogFragment : BaseDialogFragment(), DialogInterface.OnCl
             LogContentType.PID.ordinal -> ClipData.newPlainText("Log PID", log.pid)
             else -> ClipData.newPlainText("Log TID", log.tid)
         }
-        cm.primaryClip = clip
+        cm.setPrimaryClip(clip)
         activity!!.showToast(getString(R.string.copied_to_clipboard))
     }
 }

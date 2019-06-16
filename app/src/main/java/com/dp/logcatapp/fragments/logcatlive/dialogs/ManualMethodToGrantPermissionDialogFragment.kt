@@ -23,8 +23,7 @@ class ManualMethodToGrantPermissionDialogFragment : BaseDialogFragment() {
                             Manifest.permission.READ_LOGS
                     val cm = activity!!.getSystemService(Context.CLIPBOARD_SERVICE)
                             as ClipboardManager
-                    cm.primaryClip = ClipData.newPlainText("Adb command",
-                            cmd)
+                    cm.setPrimaryClip(ClipData.newPlainText("Adb command", cmd))
                 }
                 .create()
     }
