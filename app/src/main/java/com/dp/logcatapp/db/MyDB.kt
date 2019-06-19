@@ -1,6 +1,7 @@
 package com.dp.logcatapp.db
 
 import android.content.Context
+import androidx.annotation.GuardedBy
 import androidx.room.*
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
@@ -59,10 +60,19 @@ abstract class MyDB : RoomDatabase() {
 
     companion object {
         private const val DB_NAME = "logcat_reader_db"
+
+        private val instanceLock = Any()
+        @GuardedBy("instanceLock")
+        @Volatile
         private var instance: MyDB? = null
 
         fun getInstance(context: Context): MyDB {
-            synchronized(MyDB::class) {
+            val tmp = instance
+            if (tmp != null) {
+                return tmp
+            }
+
+            synchronized(instanceLock) {
                 if (instance == null) {
                     instance = Room.databaseBuilder(context.applicationContext,
                             MyDB::class.java, DB_NAME)
