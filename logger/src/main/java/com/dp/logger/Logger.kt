@@ -23,8 +23,8 @@ object Logger {
         debug(type.name(), msg)
     }
 
-    fun error(type: KClass<*>, msg: String) {
-        error(type.name(), msg)
+    fun error(type: KClass<*>, msg: String, e: Throwable? = null) {
+        error(type.name(), msg, e)
     }
 
     fun info(type: KClass<*>, msg: String) {
@@ -47,8 +47,8 @@ object Logger {
         log(DEBUG, "[$tag] $msg")
     }
 
-    fun error(tag: String, msg: String) {
-        log(ERROR, "[$tag] $msg")
+    fun error(tag: String, msg: String, e: Throwable? = null) {
+        log(ERROR, "[$tag] $msg", e)
     }
 
     fun info(tag: String, msg: String) {
@@ -67,10 +67,10 @@ object Logger {
         log(WTF, "[$tag] $msg")
     }
 
-    private fun log(type: Int, msg: String) {
+    private fun log(type: Int, msg: String, e: Throwable? = null) {
         when (type) {
             DEBUG -> Log.d(sTag, msg)
-            ERROR -> Log.e(sTag, msg)
+            ERROR -> Log.e(sTag, msg, e)
             INFO -> Log.i(sTag, msg)
             VERBOSE -> Log.v(sTag, msg)
             WARNING -> Log.w(sTag, msg)
