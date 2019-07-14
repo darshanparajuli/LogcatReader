@@ -1,10 +1,11 @@
 package com.dp.logcat
 
-import android.os.Parcel
 import android.os.Parcelable
+import kotlinx.android.parcel.Parcelize
 
 private var logCounter = 0
 
+@Parcelize
 data class Log(val id: Int,
                val date: String,
                val time: String,
@@ -14,39 +15,10 @@ data class Log(val id: Int,
                val tag: String,
                val msg: String) : Parcelable {
 
-    override fun writeToParcel(dest: Parcel, flags: Int) {
-        dest.writeInt(id)
-        dest.writeString(date)
-        dest.writeString(time)
-        dest.writeString(pid)
-        dest.writeString(tid)
-        dest.writeString(priority)
-        dest.writeString(tag)
-        dest.writeString(msg)
-    }
-
-    override fun describeContents() = 0
-
     override fun toString(): String = "[$date $time $pid:$tid $priority/$tag]\n" +
             "$msg\n" + "\n"
 
     companion object {
-        @JvmField
-        val CREATOR = object : Parcelable.Creator<Log> {
-            override fun createFromParcel(source: Parcel): Log {
-                return Log(source.readInt(),
-                        source.readString()!!,
-                        source.readString()!!,
-                        source.readString()!!,
-                        source.readString()!!,
-                        source.readString()!!,
-                        source.readString()!!,
-                        source.readString()!!)
-            }
-
-            override fun newArray(size: Int) = arrayOfNulls<Log>(size)
-        }
-
         fun parse(metadata: String, msg: String): Log {
             val date: String
             val time: String
