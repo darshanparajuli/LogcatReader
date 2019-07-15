@@ -85,5 +85,16 @@
     <string name="pref_cat_general">Общие</string>
     <string name="pref_general_keep_screen_on">Оставить экран включенным</string>
     <string name="copy_to_clipboard">Скопировать в буфер обмена</string>
+    <string name="success">Успех</string>
+    <string name="select_export_format">Выберите формат экспорта</string>
+    <string name="export">Экспорт</string>
+    <string name="export_format_default">По умолчанию</string>
+    <string name="export_format_single_line">Одна строка</string>
+    <string name="fail">Неудача</string>
+    <string name="manual_method">Ручной метод</string>
+    <string name="root_method">Корневой способ</string>
+    <string name="app_restart_dialog_title">Требуется перезапуск приложения</string>
+    <string name="asking_permission_for_root_access">Запрос разрешения на корневой доступ…</string>
+    <string name="app_restart_dialog_msg_body">Нажатие OK убьет приложение. Теперь вы увидите полный список журналов.</string>
 
 </resources>

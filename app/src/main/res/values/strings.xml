@@ -91,8 +91,8 @@
     <string name="restart_logcat">Restart logcat</string>
     <string name="exclusion">Exclusion</string>
     <string name="clear">Clear</string>
-    <string name="process_id">PID</string>
-    <string name="thread_id">TID</string>
+    <string name="process_id" translatable="false">PID</string>
+    <string name="thread_id" translatable="false">TID</string>
     <string name="log_level">Log level</string>
     <string name="message">Message</string>
     <string name="date">Date</string>
