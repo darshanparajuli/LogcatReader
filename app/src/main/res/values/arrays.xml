@@ -28,4 +28,9 @@
         <item>VERBOSE</item>
         <item>WARNING</item>
     </string-array>
+
+    <string-array name="export_format">
+        <item>@string/export_format_default</item>
+        <item>@string/export_format_single_line</item>
+    </string-array>
 </resources>

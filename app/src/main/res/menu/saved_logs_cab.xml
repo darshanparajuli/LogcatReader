@@ -9,9 +9,9 @@
         app:showAsAction="always" />
 
     <item
-        android:id="@+id/action_save"
+        android:id="@+id/action_export"
         android:icon="@drawable/ic_save_white_24dp"
-        android:title="@string/save"
+        android:title="@string/export"
         app:showAsAction="always" />
 
     <item

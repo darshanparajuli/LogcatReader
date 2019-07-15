@@ -27,6 +27,7 @@ import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.dp.logcat.LogcatStreamReader
 import com.dp.logcatapp.R
 import com.dp.logcatapp.activities.BaseActivityWithToolbar
 import com.dp.logcatapp.activities.CabToolbarCallback
@@ -57,6 +58,8 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
     private lateinit var recyclerViewAdapter: MyRecyclerViewAdapter
     private lateinit var linearLayoutManager: LinearLayoutManager
     private lateinit var progressBar: ProgressBar
+
+    private var exportFormat: ExportFormat? = null
 
     private val scope = LifecycleScope()
 
@@ -199,12 +202,10 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
                 frag.show(fragmentManager, RenameDialogFragment.TAG)
                 true
             }
-            R.id.action_save -> {
-                if (Build.VERSION.SDK_INT >= 19) {
-                    saveToDeviceKitkat()
-                } else {
-                    saveToDeviceFallback()
-                }
+            R.id.action_export -> {
+                val dialog = ChooseExportFormatTypeDialogFragment()
+                dialog.setTargetFragment(this, 0)
+                dialog.show(fragmentManager, ChooseExportFormatTypeDialogFragment.TAG)
                 true
             }
             R.id.action_share -> {
@@ -222,6 +223,15 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
                 true
             }
             else -> false
+        }
+    }
+
+    private fun handleExportAction(exportFormat: ExportFormat) {
+        this.exportFormat = exportFormat
+        if (Build.VERSION.SDK_INT >= 19) {
+            saveToDeviceKitkat()
+        } else {
+            saveToDeviceFallback()
         }
     }
 
@@ -333,7 +343,7 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
 
     override fun onCabToolbarInvalidate(toolbar: Toolbar) {
         val share = toolbar.menu.findItem(R.id.action_share)
-        val save = toolbar.menu.findItem(R.id.action_save)
+        val save = toolbar.menu.findItem(R.id.action_export)
         val rename = toolbar.menu.findItem(R.id.action_rename)
 
         val visible = viewModel.selectedItems.size == 1
@@ -372,6 +382,31 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
     override fun onDestroyView() {
         viewLifecycleOwner.lifecycle.removeObserver(scope)
         super.onDestroyView()
+    }
+
+    private class ChooseExportFormatTypeDialogFragment : BaseDialogFragment() {
+        private var exportFormat = ExportFormat.DEFAULT
+
+        override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
+            return AlertDialog.Builder(activity!!)
+                    .setTitle(getString(R.string.select_export_format))
+                    .setSingleChoiceItems(R.array.export_format, 0) { _, which ->
+                        exportFormat = ExportFormat.values()[which]
+                    }
+                    .setPositiveButton(R.string.export) { _, _ ->
+                        (targetFragment as SavedLogsFragment).handleExportAction(exportFormat)
+                    }
+                    .create()
+        }
+
+        companion object {
+            val TAG = ChooseExportFormatTypeDialogFragment::class.qualifiedName
+        }
+    }
+
+    private enum class ExportFormat {
+        DEFAULT,
+        SINGLE
     }
 
     private class MyRecyclerViewAdapter(
@@ -452,7 +487,26 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
         scope.launch {
             val result = withContext(IO) {
                 try {
-                    src.copyTo(dest)
+                    when (this@SavedLogsFragment.exportFormat ?: return@withContext false) {
+                        ExportFormat.DEFAULT -> {
+                            src.copyTo(dest)
+                        }
+                        ExportFormat.SINGLE -> {
+                            val bufferedWriter = BufferedWriter(OutputStreamWriter(dest))
+                            LogcatStreamReader(src).use {
+                                for (log in it) {
+                                    val metadata = log.metadataToString()
+                                    val msgTokens = log.msg.split("\n")
+                                    for (msg in msgTokens) {
+                                        bufferedWriter.write(metadata)
+                                        bufferedWriter.write(" ")
+                                        bufferedWriter.write(msg)
+                                        bufferedWriter.newLine()
+                                    }
+                                }
+                            }
+                        }
+                    }
                     true
                 } catch (e: IOException) {
                     false

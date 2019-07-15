@@ -15,8 +15,9 @@ data class Log(val id: Int,
                val tag: String,
                val msg: String) : Parcelable {
 
-    override fun toString(): String = "[$date $time $pid:$tid $priority/$tag]\n" +
-            "$msg\n" + "\n"
+    fun metadataToString() = "[$date $time $pid:$tid $priority/$tag]"
+
+    override fun toString(): String = "${metadataToString()}\n$msg\n\n"
 
     companion object {
         fun parse(metadata: String, msg: String): Log {
