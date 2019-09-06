@@ -383,7 +383,7 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
         super.onDestroyView()
     }
 
-    private class ChooseExportFormatTypeDialogFragment : BaseDialogFragment() {
+    class ChooseExportFormatTypeDialogFragment : BaseDialogFragment() {
         private var exportFormat = ExportFormat.DEFAULT
 
         override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
