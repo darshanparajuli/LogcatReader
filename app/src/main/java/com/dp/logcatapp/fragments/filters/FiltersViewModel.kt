@@ -8,7 +8,7 @@ import com.dp.logcatapp.R
 import com.dp.logcatapp.db.FilterInfo
 import com.dp.logcatapp.db.MyDB
 import com.dp.logcatapp.util.ScopedAndroidViewModel
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -33,7 +33,7 @@ class FiltersViewModel(application: Application) : ScopedAndroidViewModel(applic
     fun addFilters(filters: List<FilterInfo>, isExclusions: Boolean) {
         val dao = MyDB.getInstance(context).filterDao()
         launch {
-            withContext(Dispatchers.IO) {
+            withContext(IO) {
                 dao.insert(*filters.toTypedArray())
             }
 
@@ -44,7 +44,7 @@ class FiltersViewModel(application: Application) : ScopedAndroidViewModel(applic
     fun deleteFilter(filter: FilterInfo, isExclusions: Boolean) {
         val dao = MyDB.getInstance(context).filterDao()
         launch {
-            withContext(Dispatchers.IO) {
+            withContext(IO) {
                 dao.delete(filter)
             }
 
@@ -55,7 +55,7 @@ class FiltersViewModel(application: Application) : ScopedAndroidViewModel(applic
     fun deleteAllFilters(isExclusions: Boolean) {
         val dao = MyDB.getInstance(context).filterDao()
         launch {
-            withContext(Dispatchers.IO) {
+            withContext(IO) {
                 dao.deleteAll(isExclusions)
             }
 
@@ -68,7 +68,7 @@ class FiltersViewModel(application: Application) : ScopedAndroidViewModel(applic
 
         loadFiltersJob?.cancel()
         loadFiltersJob = launch {
-            filters.value = withContext(Dispatchers.IO) {
+            filters.value = withContext(IO) {
                 val list = if (isExclusions) {
                     dao.getExclusions()
                 } else {

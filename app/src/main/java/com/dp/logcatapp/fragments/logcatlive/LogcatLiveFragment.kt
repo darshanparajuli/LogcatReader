@@ -37,8 +37,12 @@ import com.dp.logcatapp.views.IndeterminateProgressSnackBar
 import com.dp.logger.Logger
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.snackbar.Snackbar
-import kotlinx.coroutines.*
 import kotlinx.coroutines.Dispatchers.Default
+import kotlinx.coroutines.Dispatchers.IO
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.Runnable
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListener {
     companion object {
@@ -676,7 +680,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
             val dialog = AskingForRootAccessDialogFragment()
             dialog.show(fragmentManager, AskingForRootAccessDialogFragment.TAG)
 
-            val result = withContext(Dispatchers.IO) {
+            val result = withContext(IO) {
                 val cmd = "pm grant ${BuildConfig.APPLICATION_ID} ${Manifest.permission.READ_LOGS}"
                 SuCommander(cmd).run()
             }

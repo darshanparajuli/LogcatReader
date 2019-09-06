@@ -51,7 +51,7 @@ internal class LogcatLiveViewModel(application: Application) : ScopedAndroidView
         loadFiltersJob?.cancel()
         loadFiltersJob = launch {
             val db = MyDB.getInstance(getApplication())
-            filters.value = withContext(Dispatchers.IO) {
+            filters.value = withContext(IO) {
                 db.filterDao().getAll()
             }
         }

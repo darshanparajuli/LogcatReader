@@ -39,7 +39,6 @@ import com.dp.logcatapp.fragments.base.BaseDialogFragment
 import com.dp.logcatapp.fragments.base.BaseFragment
 import com.dp.logcatapp.fragments.logcatlive.LogcatLiveFragment
 import com.dp.logcatapp.util.*
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -242,7 +241,7 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
 
         val db = MyDB.getInstance(context!!)
         scope.launch {
-            withContext(Dispatchers.IO) {
+            withContext(IO) {
                 val deleted = deleteList
                         .filter {
                             with(Uri.parse(it.info.path)) {
@@ -368,7 +367,7 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
 
         val db = MyDB.getInstance(context!!)
         scope.launch {
-            withContext(Dispatchers.IO) {
+            withContext(IO) {
                 db.savedLogsDao().delete(fileInfo.info)
                 db.savedLogsDao().insert(SavedLogInfo(newName, newPath.toString(), fileInfo.info.isCustom))
             }
