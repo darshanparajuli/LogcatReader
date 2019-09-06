@@ -80,7 +80,7 @@ class SavedLogsViewerFragment : BaseFragment() {
 
         override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
             when (newState) {
-                androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_DRAGGING -> {
+                RecyclerView.SCROLL_STATE_DRAGGING -> {
                     viewModel.autoScroll = false
                     if (lastDy > 0) {
                         hideFabUp()
@@ -118,7 +118,7 @@ class SavedLogsViewerFragment : BaseFragment() {
                         hideFabUp()
                     }
 
-                    if (firstPos == androidx.recyclerview.widget.RecyclerView.NO_POSITION) {
+                    if (firstPos == RecyclerView.NO_POSITION) {
                         firstPos = linearLayoutManager.findFirstCompletelyVisibleItemPosition()
                     }
 
