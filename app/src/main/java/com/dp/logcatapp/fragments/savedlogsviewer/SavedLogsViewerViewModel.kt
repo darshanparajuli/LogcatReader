@@ -19,7 +19,7 @@ internal class SavedLogsViewerViewModel(application: Application) : ScopedAndroi
     var autoScroll = true
     var scrollPosition = 0
 
-    private var logs = MutableLiveData<List<Log>>()
+    private var logs = MutableLiveData<SavedLogsResult>()
 
     fun init(uri: Uri) {
         launch {
@@ -29,10 +29,12 @@ internal class SavedLogsViewerViewModel(application: Application) : ScopedAndroi
 
     private suspend fun load(context: Context, uri: Uri) = coroutineScope {
         val logs = mutableListOf<Log>()
+        var availableBytes = 0
 
         try {
             context.contentResolver.openInputStream(uri)?.let {
                 try {
+                    availableBytes = it.available()
                     val reader = LogcatStreamReader(it)
                     for (log in reader) {
                         logs += log
@@ -45,11 +47,21 @@ internal class SavedLogsViewerViewModel(application: Application) : ScopedAndroi
             }
         } catch (e: Exception) {
             e.printStackTrace()
-            // ignore
+            return@coroutineScope SavedLogsResult.FileOpenError
         }
 
-        logs
+        if (logs.isEmpty() && availableBytes > 0) {
+            return@coroutineScope SavedLogsResult.FileParseError
+        }
+
+        SavedLogsResult.Success(logs)
     }
 
-    fun getLogs(): LiveData<List<Log>> = logs
+    fun getLogs(): LiveData<SavedLogsResult> = logs
+
+    sealed class SavedLogsResult {
+        data class Success(val logs: List<Log>) : SavedLogsResult()
+        object FileOpenError : SavedLogsResult()
+        object FileParseError : SavedLogsResult()
+    }
 }

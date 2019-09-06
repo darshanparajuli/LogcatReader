@@ -19,6 +19,7 @@ import com.dp.logcatapp.fragments.shared.dialogs.CopyToClipboardDialogFragment
 import com.dp.logcatapp.util.LifecycleScope
 import com.dp.logcatapp.util.containsIgnoreCase
 import com.dp.logcatapp.util.inflateLayout
+import com.dp.logcatapp.util.showToast
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Job
@@ -218,12 +219,22 @@ class SavedLogsViewerFragment : BaseFragment() {
         viewModel.getLogs().observe(viewLifecycleOwner, Observer {
             progressBar.visibility = View.GONE
             if (it != null) {
-                if (it.isEmpty()) {
-                    textViewEmpty.visibility = View.VISIBLE
-                } else {
-                    textViewEmpty.visibility = View.GONE
-                    setLogs(it)
-                    scrollRecyclerView()
+                when (it) {
+                    is SavedLogsViewerViewModel.SavedLogsResult.Success -> {
+                        if (it.logs.isEmpty()) {
+                            textViewEmpty.visibility = View.VISIBLE
+                        } else {
+                            textViewEmpty.visibility = View.GONE
+                            setLogs(it.logs)
+                            scrollRecyclerView()
+                        }
+                    }
+                    is SavedLogsViewerViewModel.SavedLogsResult.FileOpenError -> {
+                        context?.showToast(getString(R.string.error_opening_source))
+                    }
+                    is SavedLogsViewerViewModel.SavedLogsResult.FileParseError -> {
+                        context?.showToast(getString(R.string.unsupported_source))
+                    }
                 }
             } else {
                 textViewEmpty.visibility = View.VISIBLE
@@ -251,7 +262,9 @@ class SavedLogsViewerFragment : BaseFragment() {
                     reachedBlank = false
                     lastSearchRunnable = Runnable {
                         viewModel.getLogs().value?.let {
-                            runSearchTask(it, newText)
+                            if (it is SavedLogsViewerViewModel.SavedLogsResult.Success) {
+                                runSearchTask(it.logs, newText)
+                            }
                         }
                     }.also {
                         handler.postDelayed(it, 300)
@@ -275,9 +288,13 @@ class SavedLogsViewerFragment : BaseFragment() {
     }
 
     private fun onSearchViewClose() {
-        var logs = viewModel.getLogs().value
-        if (logs == null) {
+        val result = viewModel.getLogs().value
+
+        val logs: List<Log>
+        if (result !is SavedLogsViewerViewModel.SavedLogsResult.Success) {
             logs = emptyList()
+        } else {
+            logs = result.logs
         }
         setLogs(logs)
 

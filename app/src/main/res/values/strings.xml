@@ -116,4 +116,6 @@
     <string name="select_export_format">Select export format</string>
     <string name="export_format_default">Default</string>
     <string name="export_format_single_line">Single line</string>
+    <string name="error_opening_source">Error opening source</string>
+    <string name="unsupported_source">Unsupported source</string>
 </resources>
