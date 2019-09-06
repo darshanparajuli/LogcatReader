@@ -175,7 +175,6 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
         fabDown.hide()
     }
 
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setHasOptionsMenu(true)
