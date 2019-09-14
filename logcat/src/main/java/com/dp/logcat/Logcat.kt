@@ -7,9 +7,8 @@ import android.os.Handler
 import android.os.Looper
 import androidx.appcompat.app.AppCompatActivity
 import androidx.documentfile.provider.DocumentFile
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleObserver
-import androidx.lifecycle.OnLifecycleEvent
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
 import com.dp.logger.Logger
 import com.logcat.collections.FixedCircularArray
 import java.io.*
@@ -65,9 +64,8 @@ class Logcat(initialCapacity: Int = INITIAL_LOG_CAPACITY) : Closeable {
 
     private val activityInBackgroundCondition = ConditionVariable()
 
-    private val lifeCycleObserver = object : LifecycleObserver {
-        @OnLifecycleEvent(Lifecycle.Event.ON_RESUME)
-        private fun onActivityInForeground() {
+    private val lifeCycleObserver = object : DefaultLifecycleObserver {
+        override fun onResume(owner: LifecycleOwner) {
             Logger.debug(Logcat::class, "onActivityInForeground")
 
             if (!paused) {
@@ -81,8 +79,7 @@ class Logcat(initialCapacity: Int = INITIAL_LOG_CAPACITY) : Closeable {
             activityInBackgroundCondition.open()
         }
 
-        @OnLifecycleEvent(Lifecycle.Event.ON_PAUSE)
-        private fun onActivityInBackground() {
+        override fun onPause(owner: LifecycleOwner) {
             Logger.debug(Logcat::class, "onActivityInBackground")
             logsLock.withLock {
                 activityInBackground = true
