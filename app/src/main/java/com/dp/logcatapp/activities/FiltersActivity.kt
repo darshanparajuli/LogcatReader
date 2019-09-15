@@ -1,7 +1,7 @@
 package com.dp.logcatapp.activities
 
 import android.os.Bundle
-import androidx.fragment.app.transaction
+import androidx.fragment.app.commit
 import com.dp.logcat.Log
 import com.dp.logcatapp.R
 import com.dp.logcatapp.fragments.filters.FiltersFragment
@@ -21,7 +21,7 @@ class FiltersActivity : BaseActivityWithToolbar() {
         enableDisplayHomeAsUp()
 
         if (savedInstanceState == null) {
-            supportFragmentManager.transaction {
+            supportFragmentManager.commit {
                 replace(R.id.content_frame, FiltersFragment.newInstance(getLog(), isExclusions()),
                         FiltersFragment.TAG)
             }

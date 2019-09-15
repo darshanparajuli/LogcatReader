@@ -7,7 +7,7 @@ import android.view.View
 import android.view.animation.DecelerateInterpolator
 import androidx.annotation.NonNull
 import androidx.appcompat.widget.Toolbar
-import androidx.fragment.app.transaction
+import androidx.fragment.app.commit
 import com.dp.logcatapp.R
 import com.dp.logcatapp.fragments.savedlogs.SavedLogsFragment
 
@@ -36,7 +36,7 @@ class SavedLogsActivity : BaseActivityWithToolbar() {
         }
 
         if (savedInstanceState == null) {
-            supportFragmentManager.transaction {
+            supportFragmentManager.commit {
                 replace(R.id.content_frame, SavedLogsFragment(), SavedLogsFragment.TAG)
             }
         }
