@@ -212,7 +212,7 @@ class SavedLogsViewerFragment : BaseFragment() {
                 viewModel.autoScroll = false
                 val log = adapter[pos]
                 CopyToClipboardDialogFragment.newInstance(log)
-                        .show(fragmentManager, CopyToClipboardDialogFragment.TAG)
+                        .show(fragmentManager!!, CopyToClipboardDialogFragment.TAG)
             }
         }
 

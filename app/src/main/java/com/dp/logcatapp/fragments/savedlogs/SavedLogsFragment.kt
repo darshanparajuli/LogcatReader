@@ -198,13 +198,13 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
                 val fileInfo = recyclerViewAdapter.getItem(viewModel.selectedItems.toIntArray()[0])
                 val frag = RenameDialogFragment.newInstance(fileInfo.info.fileName, fileInfo.info.path)
                 frag.setTargetFragment(this, 0)
-                frag.show(fragmentManager, RenameDialogFragment.TAG)
+                frag.show(fragmentManager!!, RenameDialogFragment.TAG)
                 true
             }
             R.id.action_export -> {
                 val dialog = ChooseExportFormatTypeDialogFragment()
                 dialog.setTargetFragment(this, 0)
-                dialog.show(fragmentManager, ChooseExportFormatTypeDialogFragment.TAG)
+                dialog.show(fragmentManager!!, ChooseExportFormatTypeDialogFragment.TAG)
                 true
             }
             R.id.action_share -> {

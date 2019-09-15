@@ -14,7 +14,7 @@ class NeedPermissionDialogFragment : BaseDialogFragment() {
                 .setTitle(R.string.read_logs_permission_required)
                 .setMessage(R.string.read_logs_permission_required_msg)
                 .setPositiveButton(R.string.manual_method) { _, _ ->
-                    ManualMethodToGrantPermissionDialogFragment().show(fragmentManager,
+                    ManualMethodToGrantPermissionDialogFragment().show(fragmentManager!!,
                             ManualMethodToGrantPermissionDialogFragment.TAG)
                 }
                 .setNegativeButton(R.string.root_method) { _, _ ->

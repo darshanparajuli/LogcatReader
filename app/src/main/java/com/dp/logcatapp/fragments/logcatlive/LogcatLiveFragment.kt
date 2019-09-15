@@ -242,7 +242,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
                 viewModel.autoScroll = false
                 val log = adapter[pos]
                 CopyToClipboardDialogFragment.newInstance(log)
-                        .show(fragmentManager, CopyToClipboardDialogFragment.TAG)
+                        .show(fragmentManager!!, CopyToClipboardDialogFragment.TAG)
             }
         }
 
@@ -252,7 +252,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
                 viewModel.autoScroll = false
                 val log = adapter[pos]
                 FilterExclusionDialogFragment.newInstance(log)
-                        .show(fragmentManager, FilterExclusionDialogFragment.TAG)
+                        .show(fragmentManager!!, FilterExclusionDialogFragment.TAG)
             }
         }
 
@@ -260,7 +260,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
             viewModel.showedGrantPermissionInstruction = true
             NeedPermissionDialogFragment().let {
                 it.setTargetFragment(this, 0)
-                it.show(fragmentManager,
+                it.show(fragmentManager!!,
                         NeedPermissionDialogFragment.TAG)
             }
         }
@@ -309,7 +309,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
                         when (it.result) {
                             SaveInfo.SUCCESS -> {
                                 OnSavedBottomSheetDialogFragment.newInstance(it.fileName!!, it.uri!!)
-                                        .show(fragmentManager, OnSavedBottomSheetDialogFragment.TAG)
+                                        .show(fragmentManager!!, OnSavedBottomSheetDialogFragment.TAG)
                             }
                             SaveInfo.ERROR_EMPTY_LOGS -> {
                                 showSnackbar(view, getString(R.string.nothing_to_save))
@@ -678,7 +678,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
     fun useRootToGrantPermission() {
         scope.launch {
             val dialog = AskingForRootAccessDialogFragment()
-            dialog.show(fragmentManager, AskingForRootAccessDialogFragment.TAG)
+            dialog.show(fragmentManager!!, AskingForRootAccessDialogFragment.TAG)
 
             val result = withContext(IO) {
                 val cmd = "pm grant ${BuildConfig.APPLICATION_ID} ${Manifest.permission.READ_LOGS}"
@@ -687,11 +687,11 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
 
             dialog.dismissAllowingStateLoss()
             if (result) {
-                RestartAppMessageDialogFragment.newInstance().show(fragmentManager,
+                RestartAppMessageDialogFragment.newInstance().show(fragmentManager!!,
                         RestartAppMessageDialogFragment.TAG)
             } else {
                 activity!!.showToast(getString(R.string.fail))
-                ManualMethodToGrantPermissionDialogFragment().show(fragmentManager,
+                ManualMethodToGrantPermissionDialogFragment().show(fragmentManager!!,
                         ManualMethodToGrantPermissionDialogFragment.TAG)
             }
         }

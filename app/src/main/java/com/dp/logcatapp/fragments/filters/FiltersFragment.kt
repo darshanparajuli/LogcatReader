@@ -125,7 +125,7 @@ class FiltersFragment : BaseFragment() {
         }
 
         frag.setTargetFragment(this, 0)
-        frag.show(fragmentManager, FilterDialogFragment.TAG)
+        frag.show(fragmentManager!!, FilterDialogFragment.TAG)
     }
 
     @SuppressLint("CheckResult")

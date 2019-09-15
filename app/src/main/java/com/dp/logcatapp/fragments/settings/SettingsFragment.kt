@@ -48,8 +48,8 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
     private fun setupAppearanceCategory() {
         val sharedPrefs = preferenceScreen.sharedPreferences
-        val themePref = findPreference(PreferenceKeys.Appearance.KEY_THEME) as ListPreference
-        val useBlackThemePref = findPreference(PreferenceKeys.Appearance.KEY_USE_BLACK_THEME)
+        val themePref = findPreference<ListPreference>(PreferenceKeys.Appearance.KEY_THEME)!!
+        val useBlackThemePref = findPreference<Preference>(PreferenceKeys.Appearance.KEY_USE_BLACK_THEME)!!
 
         val currTheme = sharedPrefs.getString(PreferenceKeys.Appearance.KEY_THEME,
                 PreferenceKeys.Appearance.Default.THEME)!!
@@ -80,10 +80,9 @@ class SettingsFragment : PreferenceFragmentCompat() {
     }
 
     private fun setupLogcatCategory() {
-        val prefPollInterval = findPreference(PreferenceKeys.Logcat.KEY_POLL_INTERVAL)
-        val prefBuffers = findPreference(PreferenceKeys.Logcat.KEY_BUFFERS)
-                as MultiSelectListPreference
-        val prefMaxLogs = findPreference(PreferenceKeys.Logcat.KEY_MAX_LOGS)
+        val prefPollInterval = findPreference<Preference>(PreferenceKeys.Logcat.KEY_POLL_INTERVAL)!!
+        val prefBuffers = findPreference<MultiSelectListPreference>(PreferenceKeys.Logcat.KEY_BUFFERS)!!
+        val prefMaxLogs = findPreference<Preference>(PreferenceKeys.Logcat.KEY_MAX_LOGS)!!
 
         prefPollInterval.summary = preferenceScreen.sharedPreferences
                 .getString(PreferenceKeys.Logcat.KEY_POLL_INTERVAL,
@@ -121,7 +120,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
             prefBuffers.entries = availableBuffers.copyOf()
             val entryValues = mutableListOf<String>()
-            for (i in 0 until availableBuffers.size) {
+            for (i in availableBuffers.indices) {
                 entryValues += i.toString()
             }
             prefBuffers.entryValues = entryValues.toTypedArray()
@@ -180,7 +179,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
     }
 
     private fun setupSaveLocationOption() {
-        prefSaveLocation = findPreference(PreferenceKeys.Logcat.KEY_SAVE_LOCATION)
+        prefSaveLocation = findPreference<Preference>(PreferenceKeys.Logcat.KEY_SAVE_LOCATION)!!
         val saveLocation = preferenceScreen.sharedPreferences.getString(
                 PreferenceKeys.Logcat.KEY_SAVE_LOCATION,
                 PreferenceKeys.Logcat.Default.SAVE_LOCATION
@@ -199,7 +198,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
         prefSaveLocation.setOnPreferenceClickListener {
             val frag = SaveLocationDialogFragment()
             frag.setTargetFragment(this@SettingsFragment, 0)
-            frag.show(fragmentManager, SaveLocationDialogFragment.TAG)
+            frag.show(fragmentManager!!, SaveLocationDialogFragment.TAG)
             true
         }
 
@@ -221,7 +220,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
             if (isExternalStorageWritable()) {
                 val frag = FolderChooserDialogFragment()
                 frag.setTargetFragment(this, 0)
-                frag.show(fragmentManager, FolderChooserDialogFragment.TAG)
+                frag.show(fragmentManager!!, FolderChooserDialogFragment.TAG)
             } else {
                 activity!!.showToast(getString(R.string.err_msg_external_storage_not_writable))
             }
@@ -304,10 +303,10 @@ class SettingsFragment : PreferenceFragmentCompat() {
     }
 
     private fun setupAboutCategory() {
-        val prefAbout = findPreference(PreferenceKeys.About.KEY_VERSION_NAME)
+        val prefAbout = findPreference<Preference>(PreferenceKeys.About.KEY_VERSION_NAME)!!
         prefAbout.summary = "Version ${BuildConfig.VERSION_NAME}"
 
-        val prefGitHubPage = findPreference(PreferenceKeys.About.KEY_GITHUB_PAGE)
+        val prefGitHubPage = findPreference<Preference>(PreferenceKeys.About.KEY_GITHUB_PAGE)!!
         prefGitHubPage.setOnPreferenceClickListener { _ ->
             try {
                 val url = "https://github.com/darshanparajuli/LogcatReader"
