@@ -1,5 +1,6 @@
 package com.dp.logcatapp.util
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.TaskStackBuilder
 import android.content.Context
@@ -221,6 +222,7 @@ fun Context.inflateLayout(@LayoutRes layoutResId: Int, root: ViewGroup? = null,
 
 //// BEGIN String
 
+@SuppressLint("DefaultLocale")
 fun String.containsIgnoreCase(other: String) = toLowerCase().contains(other.toLowerCase())
 
 //// END String
