@@ -31,8 +31,7 @@ class Logcat(initialCapacity: Int = INITIAL_LOG_CAPACITY) : Closeable {
 
     private var pollCondition = ConditionVariable()
 
-    var exitCode: Int = -1
-        private set
+    private var exitCode: Int = -1
 
     private var _pausedLock = Any()
     private var paused: Boolean = false
@@ -153,6 +152,9 @@ class Logcat(initialCapacity: Int = INITIAL_LOG_CAPACITY) : Closeable {
 
     fun restart() {
         stop()
+        if (!exitSuccess()) {
+            Logger.error(Logcat::class, "Exit failure: $exitCode")
+        }
         start()
     }
 
