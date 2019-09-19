@@ -12,7 +12,6 @@ import androidx.lifecycle.LifecycleOwner
 import com.dp.logger.Logger
 import com.logcat.collections.FixedCircularArray
 import java.io.*
-import java.util.*
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.thread
 import kotlin.concurrent.withLock
@@ -419,7 +418,7 @@ class Logcat(initialCapacity: Int = INITIAL_LOG_CAPACITY) : Closeable {
             AVAILABLE_BUFFERS = getAvailableBuffers()
 
             Logger.debug(Logcat::class, "Available buffers: " +
-                    Arrays.toString(AVAILABLE_BUFFERS))
+                    AVAILABLE_BUFFERS.contentToString())
             Logger.debug(Logcat::class, "Default buffers: $DEFAULT_BUFFERS")
         }
 
