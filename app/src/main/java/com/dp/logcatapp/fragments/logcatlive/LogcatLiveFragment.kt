@@ -698,9 +698,9 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
     }
 
     private class LogFilter(filterInfo: FilterInfo) : Filter {
-        val type = filterInfo.type
-        val content = filterInfo.content
-        lateinit var logLevels: MutableSet<String>
+        private val type = filterInfo.type
+        private val content = filterInfo.content
+        private lateinit var logLevels: MutableSet<String>
 
         init {
             if (filterInfo.type == FilterType.LOG_LEVELS) {
