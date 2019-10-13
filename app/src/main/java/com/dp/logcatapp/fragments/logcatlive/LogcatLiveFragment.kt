@@ -706,25 +706,13 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
                 return true
             }
 
-            when (type) {
-                FilterType.LOG_LEVELS -> {
-                    return log.priority == content
-                }
-                FilterType.KEYWORD -> {
-                    return log.msg.containsIgnoreCase(content)
-                }
-                FilterType.TAG -> {
-                    return log.tag.containsIgnoreCase(content)
-                }
-                FilterType.PID -> {
-                    return log.pid.containsIgnoreCase(content)
-                }
-                FilterType.TID -> {
-                    return log.tid.containsIgnoreCase(content)
-                }
-                else -> {
-                    return false
-                }
+            return when (type) {
+                FilterType.LOG_LEVELS -> log.priority == content
+                FilterType.KEYWORD -> log.msg.containsIgnoreCase(content)
+                FilterType.TAG -> log.tag.containsIgnoreCase(content)
+                FilterType.PID -> log.pid.containsIgnoreCase(content)
+                FilterType.TID -> log.tid.containsIgnoreCase(content)
+                else -> false
             }
         }
     }
