@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Logcat Reader</string>
+    <string name="device_logs">设备 Logs</string>
+    <string name="saved_logs">保存 logs</string>
+    <string name="saved_logs_action">保存 logs</string>
+    <string name="settings">设置</string>
+    <string name="start_recording">开始记录</string>
+    <string name="stop_recording">停止记录</string>
+    <string name="logcat_service_channel_name">Logcat 服务</string>
+    <string name="logcat_service">Logcat 服务</string>
+    <string name="press_back_again_to_exit">再次点击退出</string>
+    <string name="pref_cat_general">通用</string>
+    <string name="pref_general_keep_screen_on">保持屏幕开启</string>
+    <string name="pref_cat_appearance">出现</string>
+    <string name="pref_theme_title">主题</string>
+    <string name="pref_theme_black_theme">暗色主题</string>
+    <string name="exit">退出</string>
+    <string name="search">搜索</string>
+    <string name="pause">暂停</string>
+    <string name="resume">恢复</string>
+    <string name="about">关于</string>
+    <string name="copy_adb_command">复制ADB命令</string>
+    <string name="copy_to_clipboard">复制到剪切板</string>
+    <string name="copied_to_clipboard">复制</string>
+
+    <string name="save_to_file">保存</string>
+    <string name="export">导出</string>
+    <string name="logcat">Logcat</string>
+    <string name="pref_poll_interval_title">轮询间隔</string>
+    <string name="view_log">View</string>
+    <string name="could_not_open_log_file">无法打开log文件</string>
+    <string name="failed_to_save_logs">保存log文件错误</string>
+    <string name="nothing_to_save">没有任何内容保存</string>
+    <string name="open_with">用其它应用打开</string>
+    <string name="read_logs_permission_required">权限请求</string>
+    <string name="grant_read_logs_permission_instruction">要查看所有日志,必须授予READ_LOGS权限.\n\n
+        1. 请通过USB将设备连接到计算机\n
+        2. 运行命令:\n\n
+        adb shell pm grant com.dp.logcatapp android.permission.READ_LOGS\n\n
+        3. 关闭应用程序(按两下返回键),然后将其的后台关闭.\n\n
+        如果有有任何问题请提issue,谢谢!
+    </string>
+    <string name="grant_read_logs_permission_action_using_root">Grant</string>
+    <string name="failed">失败</string>
+    <string name="pref_logcat_buffer_dialog_title">Buffer</string>
+    <string name="restarting_logcat">重新启动logcat</string>
+    <string name="saved_as_filename">另存为  %s</string>
+    <string name="kill">结束</string>
+    <string name="app_kill_reason">授权权限后请重新启动应用
+    </string>
+    <string name="started_recording">开始记录</string>
+    <string name="log_priority">Log priority</string>
+    <string name="pref_key_about_github_repo_title">GitHub Repository</string>
+    <string name="pref_key_about_github_repo_summary">View source, create issues, etc</string>
+    <string name="filter">过滤</string>
+    <string name="empty">Empty</string>
+    <string name="delete">删除</string>
+    <string name="share">分享</string>
+    <string name="save">保存</string>
+    <string name="error">错误</string>
+    <string name="saved">保存</string>
+    <string name="error_saving">错误保存</string>
+    <string name="external_storage_not_mounted_error">没有检测到外置内存卡</string>
+    <string name="pref_logcat_max_recent_logs_to_keep_in_memory">
+        最多可保留的最近的日志
+    </string>
+    <string name="not_a_valid_number">无效的数字</string>
+    <string name="cannot_be_less_than_1000">不能小于1000</string>
+    <string name="value_must_be_greater_than_0">值必须大于0</string>
+    <string name="value_must_be_a_positive_integer">值必须是一个整数</string>
+    <string name="rename">重命名</string>
+    <string name="log_count_fmt">%d log</string>
+    <string name="log_count_fmt_plural">%d logs</string>
+    <string name="select_all">选择全部</string>
+    <string name="saving">保存中</string>
+    <string name="save_location">保存 location</string>
+    <string name="save_location_internal">内部</string>
+    <string name="save_location_custom">Custom</string>
+    <string name="err_msg_external_storage_not_writable">外置储存卡不可写入</string>
+    <string name="select">选择</string>
+    <string name="filters">过滤</string>
+    <string name="add">添加</string>
+    <string name="keyword">Keyword关键字</string>
+    <string name="tag">Tag标记</string>
+    <string name="exclude">排除</string>
+    <string name="exclusions">排除</string>
+    <string name="restart_logcat">重启 logcat</string>
+    <string name="exclusion">排除</string>
+    <string name="clear">清楚</string>
+    <string name="process_id" translatable="false">PID</string>
+    <string name="thread_id" translatable="false">TID</string>
+    <string name="log_level">Log 等级</string>
+    <string name="message">信息</string>
+    <string name="date">日期</string>
+    <string name="time">时间</string>
+    <string name="unable_to_share">无法分享</string>
+    <string name="permission_instruction0">请按照以下步骤授予READ_LOGS权限（只需执行一次）:</string>
+    <string name="permission_instruction1">1.将手机连接到装有ADB工具的计算机.</string>
+    <string name="permission_instruction2">2. 运行以下命令 (单行):</string>
+    <string name="permission_instruction3">adb shell pm grant com.dp.logcatapp android.permission.READ_LOGS</string>
+    <string name="permission_instruction4">3. 关闭应用并清理后台.</string>
+    <string name="permission_instruction5">4. 重新启动.</string>
+    <string name="permission_instruction6">如果你有任何问题请提交 issues, 谢谢!</string>
+    <string name="success">完成</string>
+    <string name="fail">Fail</string>
+    <string name="manual_method">ADB模式</string>
+    <string name="read_logs_permission_required_msg">"READ_LOGS 权限已授权.\n\n如果您的设备是root用户，请选择'Root 模式'，否则，要使用ADB手动授予权限，请选择'ADB 模式'.\n\n只需要执行一次!"</string>
+    <string name="root_method">Root模式</string>
+    <string name="asking_permission_for_root_access">要求获得ROOT访问权限…</string>
+    <string name="app_restart_dialog_title">需要重启应用</string>
+    <string name="app_restart_dialog_msg_body">点击确定将终止该应用程序。 从现在开始，您应该会看到完整的日志列表。</string>
+    <string name="select_export_format">选择导出格式</string>
+    <string name="export_format_default">默认</string>
+    <string name="export_format_single_line">Single line</string>
+    <string name="error_opening_source">来源打开错误</string>
+    <string name="unsupported_source">不支持的来源</string>
+</resources>
