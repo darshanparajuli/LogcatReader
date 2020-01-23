@@ -141,4 +141,22 @@ class FixedCircularArrayTest {
         assertTrue(1000 in array)
         assertTrue(900 !in array)
     }
+
+    @Test
+    fun testAddAfterRemove() {
+        val array = FixedCircularArray<Int>(5)
+
+        for (i in 1..5) {
+            array += i
+        }
+        assertTrue(array.isNotEmpty())
+
+        array.removeAt(0)
+        array += 6
+
+        val excepted = arrayOf(2, 3, 4, 5, 6)
+        for (i in 0 until array.size) {
+            assertEquals(excepted[i], array[i])
+        }
+    }
 }
