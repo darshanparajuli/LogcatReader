@@ -17,23 +17,23 @@ object CommandUtils {
             val stdoutStream = process.inputStream
 
             val stdoutThread = thread {
-                val reader: BufferedReader
                 try {
-                    reader = BufferedReader(InputStreamReader(stdoutStream))
-                    while (true) {
-                        val line = reader.readLine() ?: break
-                        stdoutList?.add(line)
+                    BufferedReader(InputStreamReader(stdoutStream)).use {
+                        while (true) {
+                            val line = it.readLine() ?: break
+                            stdoutList?.add(line)
+                        }
                     }
                 } catch (e: Exception) {
                 }
             }
             val stderrThread = thread {
-                val reader: BufferedReader
                 try {
-                    reader = BufferedReader(InputStreamReader(stderrStream))
-                    while (true) {
-                        val line = reader.readLine() ?: break
-                        stderrList?.add(line)
+                    BufferedReader(InputStreamReader(stderrStream)).use {
+                        while (true) {
+                            val line = it.readLine() ?: break
+                            stderrList?.add(line)
+                        }
                     }
                 } catch (e: Exception) {
                 }
