@@ -65,7 +65,12 @@ class FixedCircularArray<E>(val capacity: Int, initialSize: Int = INITIAL_SIZE) 
         }
         array[(head + size - 1) % capacity] = null
 
-        next--
+        if (next == 0) {
+            next = size - 1
+        } else {
+            next--
+        }
+
         if (next == head) {
             if (head >= 0) {
                 head--
