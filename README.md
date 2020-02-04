@@ -10,3 +10,12 @@ A simple app for viewing logs on an android device.
 
 ## Screenshots
 <img src="/app/playstore_images/screenshots/screenshot-1.png" width="300px" /> <img src="/app/playstore_images/screenshots/screenshot-2.png" width="300px" />
+
+## Usage
+
+Use ADB to grant `android.permission.READ_LOGS` to LogCatReader.
+
+```sh
+adb shell pm grant com.dp.logcatapp android.permission.READ_LOGS
+adb am force-stop com.dp.logcatapp
+```
