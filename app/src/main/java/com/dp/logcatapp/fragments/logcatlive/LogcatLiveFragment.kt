@@ -576,7 +576,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
 
         recyclerView.removeOnScrollListener(onScrollListener)
         logcatService?.let {
-            it.logcat.setEventListener(null)
+            it.logcat.removeEventListener(this)
             it.logcat.unbind(activity as AppCompatActivity)
         }
         serviceBinder.close()
@@ -599,7 +599,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
 
         scrollRecyclerView()
 
-        logcat.setEventListener(this)
+        logcat.addEventListener(this)
         logcat.bind(activity as AppCompatActivity)
 
         if (viewModel.stopRecording || arguments?.getBoolean(STOP_RECORDING) == true) {

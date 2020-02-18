@@ -12,6 +12,7 @@ import androidx.lifecycle.LifecycleOwner
 import com.dp.logger.Logger
 import com.logcat.collections.FixedCircularArray
 import java.io.*
+import java.util.*
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.thread
 import kotlin.concurrent.withLock
@@ -26,8 +27,7 @@ class Logcat(initialCapacity: Int = INITIAL_LOG_CAPACITY) : Closeable {
 
     private var recordStartIndex = -1
 
-    @Volatile
-    private var listener: LogsReceivedListener? = null
+    private val listeners = Collections.newSetFromMap(WeakHashMap<LogsReceivedListener, Boolean>())
 
     private var pollCondition = ConditionVariable()
 
@@ -98,7 +98,7 @@ class Logcat(initialCapacity: Int = INITIAL_LOG_CAPACITY) : Closeable {
                 }
 
                 if (filteredLogs.isNotEmpty()) {
-                    handler.post { listener?.onReceivedLogs(filteredLogs) }
+                    handler.post { listeners.forEach { it.onReceivedLogs(filteredLogs) } }
                 }
 
                 pendingLogs.clear()
@@ -134,20 +134,13 @@ class Logcat(initialCapacity: Int = INITIAL_LOG_CAPACITY) : Closeable {
         }
     }
 
-    fun clearLogs(onClear: (() -> Unit)? = null) {
-        val wasPaused = paused
-        pause()
-
+    fun clearLogs(onClear: (() -> Unit)? = null) = withPaused {
         logsLock.withLock {
             logs.clear()
             pendingLogs.clear()
         }
 
         onClear?.invoke()
-
-        if (!wasPaused) {
-            resume()
-        }
     }
 
     fun restart() {
@@ -162,16 +155,31 @@ class Logcat(initialCapacity: Int = INITIAL_LOG_CAPACITY) : Closeable {
 
     fun isRunning() = isProcessAlive
 
-    fun setEventListener(listener: LogsReceivedListener?) {
+    private inline fun <T> withPaused(block: () -> T): T {
         val wasPaused = paused
         pause()
-
-        logsLock.withLock {
-            this.listener = listener
-        }
-
+        val result = block()
         if (!wasPaused) {
             resume()
+        }
+        return result
+    }
+
+    fun addEventListener(listener: LogsReceivedListener) = withPaused {
+        logsLock.withLock {
+            listeners += listener
+        }
+    }
+
+    fun removeEventListener(listener: LogsReceivedListener) = withPaused {
+        logsLock.withLock {
+            listeners -= listener
+        }
+    }
+
+    fun clearEventListeners() = withPaused {
+        logsLock.withLock {
+            listeners.clear()
         }
     }
 
@@ -270,7 +278,7 @@ class Logcat(initialCapacity: Int = INITIAL_LOG_CAPACITY) : Closeable {
     override fun close() {
         stop()
         logsLock.withLock {
-            listener = null
+            listeners.clear()
         }
     }
 
