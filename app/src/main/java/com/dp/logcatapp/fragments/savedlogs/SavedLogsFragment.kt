@@ -59,8 +59,6 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
 
     private var exportFormat: ExportFormat? = null
 
-    private val scope = LifecycleScope()
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         viewModel = getAndroidViewModel()
@@ -75,9 +73,6 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        viewLifecycleOwner.lifecycle.addObserver(scope)
-
         emptyView = view.findViewById(R.id.textViewEmpty)
         progressBar = view.findViewById(R.id.progressBar)
 
@@ -374,11 +369,6 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
         }
 
         (activity as SavedLogsActivity).closeCabToolbar()
-    }
-
-    override fun onDestroyView() {
-        viewLifecycleOwner.lifecycle.removeObserver(scope)
-        super.onDestroyView()
     }
 
     class ChooseExportFormatTypeDialogFragment : BaseDialogFragment() {

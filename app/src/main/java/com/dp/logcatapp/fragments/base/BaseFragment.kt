@@ -4,8 +4,13 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 
 open class BaseFragment : Fragment() {
+
+    protected val scope
+        get() = viewLifecycleOwner.lifecycleScope
+
     protected lateinit var handler: Handler
         private set
 

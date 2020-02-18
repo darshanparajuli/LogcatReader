@@ -76,8 +76,6 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
     private var lastSearchRunnable: Runnable? = null
     private var searchTask: Job? = null
 
-    private val scope = LifecycleScope()
-
     private val hideFabUpRunnable: Runnable = Runnable {
         fabUp.hide()
     }
@@ -198,9 +196,6 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        viewLifecycleOwner.lifecycle.addObserver(scope)
-
         recyclerView = view.findViewById(R.id.recyclerView)
         linearLayoutManager = LinearLayoutManager(activity)
         recyclerView.layoutManager = linearLayoutManager
@@ -558,11 +553,6 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
             handler.removeCallbacks(it)
         }
         lastSearchRunnable = null
-    }
-
-    override fun onDestroyView() {
-        viewLifecycleOwner.lifecycle.removeObserver(scope)
-        super.onDestroyView()
     }
 
     override fun onDestroy() {

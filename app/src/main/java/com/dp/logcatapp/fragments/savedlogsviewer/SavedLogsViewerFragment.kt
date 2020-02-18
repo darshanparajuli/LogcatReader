@@ -15,7 +15,10 @@ import com.dp.logcatapp.R
 import com.dp.logcatapp.activities.BaseActivityWithToolbar
 import com.dp.logcatapp.fragments.base.BaseFragment
 import com.dp.logcatapp.fragments.shared.dialogs.CopyToClipboardDialogFragment
-import com.dp.logcatapp.util.*
+import com.dp.logcatapp.util.containsIgnoreCase
+import com.dp.logcatapp.util.getAndroidViewModel
+import com.dp.logcatapp.util.inflateLayout
+import com.dp.logcatapp.util.showToast
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Job
@@ -36,8 +39,6 @@ class SavedLogsViewerFragment : BaseFragment() {
             return frag
         }
     }
-
-    private val scope = LifecycleScope()
 
     private lateinit var recyclerView: RecyclerView
     private lateinit var linearLayoutManager: LinearLayoutManager
@@ -167,8 +168,6 @@ class SavedLogsViewerFragment : BaseFragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        viewLifecycleOwner.lifecycle.addObserver(scope)
 
         progressBar = view.findViewById(R.id.progressBar)
         textViewEmpty = view.findViewById(R.id.textViewEmpty)
@@ -320,11 +319,6 @@ class SavedLogsViewerFragment : BaseFragment() {
             handler.removeCallbacks(it)
         }
         lastSearchRunnable = null
-    }
-
-    override fun onDestroyView() {
-        viewLifecycleOwner.lifecycle.removeObserver(scope)
-        super.onDestroyView()
     }
 
     override fun onDestroy() {
