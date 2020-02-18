@@ -8,15 +8,13 @@ import android.widget.CheckBox
 import android.widget.EditText
 import androidx.appcompat.app.AlertDialog
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProviders
 import com.dp.logcat.Log
 import com.dp.logcat.LogPriority
 import com.dp.logcatapp.R
-import com.dp.logcatapp.activities.FiltersActivity.Companion.KEY_LOG
-
 import com.dp.logcatapp.fragments.base.BaseDialogFragment
 import com.dp.logcatapp.fragments.filters.FiltersFragment
 import com.dp.logcatapp.model.LogcatMsg
+import com.dp.logcatapp.util.getViewModel
 import com.dp.logcatapp.util.inflateLayout
 
 class FilterDialogFragment : BaseDialogFragment() {
@@ -39,8 +37,7 @@ class FilterDialogFragment : BaseDialogFragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        viewModel = ViewModelProviders.of(this)
-                .get(MyViewModel::class.java)
+        viewModel = getViewModel()
         initViewModel(getLog())
     }
 

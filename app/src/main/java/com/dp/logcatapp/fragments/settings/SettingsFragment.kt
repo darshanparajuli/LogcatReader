@@ -198,15 +198,15 @@ class SettingsFragment : PreferenceFragmentCompat() {
         prefSaveLocation.setOnPreferenceClickListener {
             val frag = SaveLocationDialogFragment()
             frag.setTargetFragment(this@SettingsFragment, 0)
-            frag.show(fragmentManager!!, SaveLocationDialogFragment.TAG)
+            frag.show(parentFragmentManager, SaveLocationDialogFragment.TAG)
             true
         }
 
-        val frag = fragmentManager?.findFragmentByTag(SaveLocationDialogFragment.TAG)
+        val frag = parentFragmentManager.findFragmentByTag(SaveLocationDialogFragment.TAG)
         frag?.setTargetFragment(this, 0)
 
-        val folderChooserFragment = fragmentManager
-                ?.findFragmentByTag(FolderChooserDialogFragment.TAG)
+        val folderChooserFragment = parentFragmentManager
+                .findFragmentByTag(FolderChooserDialogFragment.TAG)
         folderChooserFragment?.setTargetFragment(this, 0)
     }
 
@@ -220,7 +220,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
             if (isExternalStorageWritable()) {
                 val frag = FolderChooserDialogFragment()
                 frag.setTargetFragment(this, 0)
-                frag.show(fragmentManager!!, FolderChooserDialogFragment.TAG)
+                frag.show(parentFragmentManager, FolderChooserDialogFragment.TAG)
             } else {
                 activity!!.showToast(getString(R.string.err_msg_external_storage_not_writable))
             }

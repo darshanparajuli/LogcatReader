@@ -79,6 +79,7 @@ dependencies {
     implementation "androidx.legacy:legacy-preference-v14:$legacy_preference_v14_version"
     implementation "androidx.lifecycle:lifecycle-common-java8:$lifecycle_common_java8_version"
     implementation "androidx.lifecycle:lifecycle-extensions:$lifecycle_extensions_version"
+    implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycle_viewmodel_ktx_version"
     implementation "androidx.constraintlayout:constraintlayout:$constraint_layout_version"
     implementation "androidx.room:room-runtime:$room_version"
     implementation "androidx.documentfile:documentfile:$documentfile_version"

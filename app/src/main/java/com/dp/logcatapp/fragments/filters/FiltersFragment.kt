@@ -6,7 +6,6 @@ import android.view.*
 import android.widget.ImageButton
 import android.widget.TextView
 import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -17,6 +16,7 @@ import com.dp.logcatapp.db.FilterInfo
 import com.dp.logcatapp.fragments.base.BaseFragment
 import com.dp.logcatapp.fragments.filters.dialogs.FilterDialogFragment
 import com.dp.logcatapp.model.LogcatMsg
+import com.dp.logcatapp.util.getAndroidViewModel
 import com.dp.logcatapp.util.inflateLayout
 
 class FiltersFragment : BaseFragment() {
@@ -44,8 +44,7 @@ class FiltersFragment : BaseFragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setHasOptionsMenu(true)
-        viewModel = ViewModelProviders.of(activity!!)
-                .get(FiltersViewModel::class.java)
+        viewModel = activity!!.getAndroidViewModel()
         recyclerViewAdapter = MyRecyclerViewAdapter {
             onRemoveClicked(it)
         }
@@ -119,13 +118,13 @@ class FiltersFragment : BaseFragment() {
     }
 
     private fun showAddFilter() {
-        var frag = fragmentManager?.findFragmentByTag(FilterDialogFragment.TAG) as? FilterDialogFragment
+        var frag = parentFragmentManager.findFragmentByTag(FilterDialogFragment.TAG) as? FilterDialogFragment
         if (frag == null) {
             frag = FilterDialogFragment.newInstance(getLog())
         }
 
         frag.setTargetFragment(this, 0)
-        frag.show(fragmentManager!!, FilterDialogFragment.TAG)
+        frag.show(parentFragmentManager, FilterDialogFragment.TAG)
     }
 
     @SuppressLint("CheckResult")

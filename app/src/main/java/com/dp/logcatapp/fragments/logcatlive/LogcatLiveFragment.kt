@@ -12,7 +12,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -190,7 +189,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
         adapter = MyRecyclerViewAdapter(activity!!, maxLogs)
         activity!!.getDefaultSharedPreferences().registerOnSharedPreferenceChangeListener(adapter)
 
-        viewModel = ViewModelProviders.of(activity!!).get(LogcatLiveViewModel::class.java)
+        viewModel = activity!!.getAndroidViewModel()
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
@@ -242,7 +241,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
                 viewModel.autoScroll = false
                 val log = adapter[pos]
                 CopyToClipboardDialogFragment.newInstance(log)
-                        .show(fragmentManager!!, CopyToClipboardDialogFragment.TAG)
+                        .show(parentFragmentManager, CopyToClipboardDialogFragment.TAG)
             }
         }
 
@@ -252,7 +251,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
                 viewModel.autoScroll = false
                 val log = adapter[pos]
                 FilterExclusionDialogFragment.newInstance(log)
-                        .show(fragmentManager!!, FilterExclusionDialogFragment.TAG)
+                        .show(parentFragmentManager, FilterExclusionDialogFragment.TAG)
             }
         }
 
@@ -260,8 +259,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
             viewModel.showedGrantPermissionInstruction = true
             NeedPermissionDialogFragment().let {
                 it.setTargetFragment(this, 0)
-                it.show(fragmentManager!!,
-                        NeedPermissionDialogFragment.TAG)
+                it.show(parentFragmentManager, NeedPermissionDialogFragment.TAG)
             }
         }
 
@@ -309,7 +307,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
                         when (it.result) {
                             SaveInfo.SUCCESS -> {
                                 OnSavedBottomSheetDialogFragment.newInstance(it.fileName!!, it.uri!!)
-                                        .show(fragmentManager!!, OnSavedBottomSheetDialogFragment.TAG)
+                                        .show(parentFragmentManager, OnSavedBottomSheetDialogFragment.TAG)
                             }
                             SaveInfo.ERROR_EMPTY_LOGS -> {
                                 showSnackbar(view, getString(R.string.nothing_to_save))
@@ -678,7 +676,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
     fun useRootToGrantPermission() {
         scope.launch {
             val dialog = AskingForRootAccessDialogFragment()
-            dialog.show(fragmentManager!!, AskingForRootAccessDialogFragment.TAG)
+            dialog.show(parentFragmentManager, AskingForRootAccessDialogFragment.TAG)
 
             val result = withContext(IO) {
                 val cmd = "pm grant ${BuildConfig.APPLICATION_ID} ${Manifest.permission.READ_LOGS}"
@@ -687,11 +685,11 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
 
             dialog.dismissAllowingStateLoss()
             if (result) {
-                RestartAppMessageDialogFragment.newInstance().show(fragmentManager!!,
+                RestartAppMessageDialogFragment.newInstance().show(parentFragmentManager,
                         RestartAppMessageDialogFragment.TAG)
             } else {
                 activity!!.showToast(getString(R.string.fail))
-                ManualMethodToGrantPermissionDialogFragment().show(fragmentManager!!,
+                ManualMethodToGrantPermissionDialogFragment().show(parentFragmentManager,
                         ManualMethodToGrantPermissionDialogFragment.TAG)
             }
         }

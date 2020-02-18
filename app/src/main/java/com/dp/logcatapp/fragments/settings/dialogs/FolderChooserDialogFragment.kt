@@ -14,16 +14,12 @@ import androidx.appcompat.app.AlertDialog
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.dp.logcatapp.R
 import com.dp.logcatapp.fragments.base.BaseDialogFragment
 import com.dp.logcatapp.fragments.settings.SettingsFragment
-import com.dp.logcatapp.util.PreferenceKeys
-import com.dp.logcatapp.util.getAttributeDrawable
-import com.dp.logcatapp.util.getDefaultSharedPreferences
-import com.dp.logcatapp.util.inflateLayout
+import com.dp.logcatapp.util.*
 import java.io.File
 
 
@@ -41,8 +37,7 @@ class FolderChooserDialogFragment : BaseDialogFragment(), View.OnClickListener {
         super.onCreate(savedInstanceState)
         recyclerViewAdapter = MyRecyclerViewAdapter(context!!, this)
 
-        viewModel = ViewModelProviders.of(this)
-                .get(MyViewModel::class.java)
+        viewModel = getAndroidViewModel()
         viewModel.files.observe(this, Observer<List<FileHolder>> {
             if (it != null) {
                 recyclerViewAdapter.setData(it)

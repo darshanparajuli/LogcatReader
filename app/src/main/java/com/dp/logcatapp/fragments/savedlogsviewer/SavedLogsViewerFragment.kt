@@ -7,7 +7,6 @@ import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.appcompat.widget.SearchView
 import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -16,10 +15,7 @@ import com.dp.logcatapp.R
 import com.dp.logcatapp.activities.BaseActivityWithToolbar
 import com.dp.logcatapp.fragments.base.BaseFragment
 import com.dp.logcatapp.fragments.shared.dialogs.CopyToClipboardDialogFragment
-import com.dp.logcatapp.util.LifecycleScope
-import com.dp.logcatapp.util.containsIgnoreCase
-import com.dp.logcatapp.util.inflateLayout
-import com.dp.logcatapp.util.showToast
+import com.dp.logcatapp.util.*
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Job
@@ -161,8 +157,7 @@ class SavedLogsViewerFragment : BaseFragment() {
         super.onCreate(savedInstanceState)
         setHasOptionsMenu(true)
         adapter = MyRecyclerViewAdapter(activity!!)
-        viewModel = ViewModelProviders.of(this)
-                .get(SavedLogsViewerViewModel::class.java)
+        viewModel = getAndroidViewModel()
         viewModel.init(Uri.parse(arguments!!.getString(KEY_FILE_URI)))
     }
 
@@ -212,7 +207,7 @@ class SavedLogsViewerFragment : BaseFragment() {
                 viewModel.autoScroll = false
                 val log = adapter[pos]
                 CopyToClipboardDialogFragment.newInstance(log)
-                        .show(fragmentManager!!, CopyToClipboardDialogFragment.TAG)
+                        .show(parentFragmentManager, CopyToClipboardDialogFragment.TAG)
             }
         }
 

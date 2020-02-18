@@ -23,7 +23,6 @@ import androidx.core.net.toFile
 import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -64,8 +63,7 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        viewModel = ViewModelProviders.of(this)
-                .get(SavedLogsViewModel::class.java)
+        viewModel = getAndroidViewModel()
 
         recyclerViewAdapter = MyRecyclerViewAdapter(activity!!, this,
                 this, viewModel.selectedItems)
@@ -89,7 +87,7 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
         recyclerView.layoutManager = linearLayoutManager
         recyclerView.adapter = recyclerViewAdapter
 
-        fragmentManager?.findFragmentByTag(RenameDialogFragment.TAG)
+        parentFragmentManager.findFragmentByTag(RenameDialogFragment.TAG)
                 ?.setTargetFragment(this, 0)
 
         viewModel.getFileNames().observe(viewLifecycleOwner, Observer {
@@ -198,13 +196,13 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
                 val fileInfo = recyclerViewAdapter.getItem(viewModel.selectedItems.toIntArray()[0])
                 val frag = RenameDialogFragment.newInstance(fileInfo.info.fileName, fileInfo.info.path)
                 frag.setTargetFragment(this, 0)
-                frag.show(fragmentManager!!, RenameDialogFragment.TAG)
+                frag.show(parentFragmentManager, RenameDialogFragment.TAG)
                 true
             }
             R.id.action_export -> {
                 val dialog = ChooseExportFormatTypeDialogFragment()
                 dialog.setTargetFragment(this, 0)
-                dialog.show(fragmentManager!!, ChooseExportFormatTypeDialogFragment.TAG)
+                dialog.show(parentFragmentManager, ChooseExportFormatTypeDialogFragment.TAG)
                 true
             }
             R.id.action_share -> {
