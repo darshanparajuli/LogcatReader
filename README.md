@@ -16,6 +16,5 @@ A simple app for viewing logs on an android device.
 Use ADB to grant `android.permission.READ_LOGS` to LogCatReader.
 
 ```sh
-adb shell pm grant com.dp.logcatapp android.permission.READ_LOGS
-adb am force-stop com.dp.logcatapp
+adb shell "pm grant com.dp.logcatapp android.permission.READ_LOGS && am force-stop com.dp.logcatapp"
 ```
