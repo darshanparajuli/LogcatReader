@@ -31,6 +31,7 @@ import com.dp.logcatapp.fragments.logcatlive.dialogs.*
 import com.dp.logcatapp.fragments.shared.dialogs.CopyToClipboardDialogFragment
 import com.dp.logcatapp.fragments.shared.dialogs.FilterExclusionDialogFragment
 import com.dp.logcatapp.services.LogcatService
+import com.dp.logcatapp.services.getService
 import com.dp.logcatapp.util.*
 import com.dp.logcatapp.views.IndeterminateProgressSnackBar
 import com.dp.logger.Logger
@@ -458,7 +459,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
                     val logcat = it.logcat
                     if (recording) {
                         Snackbar.make(view!!, getString(R.string.started_recording),
-                                Snackbar.LENGTH_SHORT)
+                                        Snackbar.LENGTH_SHORT)
                                 .show()
                         logcat.startRecording()
                     } else {
@@ -572,7 +573,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
 
     override fun onServiceConnected(name: ComponentName, service: IBinder) {
         Logger.debug(LogcatLiveFragment::class, "onServiceConnected")
-        logcatService = (service as LogcatService.LocalBinder).getLogcatService()
+        logcatService = service.getService()
         val logcat = logcatService!!.logcat
         logcat.pause() // resume on updateFilters callback
 

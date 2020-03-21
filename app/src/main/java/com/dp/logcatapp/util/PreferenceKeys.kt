@@ -1,5 +1,9 @@
 package com.dp.logcatapp.util
 
+import com.dp.logcat.Logcat.Companion.AVAILABLE_BUFFERS
+import com.dp.logcat.Logcat.Companion.DEFAULT_BUFFERS
+import com.dp.logcat.Logcat.Companion.INITIAL_LOG_CAPACITY
+
 object PreferenceKeys {
 
     const val MAIN_PREF_SCREEN = "pref_key_main_screen"
@@ -40,13 +44,12 @@ object PreferenceKeys {
         object Default {
             const val POLL_INTERVAL = "250"
             val BUFFERS: Set<String> = getDefaultBufferValues()
-            const val MAX_LOGS = com.dp.logcat.Logcat.INITIAL_LOG_CAPACITY.toString()
+            const val MAX_LOGS = INITIAL_LOG_CAPACITY.toString()
             const val SAVE_LOCATION = ""
 
             private fun getDefaultBufferValues(): Set<String> {
                 val bufferValues = mutableSetOf<String>()
-                com.dp.logcat.Logcat.DEFAULT_BUFFERS
-                        .map { com.dp.logcat.Logcat.AVAILABLE_BUFFERS.indexOf(it) }
+                DEFAULT_BUFFERS.map { AVAILABLE_BUFFERS.indexOf(it) }
                         .filter { it != -1 }
                         .forEach { bufferValues += it.toString() }
                 return bufferValues

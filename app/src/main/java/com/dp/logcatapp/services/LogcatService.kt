@@ -9,7 +9,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.graphics.BitmapFactory
-import android.os.Binder
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
@@ -29,7 +28,6 @@ class LogcatService : BaseService() {
         private const val NOTIFICATION_ID = 1
     }
 
-    private val localBinder = LocalBinder()
     lateinit var logcat: Logcat
         private set
     var restartedLogcat = false
@@ -60,6 +58,7 @@ class LogcatService : BaseService() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        super.onStartCommand(intent, flags, startId)
         startForeground(NOTIFICATION_ID, createNotification(recording))
         return START_STICKY
     }
@@ -82,7 +81,7 @@ class LogcatService : BaseService() {
                 PendingIntent.FLAG_UPDATE_CURRENT)
 
         val exitAction = NotificationCompat.Action.Builder(R.drawable.ic_clear_white_18dp,
-                getString(R.string.exit), exitPendingIntent)
+                        getString(R.string.exit), exitPendingIntent)
                 .build()
 
         val builder = NotificationCompat.Builder(this, NOTIFICATION_CHANNEL)
@@ -105,7 +104,7 @@ class LogcatService : BaseService() {
             val stopRecordingPendingIntent = PendingIntent.getActivity(this, 2,
                     stopRecordingIntent, PendingIntent.FLAG_UPDATE_CURRENT)
             val stopRecordingAction = NotificationCompat.Action.Builder(R.drawable.ic_stop_white_18dp,
-                    getString(R.string.stop_recording), stopRecordingPendingIntent)
+                            getString(R.string.stop_recording), stopRecordingPendingIntent)
                     .build()
 
             builder.addAction(stopRecordingAction)
@@ -133,8 +132,6 @@ class LogcatService : BaseService() {
         val nm = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         nm.deleteNotificationChannel(NOTIFICATION_CHANNEL)
     }
-
-    override fun onBind(intent: Intent?) = localBinder
 
     override fun onDestroy() {
         super.onDestroy()
@@ -169,8 +166,7 @@ class LogcatService : BaseService() {
     }
 
     private fun handleBufferUpdate(sharedPreferences: SharedPreferences, key: String) {
-        val bufferValues = sharedPreferences.getStringSet(key,
-                PreferenceKeys.Logcat.Default.BUFFERS)!!
+        val bufferValues = sharedPreferences.getStringSet(key, PreferenceKeys.Logcat.Default.BUFFERS)!!
         val buffers = Logcat.AVAILABLE_BUFFERS
 
         showToast(getString(R.string.restarting_logcat))
@@ -195,9 +191,5 @@ class LogcatService : BaseService() {
         val buffers = Logcat.AVAILABLE_BUFFERS
         logcat.logcatBuffers = bufferValues.map { e -> buffers[e.toInt()].toLowerCase() }.toSet()
         logcat.start()
-    }
-
-    inner class LocalBinder : Binder() {
-        fun getLogcatService() = this@LogcatService
     }
 }
