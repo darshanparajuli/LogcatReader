@@ -127,7 +127,7 @@ class FilterDialogFragment : BaseDialogFragment() {
             getString(R.string.filter)
         }
 
-        return AlertDialog.Builder(activity!!)
+        return AlertDialog.Builder(requireActivity())
                 .setTitle(title)
                 .setView(rootView)
                 .setPositiveButton(android.R.string.ok) { _, _ ->

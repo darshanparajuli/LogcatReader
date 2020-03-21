@@ -13,7 +13,7 @@ class AskingForRootAccessDialogFragment : BaseDialogFragment() {
         val view = inflateLayout(R.layout.asking_for_root_access_dialog_fragment)
 
         isCancelable = false
-        return AlertDialog.Builder(activity!!)
+        return AlertDialog.Builder(requireActivity())
                 .setView(view)
                 .setCancelable(false)
                 .create()

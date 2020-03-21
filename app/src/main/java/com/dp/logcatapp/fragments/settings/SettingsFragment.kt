@@ -66,14 +66,15 @@ class SettingsFragment : PreferenceFragmentCompat() {
         themePref.onPreferenceChangeListener =
                 Preference.OnPreferenceChangeListener { preference, newValue ->
                     preference.summary = themePrefEntries[(newValue as String).toInt()]
-                    activity!!.restartApp()
+                    requireActivity().restartApp()
                     true
                 }
 
         useBlackThemePref.onPreferenceChangeListener = Preference
                 .OnPreferenceChangeListener { _, _ ->
-                    if (activity!!.isDarkThemeOn()) {
-                        activity!!.restartApp()
+                    val activity = requireActivity()
+                    if (activity.isDarkThemeOn()) {
+                        activity.restartApp()
                     }
                     true
                 }
@@ -90,18 +91,19 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
         prefPollInterval.onPreferenceChangeListener = Preference
                 .OnPreferenceChangeListener { preference, newValue ->
+                    val activity = requireActivity()
                     try {
                         val v = newValue.toString().trim()
                         val num = v.toLong()
                         if (num <= 0) {
-                            activity!!.showToast(getString(R.string.value_must_be_greater_than_0))
+                            activity.showToast(getString(R.string.value_must_be_greater_than_0))
                             false
                         } else {
                             preference.summary = "$v ms"
                             true
                         }
                     } catch (e: NumberFormatException) {
-                        activity!!.showToast(getString(R.string.value_must_be_a_positive_integer))
+                        activity.showToast(getString(R.string.value_must_be_a_positive_integer))
                         false
                     }
                 }
@@ -151,6 +153,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
         prefMaxLogs.summary = NumberFormat.getInstance().format(maxLogs)
         prefMaxLogs.onPreferenceChangeListener = Preference
                 .OnPreferenceChangeListener callback@{ preference, newValue ->
+                    val activity = requireActivity()
                     try {
                         val oldValue = preferenceScreen.sharedPreferences.getString(
                                 PreferenceKeys.Logcat.KEY_MAX_LOGS,
@@ -163,14 +166,14 @@ class SettingsFragment : PreferenceFragmentCompat() {
                         }
 
                         if (newMaxLogs < 1000) {
-                            activity!!.showToast(getString(R.string.cannot_be_less_than_1000))
+                            activity.showToast(getString(R.string.cannot_be_less_than_1000))
                             return@callback false
                         }
 
                         preference.summary = NumberFormat.getInstance().format(newMaxLogs)
                         true
                     } catch (e: NumberFormatException) {
-                        activity!!.showToast(getString(R.string.not_a_valid_number))
+                        activity.showToast(getString(R.string.not_a_valid_number))
                         false
                     }
                 }
@@ -222,17 +225,18 @@ class SettingsFragment : PreferenceFragmentCompat() {
                 frag.setTargetFragment(this, 0)
                 frag.show(parentFragmentManager, FolderChooserDialogFragment.TAG)
             } else {
-                activity!!.showToast(getString(R.string.err_msg_external_storage_not_writable))
+                requireActivity().showToast(getString(R.string.err_msg_external_storage_not_writable))
             }
         }
     }
 
     fun setupCustomSaveLocationPreLollipop(file: File?) {
+        val activity = requireActivity()
         if (file == null) {
-            activity!!.showToast("Folder not selected")
+            activity.showToast("Folder not selected")
         } else {
             if (!file.canWrite()) {
-                activity!!.showToast("Folder not writable")
+                activity.showToast("Folder not writable")
                 return
             }
 
@@ -246,7 +250,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
     @TargetApi(21)
     private fun setupCustomSaveLocationLollipop() {
-        if (ContextCompat.checkSelfPermission(activity!!,
+        if (ContextCompat.checkSelfPermission(requireActivity(),
                         Manifest.permission.WRITE_EXTERNAL_STORAGE) !=
                 PackageManager.PERMISSION_GRANTED) {
             requestPermissions(arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),

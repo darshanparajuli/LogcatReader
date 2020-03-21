@@ -63,8 +63,8 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
         super.onCreate(savedInstanceState)
         viewModel = getAndroidViewModel()
 
-        recyclerViewAdapter = MyRecyclerViewAdapter(activity!!, this,
-                this, viewModel.selectedItems)
+        recyclerViewAdapter = MyRecyclerViewAdapter(requireActivity(),
+                this, this, viewModel.selectedItems)
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
@@ -202,7 +202,7 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
             }
             R.id.action_share -> {
                 val fileInfo = recyclerViewAdapter.getItem(viewModel.selectedItems.toIntArray()[0])
-                ShareUtils.shareSavedLogs(context!!, Uri.parse(fileInfo.info.path),
+                ShareUtils.shareSavedLogs(requireContext(), Uri.parse(fileInfo.info.path),
                         fileInfo.info.isCustom)
                 true
             }
@@ -264,14 +264,15 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
     }
 
     private fun saveToDeviceFallback() {
+        val activity = requireActivity()
         if (Environment.getExternalStorageState() != Environment.MEDIA_MOUNTED) {
-            activity!!.showToast(getString(R.string.external_storage_not_mounted_error))
+            activity.showToast(getString(R.string.external_storage_not_mounted_error))
             return
         }
 
         val fileInfo = recyclerViewAdapter.getItem(viewModel.selectedItems.toIntArray()[0])
         val fileName = fileInfo.info.fileName
-        val srcFolder = File(context!!.filesDir, LogcatLiveFragment.LOGCAT_DIR)
+        val srcFolder = File(activity.filesDir, LogcatLiveFragment.LOGCAT_DIR)
         val src = File(srcFolder, fileName)
 
         @Suppress("DEPRECATION")
@@ -280,7 +281,7 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
         val destFolder = File(documentsFolder, "LogcatReader")
         if (!destFolder.exists()) {
             if (!destFolder.mkdirs()) {
-                activity!!.showToast(getString(R.string.error_saving))
+                activity.showToast(getString(R.string.error_saving))
                 return
             }
         }

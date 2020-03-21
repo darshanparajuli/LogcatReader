@@ -44,7 +44,7 @@ class FiltersFragment : BaseFragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setHasOptionsMenu(true)
-        viewModel = activity!!.getAndroidViewModel()
+        viewModel = requireActivity().getAndroidViewModel()
         recyclerViewAdapter = MyRecyclerViewAdapter {
             onRemoveClicked(it)
         }
@@ -88,10 +88,11 @@ class FiltersFragment : BaseFragment() {
 
         emptyMessage = rootView.findViewById(R.id.textViewEmpty)
 
+        val activity = requireActivity()
         val recyclerView = rootView.findViewById<RecyclerView>(R.id.recyclerView)
-        recyclerView.addItemDecoration(DividerItemDecoration(activity!!,
+        recyclerView.addItemDecoration(DividerItemDecoration(activity,
                 DividerItemDecoration.VERTICAL))
-        linearLayoutManager = LinearLayoutManager(activity!!)
+        linearLayoutManager = LinearLayoutManager(activity)
         recyclerView.layoutManager = linearLayoutManager
         recyclerView.adapter = recyclerViewAdapter
 

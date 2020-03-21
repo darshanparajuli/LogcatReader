@@ -157,9 +157,9 @@ class SavedLogsViewerFragment : BaseFragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setHasOptionsMenu(true)
-        adapter = MyRecyclerViewAdapter(activity!!)
+        adapter = MyRecyclerViewAdapter(requireActivity())
         viewModel = getAndroidViewModel()
-        viewModel.init(Uri.parse(arguments!!.getString(KEY_FILE_URI)))
+        viewModel.init(Uri.parse(requireArguments().getString(KEY_FILE_URI)))
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,

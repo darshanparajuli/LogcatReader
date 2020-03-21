@@ -34,15 +34,16 @@ class CopyToClipboardDialogFragment : BaseDialogFragment(), DialogInterface.OnCl
     }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-        return AlertDialog.Builder(activity!!)
+        return AlertDialog.Builder(requireActivity())
                 .setTitle(R.string.copy_to_clipboard)
                 .setItems(R.array.log_content_types, this)
                 .create()
     }
 
     override fun onClick(dialog: DialogInterface, which: Int) {
-        val log = arguments!!.getParcelable<Log>(KEY_LOG)!!
-        val cm = activity!!.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        val log = requireArguments().getParcelable<Log>(KEY_LOG)!!
+        val activity = requireActivity()
+        val cm = activity.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         val clip = when (which) {
             LogContentType.TAG.ordinal -> ClipData.newPlainText("Log Tag", log.tag)
             LogContentType.MESSAGE.ordinal -> ClipData.newPlainText("Log Msg", log.msg)
@@ -52,6 +53,6 @@ class CopyToClipboardDialogFragment : BaseDialogFragment(), DialogInterface.OnCl
             else -> ClipData.newPlainText("Log TID", log.tid)
         }
         cm.setPrimaryClip(clip)
-        activity!!.showToast(getString(R.string.copied_to_clipboard))
+        activity.showToast(getString(R.string.copied_to_clipboard))
     }
 }

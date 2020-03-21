@@ -35,7 +35,7 @@ class FolderChooserDialogFragment : BaseDialogFragment(), View.OnClickListener {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        recyclerViewAdapter = MyRecyclerViewAdapter(context!!, this)
+        recyclerViewAdapter = MyRecyclerViewAdapter(requireContext(), this)
 
         viewModel = getAndroidViewModel()
         viewModel.files.observe(this, Observer<List<FileHolder>> {
@@ -49,12 +49,13 @@ class FolderChooserDialogFragment : BaseDialogFragment(), View.OnClickListener {
         val rootView = inflateLayout(R.layout.folder_chooser)
         val recyclerView = rootView.findViewById<RecyclerView>(R.id.recyclerView)
 
-        layoutManager = LinearLayoutManager(activity!!)
+        val activity = requireActivity()
+        layoutManager = LinearLayoutManager(activity)
 
         recyclerView.layoutManager = layoutManager
         recyclerView.adapter = recyclerViewAdapter
 
-        return AlertDialog.Builder(activity!!)
+        return AlertDialog.Builder(activity)
                 .setTitle("Select a folder")
                 .setView(rootView)
                 .setPositiveButton(getString(R.string.select)) { _, _ ->

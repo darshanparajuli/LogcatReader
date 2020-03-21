@@ -182,13 +182,14 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
         setHasOptionsMenu(true)
         serviceBinder = ServiceBinder(LogcatService::class.java, this)
 
-        val maxLogs = activity!!.getDefaultSharedPreferences()
+        val activity = requireActivity()
+        val maxLogs = activity.getDefaultSharedPreferences()
                 .getString(PreferenceKeys.Logcat.KEY_MAX_LOGS,
                         PreferenceKeys.Logcat.Default.MAX_LOGS)!!.trim().toInt()
-        adapter = MyRecyclerViewAdapter(activity!!, maxLogs)
-        activity!!.getDefaultSharedPreferences().registerOnSharedPreferenceChangeListener(adapter)
+        adapter = MyRecyclerViewAdapter(activity, maxLogs)
+        activity.getDefaultSharedPreferences().registerOnSharedPreferenceChangeListener(adapter)
 
-        viewModel = activity!!.getAndroidViewModel()
+        viewModel = activity.getAndroidViewModel()
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
@@ -318,9 +319,8 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
         })
     }
 
-    private fun checkReadLogsPermission() =
-            ContextCompat.checkSelfPermission(activity!!,
-                    Manifest.permission.READ_LOGS) == PackageManager.PERMISSION_GRANTED
+    private fun checkReadLogsPermission() = ContextCompat.checkSelfPermission(requireContext(),
+            Manifest.permission.READ_LOGS) == PackageManager.PERMISSION_GRANTED
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         super.onCreateOptionsMenu(menu, inflater)
@@ -404,23 +404,24 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
         val playPauseItem = menu.findItem(R.id.action_play_pause)
         val recordToggleItem = menu.findItem(R.id.action_record_toggle)
 
+        val context = requireContext()
         logcatService?.let {
             if (it.paused) {
-                playPauseItem.icon = ContextCompat.getDrawable(activity!!,
+                playPauseItem.icon = ContextCompat.getDrawable(context,
                         R.drawable.ic_play_arrow_white_24dp)
                 playPauseItem.title = getString(R.string.resume)
             } else {
-                playPauseItem.icon = ContextCompat.getDrawable(activity!!,
+                playPauseItem.icon = ContextCompat.getDrawable(context,
                         R.drawable.ic_pause_white_24dp)
                 playPauseItem.title = getString(R.string.pause)
             }
 
             if (it.recording) {
-                recordToggleItem.icon = ContextCompat.getDrawable(activity!!,
+                recordToggleItem.icon = ContextCompat.getDrawable(context,
                         R.drawable.ic_stop_white_24dp)
                 recordToggleItem.title = getString(R.string.stop_recording)
             } else {
-                recordToggleItem.icon = ContextCompat.getDrawable(activity!!,
+                recordToggleItem.icon = ContextCompat.getDrawable(context,
                         R.drawable.ic_fiber_manual_record_white_24dp)
                 recordToggleItem.title = getString(R.string.start_recording)
             }
@@ -458,9 +459,8 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
 
                     val logcat = it.logcat
                     if (recording) {
-                        Snackbar.make(view!!, getString(R.string.started_recording),
-                                        Snackbar.LENGTH_SHORT)
-                                .show()
+                        Snackbar.make(requireView(), getString(R.string.started_recording),
+                                Snackbar.LENGTH_SHORT).show()
                         logcat.startRecording()
                     } else {
                         saveToFile(true)
@@ -504,7 +504,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
     }
 
     private fun moveToFilterActivity(isExclusion: Boolean) {
-        val intent = Intent(activity!!, FiltersActivity::class.java)
+        val intent = Intent(requireActivity(), FiltersActivity::class.java)
         intent.putExtra(FiltersActivity.EXTRA_EXCLUSIONS, isExclusion)
         startActivity(intent)
     }
@@ -541,12 +541,12 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
 
     override fun onStart() {
         super.onStart()
-        serviceBinder.bind(activity!!)
+        serviceBinder.bind(requireActivity())
     }
 
     override fun onStop() {
         super.onStop()
-        serviceBinder.unbind(activity!!)
+        serviceBinder.unbind(requireActivity())
     }
 
     private fun removeLastSearchRunnableCallback() {
@@ -558,7 +558,8 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
 
     override fun onDestroy() {
         super.onDestroy()
-        activity!!.getDefaultSharedPreferences().unregisterOnSharedPreferenceChangeListener(adapter)
+        requireContext().getDefaultSharedPreferences()
+                .unregisterOnSharedPreferenceChangeListener(adapter)
 
         removeLastSearchRunnableCallback()
         searchTask?.cancel()
@@ -679,7 +680,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
                 RestartAppMessageDialogFragment.newInstance().show(parentFragmentManager,
                         RestartAppMessageDialogFragment.TAG)
             } else {
-                activity!!.showToast(getString(R.string.fail))
+                requireActivity().showToast(getString(R.string.fail))
                 ManualMethodToGrantPermissionDialogFragment().show(parentFragmentManager,
                         ManualMethodToGrantPermissionDialogFragment.TAG)
             }

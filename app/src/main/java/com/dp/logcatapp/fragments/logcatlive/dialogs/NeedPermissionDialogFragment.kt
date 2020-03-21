@@ -10,7 +10,7 @@ import com.dp.logcatapp.fragments.logcatlive.LogcatLiveFragment
 class NeedPermissionDialogFragment : BaseDialogFragment() {
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-        return AlertDialog.Builder(activity!!)
+        return AlertDialog.Builder(requireActivity())
                 .setTitle(R.string.read_logs_permission_required)
                 .setMessage(R.string.read_logs_permission_required_msg)
                 .setPositiveButton(R.string.manual_method) { _, _ ->
