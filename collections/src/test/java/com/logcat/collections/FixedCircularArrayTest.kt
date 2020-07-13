@@ -38,10 +38,27 @@ class FixedCircularArrayTest {
             array.add(i)
         }
 
+        println("================================")
         assertEquals(10, array.size)
         var index = 0
         while (array.isNotEmpty()) {
             assertEquals(91 + index++, array.removeAt(0))
+        }
+        assertTrue(array.isEmpty())
+
+        for (i in 0 until 5) {
+            array.add(i)
+        }
+        assertEquals(5, array.size)
+
+        for (i in 0 until 20) {
+            array.add(i)
+        }
+        assertEquals(10, array.size)
+
+        index = 0
+        while (array.isNotEmpty()) {
+            assertEquals(10 + index++, array.removeAt(0))
         }
         assertTrue(array.isEmpty())
     }

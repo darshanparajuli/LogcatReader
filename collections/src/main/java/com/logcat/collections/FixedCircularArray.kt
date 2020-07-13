@@ -1,16 +1,19 @@
 package com.logcat.collections
 
+import kotlin.math.min
+
 class FixedCircularArray<E>(val capacity: Int, initialSize: Int = INITIAL_SIZE) : Iterable<E> {
 
     companion object {
         private const val INITIAL_SIZE = 16
     }
 
-    private var array = arrayOfNulls<Any>(Math.min(capacity, initialSize))
-    private var head = -1
+    private var array = arrayOfNulls<Any>(min(capacity, initialSize))
+    private var head = 0
     private var next = 0
 
     init {
+        resetHead()
         if (capacity <= 0) {
             throw IllegalStateException("capacity (= $capacity) must be > 0")
         }
@@ -65,16 +68,10 @@ class FixedCircularArray<E>(val capacity: Int, initialSize: Int = INITIAL_SIZE) 
         }
         array[(head + size - 1) % capacity] = null
 
-        if (next == 0) {
-            next = size - 1
-        } else {
-            next--
-        }
-
+        next = (head + size - 1) % capacity
         if (next == head) {
-            if (head >= 0) {
-                head--
-            }
+            // empty array, reset
+            resetHead()
         }
 
         return result
@@ -111,7 +108,7 @@ class FixedCircularArray<E>(val capacity: Int, initialSize: Int = INITIAL_SIZE) 
             return
         }
 
-        val newSize = Math.min(array.size * 2, capacity)
+        val newSize = min(array.size * 2, capacity)
         val newArray = arrayOfNulls<Any>(newSize)
         System.arraycopy(array, 0, newArray, 0, array.size)
         array = newArray
