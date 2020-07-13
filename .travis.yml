@@ -7,7 +7,5 @@ android:
     - platform-tools
     - build-tools-29.0.3
     - android-29
-before_install:
-  - yes | sdkmanager --licenses
 script:
   - ./gradlew assembleDebug test
