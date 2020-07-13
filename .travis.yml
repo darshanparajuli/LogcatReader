@@ -10,4 +10,4 @@ android:
 before_install:
   - yes | sdkmanager "platforms;android-29"
 script:
-  - ./gradlew build test
+  - ./gradlew assembleDebug test
