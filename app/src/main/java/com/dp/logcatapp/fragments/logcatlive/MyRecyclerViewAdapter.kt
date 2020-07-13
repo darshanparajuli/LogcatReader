@@ -14,6 +14,7 @@ import com.dp.logcat.Logcat
 import com.dp.logcatapp.R
 import com.dp.logcatapp.util.PreferenceKeys
 import com.logcat.collections.FixedCircularArray
+import kotlin.math.max
 
 internal class MyRecyclerViewAdapter(context: Context, initialCapacity: Int) :
         RecyclerView.Adapter<MyRecyclerViewAdapter.MyViewHolder>(),
@@ -83,7 +84,11 @@ internal class MyRecyclerViewAdapter(context: Context, initialCapacity: Int) :
     internal fun addItems(items: List<Log>) {
         val startPosition = list.size
         list.add(items)
-        notifyItemRangeInserted(startPosition, items.size)
+        if (list.size < list.capacity) {
+            notifyItemRangeInserted(startPosition, items.size)
+        } else {
+            notifyItemRangeChanged(0, list.size)
+        }
     }
 
     internal fun setItems(items: List<Log>) {
