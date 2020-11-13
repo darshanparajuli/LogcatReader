@@ -96,7 +96,7 @@ class FiltersViewModel(application: Application) : ScopedAndroidViewModel(applic
                     LogPriority.FATAL -> "Fatal"
                     LogPriority.INFO -> "Info"
                     LogPriority.VERBOSE -> "Verbose"
-                    LogPriority.WARNING -> "warning"
+                    LogPriority.WARNING -> "Warning"
                     else -> ""
                   }
                 }
