@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <dimen name="activity_horizontal_margin">5dp</dimen>
-    <dimen name="activity_vertical_margin">5dp</dimen>
+  <dimen name="activity_horizontal_margin">5dp</dimen>
+  <dimen name="activity_vertical_margin">5dp</dimen>
 
-    <dimen name="toolbar_shadow_height">4dp</dimen>
-    <dimen name="toolbar_shadow_height_compat">@dimen/toolbar_shadow_height</dimen>
+  <dimen name="toolbar_shadow_height">4dp</dimen>
+  <dimen name="toolbar_shadow_height_compat">@dimen/toolbar_shadow_height</dimen>
 
-    <dimen name="text_size_huge">24sp</dimen>
-    <dimen name="text_size_big">20sp</dimen>
-    <dimen name="text_size_medium_big">18sp</dimen>
-    <dimen name="text_size_medium">16sp</dimen>
-    <dimen name="text_size_small">14sp</dimen>
-    <dimen name="text_size_smaller2">13sp</dimen>
-    <dimen name="text_size_smaller">12sp</dimen>
-    <dimen name="text_size_tiny">10sp</dimen>
+  <dimen name="text_size_huge">24sp</dimen>
+  <dimen name="text_size_big">20sp</dimen>
+  <dimen name="text_size_medium_big">18sp</dimen>
+  <dimen name="text_size_medium">16sp</dimen>
+  <dimen name="text_size_small">14sp</dimen>
+  <dimen name="text_size_smaller2">13sp</dimen>
+  <dimen name="text_size_smaller">12sp</dimen>
+  <dimen name="text_size_tiny">10sp</dimen>
 </resources>

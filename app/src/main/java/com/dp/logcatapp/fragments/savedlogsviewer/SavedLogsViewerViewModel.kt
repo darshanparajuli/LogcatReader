@@ -15,53 +15,58 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.IOException
 
-internal class SavedLogsViewerViewModel(application: Application) : ScopedAndroidViewModel(application) {
-    var autoScroll = true
-    var scrollPosition = 0
+internal class SavedLogsViewerViewModel(application: Application) : ScopedAndroidViewModel(
+  application
+) {
+  var autoScroll = true
+  var scrollPosition = 0
 
-    private var logs = MutableLiveData<SavedLogsResult>()
+  private var logs = MutableLiveData<SavedLogsResult>()
 
-    fun init(uri: Uri) {
-        launch {
-            logs.value = withContext(IO) { load(getApplication(), uri) }
-        }
+  fun init(uri: Uri) {
+    launch {
+      logs.value = withContext(IO) { load(getApplication(), uri) }
     }
+  }
 
-    private suspend fun load(context: Context, uri: Uri) = coroutineScope {
-        val logs = mutableListOf<Log>()
-        var availableBytes = 0
+  private suspend fun load(
+    context: Context,
+    uri: Uri
+  ) = coroutineScope {
+    val logs = mutableListOf<Log>()
+    var availableBytes = 0
 
+    try {
+      context.contentResolver.openInputStream(uri)?.let {
         try {
-            context.contentResolver.openInputStream(uri)?.let {
-                try {
-                    availableBytes = it.available()
-                    val reader = LogcatStreamReader(it)
-                    for (log in reader) {
-                        logs += log
-                    }
-                } catch (e: IOException) {
-                    // ignore
-                } finally {
-                    it.closeQuietly()
-                }
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-            return@coroutineScope SavedLogsResult.FileOpenError
+          availableBytes = it.available()
+          val reader = LogcatStreamReader(it)
+          for (log in reader) {
+            logs += log
+          }
+        } catch (e: IOException) {
+          // ignore
+        } finally {
+          it.closeQuietly()
         }
-
-        if (logs.isEmpty() && availableBytes > 0) {
-            return@coroutineScope SavedLogsResult.FileParseError
-        }
-
-        SavedLogsResult.Success(logs)
+      }
+    } catch (e: Exception) {
+      e.printStackTrace()
+      return@coroutineScope SavedLogsResult.FileOpenError
     }
 
-    fun getLogs(): LiveData<SavedLogsResult> = logs
-
-    sealed class SavedLogsResult {
-        data class Success(val logs: List<Log>) : SavedLogsResult()
-        object FileOpenError : SavedLogsResult()
-        object FileParseError : SavedLogsResult()
+    if (logs.isEmpty() && availableBytes > 0) {
+      return@coroutineScope SavedLogsResult.FileParseError
     }
+
+    SavedLogsResult.Success(logs)
+  }
+
+  fun getLogs(): LiveData<SavedLogsResult> = logs
+
+  sealed class SavedLogsResult {
+    data class Success(val logs: List<Log>) : SavedLogsResult()
+    object FileOpenError : SavedLogsResult()
+    object FileParseError : SavedLogsResult()
+  }
 }

@@ -14,45 +14,53 @@ import com.dp.logcatapp.util.showToast
 
 class CopyToClipboardDialogFragment : BaseDialogFragment(), DialogInterface.OnClickListener {
 
-    companion object {
-        val TAG = CopyToClipboardDialogFragment::class.qualifiedName
+  companion object {
+    val TAG = CopyToClipboardDialogFragment::class.qualifiedName
 
-        private val KEY_LOG = TAG + "_key_log"
+    private val KEY_LOG = TAG + "_key_log"
 
-        fun newInstance(log: Log): CopyToClipboardDialogFragment {
-            val bundle = Bundle()
-            bundle.putParcelable(KEY_LOG, log)
+    fun newInstance(log: Log): CopyToClipboardDialogFragment {
+      val bundle = Bundle()
+      bundle.putParcelable(KEY_LOG, log)
 
-            val fragment = CopyToClipboardDialogFragment()
-            fragment.arguments = bundle
-            return fragment
-        }
+      val fragment = CopyToClipboardDialogFragment()
+      fragment.arguments = bundle
+      return fragment
     }
+  }
 
-    private enum class LogContentType {
-        TAG, MESSAGE, DATE, TIME, PID, TID
-    }
+  private enum class LogContentType {
+    TAG,
+    MESSAGE,
+    DATE,
+    TIME,
+    PID,
+    TID
+  }
 
-    override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-        return AlertDialog.Builder(requireActivity())
-                .setTitle(R.string.copy_to_clipboard)
-                .setItems(R.array.log_content_types, this)
-                .create()
-    }
+  override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
+    return AlertDialog.Builder(requireActivity())
+      .setTitle(R.string.copy_to_clipboard)
+      .setItems(R.array.log_content_types, this)
+      .create()
+  }
 
-    override fun onClick(dialog: DialogInterface, which: Int) {
-        val log = requireArguments().getParcelable<Log>(KEY_LOG)!!
-        val activity = requireActivity()
-        val cm = activity.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-        val clip = when (which) {
-            LogContentType.TAG.ordinal -> ClipData.newPlainText("Log Tag", log.tag)
-            LogContentType.MESSAGE.ordinal -> ClipData.newPlainText("Log Msg", log.msg)
-            LogContentType.DATE.ordinal -> ClipData.newPlainText("Log Date", log.date)
-            LogContentType.TIME.ordinal -> ClipData.newPlainText("Log Time", log.time)
-            LogContentType.PID.ordinal -> ClipData.newPlainText("Log PID", log.pid)
-            else -> ClipData.newPlainText("Log TID", log.tid)
-        }
-        cm.setPrimaryClip(clip)
-        activity.showToast(getString(R.string.copied_to_clipboard))
+  override fun onClick(
+    dialog: DialogInterface,
+    which: Int
+  ) {
+    val log = requireArguments().getParcelable<Log>(KEY_LOG)!!
+    val activity = requireActivity()
+    val cm = activity.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+    val clip = when (which) {
+      LogContentType.TAG.ordinal -> ClipData.newPlainText("Log Tag", log.tag)
+      LogContentType.MESSAGE.ordinal -> ClipData.newPlainText("Log Msg", log.msg)
+      LogContentType.DATE.ordinal -> ClipData.newPlainText("Log Date", log.date)
+      LogContentType.TIME.ordinal -> ClipData.newPlainText("Log Time", log.time)
+      LogContentType.PID.ordinal -> ClipData.newPlainText("Log PID", log.pid)
+      else -> ClipData.newPlainText("Log TID", log.tid)
     }
+    cm.setPrimaryClip(clip)
+    activity.showToast(getString(R.string.copied_to_clipboard))
+  }
 }

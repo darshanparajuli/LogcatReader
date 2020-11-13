@@ -8,19 +8,22 @@
     android:gravity="center_vertical"
     android:background="?attr/selectableItemBackground"
     android:descendantFocusability="blocksDescendants"
-    android:orientation="horizontal">
+    android:orientation="horizontal"
+    >
 
-    <androidx.appcompat.widget.AppCompatImageView
-        android:id="@+id/fileIcon"
-        android:layout_marginRight="20dp"
-        android:layout_marginEnd="20dp"
-        android:layout_width="40dp"
-        android:layout_height="40dp" />
+  <androidx.appcompat.widget.AppCompatImageView
+      android:id="@+id/fileIcon"
+      android:layout_width="40dp"
+      android:layout_height="40dp"
+      android:layout_marginRight="20dp"
+      android:layout_marginEnd="20dp"
+      />
 
-    <androidx.appcompat.widget.AppCompatTextView
-        android:id="@+id/fileName"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Folder name" />
+  <androidx.appcompat.widget.AppCompatTextView
+      android:id="@+id/fileName"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:text="Folder name"
+      />
 
 </LinearLayout>

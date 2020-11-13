@@ -3,100 +3,100 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="com.dp.logcatapp">
 
-    <!-- adb shell pm grant com.dp.logcatapp android.permission.READ_LOGS -->
-    <uses-permission android:name="android.permission.READ_LOGS" />
+  <!-- adb shell pm grant com.dp.logcatapp android.permission.READ_LOGS -->
+  <uses-permission android:name="android.permission.READ_LOGS" />
 
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+  <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+  <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+  <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 
-    <application
-        android:name=".LogcatApp"
-        android:allowBackup="true"
-        android:fullBackupContent="true"
-        android:icon="@mipmap/ic_launcher"
-        android:label="@string/app_name"
-        android:largeHeap="true"
-        android:supportsRtl="true"
-        android:theme="@style/LightTheme"
-        tools:ignore="GoogleAppIndexingWarning">
-        <activity
-            android:name=".activities.SplashActivity"
-            android:theme="@style/SplashScreenTheme">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
+  <application
+      android:name=".LogcatApp"
+      android:allowBackup="true"
+      android:fullBackupContent="true"
+      android:icon="@mipmap/ic_launcher"
+      android:label="@string/app_name"
+      android:largeHeap="true"
+      android:supportsRtl="true"
+      android:theme="@style/LightTheme"
+      tools:ignore="GoogleAppIndexingWarning">
+    <activity
+        android:name=".activities.SplashActivity"
+        android:theme="@style/SplashScreenTheme">
+      <intent-filter>
+        <action android:name="android.intent.action.MAIN" />
 
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
-        <activity
-            android:name=".activities.MainActivity"
-            android:launchMode="singleTask" />
-        <activity
-            android:name=".activities.SettingsActivity"
-            android:launchMode="singleTask"
-            android:parentActivityName=".activities.MainActivity"
-            android:windowSoftInputMode="adjustResize">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value=".activities.MainActivity" />
-        </activity>
+        <category android:name="android.intent.category.LAUNCHER" />
+      </intent-filter>
+    </activity>
+    <activity
+        android:name=".activities.MainActivity"
+        android:launchMode="singleTask" />
+    <activity
+        android:name=".activities.SettingsActivity"
+        android:launchMode="singleTask"
+        android:parentActivityName=".activities.MainActivity"
+        android:windowSoftInputMode="adjustResize">
+      <meta-data
+          android:name="android.support.PARENT_ACTIVITY"
+          android:value=".activities.MainActivity" />
+    </activity>
 
-        <activity
-            android:name=".activities.FiltersActivity"
-            android:launchMode="singleTask"
-            android:parentActivityName=".activities.MainActivity"
-            android:windowSoftInputMode="adjustResize">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value=".activities.MainActivity" />
-        </activity>
+    <activity
+        android:name=".activities.FiltersActivity"
+        android:launchMode="singleTask"
+        android:parentActivityName=".activities.MainActivity"
+        android:windowSoftInputMode="adjustResize">
+      <meta-data
+          android:name="android.support.PARENT_ACTIVITY"
+          android:value=".activities.MainActivity" />
+    </activity>
 
-        <activity
-            android:name=".activities.SavedLogsActivity"
-            android:launchMode="singleTask"
-            android:parentActivityName=".activities.MainActivity"
-            android:windowSoftInputMode="adjustResize">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value=".activities.MainActivity" />
-        </activity>
+    <activity
+        android:name=".activities.SavedLogsActivity"
+        android:launchMode="singleTask"
+        android:parentActivityName=".activities.MainActivity"
+        android:windowSoftInputMode="adjustResize">
+      <meta-data
+          android:name="android.support.PARENT_ACTIVITY"
+          android:value=".activities.MainActivity" />
+    </activity>
 
-        <activity
-            android:name=".activities.SavedLogsViewerActivity"
-            android:launchMode="singleTask"
-            android:parentActivityName=".activities.SavedLogsActivity"
-            android:windowSoftInputMode="adjustResize">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value=".activities.SavedLogsActivity" />
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
+    <activity
+        android:name=".activities.SavedLogsViewerActivity"
+        android:launchMode="singleTask"
+        android:parentActivityName=".activities.SavedLogsActivity"
+        android:windowSoftInputMode="adjustResize">
+      <meta-data
+          android:name="android.support.PARENT_ACTIVITY"
+          android:value=".activities.SavedLogsActivity" />
+      <intent-filter>
+        <action android:name="android.intent.action.VIEW" />
+        <category android:name="android.intent.category.DEFAULT" />
 
-                <data
-                    android:mimeType="text/plain"
-                    android:scheme="file" />
-                <data
-                    android:mimeType="text/plain"
-                    android:scheme="content" />
-            </intent-filter>
-        </activity>
+        <data
+            android:mimeType="text/plain"
+            android:scheme="file" />
+        <data
+            android:mimeType="text/plain"
+            android:scheme="content" />
+      </intent-filter>
+    </activity>
 
-        <service
-            android:name=".services.LogcatService"
-            android:exported="false"
-            android:stopWithTask="false" />
+    <service
+        android:name=".services.LogcatService"
+        android:exported="false"
+        android:stopWithTask="false" />
 
-        <provider
-            android:name="androidx.core.content.FileProvider"
-            android:authorities="${applicationId}.${fileProvider}"
-            android:exported="false"
-            android:grantUriPermissions="true">
-            <meta-data
-                android:name="android.support.FILE_PROVIDER_PATHS"
-                android:resource="@xml/file_provider_paths" />
-        </provider>
-    </application>
+    <provider
+        android:name="androidx.core.content.FileProvider"
+        android:authorities="${applicationId}.${fileProvider}"
+        android:exported="false"
+        android:grantUriPermissions="true">
+      <meta-data
+          android:name="android.support.FILE_PROVIDER_PATHS"
+          android:resource="@xml/file_provider_paths" />
+    </provider>
+  </application>
 
 </manifest>

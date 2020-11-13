@@ -5,13 +5,13 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 
 open class SplashActivity : AppCompatActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        startActivity(Intent(this, MainActivity::class.java))
-        finish()
-    }
+  override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
+    startActivity(Intent(this, MainActivity::class.java))
+    finish()
+  }
 
-    override fun onBackPressed() {
-        // prevent back press
-    }
+  override fun onBackPressed() {
+    // prevent back press
+  }
 }

@@ -1,31 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!--<string name="font_Roboto_Black">Roboto-Black</string>-->
-    <!--<string name="font_Roboto_BlackItalic">Roboto-BlackItalic</string>-->
-    <string name="font_Roboto_Bold" translatable="false">Roboto-Bold</string>
-    <string name="font_Roboto_BoldItalic" translatable="false">Roboto-BoldItalic</string>
-    <string name="font_Roboto_Italic" translatable="false">Roboto-Italic</string>
-    <string name="font_Roboto_Light" translatable="false">Roboto-Light</string>
-    <!--<string name="font_Roboto_LightItalic">Roboto-LightItalic</string>-->
-    <string name="font_Roboto_Medium" translatable="false">Roboto-Medium</string>
-    <string name="font_Roboto_MediumItalic" translatable="false">Roboto-MediumItalic</string>
-    <string name="font_Roboto_Regular" translatable="false">Roboto-Regular</string>
-    <!--<string name="font_Roboto_Thin">Roboto-Thin</string>-->
-    <!--<string name="font_Roboto_ThinItalic">Roboto-ThinItalic</string>-->
-    <string name="font_RobotoCondensed_Bold" translatable="false">RobotoCondensed-Bold</string>
-    <string name="font_RobotoCondensed_BoldItalic" translatable="false">RobotoCondensed-BoldItalic</string>
-    <string name="font_RobotoCondensed_Italic" translatable="false">RobotoCondensed-Italic</string>
-    <!--<string name="font_RobotoCondensed_Light">RobotoCondensed-Light</string>-->
-    <!--<string name="font_RobotoCondensed_LightItalic">RobotoCondensed-LightItalic</string>-->
-    <string name="font_RobotoCondensed_Regular" translatable="false">RobotoCondensed-Regular</string>
-    <string name="font_RobotoMono_Bold" translatable="false">RobotoMono-Bold</string>
-    <string name="font_RobotoMono_BoldItalic" translatable="false">RobotoMono-BoldItalic</string>
-    <string name="font_RobotoMono_Italic" translatable="false">RobotoMono-Italic</string>
-    <!--<string name="font_RobotoMono_Light">RobotoMono-Light</string>-->
-    <!--<string name="font_RobotoMono_LightItalic">RobotoMono-LightItalic</string>-->
-    <string name="font_RobotoMono_Medium" translatable="false">RobotoMono-Medium</string>
-    <string name="font_RobotoMono_MediumItalic" translatable="false">RobotoMono-MediumItalic</string>
-    <string name="font_RobotoMono_Regular" translatable="false">RobotoMono-Regular</string>
-    <!--<string name="font_RobotoMono_Thin">RobotoMono-Thin</string>-->
-    <!--<string name="font_RobotoMono_ThinItalic">RobotoMono-ThinItalic</string>-->
+  <!--<string name="font_Roboto_Black">Roboto-Black</string>-->
+  <!--<string name="font_Roboto_BlackItalic">Roboto-BlackItalic</string>-->
+  <string name="font_Roboto_Bold" translatable="false">Roboto-Bold</string>
+  <string name="font_Roboto_BoldItalic" translatable="false">Roboto-BoldItalic</string>
+  <string name="font_Roboto_Italic" translatable="false">Roboto-Italic</string>
+  <string name="font_Roboto_Light" translatable="false">Roboto-Light</string>
+  <!--<string name="font_Roboto_LightItalic">Roboto-LightItalic</string>-->
+  <string name="font_Roboto_Medium" translatable="false">Roboto-Medium</string>
+  <string name="font_Roboto_MediumItalic" translatable="false">Roboto-MediumItalic</string>
+  <string name="font_Roboto_Regular" translatable="false">Roboto-Regular</string>
+  <!--<string name="font_Roboto_Thin">Roboto-Thin</string>-->
+  <!--<string name="font_Roboto_ThinItalic">Roboto-ThinItalic</string>-->
+  <string name="font_RobotoCondensed_Bold" translatable="false">RobotoCondensed-Bold</string>
+  <string name="font_RobotoCondensed_BoldItalic" translatable="false">RobotoCondensed-BoldItalic</string>
+  <string name="font_RobotoCondensed_Italic" translatable="false">RobotoCondensed-Italic</string>
+  <!--<string name="font_RobotoCondensed_Light">RobotoCondensed-Light</string>-->
+  <!--<string name="font_RobotoCondensed_LightItalic">RobotoCondensed-LightItalic</string>-->
+  <string name="font_RobotoCondensed_Regular" translatable="false">RobotoCondensed-Regular</string>
+  <string name="font_RobotoMono_Bold" translatable="false">RobotoMono-Bold</string>
+  <string name="font_RobotoMono_BoldItalic" translatable="false">RobotoMono-BoldItalic</string>
+  <string name="font_RobotoMono_Italic" translatable="false">RobotoMono-Italic</string>
+  <!--<string name="font_RobotoMono_Light">RobotoMono-Light</string>-->
+  <!--<string name="font_RobotoMono_LightItalic">RobotoMono-LightItalic</string>-->
+  <string name="font_RobotoMono_Medium" translatable="false">RobotoMono-Medium</string>
+  <string name="font_RobotoMono_MediumItalic" translatable="false">RobotoMono-MediumItalic</string>
+  <string name="font_RobotoMono_Regular" translatable="false">RobotoMono-Regular</string>
+  <!--<string name="font_RobotoMono_Thin">RobotoMono-Thin</string>-->
+  <!--<string name="font_RobotoMono_ThinItalic">RobotoMono-ThinItalic</string>-->
 </resources>

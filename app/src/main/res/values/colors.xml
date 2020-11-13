@@ -1,44 +1,44 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="color_accent">#FF3D00</color>
-    <color name="color_primary">#009688</color>
-    <color name="color_primary_dark">#00796B</color>
-    <color name="color_primary_dark_mode">#00796B</color>
-    <color name="color_primary_dark_mode_dark">#004D40</color>
+  <color name="color_accent">#FF3D00</color>
+  <color name="color_primary">#009688</color>
+  <color name="color_primary_dark">#00796B</color>
+  <color name="color_primary_dark_mode">#00796B</color>
+  <color name="color_primary_dark_mode_dark">#004D40</color>
 
-    <color name="toolbar_shadow_start_color_light">#4b000000</color>
-    <color name="toolbar_shadow_center_color_light">#1e000000</color>
-    <color name="toolbar_shadow_start_color_dark">#64000000</color>
-    <color name="toolbar_shadow_center_color_dark">#28000000</color>
+  <color name="toolbar_shadow_start_color_light">#4b000000</color>
+  <color name="toolbar_shadow_center_color_light">#1e000000</color>
+  <color name="toolbar_shadow_start_color_dark">#64000000</color>
+  <color name="toolbar_shadow_center_color_dark">#28000000</color>
 
-    <color name="primary_text_color_light">#de000000</color>
-    <color name="primary_text_color_dark">#FFFFFF</color>
+  <color name="primary_text_color_light">#de000000</color>
+  <color name="primary_text_color_dark">#FFFFFF</color>
 
-    <color name="divider_dark">#1fffffff</color>
-    <color name="divider_light">#1f000000</color>
+  <color name="divider_dark">#1fffffff</color>
+  <color name="divider_light">#1f000000</color>
 
-    <color name="secondary_text_color_light">#8a000000</color>
-    <color name="secondary_text_color_dark">#b2ffffff</color>
+  <color name="secondary_text_color_light">#8a000000</color>
+  <color name="secondary_text_color_dark">#b2ffffff</color>
 
-    <color name="list_selected_item_bg_light">#32000000</color>
-    <color name="list_selected_item_bg_dark">#32ffffff</color>
+  <color name="list_selected_item_bg_light">#32000000</color>
+  <color name="list_selected_item_bg_dark">#32ffffff</color>
 
-    <color name="dark_window_bg">#212121</color>
-    <color name="light_window_bg">#F5F5F5</color>
-    <color name="black_window_bg">#000000</color>
+  <color name="dark_window_bg">#212121</color>
+  <color name="light_window_bg">#F5F5F5</color>
+  <color name="black_window_bg">#000000</color>
 
-    <color name="priority_assert">#512DA8</color>
-    <color name="priority_debug">#1976D2</color>
-    <color name="priority_error">#D32F2F</color>
-    <color name="priority_fatal">#C2185B</color>
-    <color name="priority_info">#388E3C</color>
-    <color name="priority_silent">#616161</color>
-    <color name="priority_warning">#E65100</color>
-    <color name="priority_verbose">#546E7A</color>
+  <color name="priority_assert">#512DA8</color>
+  <color name="priority_debug">#1976D2</color>
+  <color name="priority_error">#D32F2F</color>
+  <color name="priority_fatal">#C2185B</color>
+  <color name="priority_info">#388E3C</color>
+  <color name="priority_silent">#616161</color>
+  <color name="priority_warning">#E65100</color>
+  <color name="priority_verbose">#546E7A</color>
 
-    <color name="icon_tint_light">#616161</color>
-    <color name="icon_tint_dark">#BDBDBD</color>
+  <color name="icon_tint_light">#616161</color>
+  <color name="icon_tint_dark">#BDBDBD</color>
 
-    <!--Fix accent color for preference category for API < 21-->
-    <color name="preference_fallback_accent_color">@color/color_accent</color>
+  <!--Fix accent color for preference category for API < 21-->
+  <color name="preference_fallback_accent_color">@color/color_accent</color>
 </resources>

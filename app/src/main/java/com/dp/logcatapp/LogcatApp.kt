@@ -5,8 +5,8 @@ import com.dp.logger.Logger
 
 @Suppress("unused")
 class LogcatApp : Application() {
-    override fun onCreate() {
-        super.onCreate()
-        Logger.init("LogcatReader")
-    }
+  override fun onCreate() {
+    super.onCreate()
+    Logger.init("LogcatReader")
+  }
 }

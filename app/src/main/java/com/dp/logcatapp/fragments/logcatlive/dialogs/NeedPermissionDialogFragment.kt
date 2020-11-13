@@ -9,21 +9,23 @@ import com.dp.logcatapp.fragments.logcatlive.LogcatLiveFragment
 
 class NeedPermissionDialogFragment : BaseDialogFragment() {
 
-    override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-        return AlertDialog.Builder(requireActivity())
-                .setTitle(R.string.read_logs_permission_required)
-                .setMessage(R.string.read_logs_permission_required_msg)
-                .setPositiveButton(R.string.manual_method) { _, _ ->
-                    ManualMethodToGrantPermissionDialogFragment().show(parentFragmentManager,
-                            ManualMethodToGrantPermissionDialogFragment.TAG)
-                }
-                .setNegativeButton(R.string.root_method) { _, _ ->
-                    (targetFragment as LogcatLiveFragment).useRootToGrantPermission()
-                }
-                .create()
-    }
+  override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
+    return AlertDialog.Builder(requireActivity())
+      .setTitle(R.string.read_logs_permission_required)
+      .setMessage(R.string.read_logs_permission_required_msg)
+      .setPositiveButton(R.string.manual_method) { _, _ ->
+        ManualMethodToGrantPermissionDialogFragment().show(
+          parentFragmentManager,
+          ManualMethodToGrantPermissionDialogFragment.TAG
+        )
+      }
+      .setNegativeButton(R.string.root_method) { _, _ ->
+        (targetFragment as LogcatLiveFragment).useRootToGrantPermission()
+      }
+      .create()
+  }
 
-    companion object {
-        val TAG = NeedPermissionDialogFragment::class.qualifiedName
-    }
+  companion object {
+    val TAG = NeedPermissionDialogFragment::class.qualifiedName
+  }
 }

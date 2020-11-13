@@ -5,26 +5,30 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="?attr/colorPrimary"
-    android:elevation="@dimen/toolbar_shadow_height">
+    android:elevation="@dimen/toolbar_shadow_height"
+    >
 
-    <FrameLayout
+  <FrameLayout
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      >
+
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="?attr/actionBarSize"
+        android:theme="@style/ToolBarTheme"
+        app:popupTheme="?attr/toolbar_popup_theme"
+        />
 
-        <androidx.appcompat.widget.Toolbar
-            android:id="@+id/toolbar"
-            android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize"
-            android:theme="@style/ToolBarTheme"
-            app:popupTheme="?attr/toolbar_popup_theme" />
-
-        <androidx.appcompat.widget.Toolbar
-            android:id="@+id/cabToolbar"
-            android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize"
-            android:background="?attr/colorPrimary"
-            android:theme="@style/ToolBarTheme"
-            android:visibility="gone"
-            app:popupTheme="?attr/toolbar_popup_theme" />
-    </FrameLayout>
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/cabToolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="?attr/colorPrimary"
+        android:theme="@style/ToolBarTheme"
+        android:visibility="gone"
+        app:popupTheme="?attr/toolbar_popup_theme"
+        />
+  </FrameLayout>
 </com.google.android.material.appbar.AppBarLayout>

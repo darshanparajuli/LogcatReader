@@ -1,4 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <dimen name="toolbar_shadow_height_compat">0dp</dimen>
+  <dimen name="toolbar_shadow_height_compat">0dp</dimen>
 </resources>

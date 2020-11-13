@@ -1,44 +1,44 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
-    <item
-        android:id="@+id/action_search"
-        android:icon="@drawable/ic_search_white_24dp"
-        android:title="@string/search"
-        app:actionViewClass="androidx.appcompat.widget.SearchView"
-        app:showAsAction="always|collapseActionView" />
-    <item
-        android:id="@+id/action_play_pause"
-        android:icon="@drawable/ic_pause_white_24dp"
-        android:title="@string/pause"
-        app:showAsAction="always" />
-    <item
-        android:id="@+id/action_record_toggle"
-        android:icon="@drawable/ic_fiber_manual_record_white_24dp"
-        android:title="@string/start_recording"
-        app:showAsAction="always" />
+  <item
+      android:id="@+id/action_search"
+      android:icon="@drawable/ic_search_white_24dp"
+      android:title="@string/search"
+      app:actionViewClass="androidx.appcompat.widget.SearchView"
+      app:showAsAction="always|collapseActionView" />
+  <item
+      android:id="@+id/action_play_pause"
+      android:icon="@drawable/ic_pause_white_24dp"
+      android:title="@string/pause"
+      app:showAsAction="always" />
+  <item
+      android:id="@+id/action_record_toggle"
+      android:icon="@drawable/ic_fiber_manual_record_white_24dp"
+      android:title="@string/start_recording"
+      app:showAsAction="always" />
 
-    <item
-        android:id="@+id/clear_action"
-        android:title="@string/clear" />
+  <item
+      android:id="@+id/clear_action"
+      android:title="@string/clear" />
 
-    <item
-        android:id="@+id/filters_action"
-        android:title="@string/filters" />
+  <item
+      android:id="@+id/filters_action"
+      android:title="@string/filters" />
 
-    <item
-        android:id="@+id/exclusions_action"
-        android:title="@string/exclusions" />
+  <item
+      android:id="@+id/exclusions_action"
+      android:title="@string/exclusions" />
 
-    <item
-        android:id="@+id/action_save"
-        android:title="@string/save_to_file" />
+  <item
+      android:id="@+id/action_save"
+      android:title="@string/save_to_file" />
 
-    <item
-        android:id="@+id/action_view_saved_logs"
-        android:title="@string/saved_logs_action" />
+  <item
+      android:id="@+id/action_view_saved_logs"
+      android:title="@string/saved_logs_action" />
 
-    <item
-        android:id="@+id/action_restart_logcat"
-        android:title="@string/restart_logcat" />
+  <item
+      android:id="@+id/action_restart_logcat"
+      android:title="@string/restart_logcat" />
 </menu>

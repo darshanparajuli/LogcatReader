@@ -7,30 +7,32 @@ import android.widget.TextView
 import com.dp.logcatapp.R
 import com.google.android.material.snackbar.Snackbar
 
-class IndeterminateProgressSnackBar(view: View,
-                                    message: String) {
+class IndeterminateProgressSnackBar(
+  view: View,
+  message: String
+) {
 
-    private val progressBar: ProgressBar
-    private val textView: TextView
-    private val snackBar = Snackbar.make(view, "", Snackbar.LENGTH_INDEFINITE)
+  private val progressBar: ProgressBar
+  private val textView: TextView
+  private val snackBar = Snackbar.make(view, "", Snackbar.LENGTH_INDEFINITE)
 
-    init {
-        val rootView = LayoutInflater.from(view.context)
-                .inflate(R.layout.indeterminate_progress_snackbar, null)
-        progressBar = rootView.findViewById(R.id.progressBar)
-        textView = rootView.findViewById(R.id.message)
-        textView.text = message
+  init {
+    val rootView = LayoutInflater.from(view.context)
+      .inflate(R.layout.indeterminate_progress_snackbar, null)
+    progressBar = rootView.findViewById(R.id.progressBar)
+    textView = rootView.findViewById(R.id.message)
+    textView.text = message
 
-        val snackBarLayout = snackBar.view as Snackbar.SnackbarLayout
-        snackBarLayout.removeAllViews()
-        snackBarLayout.addView(rootView)
-    }
+    val snackBarLayout = snackBar.view as Snackbar.SnackbarLayout
+    snackBarLayout.removeAllViews()
+    snackBarLayout.addView(rootView)
+  }
 
-    fun show() {
-        snackBar.show()
-    }
+  fun show() {
+    snackBar.show()
+  }
 
-    fun dismiss() {
-        snackBar.dismiss()
-    }
+  fun dismiss() {
+    snackBar.dismiss()
+  }
 }

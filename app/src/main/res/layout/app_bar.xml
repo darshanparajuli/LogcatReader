@@ -4,12 +4,14 @@
     android:id="@+id/toolbar_container"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="?attr/colorPrimary">
+    android:background="?attr/colorPrimary"
+    >
 
-    <androidx.appcompat.widget.Toolbar
-        android:id="@+id/toolbar"
-        android:layout_width="match_parent"
-        android:layout_height="?attr/actionBarSize"
-        android:theme="@style/ToolBarTheme"
-        app:popupTheme="?attr/toolbar_popup_theme" />
+  <androidx.appcompat.widget.Toolbar
+      android:id="@+id/toolbar"
+      android:layout_width="match_parent"
+      android:layout_height="?attr/actionBarSize"
+      android:theme="@style/ToolBarTheme"
+      app:popupTheme="?attr/toolbar_popup_theme"
+      />
 </com.google.android.material.appbar.AppBarLayout>

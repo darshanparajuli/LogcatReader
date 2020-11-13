@@ -9,17 +9,17 @@ import com.dp.logcatapp.util.inflateLayout
 
 class AskingForRootAccessDialogFragment : BaseDialogFragment() {
 
-    override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-        val view = inflateLayout(R.layout.asking_for_root_access_dialog_fragment)
+  override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
+    val view = inflateLayout(R.layout.asking_for_root_access_dialog_fragment)
 
-        isCancelable = false
-        return AlertDialog.Builder(requireActivity())
-                .setView(view)
-                .setCancelable(false)
-                .create()
-    }
+    isCancelable = false
+    return AlertDialog.Builder(requireActivity())
+      .setView(view)
+      .setCancelable(false)
+      .create()
+  }
 
-    companion object {
-        val TAG = AskingForRootAccessDialogFragment::class.qualifiedName
-    }
+  companion object {
+    val TAG = AskingForRootAccessDialogFragment::class.qualifiedName
+  }
 }

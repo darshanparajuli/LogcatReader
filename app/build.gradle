@@ -6,90 +6,90 @@ apply plugin: 'kotlin-kapt'
 def fileProvider = "file_provider"
 
 android {
-    compileSdkVersion 29
-    buildToolsVersion "29.0.3"
+  compileSdkVersion 29
+  buildToolsVersion "29.0.3"
 
-    defaultConfig {
-        applicationId "com.dp.logcatapp"
-        minSdkVersion 16
-        targetSdkVersion 29
-        versionCode 32
-        versionName "1.7.1"
-        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-        vectorDrawables.useSupportLibrary = true
-    }
+  defaultConfig {
+    applicationId "com.dp.logcatapp"
+    minSdkVersion 16
+    targetSdkVersion 29
+    versionCode 32
+    versionName "1.7.1"
+    testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    vectorDrawables.useSupportLibrary = true
+  }
 
-    signingConfigs {
-        release {
-            try {
-                def keystoreProperties = new Properties()
-                keystoreProperties.load(new FileInputStream(rootProject.file("keystore.properties")))
-                keyAlias keystoreProperties['keyAlias']
-                keyPassword keystoreProperties['keyPassword']
-                storeFile file(keystoreProperties['storeFile'])
-                storePassword keystoreProperties['storePassword']
-            } catch (FileNotFoundException ignored) {
-                println("keystore file not found.")
-            }
-        }
+  signingConfigs {
+    release {
+      try {
+        def keystoreProperties = new Properties()
+        keystoreProperties.load(new FileInputStream(rootProject.file("keystore.properties")))
+        keyAlias keystoreProperties['keyAlias']
+        keyPassword keystoreProperties['keyPassword']
+        storeFile file(keystoreProperties['storeFile'])
+        storePassword keystoreProperties['storePassword']
+      } catch (FileNotFoundException ignored) {
+        println("keystore file not found.")
+      }
     }
+  }
 
-    dexOptions {
-        javaMaxHeapSize "2g"
-    }
+  dexOptions {
+    javaMaxHeapSize "2g"
+  }
 
-    lintOptions {
-        abortOnError false
-        disable 'MissingTranslation'
-    }
+  lintOptions {
+    abortOnError false
+    disable 'MissingTranslation'
+  }
 
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
-    }
+  compileOptions {
+    sourceCompatibility JavaVersion.VERSION_1_8
+    targetCompatibility JavaVersion.VERSION_1_8
+  }
 
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_1_8
-    }
+  kotlinOptions {
+    jvmTarget = JavaVersion.VERSION_1_8
+  }
 
-    buildTypes {
-        buildTypes.each {
-            it.buildConfigField("String", "FILE_PROVIDER", "\"$fileProvider\"")
-            it.addManifestPlaceholders(["fileProvider": fileProvider])
-        }
-        release {
-            signingConfig signingConfigs.release
-            minifyEnabled false
-            shrinkResources false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-        }
+  buildTypes {
+    buildTypes.each {
+      it.buildConfigField("String", "FILE_PROVIDER", "\"$fileProvider\"")
+      it.addManifestPlaceholders(["fileProvider": fileProvider])
     }
+    release {
+      signingConfig signingConfigs.release
+      minifyEnabled false
+      shrinkResources false
+      proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+    }
+  }
 }
 
 dependencies {
-    implementation fileTree(include: ['*.jar'], dir: 'libs')
-    implementation project(':collections')
-    implementation project(':logcat')
-    implementation project(':logger')
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
-    implementation "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
-    implementation "androidx.core:core-ktx:$core_ktx_version"
-    implementation "androidx.fragment:fragment-ktx:$fragment_ktx_version"
-    implementation "androidx.appcompat:appcompat:$appcompat_version"
-    implementation "com.google.android.material:material:$material_version"
-    implementation "androidx.preference:preference:$preference_version"
-    implementation "androidx.legacy:legacy-preference-v14:$legacy_preference_v14_version"
-    implementation "androidx.lifecycle:lifecycle-common-java8:$lifecycle_common_java8_version"
-    implementation "androidx.lifecycle:lifecycle-extensions:$lifecycle_extensions_version"
-    implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycle_viewmodel_ktx_version"
-    implementation "androidx.lifecycle:lifecycle-runtime-ktx:$lifecycle_runtime_version"
-    implementation "androidx.constraintlayout:constraintlayout:$constraint_layout_version"
-    implementation "androidx.room:room-runtime:$room_version"
-    implementation "androidx.documentfile:documentfile:$documentfile_version"
-    kapt "androidx.room:room-compiler:$room_version"
-    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlin_coroutines_core_version"
-    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$kotlin_coroutines_android_version"
-    testImplementation "junit:junit:$junit_version"
-    androidTestImplementation "androidx.test:runner:$runner_version"
-    androidTestImplementation "androidx.test.espresso:espresso-core:$espresso_core_version"
+  implementation fileTree(include: ['*.jar'], dir: 'libs')
+  implementation project(':collections')
+  implementation project(':logcat')
+  implementation project(':logger')
+  implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+  implementation "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
+  implementation "androidx.core:core-ktx:$core_ktx_version"
+  implementation "androidx.fragment:fragment-ktx:$fragment_ktx_version"
+  implementation "androidx.appcompat:appcompat:$appcompat_version"
+  implementation "com.google.android.material:material:$material_version"
+  implementation "androidx.preference:preference:$preference_version"
+  implementation "androidx.legacy:legacy-preference-v14:$legacy_preference_v14_version"
+  implementation "androidx.lifecycle:lifecycle-common-java8:$lifecycle_common_java8_version"
+  implementation "androidx.lifecycle:lifecycle-extensions:$lifecycle_extensions_version"
+  implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycle_viewmodel_ktx_version"
+  implementation "androidx.lifecycle:lifecycle-runtime-ktx:$lifecycle_runtime_version"
+  implementation "androidx.constraintlayout:constraintlayout:$constraint_layout_version"
+  implementation "androidx.room:room-runtime:$room_version"
+  implementation "androidx.documentfile:documentfile:$documentfile_version"
+  kapt "androidx.room:room-compiler:$room_version"
+  implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlin_coroutines_core_version"
+  implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$kotlin_coroutines_android_version"
+  testImplementation "junit:junit:$junit_version"
+  androidTestImplementation "androidx.test:runner:$runner_version"
+  androidTestImplementation "androidx.test.espresso:espresso-core:$espresso_core_version"
 }

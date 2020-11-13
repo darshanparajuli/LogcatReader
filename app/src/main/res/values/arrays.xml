@@ -1,36 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string-array name="log_content_types">
-        <item>@string/tag</item>
-        <item>@string/message</item>
-        <item>@string/date</item>
-        <item>@string/time</item>
-        <item>@string/process_id</item>
-        <item>@string/thread_id</item>
-    </string-array>
+  <string-array name="log_content_types">
+    <item>@string/tag</item>
+    <item>@string/message</item>
+    <item>@string/date</item>
+    <item>@string/time</item>
+    <item>@string/process_id</item>
+    <item>@string/thread_id</item>
+  </string-array>
 
-    <string-array name="filter_exclude">
-        <item>@string/filter</item>
-        <item>@string/exclude</item>
-    </string-array>
+  <string-array name="filter_exclude">
+    <item>@string/filter</item>
+    <item>@string/exclude</item>
+  </string-array>
 
-    <string-array name="save_location_options">
-        <item>@string/save_location_internal</item>
-        <item>@string/save_location_custom</item>
-    </string-array>
+  <string-array name="save_location_options">
+    <item>@string/save_location_internal</item>
+    <item>@string/save_location_custom</item>
+  </string-array>
 
-    <string-array name="log_levels">
-        <item>ASSERT</item>
-        <item>DEBUG</item>
-        <item>ERROR</item>
-        <item>FATAL</item>
-        <item>INFO</item>
-        <item>VERBOSE</item>
-        <item>WARNING</item>
-    </string-array>
+  <string-array name="log_levels">
+    <item>ASSERT</item>
+    <item>DEBUG</item>
+    <item>ERROR</item>
+    <item>FATAL</item>
+    <item>INFO</item>
+    <item>VERBOSE</item>
+    <item>WARNING</item>
+  </string-array>
 
-    <string-array name="export_format">
-        <item>@string/export_format_default</item>
-        <item>@string/export_format_single_line</item>
-    </string-array>
+  <string-array name="export_format">
+    <item>@string/export_format_default</item>
+    <item>@string/export_format_single_line</item>
+  </string-array>
 </resources>

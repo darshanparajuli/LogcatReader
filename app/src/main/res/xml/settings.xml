@@ -1,68 +1,68 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     android:key="pref_key_main_screen">
-    <androidx.preference.PreferenceCategory android:title="@string/pref_cat_general">
-        <androidx.preference.SwitchPreferenceCompat
-            android:defaultValue="false"
-            android:key="pref_key_general_keep_screen_on"
-            android:persistent="true"
-            android:title="@string/pref_general_keep_screen_on" />
-    </androidx.preference.PreferenceCategory>
+  <androidx.preference.PreferenceCategory android:title="@string/pref_cat_general">
+    <androidx.preference.SwitchPreferenceCompat
+        android:defaultValue="false"
+        android:key="pref_key_general_keep_screen_on"
+        android:persistent="true"
+        android:title="@string/pref_general_keep_screen_on" />
+  </androidx.preference.PreferenceCategory>
 
-    <androidx.preference.PreferenceCategory android:title="@string/pref_cat_appearance">
-        <androidx.preference.ListPreference
-            android:defaultValue="0"
-            android:dialogTitle="@string/pref_theme_title"
-            android:entries="@array/pref_appearance_theme_entries"
-            android:entryValues="@array/pref_appearance_theme_values"
-            android:key="pref_key_appearance_theme"
-            android:persistent="true"
-            android:title="@string/pref_theme_title" />
+  <androidx.preference.PreferenceCategory android:title="@string/pref_cat_appearance">
+    <androidx.preference.ListPreference
+        android:defaultValue="0"
+        android:dialogTitle="@string/pref_theme_title"
+        android:entries="@array/pref_appearance_theme_entries"
+        android:entryValues="@array/pref_appearance_theme_values"
+        android:key="pref_key_appearance_theme"
+        android:persistent="true"
+        android:title="@string/pref_theme_title" />
 
-        <androidx.preference.SwitchPreferenceCompat
-            android:defaultValue="false"
-            android:key="pref_key_appearance_use_black_theme"
-            android:persistent="true"
-            android:title="@string/pref_theme_black_theme" />
-    </androidx.preference.PreferenceCategory>
+    <androidx.preference.SwitchPreferenceCompat
+        android:defaultValue="false"
+        android:key="pref_key_appearance_use_black_theme"
+        android:persistent="true"
+        android:title="@string/pref_theme_black_theme" />
+  </androidx.preference.PreferenceCategory>
 
-    <androidx.preference.PreferenceCategory android:title="@string/logcat">
-        <androidx.preference.EditTextPreference
-            android:defaultValue="250"
-            android:dialogTitle="@string/pref_poll_interval_title"
-            android:key="pref_key_logcat_poll_interval"
-            android:persistent="true"
-            android:title="@string/pref_poll_interval_title" />
+  <androidx.preference.PreferenceCategory android:title="@string/logcat">
+    <androidx.preference.EditTextPreference
+        android:defaultValue="250"
+        android:dialogTitle="@string/pref_poll_interval_title"
+        android:key="pref_key_logcat_poll_interval"
+        android:persistent="true"
+        android:title="@string/pref_poll_interval_title" />
 
-        <androidx.preference.MultiSelectListPreference
-            android:dialogTitle="@string/pref_logcat_buffer_dialog_title"
-            android:entries="@array/pref_logcat_log_buffers"
-            android:entryValues="@array/pref_logcat_log_buffers_values"
-            android:key="pref_key_logcat_buffers"
-            android:persistent="true"
-            android:summary=""
-            android:title="@string/pref_logcat_buffer_dialog_title" />
+    <androidx.preference.MultiSelectListPreference
+        android:dialogTitle="@string/pref_logcat_buffer_dialog_title"
+        android:entries="@array/pref_logcat_log_buffers"
+        android:entryValues="@array/pref_logcat_log_buffers_values"
+        android:key="pref_key_logcat_buffers"
+        android:persistent="true"
+        android:summary=""
+        android:title="@string/pref_logcat_buffer_dialog_title" />
 
-        <androidx.preference.EditTextPreference
-            android:defaultValue="250000"
-            android:dialogTitle="@string/pref_logcat_max_recent_logs_to_keep_in_memory"
-            android:key="pref_key_logcat_max_logs"
-            android:persistent="true"
-            android:title="@string/pref_logcat_max_recent_logs_to_keep_in_memory" />
-        <androidx.preference.Preference
-            android:key="pref_key_logcat_save_location"
-            android:title="@string/save_location" />
-    </androidx.preference.PreferenceCategory>
+    <androidx.preference.EditTextPreference
+        android:defaultValue="250000"
+        android:dialogTitle="@string/pref_logcat_max_recent_logs_to_keep_in_memory"
+        android:key="pref_key_logcat_max_logs"
+        android:persistent="true"
+        android:title="@string/pref_logcat_max_recent_logs_to_keep_in_memory" />
+    <androidx.preference.Preference
+        android:key="pref_key_logcat_save_location"
+        android:title="@string/save_location" />
+  </androidx.preference.PreferenceCategory>
 
-    <androidx.preference.PreferenceCategory android:title="@string/about">
-        <androidx.preference.Preference
-            android:key="pref_key_about_github_repo"
-            android:selectable="true"
-            android:summary="@string/pref_key_about_github_repo_summary"
-            android:title="@string/pref_key_about_github_repo_title" />
-        <androidx.preference.Preference
-            android:key="pref_key_about_version_name"
-            android:selectable="false"
-            android:title="@string/app_name" />
-    </androidx.preference.PreferenceCategory>
+  <androidx.preference.PreferenceCategory android:title="@string/about">
+    <androidx.preference.Preference
+        android:key="pref_key_about_github_repo"
+        android:selectable="true"
+        android:summary="@string/pref_key_about_github_repo_summary"
+        android:title="@string/pref_key_about_github_repo_title" />
+    <androidx.preference.Preference
+        android:key="pref_key_about_version_name"
+        android:selectable="false"
+        android:title="@string/app_name" />
+  </androidx.preference.PreferenceCategory>
 </androidx.preference.PreferenceScreen>
