@@ -77,7 +77,7 @@ dependencies {
   implementation "androidx.fragment:fragment-ktx:$fragment_ktx_version"
   implementation "androidx.appcompat:appcompat:$appcompat_version"
   implementation "com.google.android.material:material:$material_version"
-  implementation "androidx.preference:preference:$preference_version"
+  implementation "androidx.preference:preference-ktx:$preference_version"
   implementation "androidx.legacy:legacy-preference-v14:$legacy_preference_v14_version"
   implementation "androidx.lifecycle:lifecycle-common-java8:$lifecycle_common_java8_version"
   implementation "androidx.lifecycle:lifecycle-extensions:$lifecycle_extensions_version"
