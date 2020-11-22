@@ -1,8 +1,10 @@
 package com.dp.logcatapp.util
 
+import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.withContext
 import java.io.BufferedReader
 import java.io.BufferedWriter
 import java.io.InputStreamReader
@@ -21,7 +23,7 @@ class SuCommander(private val cmd: String) {
   suspend fun run() = coroutineScope {
     try {
       val processBuilder = ProcessBuilder("su")
-      val process = processBuilder.start()
+      val process = withContext(IO) { processBuilder.start() }
 
       val stdoutWriter = BufferedWriter(OutputStreamWriter(process.outputStream))
       val stdinReader = BufferedReader(InputStreamReader(process.inputStream))
@@ -65,7 +67,7 @@ class SuCommander(private val cmd: String) {
 
       stdoutWriter.writeCmd("exit")
 
-      process.waitFor()
+      withContext(IO) { process.waitFor() }
       process.destroy()
 
       stderrReaderResult.await()
