@@ -3,6 +3,6 @@
     <string-array name="pref_appearance_theme_entries">
         <item>Автоматическая</item>
         <item>Светлая</item>
-        <item>Темная</item>
+        <item>Тёмная</item>
     </string-array>
 </resources>
