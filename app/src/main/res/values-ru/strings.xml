@@ -1,18 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-
-<!-- Thanks to Рамзан Эльмурзаев -->
-
 <resources>
-    <string name="app_name">Logcat Reader</string>
-    <string name="device_logs">Логи устройства</string>
-    <string name="saved_logs">Сохраненные логи</string>
-    <string name="saved_logs_action">Сохраненные логи</string>
+    <string name="device_logs">Журналы</string>
+    <string name="saved_logs">Сохранённые журналы</string>
+    <string name="saved_logs_action">Сохранённые журналы</string>
     <string name="settings">Настройки</string>
     <string name="start_recording">Начать запись</string>
     <string name="stop_recording">Остановить запись</string>
-    <string name="logcat_service_channel_name">Logcat сервис</string>
-    <string name="logcat_service">Logcat сервис</string>
+    <string name="logcat_service_channel_name">Служба Logcat</string>
+    <string name="logcat_service">Служба Logcat</string>
     <string name="press_back_again_to_exit">Нажмите ещё раз для выхода</string>
+    <string name="pref_cat_general">Общие</string>
+    <string name="pref_general_keep_screen_on">Держать экран включённым</string>
     <string name="pref_cat_appearance">Внешний вид</string>
     <string name="pref_theme_title">Тема</string>
     <string name="pref_theme_black_theme">Чёрная тема</string>
@@ -22,57 +20,70 @@
     <string name="resume">Продолжить</string>
     <string name="about">О приложении</string>
     <string name="copy_adb_command">Копировать</string>
-    <string name="copied_to_clipboard">Cкопировано</string>
+    <string name="copy_to_clipboard">Скопировать в буфер обмена</string>
+    <string name="copied_to_clipboard">Скопировано</string>
+
     <string name="save_to_file">Сохранить</string>
-    <string name="logcat">Logcat</string>
-    <string name="pref_poll_interval_title">Интервал логов</string>
+    <string name="export">Экспорт</string>
+    <string name="pref_poll_interval_title">Интервал опроса журналов</string>
     <string name="view_log">Посмотреть</string>
-    <string name="could_not_open_log_file">Не удалось открыть лог файл</string>
-    <string name="failed_to_save_logs">Не удалось сохранить логи</string>
+    <string name="could_not_open_log_file">Невозможно открыть файл журнала</string>
+    <string name="failed_to_save_logs">Невозможно сохранить журналы</string>
     <string name="nothing_to_save">Нечего сохранять</string>
     <string name="open_with">Открыть с помощью</string>
-    <string name="read_logs_permission_required"> Необходимо разрешение на чтение логов</string>
-    <string name="grant_read_logs_permission_instruction">Чтобы просматривать логи, необходимо предоставить разрешение на чтение логов. Если ваше устройство рутировано, нажмите «Предоставить». Если это не работает или ваше устройство не рутировано, подключите ваше устройство к компьютеру через usb и введите команду запуска \'adb shell pm grant com.dp.logcatapp android.permission.READ_LOGS\'. В любом случае после этого вы должны запустить приложение и удалить его из списка недавних (удалить процесс). Он должен показывать все логи устройств при следующем запуске приложения. Сообщите, если он все еще не работает, спасибо!</string>
+    <string name="read_logs_permission_required">Необходимо разрешение</string>
+    <string name="grant_read_logs_permission_instruction">"Чтобы просматривать журналы, необходимо предоставить разрешение на их чтение.
+
+ 1. Подключите устройство к компьютеру через USB
+ 2. Выполните команду:
+
+ adb shell pm grant com.dp.logcatapp android.permission.READ_LOGS
+
+ 3. Закройте приложение (двойное нажатие кнопки «Назад») и смахните его из «Недавних».
+
+ Пожалуйста, сообщите, если возникнут какие-либо проблемы. Спасибо!"</string>
+    </string>
     <string name="grant_read_logs_permission_action_using_root">Предоставить</string>
     <string name="failed">Не удалось</string>
     <string name="pref_logcat_buffer_dialog_title">Буферы</string>
-    <string name="restarting_logcat">Перезапуск logcat</string>
+    <string name="restarting_logcat">Перезапуск Logcat</string>
     <string name="saved_as_filename">Сохранено как %s</string>
-    <string name="kill">Удалить процесс</string>
+    <string name="kill">Завершить процесс</string>
     <string name="app_kill_reason">Разрешение было предоставлено. Logcat Reader нужно закрыть и открыть вручную, потому что автоматический перезапуск приложения не будет работать в этом случае. Это нужно сделать только один раз.</string>
+    </string>
     <string name="started_recording">Запись начата</string>
-    <string name="log_priority">Приоритет логов</string>
-    <string name="pref_key_about_github_repo_title">GitHub репозиторий</string>
-    <string name="pref_key_about_github_repo_summary">Посмотреть код, задать вопрос, и т.д.</string>
+    <string name="log_priority">Приоритет журналов</string>
+    <string name="pref_key_about_github_repo_title">Репозиторий GitHub</string>
+    <string name="pref_key_about_github_repo_summary">Посмотреть код, задать вопрос и т.д.</string>
     <string name="filter">Фильтр</string>
     <string name="empty">Пусто</string>
     <string name="delete">Удалить</string>
     <string name="share">Поделиться</string>
     <string name="save">Сохранить</string>
     <string name="error">Ошибка</string>
-    <string name="saved">Сохраненный</string>
+    <string name="saved">Сохранённый</string>
     <string name="error_saving">Ошибка при сохранении</string>
     <string name="external_storage_not_mounted_error">Внешнее хранилище не установлено</string>
-    <string name="pref_logcat_max_recent_logs_to_keep_in_memory">Макс. кол-во последних логов для хранения в памяти</string>
-    <string name="not_a_valid_number">Недействительный номер</string>
+    <string name="pref_logcat_max_recent_logs_to_keep_in_memory">Максимальное количество хранящихся в памяти последних журналов</string>
+    <string name="not_a_valid_number">Неподходящее число</string>
     <string name="cannot_be_less_than_1000">Не может быть меньше 1000</string>
     <string name="value_must_be_greater_than_0">Значение должно быть больше 0</string>
-    <string name="value_must_be_a_positive_integer">Значение должно быть целым числом</string>
+    <string name="value_must_be_a_positive_integer">Значение должно быть положительным целым числом</string>
     <string name="rename">Переименовать</string>
     <string name="log_count_fmt">%d журнал</string>
-    <string name="log_count_fmt_plural">%d журналы</string>
+    <string name="log_count_fmt_plural">%d журналов</string>
     <string name="select_all">Выбрать все</string>
     <string name="saving">Сохранение…</string>
-    <string name="save_location">Расположение логов</string>
-    <string name="save_location_internal">Внутренняя память приложения</string>
+    <string name="save_location">Расположение журналов</string>
+    <string name="save_location_internal">Внутренняя память</string>
     <string name="save_location_custom">Выбрать свою папку</string>
     <string name="err_msg_external_storage_not_writable">Внешнее хранилище недоступно для записи</string>
     <string name="select">Выбрать</string>
     <string name="filters">Фильтры</string>
-    <string name="keyword">"дескриптор"</string>
     <string name="add">Добавить</string>
-    <string name="tag">Тег</string>
-    <string name="exclude">исключать</string>
+    <string name="keyword">Ключевое слово</string>
+    <string name="tag">Метка</string>
+    <string name="exclude">Исключать</string>
     <string name="exclusions">Исключения</string>
     <string name="restart_logcat">Перезапустить Logcat</string>
     <string name="exclusion">Исключения</string>
@@ -81,20 +92,24 @@
     <string name="message">Сообщение</string>
     <string name="date">Дата</string>
     <string name="time">Время</string>
-    <string name="unable_to_share">Не удалось поделиться</string>
-    <string name="pref_cat_general">Общие</string>
-    <string name="pref_general_keep_screen_on">Оставить экран включенным</string>
-    <string name="copy_to_clipboard">Скопировать в буфер обмена</string>
-    <string name="success">Успех</string>
+    <string name="unable_to_share">Невозможно поделиться</string>
+    <string name="permission_instruction0">Следуйте инструкциям ниже, чтобы предоставить разрешение READ_LOGS (нужно сделать только один раз):</string>
+    <string name="permission_instruction1">1. Подключите устройство к компьютеру с установленными ADB tools.</string>
+    <string name="permission_instruction2">2. Выполните следующую команду (одной строкой):</string>
+    <string name="permission_instruction4">3. Закройте приложение двойным нажатием кнопки «Назад» и смахните его из «Недавних».</string>
+    <string name="permission_instruction5">4. Снова запустите приложение, теперь вы должны увидеть все журналы.</string>
+    <string name="permission_instruction6">Пожалуйста, сообщите, если возникнут какие-либо проблемы. Спасибо!</string>
+    <string name="success">Успешно</string>
+    <string name="fail">Ошибка</string>
+    <string name="manual_method">Вручную</string>
+    <string name="read_logs_permission_required_msg">Необходимо разрешение READ_LOGS.\n\nЕсли устройство имеет root-доступ, выберите «Root», в противном случае, чтобы предоставить разрешение с помощью ADB, выберите «Вручную».\n\nЭто нужно сделать только один раз!</string>
+    <string name="root_method">Root</string>
+    <string name="asking_permission_for_root_access">Запрос root-доступа…</string>
+    <string name="app_restart_dialog_title">Требуется перезапуск приложения</string>
+    <string name="app_restart_dialog_msg_body">Нажатие «ОК» закроет приложение. Теперь вы должны увидеть полный список журналов.</string>
     <string name="select_export_format">Выберите формат экспорта</string>
-    <string name="export">Экспорт</string>
     <string name="export_format_default">По умолчанию</string>
     <string name="export_format_single_line">Одна строка</string>
-    <string name="fail">Неудача</string>
-    <string name="manual_method">Ручной метод</string>
-    <string name="root_method">Корневой способ</string>
-    <string name="app_restart_dialog_title">Требуется перезапуск приложения</string>
-    <string name="asking_permission_for_root_access">Запрос разрешения на корневой доступ…</string>
-    <string name="app_restart_dialog_msg_body">Нажатие OK убьет приложение. Теперь вы увидите полный список журналов.</string>
-
+    <string name="error_opening_source">Ошибка открытия источника</string>
+    <string name="unsupported_source">Неподдерживаемый источник</string>
 </resources>
