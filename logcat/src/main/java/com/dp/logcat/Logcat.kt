@@ -547,7 +547,7 @@ class Logcat(initialCapacity: Int = INITIAL_LOG_CAPACITY) : Closeable {
       val result = mutableSetOf<String>()
 
       val stdoutList = mutableListOf<String>()
-      CommandUtils.runCmd(cmd = arrayOf("logcat", "-g"), stdoutList = stdoutList)
+      CommandUtils.runCmd(cmd = listOf("logcat", "-g"), stdoutList = stdoutList)
 
       for (s in stdoutList) {
         val colonIndex = s.indexOf(":")
@@ -567,68 +567,61 @@ class Logcat(initialCapacity: Int = INITIAL_LOG_CAPACITY) : Closeable {
       return result
     }
 
-    private fun parseBufferNames(
-      s: String,
-      names: MutableSet<String>
-    ): Boolean {
-      var startIndex = s.indexOf("'")
-      if (startIndex == -1) {
-        return true
-      }
-
-      var nextIndex = s.indexOf("'", startIndex + 1)
-      if (nextIndex == -1) {
-        return true
-      }
-
-      val periodIndex = s.indexOf(".")
-      while (periodIndex == -1 || (startIndex < periodIndex && nextIndex < periodIndex)) {
-        val name = s.substring(startIndex + 1, nextIndex)
-        if (name != "all" && name != "default") {
-          names += name
-        }
-
-        startIndex = s.indexOf("'", nextIndex + 1)
-        if (startIndex == -1) {
-          break
-        }
-
-        nextIndex = s.indexOf("'", startIndex + 1)
-        if (nextIndex == -1) {
-          break
-        }
-      }
-
-      return periodIndex != -1
-    }
-
     private fun getAvailableBuffers(): Array<String> {
-      val result = mutableSetOf<String>()
-
       val stdoutList = mutableListOf<String>()
       CommandUtils.runCmd(
-        cmd = arrayOf("logcat", "-h"),
+        cmd = listOf("logcat", "-h"),
         stdoutList = stdoutList, redirectStderr = true
       )
 
-      var bFound = false
-      for (s in stdoutList) {
-        val trimmed = s.trim()
-        if (bFound) {
-          if (parseBufferNames(trimmed, result)) {
-            break
-          }
-        } else {
-          if (trimmed.startsWith("-b")) {
-            bFound = true
-            if (parseBufferNames(trimmed, result)) {
-              break
-            }
+      val helpText = getBufferHelpText(stdoutList)
+
+      val buffers = mutableListOf<String>()
+      if (helpText.firstOrNull()?.run {
+          contains("request alternate ring buffer", ignoreCase = true) &&
+            endsWith(":")
+        } == true
+      ) {
+        if (helpText.size >= 2) {
+          buffers += helpText[1].split(" ")
+        }
+      }
+
+      val pattern = "'[a-z]+'".toRegex()
+      for (s in helpText) {
+        pattern.findAll(s).forEach { match ->
+          match.value.let {
+            buffers += it.substring(1, it.length - 1)
           }
         }
       }
 
-      return result.toTypedArray().sortedArray()
+      buffers -= "default"
+      buffers -= "all"
+
+      return buffers.toTypedArray().sortedArray()
+    }
+
+    private fun getBufferHelpText(stdout: List<String>): List<String> {
+      val startPattern = "^\\s+-b,?.*<buffer>\\s+".toRegex()
+      val start = stdout.indexOfFirst {
+        startPattern.find(it)?.range?.start == 0
+      }
+      if (start == -1) {
+        return emptyList()
+      }
+
+      val endPattern = "^\\s+-[a-zA-Z],?\\s+".toRegex()
+      var end = stdout.subList(start + 1, stdout.size).indexOfFirst {
+        endPattern.find(it)?.range?.start == 0
+      }
+      if (end == -1) {
+        end = stdout.size
+      } else {
+        end += start + 1
+      }
+
+      return stdout.subList(start, end).map { it.trim() }.toList()
     }
   }
 }

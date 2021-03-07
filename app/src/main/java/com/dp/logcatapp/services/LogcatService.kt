@@ -19,6 +19,7 @@ import com.dp.logcatapp.activities.MainActivity
 import com.dp.logcatapp.util.PreferenceKeys
 import com.dp.logcatapp.util.getDefaultSharedPreferences
 import com.dp.logcatapp.util.showToast
+import java.util.Locale
 
 class LogcatService : BaseService() {
 
@@ -221,7 +222,18 @@ class LogcatService : BaseService() {
     logcat.setPollInterval(pollInterval)
 
     val buffers = Logcat.AVAILABLE_BUFFERS
-    logcat.logcatBuffers = bufferValues.map { e -> buffers[e.toInt()].toLowerCase() }.toSet()
+    logcat.logcatBuffers = bufferValues.mapNotNull { e ->
+      buffers.getOrNull(e.toInt())
+        ?.toLowerCase(Locale.getDefault())
+    }.toSet().ifEmpty {
+      sharedPreferences.edit {
+        putStringSet(
+          PreferenceKeys.Logcat.KEY_BUFFERS,
+          PreferenceKeys.Logcat.Default.BUFFERS
+        )
+      }
+      Logcat.DEFAULT_BUFFERS
+    }
     logcat.start()
   }
 }

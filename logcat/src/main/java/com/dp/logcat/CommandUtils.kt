@@ -7,12 +7,12 @@ import kotlin.concurrent.thread
 object CommandUtils {
 
   fun runCmd(
-    vararg cmd: String,
+    cmd: List<String>,
     stdoutList: MutableList<String>? = null,
     stderrList: MutableList<String>? = null,
     redirectStderr: Boolean = false
   ): Int {
-    val processBuilder = ProcessBuilder(*cmd)
+    val processBuilder = ProcessBuilder(cmd)
       .redirectErrorStream(redirectStderr)
     var process: Process? = null
     try {
