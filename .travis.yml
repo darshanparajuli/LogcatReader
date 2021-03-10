@@ -1,11 +1,22 @@
 language: android
 dist: trusty
+sudo: true
+
 android:
   components:
-    - tools # to get the new `repository-11.xml`
-    - tools # see https://github.com/travis-ci/travis-ci/issues/6040#issuecomment-219367943)
+    - tools
     - platform-tools
-    - build-tools-29.0.3
-    - android-29
+    - tools
+    - extra-android-m2repository
+  licenses:
+    - 'android-sdk-preview-license-.+'
+    - 'android-sdk-license-.+'
+    - 'google-gdk-license-.+'
+
+before_install:
+  - touch $HOME/.android/repositories.cfg
+  - yes | sdkmanager "platforms;android-30"
+  - yes | sdkmanager "build-tools;30.0.3"
+
 script:
-  - ./gradlew assembleDebug test
+  - ./gradlew clean test
