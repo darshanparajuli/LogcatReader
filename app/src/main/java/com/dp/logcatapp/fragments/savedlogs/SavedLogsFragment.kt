@@ -19,6 +19,7 @@ import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.Toolbar
+import androidx.core.content.ContextCompat.getColor
 import androidx.core.net.toFile
 import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
@@ -42,6 +43,9 @@ import com.dp.logcatapp.util.closeQuietly
 import com.dp.logcatapp.util.getAndroidViewModel
 import com.dp.logcatapp.util.inflateLayout
 import com.dp.logcatapp.util.showToast
+import com.dp.logcatapp.views.IndeterminateProgressSnackBar
+import com.google.android.material.snackbar.Snackbar
+import com.google.android.material.snackbar.Snackbar.LENGTH_SHORT
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -67,6 +71,7 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
   private lateinit var recyclerViewAdapter: MyRecyclerViewAdapter
   private lateinit var linearLayoutManager: LinearLayoutManager
   private lateinit var progressBar: ProgressBar
+  private lateinit var snackBarProgress: IndeterminateProgressSnackBar
 
   private var exportFormat: ExportFormat? = null
 
@@ -100,6 +105,7 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
     recyclerView.itemAnimator = null
     recyclerView.layoutManager = linearLayoutManager
     recyclerView.adapter = recyclerViewAdapter
+    snackBarProgress = IndeterminateProgressSnackBar(view, getString(R.string.saving))
 
     parentFragmentManager.findFragmentByTag(RenameDialogFragment.TAG)
       ?.setTargetFragment(this, 0)
@@ -522,7 +528,8 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
     src: InputStream,
     dest: OutputStream
   ) {
-    scope.launch {
+    scope.launchWhenResumed {
+      snackBarProgress.show()
       val result = withContext(IO) {
         try {
           when (this@SavedLogsFragment.exportFormat ?: return@withContext false) {
@@ -554,11 +561,16 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
         }
       }
 
-      activity?.let {
+      snackBarProgress.dismiss()
+      view?.let {
         if (result) {
-          it.showToast(it.getString(R.string.saved))
+          Snackbar.make(it, R.string.saved, LENGTH_SHORT)
+            .show()
+          (activity as? SavedLogsActivity)?.closeCabToolbar()
         } else {
-          it.showToast(it.getString(R.string.error_saving))
+          Snackbar.make(it, R.string.error_saving, LENGTH_SHORT)
+            .setBackgroundTint(getColor(requireContext(), R.color.color_primary_error))
+            .show()
         }
       }
     }
