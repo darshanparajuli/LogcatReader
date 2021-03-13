@@ -752,6 +752,11 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
   private class LogFilter(filterInfo: FilterInfo) : Filter {
     private val type = filterInfo.type
     private val content = filterInfo.content
+    private val priorities: Set<String> = if (type == FilterType.LOG_LEVELS) {
+      filterInfo.content.split(",").toSet()
+    } else {
+      emptySet()
+    }
 
     override fun apply(log: Log): Boolean {
       if (content.isEmpty()) {
@@ -759,7 +764,9 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
       }
 
       return when (type) {
-        FilterType.LOG_LEVELS -> log.priority == content
+        FilterType.LOG_LEVELS -> {
+          log.priority in priorities
+        }
         FilterType.KEYWORD -> log.msg.containsIgnoreCase(content)
         FilterType.TAG -> log.tag.containsIgnoreCase(content)
         FilterType.PID -> log.pid.containsIgnoreCase(content)

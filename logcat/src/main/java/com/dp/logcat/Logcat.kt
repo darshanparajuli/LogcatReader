@@ -104,7 +104,9 @@ class Logcat(initialCapacity: Int = INITIAL_LOG_CAPACITY) : Closeable {
         logs.add(pendingLogs)
 
         val filteredLogs = pendingLogs.filter { e ->
-          !exclusions.values.any { it.apply(e) } && filters.values.all { it.apply(e) }
+          !exclusions.values.any { it.apply(e) }
+        }.filter { e ->
+          filters.values.all { it.apply(e) }
         }
 
         if (filteredLogs.isNotEmpty()) {
