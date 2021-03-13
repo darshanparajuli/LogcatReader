@@ -90,7 +90,7 @@ class LogcatService : BaseService() {
     )
 
     val exitAction = NotificationCompat.Action.Builder(
-      R.drawable.ic_clear_white_18dp,
+      R.drawable.ic_clear_white_24dp,
       getString(R.string.exit), exitPendingIntent
     )
       .build()
@@ -117,7 +117,7 @@ class LogcatService : BaseService() {
         stopRecordingIntent, PendingIntent.FLAG_UPDATE_CURRENT
       )
       val stopRecordingAction = NotificationCompat.Action.Builder(
-        R.drawable.ic_stop_white_18dp,
+        R.drawable.ic_stop_white_24dp,
         getString(R.string.stop_recording), stopRecordingPendingIntent
       )
         .build()
