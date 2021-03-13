@@ -5,6 +5,7 @@ import android.os.Handler
 import android.os.Looper
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import com.dp.logcatapp.util.mainHandler
 
 open class BaseFragment : Fragment() {
 
@@ -16,7 +17,7 @@ open class BaseFragment : Fragment() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    handler = Handler()
+    handler = mainHandler()
   }
 
   override fun onDestroy() {

@@ -11,6 +11,7 @@ import android.graphics.Typeface
 import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.os.Build
+import android.os.Build.VERSION.SDK_INT
 import android.provider.OpenableColumns
 import android.util.TypedValue
 import android.view.Display
@@ -99,7 +100,7 @@ fun Context.showToast(
   length: Int = Toast.LENGTH_SHORT
 ) {
   val toast = Toast.makeText(this, msg, length)
-  if (Build.VERSION.SDK_INT <= 25) {
+  if (SDK_INT <= 25) {
     try {
       val field = View::class.java.getDeclaredField("mContext")
       field.isAccessible = true
@@ -118,15 +119,20 @@ private class ToastViewContextWrapper(base: Context) : ContextWrapper(base) {
 private class ToastViewApplicationContextWrapper(base: Context) : ContextWrapper(base) {
   override fun getSystemService(name: String): Any {
     return if (name == Context.WINDOW_SERVICE) {
-      ToastWindowManager(baseContext.getSystemService(name) as WindowManager)
+      ToastWindowManager(baseContext, baseContext.getSystemService(name) as WindowManager)
     } else {
       super.getSystemService(name)
     }
   }
 }
 
-private class ToastWindowManager(val base: WindowManager) : WindowManager {
-  override fun getDefaultDisplay(): Display = base.defaultDisplay
+private class ToastWindowManager(
+  private val context: Context,
+  private val base: WindowManager
+) : WindowManager {
+  @Suppress("DEPRECATION")
+  override fun getDefaultDisplay(): Display =
+    if (SDK_INT >= 30) context.display!! else base.defaultDisplay
 
   override fun addView(
     view: View?,

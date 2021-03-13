@@ -1,14 +1,14 @@
 package com.dp.logcatapp.fragments.base
 
-import android.os.Handler
 import android.os.Looper
 import android.view.View
 import android.view.animation.Animation
 import android.view.animation.AnimationUtils
 import androidx.fragment.app.DialogFragment
+import com.dp.logcatapp.util.mainHandler
 
 open class BaseDialogFragment : DialogFragment() {
-  private val handler = Handler()
+  private val handler = mainHandler()
 
   override fun onCreateAnimation(
     transit: Int,
@@ -43,6 +43,7 @@ open class BaseDialogFragment : DialogFragment() {
   }
 
   override fun onDestroyView() {
+    @Suppress("DEPRECATION")
     if (dialog != null && retainInstance)
       dialog?.setDismissMessage(null)
     super.onDestroyView()

@@ -16,6 +16,7 @@ import androidx.core.app.TaskStackBuilder
 import androidx.core.view.ViewCompat
 import androidx.preference.PreferenceManager
 import com.dp.logcatapp.R
+import com.dp.logcatapp.util.mainHandler
 import com.dp.logcatapp.util.setTheme
 
 @SuppressLint("Registered")
@@ -29,7 +30,7 @@ abstract class BaseActivityWithToolbar : AppCompatActivity() {
 
   lateinit var toolbar: Toolbar
     private set
-  protected val handler = Handler()
+  protected val handler = mainHandler()
 
   override fun onCreate(savedInstanceState: Bundle?) {
     PreferenceManager.setDefaultValues(this, R.xml.settings, false)
@@ -56,6 +57,7 @@ abstract class BaseActivityWithToolbar : AppCompatActivity() {
     supportActionBar?.title = getToolbarTitle()
   }
 
+  @Suppress("DEPRECATION")
   private fun setAppBarPaddingForKitkat(viewGroup: ViewGroup) {
     val dm = DisplayMetrics()
     windowManager.defaultDisplay.getMetrics(dm)
