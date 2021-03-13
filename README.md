@@ -18,3 +18,7 @@ Use ADB to grant `android.permission.READ_LOGS` to LogCatReader.
 ```sh
 adb shell "pm grant com.dp.logcatapp android.permission.READ_LOGS && am force-stop com.dp.logcatapp"
 ```
+
+## Contributing
+
+Pull requests are welcome! Please use [Square's code style](https://github.com/square/java-code-styles) for formatting. 🙏
