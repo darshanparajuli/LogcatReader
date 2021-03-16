@@ -87,7 +87,7 @@
   <string name="exclusions">排除</string>
   <string name="restart_logcat">重启 logcat</string>
   <string name="exclusion">排除</string>
-  <string name="clear">清楚</string>
+  <string name="clear">清除</string>
   <string name="process_id" translatable="false">PID</string>
   <string name="thread_id" translatable="false">TID</string>
   <string name="log_level">Log 等级</string>
