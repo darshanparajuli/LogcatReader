@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string-array name="pref_appearance_theme_entries">
+    <item>Adaptar do sistema</item>
+    <item>Tema claro</item>
+    <item>Tema escuro</item>
+  </string-array>
+  
+</resources>
