@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="app_name">Logcat Reader</string>
+  <string name="device_logs">Registros disponíveis</string>
+  <string name="saved_logs">Registros salvos</string>
+  <string name="saved_logs_action">Registros salvos</string>
+  <string name="settings">Configurações</string>
+  <string name="start_recording">Comece a registrar</string>
+  <string name="stop_recording">Parar de registrar</string>
+  <string name="logcat_service_channel_name">Serviço de Logcat</string>
+  <string name="logcat_service">Serviço de Logcat</string>
+  <string name="press_back_again_to_exit">Toque novamente para sair</string>
+  <string name="pref_cat_general">Geral</string>
+  <string name="pref_general_keep_screen_on">Mantenha a tela ligada</string>
+  <string name="pref_cat_appearance">Aparência</string>
+  <string name="pref_theme_title">Tema</string>
+  <string name="pref_theme_black_theme">Tema super escuro</string>
+  <string name="exit">Sair</string>
+  <string name="search">Procura</string>
+  <string name="pause">Pausar</string>
+  <string name="resume">Retomar</string>
+  <string name="about">Sobre</string>
+  <string name="copy_adb_command">Copiar comando para o ADB</string>
+  <string name="copy_to_clipboard">Copiar ao Clipboard</string>
+  <string name="copied_to_clipboard">Copiado</string>
+
+  <string name="save_to_file">Salvar</string>
+  <string name="export">Exportar</string>
+  <string name="logcat">Logcat</string>
+  <string name="pref_poll_interval_title">Intervalo de registro</string>
+  <string name="view_log">Ver</string>
+  <string name="could_not_open_log_file">Não foi possível abrir o arquivo de registro</string>
+  <string name="failed_to_save_logs">Falha ao salvar os registros</string>
+  <string name="nothing_to_save">Nada para salvar</string>
+  <string name="open_with">Abrir com</string>
+  <string name="read_logs_permission_required">Permissão necessária</string>
+  <string name="grant_read_logs_permission_instruction">Para ver todos os registros,
+        a permissão READ_LOGS deve ser concedida.\n\n
+        1. Por favor, conecte o aparelho ao seu computador via usb\n
+        2. Execute o comando:\n\n
+        adb shell pm grant com.dp.logcatapp android.permission.READ_LOGS\n\n
+        3. Feche o App (clique 2 vezes no botão de voltar), e removê-lo dos Recentes.\n\n
+        Se tiver algum problema, avise-me, obrigado!
+    </string>
+  <string name="grant_read_logs_permission_action_using_root">Conceder</string>
+  <string name="failed">Falha</string>
+  <string name="pref_logcat_buffer_dialog_title">Buffers</string>
+  <string name="restarting_logcat">Reiniciando o Logcat</string>
+  <string name="saved_as_filename">Salvo como %s</string>
+  <string name="kill">Terminar</string>
+  <string name="app_kill_reason">A permissão foi concedida. Logcat Reader precisa ser terminado
+                e reaberto manualmente porque neste caso o reinício normal do App não funcionará.
+        Isto precisa ser feito apenas uma vez.
+    </string>
+  <string name="started_recording">Começou a registrar</string>
+  <string name="log_priority">Prioridade de registro</string>
+  <string name="pref_key_about_github_repo_title">Repositório no GitHub</string>
+  <string name="pref_key_about_github_repo_summary">Ver fonte, criar Issues, etc</string>
+  <string name="filter">Filtrar</string>
+  <string name="empty">Vazio</string>
+  <string name="delete">Excluir</string>
+  <string name="share">Compartilhar</string>
+  <string name="save">Salvar</string>
+  <string name="error">Erro</string>
+  <string name="saved">Salvo</string>
+  <string name="error_saving">Erro ao salvar</string>
+  <string name="external_storage_not_mounted_error">A memória externa não é montada</string>
+  <string name="pref_logcat_max_recent_logs_to_keep_in_memory">
+        Max. de registros recentes para ser mantidos em memória
+    </string>
+  <string name="not_a_valid_number">Não é um número válido</string>
+  <string name="cannot_be_less_than_1000">Não pode ser inferior a 1000</string>
+  <string name="value_must_be_greater_than_0">O valor deve ser maior que 0</string>
+  <string name="value_must_be_a_positive_integer">Deve ser um número inteiro positivo</string>
+  <string name="rename">Renomear</string>
+  <string name="log_count_fmt">%d registro</string>
+  <string name="log_count_fmt_plural">%d registros</string>
+  <string name="select_all">Selecione tudo</string>
+  <string name="saving">Salvando…</string>
+  <string name="save_location">Salvar localização</string>
+  <string name="save_location_internal">Interno</string>
+  <string name="save_location_custom">Personalizado</string>
+  <string name="err_msg_external_storage_not_writable">Não é possível salvar na memória externa</string>
+  <string name="select">Selecione</string>
+  <string name="filters">Filtros</string>
+  <string name="add">Adicionar</string>
+  <string name="keyword">Palavra-chave</string>
+  <string name="tag">ID</string>
+  <string name="exclude">Excluir</string>
+  <string name="exclusions">Exclusões</string>
+  <string name="restart_logcat">Reiniciar Logcat</string>
+  <string name="exclusion">Exclusão</string>
+  <string name="clear">Limpar</string>  
+  <string name="log_level">Nível de registro</string>
+  <string name="message">Mensagem</string>
+  <string name="date">Data</string>
+  <string name="time">Tempo</string>
+  <string name="unable_to_share">Impossível compartilhar</string>
+  <string name="permission_instruction0">Por favor, siga os passos abaixo para conceder a permissão de READ_LOGS (precisa ser feito apenas uma vez):</string>
+  <string name="permission_instruction1">1. Conecte o aparelho a um computador com ferramentas de ADB instaladas.</string>
+  <string name="permission_instruction2">2. Execute o seguinte comando (linha única):</string>
+  <string name="permission_instruction3">adb shell pm grant com.dp.logcatapp android.permission.READ_LOGS</string>
+  <string name="permission_instruction4">3. Feche o App clicando dois vezes no botão de voltar, e removê-lo dos Recentes.</string>
+  <string name="permission_instruction5">4. Abra o App novamente, e agora deveria ver todos os registros.</string>
+  <string name="permission_instruction6">Se tiver algum problema, avise-me, obrigado!</string>
+  <string name="success">Sucesso</string>
+  <string name="fail">Falha</string>
+  <string name="manual_method">Método manual</string>
+  <string name="read_logs_permission_required_msg">"A permissão de READ_LOGS é necessária.\n\nSe seu aparelho estiver com Root, selecione o 'Método Root', caso contrário, selecione o 'Método Manual' e manualmente conceda a permissão usando ferramentas de ADB.\n\nIsso precisa ser feito apenas uma vez!"</string>
+  <string name="root_method">Método Root</string>
+  <string name="asking_permission_for_root_access">Pedindo a permissão para o acesso ROOT…</string>
+  <string name="app_restart_dialog_title">Reinício do App necessário</string>
+  <string name="app_restart_dialog_msg_body">Ao clicar no OK o App será terminado. A partir de agora você deveria ver uma lista completa de registros.</string>
+  <string name="select_export_format">Selecione o formato de exportação</string>
+  <string name="export_format_default">Padrão</string>
+  <string name="export_format_single_line">Linha única</string>
+  <string name="error_opening_source">Erro ao abrir a fonte</string>
+  <string name="unsupported_source">Fonte não suportada</string>
+</resources>
