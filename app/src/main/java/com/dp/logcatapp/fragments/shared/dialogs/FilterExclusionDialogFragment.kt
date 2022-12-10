@@ -9,6 +9,7 @@ import com.dp.logcat.Log
 import com.dp.logcatapp.R
 import com.dp.logcatapp.activities.FiltersActivity
 import com.dp.logcatapp.fragments.base.BaseDialogFragment
+import com.dp.logcatapp.util.getParcelableCompat
 
 class FilterExclusionDialogFragment : BaseDialogFragment(), DialogInterface.OnClickListener {
 
@@ -42,7 +43,7 @@ class FilterExclusionDialogFragment : BaseDialogFragment(), DialogInterface.OnCl
     dialog: DialogInterface,
     which: Int
   ) {
-    val log = requireArguments().getParcelable<Log>(KEY_LOG)!!
+    val log = requireArguments().getParcelableCompat<Log>(KEY_LOG)!!
     when (which) {
       LogContentType.FILTER.ordinal -> moveToFilterActivity(log, false)
       LogContentType.EXCLUDE.ordinal -> moveToFilterActivity(log, true)

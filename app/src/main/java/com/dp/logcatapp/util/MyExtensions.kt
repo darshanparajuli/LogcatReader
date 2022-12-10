@@ -10,8 +10,10 @@ import android.content.SharedPreferences
 import android.graphics.Typeface
 import android.graphics.drawable.Drawable
 import android.net.Uri
-import android.os.Build
 import android.os.Build.VERSION.SDK_INT
+import android.os.Build.VERSION_CODES.TIRAMISU
+import android.os.Bundle
+import android.os.Parcelable
 import android.provider.OpenableColumns
 import android.util.TypedValue
 import android.view.Display
@@ -34,6 +36,7 @@ import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
 import java.util.Calendar
+import java.util.Locale
 
 //// BEGIN Activity
 
@@ -227,7 +230,12 @@ fun Context.getFileNameFromUri(uri: Uri): String {
     val cursor = contentResolver.query(uri, null, null, null, null)
     name = cursor?.use {
       if (it.moveToFirst()) {
-        it.getString(it.getColumnIndex(OpenableColumns.DISPLAY_NAME))
+        val index = it.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+        if (index != -1) {
+          it.getString(index)
+        } else {
+          null
+        }
       } else {
         null
       }
@@ -257,7 +265,8 @@ fun Context.inflateLayout(
 //// BEGIN String
 
 @SuppressLint("DefaultLocale")
-fun String.containsIgnoreCase(other: String) = toLowerCase().contains(other.toLowerCase())
+fun String.containsIgnoreCase(other: String) =
+  lowercase(Locale.getDefault()).contains(other.lowercase(Locale.getDefault()))
 
 //// END String
 
@@ -274,6 +283,15 @@ fun OutputStream.closeQuietly() {
   try {
     close()
   } catch (e: IOException) {
+  }
+}
+
+inline fun <reified T : Parcelable> Bundle.getParcelableCompat(key: String): T? {
+  if (SDK_INT >= TIRAMISU) {
+    return getParcelable(key, T::class.java)
+  } else {
+    @Suppress("DEPRECATION")
+    return getParcelable(key)
   }
 }
 

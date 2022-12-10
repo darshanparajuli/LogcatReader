@@ -50,7 +50,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
   }
 
   private fun setupAppearanceCategory() {
-    val sharedPrefs = preferenceScreen.sharedPreferences
+    val sharedPrefs = preferenceScreen.sharedPreferences!!
     val themePref = findPreference<ListPreference>(PreferenceKeys.Appearance.KEY_THEME)!!
     val useBlackThemePref =
       findPreference<Preference>(PreferenceKeys.Appearance.KEY_USE_BLACK_THEME)!!
@@ -91,7 +91,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
     val prefBuffers = findPreference<MultiSelectListPreference>(PreferenceKeys.Logcat.KEY_BUFFERS)!!
     val prefMaxLogs = findPreference<Preference>(PreferenceKeys.Logcat.KEY_MAX_LOGS)!!
 
-    prefPollInterval.summary = preferenceScreen.sharedPreferences
+    prefPollInterval.summary = preferenceScreen.sharedPreferences!!
       .getString(
         PreferenceKeys.Logcat.KEY_POLL_INTERVAL,
         PreferenceKeys.Logcat.Default.POLL_INTERVAL
@@ -119,7 +119,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
     val availableBuffers = Logcat.AVAILABLE_BUFFERS
     val defaultBuffers = PreferenceKeys.Logcat.Default.BUFFERS
     if (availableBuffers.isNotEmpty() && defaultBuffers.isNotEmpty()) {
-      val bufferValues = preferenceScreen.sharedPreferences
+      val bufferValues = preferenceScreen.sharedPreferences!!
         .getStringSet(PreferenceKeys.Logcat.KEY_BUFFERS, defaultBuffers)!!
 
       val toSummary = { values: Set<String> ->
@@ -153,7 +153,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
       prefBuffers.isVisible = false
     }
 
-    val maxLogs = preferenceScreen.sharedPreferences.getString(
+    val maxLogs = preferenceScreen.sharedPreferences!!.getString(
       PreferenceKeys.Logcat.KEY_MAX_LOGS,
       PreferenceKeys.Logcat.Default.MAX_LOGS
     )!!.trim().toInt()
@@ -163,7 +163,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
       .OnPreferenceChangeListener callback@{ preference, newValue ->
         val activity = requireActivity()
         try {
-          val oldValue = preferenceScreen.sharedPreferences.getString(
+          val oldValue = preferenceScreen.sharedPreferences!!.getString(
             PreferenceKeys.Logcat.KEY_MAX_LOGS,
             PreferenceKeys.Logcat.Default.MAX_LOGS
           )!!.trim().toInt()
@@ -190,8 +190,8 @@ class SettingsFragment : PreferenceFragmentCompat() {
   }
 
   private fun setupSaveLocationOption() {
-    prefSaveLocation = findPreference<Preference>(PreferenceKeys.Logcat.KEY_SAVE_LOCATION)!!
-    val saveLocation = preferenceScreen.sharedPreferences.getString(
+    prefSaveLocation = findPreference(PreferenceKeys.Logcat.KEY_SAVE_LOCATION)!!
+    val saveLocation = preferenceScreen.sharedPreferences!!.getString(
       PreferenceKeys.Logcat.KEY_SAVE_LOCATION,
       PreferenceKeys.Logcat.Default.SAVE_LOCATION
     )!!.trim()
@@ -250,7 +250,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
         return
       }
 
-      preferenceScreen.sharedPreferences.edit {
+      preferenceScreen.sharedPreferences!!.edit {
         putString(PreferenceKeys.Logcat.KEY_SAVE_LOCATION, file.absolutePath)
       }
       prefSaveLocation.summary = "%s/%s".format(
@@ -311,12 +311,12 @@ class SettingsFragment : PreferenceFragmentCompat() {
       SAVE_LOCATION_REQ -> {
         val uri = data?.data
         if (uri != null) {
-          activity!!.contentResolver.takePersistableUriPermission(
+          requireActivity().contentResolver.takePersistableUriPermission(
             uri,
             Intent.FLAG_GRANT_READ_URI_PERMISSION or
               Intent.FLAG_GRANT_WRITE_URI_PERMISSION
           )
-          preferenceScreen.sharedPreferences.edit {
+          preferenceScreen.sharedPreferences!!.edit {
             putString(
               PreferenceKeys.Logcat.KEY_SAVE_LOCATION,
               uri.toString()
@@ -329,7 +329,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
   }
 
   private fun setupDefaultSaveLocation() {
-    preferenceScreen.sharedPreferences.edit {
+    preferenceScreen.sharedPreferences!!.edit {
       putString(PreferenceKeys.Logcat.KEY_SAVE_LOCATION, "")
     }
     prefSaveLocation.summary = getString(R.string.save_location_internal)
@@ -359,7 +359,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
     }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-      return AlertDialog.Builder(activity!!)
+      return AlertDialog.Builder(requireActivity())
         .setTitle(R.string.save_location)
         .setItems(R.array.save_location_options) { _, which ->
           if (which == 0) {

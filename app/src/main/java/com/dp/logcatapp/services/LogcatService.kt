@@ -5,11 +5,14 @@ import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
+import android.app.PendingIntent.FLAG_IMMUTABLE
+import android.app.PendingIntent.FLAG_UPDATE_CURRENT
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.graphics.BitmapFactory
-import android.os.Build
+import android.os.Build.VERSION
+import android.os.Build.VERSION_CODES
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.edit
@@ -38,7 +41,7 @@ class LogcatService : BaseService() {
 
   override fun onCreate() {
     super.onCreate()
-    if (Build.VERSION.SDK_INT >= 26) {
+    if (VERSION.SDK_INT >= 26) {
       createNotificationChannel()
     }
 
@@ -76,18 +79,32 @@ class LogcatService : BaseService() {
   private fun createNotification(addStopRecordingAction: Boolean): Notification {
     val startIntent = Intent(this, MainActivity::class.java)
     startIntent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
-    val contentIntent = PendingIntent.getActivity(
-      this, 0, startIntent,
-      PendingIntent.FLAG_UPDATE_CURRENT
-    )
+    val contentIntent = if (VERSION.SDK_INT >= VERSION_CODES.M) {
+      PendingIntent.getActivity(
+        this, 0, startIntent,
+        FLAG_UPDATE_CURRENT or FLAG_IMMUTABLE,
+      )
+    } else {
+      PendingIntent.getActivity(
+        this, 0, startIntent,
+        FLAG_UPDATE_CURRENT,
+      )
+    }
 
     val exitIntent = Intent(this, MainActivity::class.java)
     exitIntent.putExtra(MainActivity.EXIT_EXTRA, true)
     exitIntent.action = "exit"
-    val exitPendingIntent = PendingIntent.getActivity(
-      this, 1, exitIntent,
-      PendingIntent.FLAG_UPDATE_CURRENT
-    )
+    val exitPendingIntent = if (VERSION.SDK_INT >= VERSION_CODES.M) {
+      PendingIntent.getActivity(
+        this, 1, exitIntent,
+        FLAG_UPDATE_CURRENT or FLAG_IMMUTABLE
+      )
+    } else {
+      PendingIntent.getActivity(
+        this, 1, exitIntent,
+        FLAG_UPDATE_CURRENT
+      )
+    }
 
     val exitAction = NotificationCompat.Action.Builder(
       R.drawable.ic_clear_white_24dp,
@@ -112,10 +129,19 @@ class LogcatService : BaseService() {
       val stopRecordingIntent = Intent(this, MainActivity::class.java)
       stopRecordingIntent.putExtra(MainActivity.STOP_RECORDING_EXTRA, true)
       stopRecordingIntent.action = "stop recording"
-      val stopRecordingPendingIntent = PendingIntent.getActivity(
-        this, 2,
-        stopRecordingIntent, PendingIntent.FLAG_UPDATE_CURRENT
-      )
+      val stopRecordingPendingIntent = if (VERSION.SDK_INT >= VERSION_CODES.M) {
+        PendingIntent.getActivity(
+          this, 2,
+          stopRecordingIntent,
+          FLAG_UPDATE_CURRENT or FLAG_IMMUTABLE
+        )
+      } else {
+        PendingIntent.getActivity(
+          this, 2,
+          stopRecordingIntent,
+          FLAG_UPDATE_CURRENT,
+        )
+      }
       val stopRecordingAction = NotificationCompat.Action.Builder(
         R.drawable.ic_stop_white_24dp,
         getString(R.string.stop_recording), stopRecordingPendingIntent
@@ -125,7 +151,7 @@ class LogcatService : BaseService() {
       builder.addAction(stopRecordingAction)
     }
 
-    if (Build.VERSION.SDK_INT < 21) {
+    if (VERSION.SDK_INT < 21) {
       builder.setLargeIcon(BitmapFactory.decodeResource(resources, R.mipmap.ic_launcher))
     }
 
@@ -154,7 +180,7 @@ class LogcatService : BaseService() {
     super.onDestroy()
     logcat.close()
 
-    if (Build.VERSION.SDK_INT >= 26) {
+    if (VERSION.SDK_INT >= 26) {
       deleteNotificationChannel()
     }
   }
@@ -199,7 +225,8 @@ class LogcatService : BaseService() {
     showToast(getString(R.string.restarting_logcat))
 
     restartedLogcat = true
-    logcat.logcatBuffers = bufferValues.map { e -> buffers[e.toInt()].toLowerCase() }.toSet()
+    logcat.logcatBuffers =
+      bufferValues.map { e -> buffers[e.toInt()].lowercase(Locale.getDefault()) }.toSet()
     logcat.restart()
   }
 
@@ -224,7 +251,7 @@ class LogcatService : BaseService() {
     val buffers = Logcat.AVAILABLE_BUFFERS
     logcat.logcatBuffers = bufferValues.mapNotNull { e ->
       buffers.getOrNull(e.toInt())
-        ?.toLowerCase(Locale.getDefault())
+        ?.lowercase(Locale.getDefault())
     }.toSet().ifEmpty {
       sharedPreferences.edit {
         putStringSet(

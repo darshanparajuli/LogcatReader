@@ -6,17 +6,18 @@ apply plugin: 'kotlin-kapt'
 def fileProvider = "file_provider"
 
 android {
-  compileSdkVersion 30
-  buildToolsVersion "30.0.3"
+  compileSdkVersion 33
+  buildToolsVersion "33.0.1"
 
   defaultConfig {
     applicationId "com.dp.logcatapp"
     minSdkVersion 16
-    targetSdkVersion 30
+    targetSdkVersion 33
     versionCode 33
     versionName "1.7.2"
     testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     vectorDrawables.useSupportLibrary = true
+    multiDexEnabled true
   }
 
   signingConfigs {
@@ -90,6 +91,7 @@ dependencies {
   kapt "androidx.room:room-compiler:$room_version"
   implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlin_coroutines_core_version"
   implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$kotlin_coroutines_android_version"
+  implementation "androidx.multidex:multidex:$multidex_version"
 
   testImplementation "junit:junit:$junit_version"
   androidTestImplementation "androidx.test:runner:$runner_version"
