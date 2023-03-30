@@ -1,10 +1,12 @@
 package com.dp.logcatapp.fragments.logcatlive
 
 import android.Manifest
+import android.annotation.TargetApi
 import android.content.ComponentName
 import android.content.Intent
 import android.content.ServiceConnection
 import android.content.pm.PackageManager
+import android.os.Build.VERSION_CODES
 import android.os.Bundle
 import android.os.IBinder
 import android.view.LayoutInflater
@@ -13,9 +15,15 @@ import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts.RequestPermission
+import androidx.annotation.RequiresApi
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
 import androidx.core.content.ContextCompat
+import androidx.core.view.MenuHost
+import androidx.core.view.MenuProvider
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -69,6 +77,8 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
     private const val SEARCH_FILTER_TAG = "search_filter_tag"
 
     private val STOP_RECORDING = TAG + "_stop_recording"
+    private val PERMISSION_DIALOG = TAG + "_permission_dialog"
+    private val ROOT_METHOD = TAG + "_root_method"
 
     fun newInstance(stopRecording: Boolean): LogcatLiveFragment {
       val bundle = Bundle()
@@ -79,6 +89,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
     }
   }
 
+  private lateinit var notificationPermissionLauncher: ActivityResultLauncher<String>
   private lateinit var serviceBinder: ServiceBinder
   private lateinit var recyclerView: RecyclerView
   private lateinit var linearLayoutManager: LinearLayoutManager
@@ -93,6 +104,13 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
   private var lastLogId = -1
   private var lastSearchRunnable: Runnable? = null
   private var searchTask: Job? = null
+
+  private lateinit var searchItem: MenuItem
+  private lateinit var searchView: SearchView
+
+  private lateinit var playPauseItem: MenuItem
+  private lateinit var recordToggleItem: MenuItem
+  var reachedBlank = false
 
   private val hideFabUpRunnable: Runnable = Runnable {
     fabUp.hide()
@@ -204,7 +222,6 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    setHasOptionsMenu(true)
     serviceBinder = ServiceBinder(LogcatService::class.java, this)
 
     val activity = requireActivity()
@@ -217,6 +234,19 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
     activity.getDefaultSharedPreferences().registerOnSharedPreferenceChangeListener(adapter)
 
     viewModel = activity.getAndroidViewModel()
+
+    @RequiresApi(VERSION_CODES.TIRAMISU)
+    notificationPermissionLauncher = registerForActivityResult(
+      RequestPermission()
+    ) { isGranted ->
+      // the rational should be shown only if the
+      // permission is first time denied
+      if (shouldShowRequestPermissionRationale(Manifest.permission.POST_NOTIFICATIONS) &&
+        !isGranted)
+        requestAndShowRationaleNotificationPermission()
+      else
+        checkAndRequestLogPermission()
+    }
   }
 
   override fun onCreateView(
@@ -289,13 +319,201 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
       }
     }
 
-    if (!checkReadLogsPermission() && !viewModel.showedGrantPermissionInstruction) {
-      viewModel.showedGrantPermissionInstruction = true
-      NeedPermissionDialogFragment().let {
-        it.setTargetFragment(this, 0)
-        it.show(parentFragmentManager, NeedPermissionDialogFragment.TAG)
+    checkAndRequestNotificationAndLogPermission()
+
+    val menuHost: MenuHost = requireActivity()
+
+    menuHost.addMenuProvider(object : MenuProvider {
+      override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
+        menuInflater.inflate(R.menu.logcat_live, menu)
+        searchItem = menu.findItem(R.id.action_search)
+        searchView = searchItem.actionView as SearchView
+
+        playPauseItem = menu.findItem(R.id.action_play_pause)
+        recordToggleItem = menu.findItem(R.id.action_record_toggle)
+        reachedBlank = false
+
+        searchView.setOnQueryTextFocusChangeListener { _, hasFocus ->
+          playPauseItem.isVisible = !hasFocus
+          recordToggleItem.isVisible = !hasFocus
+        }
+
+        searchView.setOnCloseListener {
+          removeLastSearchRunnableCallback()
+          searchViewActive = false
+          if (!reachedBlank) {
+            onSearchViewClose()
+          }
+          playPauseItem.isVisible = true
+          recordToggleItem.isVisible = true
+          false
+        }
+
+        searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+          override fun onQueryTextChange(newText: String): Boolean {
+            searchViewActive = true
+            removeLastSearchRunnableCallback()
+
+            if (newText.isBlank()) {
+              reachedBlank = true
+              onSearchViewClose()
+            } else {
+              reachedBlank = false
+              logcatService?.logcat?.let {
+                lastSearchRunnable = Runnable {
+                  runSearchTask(it, newText)
+                }.also {
+                  handler.postDelayed(it, 100)
+                }
+              }
+            }
+            return true
+          }
+
+          override fun onQueryTextSubmit(query: String) = false
+        })
       }
-    }
+
+      override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
+        return when (menuItem.itemId) {
+          R.id.action_search -> {
+            true
+          }
+          R.id.action_play_pause -> {
+            logcatService?.let {
+              val newPausedState = !it.paused
+              if (newPausedState) {
+                it.logcat.pause()
+              } else {
+                it.logcat.resume()
+              }
+              it.paused = newPausedState
+              activity?.invalidateOptionsMenu()
+            }
+            true
+          }
+          R.id.action_record_toggle -> {
+            logcatService?.let {
+              val recording = !it.recording
+
+              if (recording && it.paused) {
+                return@let
+              }
+
+              it.updateNotification(recording)
+
+              val logcat = it.logcat
+              if (recording) {
+                Snackbar.make(
+                  requireView(), getString(R.string.started_recording),
+                  Snackbar.LENGTH_SHORT
+                ).show()
+                logcat.startRecording()
+              } else {
+                saveToFile(true)
+              }
+
+              it.recording = recording
+              activity?.invalidateOptionsMenu()
+            }
+            true
+          }
+          R.id.clear_action -> {
+            logcatService?.logcat?.clearLogs {
+              adapter.clear()
+              updateToolbarSubtitle(adapter.itemCount)
+            }
+            true
+          }
+          R.id.filters_action -> {
+            moveToFilterActivity(false)
+            true
+          }
+          R.id.exclusions_action -> {
+            moveToFilterActivity(true)
+            true
+          }
+          R.id.action_save -> {
+            saveToFile(false)
+            true
+          }
+          R.id.action_view_saved_logs -> {
+            startActivity(Intent(activity, SavedLogsActivity::class.java))
+            true
+          }
+          R.id.action_restart_logcat -> {
+            adapter.clear()
+            logcatService?.logcat?.restart()
+            true
+          }
+          else -> false
+        }
+      }
+
+      override fun onPrepareMenu(menu: Menu) {
+        val playPauseItem = menu.findItem(R.id.action_play_pause)
+        val recordToggleItem = menu.findItem(R.id.action_record_toggle)
+
+        val context = requireContext()
+        logcatService?.let {
+          if (it.paused) {
+            playPauseItem.icon = ContextCompat.getDrawable(
+              context,
+              R.drawable.ic_play_arrow_white_24dp
+            )
+            playPauseItem.title = getString(R.string.resume)
+          } else {
+            playPauseItem.icon = ContextCompat.getDrawable(
+              context,
+              R.drawable.ic_pause_white_24dp
+            )
+            playPauseItem.title = getString(R.string.pause)
+          }
+
+          if (it.recording) {
+            recordToggleItem.icon = ContextCompat.getDrawable(
+              context,
+              R.drawable.ic_stop_white_24dp
+            )
+            recordToggleItem.title = getString(R.string.stop_recording)
+          } else {
+            recordToggleItem.icon = ContextCompat.getDrawable(
+              context,
+              R.drawable.ic_fiber_manual_record_white_24dp
+            )
+            recordToggleItem.title = getString(R.string.start_recording)
+          }
+        }
+      }
+    })
+
+    viewModel.getFileSaveNotifier().observe(viewLifecycleOwner, Observer { saveInfo ->
+      saveInfo?.let {
+        if (viewModel.alreadySaved) {
+          return@Observer
+        }
+        when (it.result) {
+          SaveInfo.IN_PROGRESS -> {
+            snackBarProgress.show()
+          }
+          else -> {
+            snackBarProgress.dismiss()
+            when (it.result) {
+              SaveInfo.SUCCESS -> {
+                OnSavedBottomSheetDialogFragment.newInstance(it.fileName!!, it.uri!!)
+                  .show(parentFragmentManager, OnSavedBottomSheetDialogFragment.TAG)
+              }
+              SaveInfo.ERROR_EMPTY_LOGS -> {
+                showSnackbar(view, getString(R.string.nothing_to_save))
+              }
+              else -> {
+                showSnackbar(view, getString(R.string.failed_to_save_logs))
+              }
+            }
+          }
+        }
+      }
+    })
 
     viewModel.getFilters().observe(viewLifecycleOwner, Observer { filters ->
       if (filters != null) {
@@ -328,36 +546,50 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
     })
   }
 
-  override fun onActivityCreated(savedInstanceState: Bundle?) {
-    super.onActivityCreated(savedInstanceState)
+  @RequiresApi(VERSION_CODES.TIRAMISU)
+  private fun requestAndShowRationaleNotificationPermission() {
+    val dialogNotificationPermission = AlertDialog.Builder(requireActivity())
+      .setTitle(R.string.notification_permission_required)
+      .setMessage(R.string.notification_permission_required_msg)
+      .setPositiveButton(R.string.ok) { _, _ ->
+        notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+      }
+      .setNegativeButton(R.string.cancel) { _, _ ->
+        checkAndRequestLogPermission()
+      }
+    dialogNotificationPermission.show()
+  }
 
-    viewModel.getFileSaveNotifier().observe(viewLifecycleOwner, Observer { saveInfo ->
-      saveInfo?.let {
-        if (viewModel.alreadySaved) {
-          return@Observer
-        }
-        when (it.result) {
-          SaveInfo.IN_PROGRESS -> {
-            snackBarProgress.show()
-          }
-          else -> {
-            snackBarProgress.dismiss()
-            when (it.result) {
-              SaveInfo.SUCCESS -> {
-                OnSavedBottomSheetDialogFragment.newInstance(it.fileName!!, it.uri!!)
-                  .show(parentFragmentManager, OnSavedBottomSheetDialogFragment.TAG)
-              }
-              SaveInfo.ERROR_EMPTY_LOGS -> {
-                showSnackbar(view, getString(R.string.nothing_to_save))
-              }
-              else -> {
-                showSnackbar(view, getString(R.string.failed_to_save_logs))
-              }
-            }
+  private fun checkAndRequestLogPermission() {
+    if (!checkReadLogsPermission() && !viewModel.showedGrantReadPermissionInstruction) {
+      viewModel.showedGrantReadPermissionInstruction = true
+      NeedPermissionDialogFragment().let {
+        it.show(parentFragmentManager, NeedPermissionDialogFragment.TAG)
+        parentFragmentManager.setFragmentResultListener(PERMISSION_DIALOG,
+          this) { key, bundle ->
+          if (key == PERMISSION_DIALOG) {
+            val isRootMethod: Boolean = bundle.getBoolean(LogcatLiveFragment.ROOT_METHOD, false)
+
+            if (isRootMethod)
+              useRootToGrantPermission()
           }
         }
       }
-    })
+    }
+  }
+
+  private fun checkAndRequestNotificationAndLogPermission() {
+    if ((android.os.Build.VERSION.SDK_INT >= VERSION_CODES.TIRAMISU)
+      && !checkNotificationPermission() &&
+      !viewModel.showedGrantNotificationPermissionInstrution) {
+      if (shouldShowRequestPermissionRationale(Manifest.permission.POST_NOTIFICATIONS)) {
+        requestAndShowRationaleNotificationPermission()
+      }
+      else
+        notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+    }
+    else
+      checkAndRequestLogPermission()
   }
 
   private fun checkReadLogsPermission() = ContextCompat.checkSelfPermission(
@@ -365,60 +597,11 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
     Manifest.permission.READ_LOGS
   ) == PackageManager.PERMISSION_GRANTED
 
-  override fun onCreateOptionsMenu(
-    menu: Menu,
-    inflater: MenuInflater
-  ) {
-    super.onCreateOptionsMenu(menu, inflater)
-
-    inflater.inflate(R.menu.logcat_live, menu)
-    val searchItem = menu.findItem(R.id.action_search)
-    val searchView = searchItem.actionView as SearchView
-
-    var reachedBlank = false
-    searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
-      override fun onQueryTextChange(newText: String): Boolean {
-        searchViewActive = true
-        removeLastSearchRunnableCallback()
-
-        if (newText.isBlank()) {
-          reachedBlank = true
-          onSearchViewClose()
-        } else {
-          reachedBlank = false
-          logcatService?.logcat?.let {
-            lastSearchRunnable = Runnable {
-              runSearchTask(it, newText)
-            }.also {
-              handler.postDelayed(it, 100)
-            }
-          }
-        }
-        return true
-      }
-
-      override fun onQueryTextSubmit(query: String) = false
-    })
-
-    val playPauseItem = menu.findItem(R.id.action_play_pause)
-    val recordToggleItem = menu.findItem(R.id.action_record_toggle)
-
-    searchView.setOnQueryTextFocusChangeListener { _, hasFocus ->
-      playPauseItem.isVisible = !hasFocus
-      recordToggleItem.isVisible = !hasFocus
-    }
-
-    searchView.setOnCloseListener {
-      removeLastSearchRunnableCallback()
-      searchViewActive = false
-      if (!reachedBlank) {
-        onSearchViewClose()
-      }
-      playPauseItem.isVisible = true
-      recordToggleItem.isVisible = true
-      false
-    }
-  }
+  @RequiresApi(VERSION_CODES.TIRAMISU)
+  private fun checkNotificationPermission() = ContextCompat.checkSelfPermission(
+    requireContext(),
+    Manifest.permission.POST_NOTIFICATIONS
+  ) == PackageManager.PERMISSION_GRANTED
 
   private fun onSearchViewClose() {
     logcatService?.logcat?.let {
@@ -441,120 +624,6 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
     }
 
     resumeLogcat()
-  }
-
-  override fun onPrepareOptionsMenu(menu: Menu) {
-    super.onPrepareOptionsMenu(menu)
-
-    val playPauseItem = menu.findItem(R.id.action_play_pause)
-    val recordToggleItem = menu.findItem(R.id.action_record_toggle)
-
-    val context = requireContext()
-    logcatService?.let {
-      if (it.paused) {
-        playPauseItem.icon = ContextCompat.getDrawable(
-          context,
-          R.drawable.ic_play_arrow_white_24dp
-        )
-        playPauseItem.title = getString(R.string.resume)
-      } else {
-        playPauseItem.icon = ContextCompat.getDrawable(
-          context,
-          R.drawable.ic_pause_white_24dp
-        )
-        playPauseItem.title = getString(R.string.pause)
-      }
-
-      if (it.recording) {
-        recordToggleItem.icon = ContextCompat.getDrawable(
-          context,
-          R.drawable.ic_stop_white_24dp
-        )
-        recordToggleItem.title = getString(R.string.stop_recording)
-      } else {
-        recordToggleItem.icon = ContextCompat.getDrawable(
-          context,
-          R.drawable.ic_fiber_manual_record_white_24dp
-        )
-        recordToggleItem.title = getString(R.string.start_recording)
-      }
-    }
-  }
-
-  override fun onOptionsItemSelected(item: MenuItem): Boolean {
-    return when (item.itemId) {
-      R.id.action_search -> {
-        true
-      }
-      R.id.action_play_pause -> {
-        logcatService?.let {
-          val newPausedState = !it.paused
-          if (newPausedState) {
-            it.logcat.pause()
-          } else {
-            it.logcat.resume()
-          }
-          it.paused = newPausedState
-          activity?.invalidateOptionsMenu()
-        }
-        true
-      }
-      R.id.action_record_toggle -> {
-        logcatService?.let {
-          val recording = !it.recording
-
-          if (recording && it.paused) {
-            return@let
-          }
-
-          it.updateNotification(recording)
-
-          val logcat = it.logcat
-          if (recording) {
-            Snackbar.make(
-              requireView(), getString(R.string.started_recording),
-              Snackbar.LENGTH_SHORT
-            ).show()
-            logcat.startRecording()
-          } else {
-            saveToFile(true)
-          }
-
-          it.recording = recording
-          activity?.invalidateOptionsMenu()
-        }
-        true
-      }
-      R.id.clear_action -> {
-        logcatService?.logcat?.clearLogs {
-          adapter.clear()
-          updateToolbarSubtitle(adapter.itemCount)
-        }
-        true
-      }
-      R.id.filters_action -> {
-        moveToFilterActivity(false)
-        true
-      }
-      R.id.exclusions_action -> {
-        moveToFilterActivity(true)
-        true
-      }
-      R.id.action_save -> {
-        saveToFile(false)
-        true
-      }
-      R.id.action_view_saved_logs -> {
-        startActivity(Intent(activity, SavedLogsActivity::class.java))
-        true
-      }
-      R.id.action_restart_logcat -> {
-        adapter.clear()
-        logcatService?.logcat?.restart()
-        true
-      }
-      else -> return super.onOptionsItemSelected(item)
-    }
   }
 
   private fun moveToFilterActivity(isExclusion: Boolean) {

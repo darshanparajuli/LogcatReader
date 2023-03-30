@@ -8,7 +8,6 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
-import android.graphics.BitmapFactory
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
@@ -78,7 +77,8 @@ class LogcatService : BaseService() {
     startIntent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
     val contentIntent = PendingIntent.getActivity(
       this, 0, startIntent,
-      PendingIntent.FLAG_UPDATE_CURRENT
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        else PendingIntent.FLAG_UPDATE_CURRENT
     )
 
     val exitIntent = Intent(this, MainActivity::class.java)
@@ -86,7 +86,8 @@ class LogcatService : BaseService() {
     exitIntent.action = "exit"
     val exitPendingIntent = PendingIntent.getActivity(
       this, 1, exitIntent,
-      PendingIntent.FLAG_UPDATE_CURRENT
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        else PendingIntent.FLAG_UPDATE_CURRENT
     )
 
     val exitAction = NotificationCompat.Action.Builder(
@@ -114,7 +115,9 @@ class LogcatService : BaseService() {
       stopRecordingIntent.action = "stop recording"
       val stopRecordingPendingIntent = PendingIntent.getActivity(
         this, 2,
-        stopRecordingIntent, PendingIntent.FLAG_UPDATE_CURRENT
+        stopRecordingIntent,
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+          else PendingIntent.FLAG_UPDATE_CURRENT
       )
       val stopRecordingAction = NotificationCompat.Action.Builder(
         R.drawable.ic_stop_white_24dp,
@@ -123,10 +126,6 @@ class LogcatService : BaseService() {
         .build()
 
       builder.addAction(stopRecordingAction)
-    }
-
-    if (Build.VERSION.SDK_INT < 21) {
-      builder.setLargeIcon(BitmapFactory.decodeResource(resources, R.mipmap.ic_launcher))
     }
 
     return builder.build()
@@ -199,7 +198,7 @@ class LogcatService : BaseService() {
     showToast(getString(R.string.restarting_logcat))
 
     restartedLogcat = true
-    logcat.logcatBuffers = bufferValues.map { e -> buffers[e.toInt()].toLowerCase() }.toSet()
+    logcat.logcatBuffers = bufferValues.map { e -> buffers[e.toInt()].lowercase() }.toSet()
     logcat.restart()
   }
 
@@ -224,7 +223,7 @@ class LogcatService : BaseService() {
     val buffers = Logcat.AVAILABLE_BUFFERS
     logcat.logcatBuffers = bufferValues.mapNotNull { e ->
       buffers.getOrNull(e.toInt())
-        ?.toLowerCase(Locale.getDefault())
+        ?.lowercase(Locale.getDefault())
     }.toSet().ifEmpty {
       sharedPreferences.edit {
         putStringSet(

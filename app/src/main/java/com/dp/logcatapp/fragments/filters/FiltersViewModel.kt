@@ -16,11 +16,11 @@ import kotlinx.coroutines.withContext
 class FiltersViewModel(application: Application) : ScopedAndroidViewModel(application) {
   private val context = application
 
-  private lateinit var filters: MutableLiveData<List<FilterListItem>>
+  private lateinit var filters: MutableLiveData<List<FilterListItem>?>
 
   private var loadFiltersJob: Job? = null
 
-  fun getFilters(isExclusions: Boolean): LiveData<List<FilterListItem>> {
+  fun getFilters(isExclusions: Boolean): MutableLiveData<List<FilterListItem>?> {
     if (this::filters.isInitialized) {
       return filters
     }

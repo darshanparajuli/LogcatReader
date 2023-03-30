@@ -12,9 +12,4 @@
   <style name="BlackTheme" parent="BlackThemeCommon">
     <item name="android:statusBarColor">#64000000</item>
   </style>
-
-  <style name="SplashScreenTheme" parent="SplashScreenThemeCommon">
-    <item name="android:statusBarColor">#64000000</item>
-  </style>
-
 </resources>

@@ -11,6 +11,7 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
+import androidx.fragment.app.setFragmentResult
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
@@ -19,6 +20,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.dp.logcatapp.R
 import com.dp.logcatapp.fragments.base.BaseDialogFragment
 import com.dp.logcatapp.fragments.settings.SettingsFragment
+import com.dp.logcatapp.fragments.settings.SettingsFragment.Companion
 import com.dp.logcatapp.util.PreferenceKeys
 import com.dp.logcatapp.util.getAndroidViewModel
 import com.dp.logcatapp.util.getAttributeDrawable
@@ -30,6 +32,8 @@ class FolderChooserDialogFragment : BaseDialogFragment(), View.OnClickListener {
 
   companion object {
     val TAG = FolderChooserDialogFragment::class.qualifiedName
+    val FOLDER_CHOOSER_DIALOG = SettingsFragment.TAG + "_folder_chooser_dialog"
+    val FOLDER_URI = SettingsFragment.TAG + "_folder_uri"
   }
 
   private lateinit var recyclerViewAdapter: MyRecyclerViewAdapter
@@ -73,7 +77,10 @@ class FolderChooserDialogFragment : BaseDialogFragment(), View.OnClickListener {
           null
         }
 
-        (targetFragment as SettingsFragment).setupCustomSaveLocationPreLollipop(folder)
+        val folderUri = if (folder == null) "" else folder.toURI().toString()
+        val bundle = Bundle()
+        bundle.putString(FOLDER_URI, folderUri)
+        setFragmentResult(FOLDER_CHOOSER_DIALOG, bundle)
       }
       .setNegativeButton(android.R.string.cancel) { _, _ ->
         dismiss()

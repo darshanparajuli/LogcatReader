@@ -1,5 +1,7 @@
 package com.dp.logcatapp.activities
 
+import android.os.Build
+import android.os.Build.VERSION
 import android.os.Bundle
 import androidx.fragment.app.commit
 import com.dp.logcat.Log
@@ -32,7 +34,11 @@ class FiltersActivity : BaseActivityWithToolbar() {
 
   private fun isExclusions() = intent != null && intent.getBooleanExtra(EXTRA_EXCLUSIONS, false)
 
-  private fun getLog() = intent.getParcelableExtra<Log>(KEY_LOG)
+  private fun getLog() = if (VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                            intent.getParcelableExtra(KEY_LOG, Log::class.java)
+                          } else {
+                            intent.getParcelableExtra<Log>(KEY_LOG)
+                          }
 
   override fun getToolbarIdRes() = R.id.toolbar
 
