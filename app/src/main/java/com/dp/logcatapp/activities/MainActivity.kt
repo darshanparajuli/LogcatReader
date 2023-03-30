@@ -5,7 +5,9 @@ import android.os.Build
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
+import androidx.activity.OnBackPressedCallback
 import androidx.core.app.ActivityCompat
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.dp.logcatapp.R
 import com.dp.logcatapp.fragments.logcatlive.LogcatLiveFragment
 import com.dp.logcatapp.services.LogcatService
@@ -22,6 +24,8 @@ class MainActivity : BaseActivityWithToolbar() {
   }
 
   override fun onCreate(savedInstanceState: Bundle?) {
+    installSplashScreen()
+
     super.onCreate(savedInstanceState)
     setContentView(R.layout.activity_main)
     setupToolbar()
@@ -49,6 +53,18 @@ class MainActivity : BaseActivityWithToolbar() {
         )
         .commit()
     }
+
+    onBackPressedDispatcher.addCallback(this, object: OnBackPressedCallback(true) {
+      override fun handleOnBackPressed() {
+        if (canExit) {
+          finishAndRemoveTask()
+        } else {
+          canExit = true
+          showToast(getString(R.string.press_back_again_to_exit))
+          handler.postDelayed(exitRunnable, EXIT_DOUBLE_PRESS_DELAY)
+        }
+      }
+    })
   }
 
   override fun getToolbarIdRes(): Int = R.id.toolbar
@@ -93,17 +109,6 @@ class MainActivity : BaseActivityWithToolbar() {
     super.onDestroy()
     if (canExit) {
       stopService(Intent(this, LogcatService::class.java))
-    }
-  }
-
-  override fun onBackPressed() {
-    if (canExit) {
-      handler.removeCallbacks(exitRunnable)
-      super.onBackPressed()
-    } else {
-      canExit = true
-      showToast(getString(R.string.press_back_again_to_exit))
-      handler.postDelayed(exitRunnable, EXIT_DOUBLE_PRESS_DELAY)
     }
   }
 
