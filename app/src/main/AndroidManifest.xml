@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    package="com.dp.logcatapp">
+    xmlns:tools="http://schemas.android.com/tools">
 
   <!-- adb shell pm grant com.dp.logcatapp android.permission.READ_LOGS -->
+  <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
   <uses-permission android:name="android.permission.READ_LOGS" />
 
   <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
@@ -21,17 +21,15 @@
       android:theme="@style/LightTheme"
       tools:ignore="GoogleAppIndexingWarning">
     <activity
-        android:name=".activities.SplashActivity"
-        android:theme="@style/SplashScreenTheme">
+        android:name=".activities.MainActivity"
+        android:launchMode="singleTask"
+        android:theme="@style/SplashScreenTheme"
+        android:exported="true">
       <intent-filter>
         <action android:name="android.intent.action.MAIN" />
-
         <category android:name="android.intent.category.LAUNCHER" />
       </intent-filter>
     </activity>
-    <activity
-        android:name=".activities.MainActivity"
-        android:launchMode="singleTask" />
     <activity
         android:name=".activities.SettingsActivity"
         android:launchMode="singleTask"
@@ -66,7 +64,8 @@
         android:name=".activities.SavedLogsViewerActivity"
         android:launchMode="singleTask"
         android:parentActivityName=".activities.SavedLogsActivity"
-        android:windowSoftInputMode="adjustResize">
+        android:windowSoftInputMode="adjustResize"
+        android:exported="true">
       <meta-data
           android:name="android.support.PARENT_ACTIVITY"
           android:value=".activities.SavedLogsActivity" />
