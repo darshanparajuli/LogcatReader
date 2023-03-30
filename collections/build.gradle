@@ -1,18 +1,24 @@
-apply plugin: 'com.android.library'
-
-apply plugin: 'kotlin-android'
-
-apply plugin: 'kotlin-android-extensions'
+plugins {
+  id 'com.android.library'
+  id 'kotlin-android'
+  id 'kotlin-parcelize'
+}
 
 android {
-  compileSdkVersion 29
+  namespace "com.logcat.collections"
+
+  compileSdkVersion 33
 
   defaultConfig {
-    minSdkVersion 16
+    minSdkVersion 21
     versionCode 1
     versionName "1.0"
 
     testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+  }
+
+  buildFeatures {
+    viewBinding true
   }
 
   buildTypes {
@@ -20,13 +26,26 @@ android {
       minifyEnabled false
       proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
     }
+    buildTypes {
+    }
+  }
+
+  compileOptions {
+    sourceCompatibility JavaVersion.VERSION_11
+    targetCompatibility JavaVersion.VERSION_11
+  }
+
+  kotlin {
+    jvmToolchain {
+      languageVersion.set(JavaLanguageVersion.of("11"))
+    }
   }
 }
 
 dependencies {
   implementation fileTree(dir: 'libs', include: ['*.jar'])
   implementation project(':logger')
-  implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+  implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
   implementation "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
   implementation "androidx.appcompat:appcompat:$appcompat_version"
 

@@ -11,6 +11,9 @@ import android.view.ViewGroup
 import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.appcompat.widget.SearchView
+import androidx.core.view.MenuHost
+import androidx.core.view.MenuProvider
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -169,7 +172,6 @@ class SavedLogsViewerFragment : BaseFragment() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    setHasOptionsMenu(true)
     adapter = MyRecyclerViewAdapter(requireActivity())
     viewModel = getAndroidViewModel()
     viewModel.init(Uri.parse(requireArguments().getString(KEY_FILE_URI)))
@@ -257,53 +259,52 @@ class SavedLogsViewerFragment : BaseFragment() {
         textViewEmpty.visibility = View.VISIBLE
       }
     })
-  }
 
-  override fun onCreateOptionsMenu(
-    menu: Menu,
-    inflater: MenuInflater
-  ) {
-    super.onCreateOptionsMenu(menu, inflater)
+    val menuHost: MenuHost = requireActivity()
+    menuHost.addMenuProvider(object : MenuProvider {
+      override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
+        menuInflater.inflate(R.menu.saved_logs_viewer, menu)
+        val searchItem = menu.findItem(R.id.action_search)
+        val searchView = searchItem.actionView as SearchView
 
-    inflater.inflate(R.menu.saved_logs_viewer, menu)
-    val searchItem = menu.findItem(R.id.action_search)
-    val searchView = searchItem.actionView as SearchView
+        var reachedBlank = false
+        searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+          override fun onQueryTextChange(newText: String): Boolean {
+            searchViewActive = true
+            removeLastSearchRunnableCallback()
 
-    var reachedBlank = false
-    searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
-      override fun onQueryTextChange(newText: String): Boolean {
-        searchViewActive = true
-        removeLastSearchRunnableCallback()
-
-        if (newText.isBlank()) {
-          reachedBlank = true
-          onSearchViewClose()
-        } else {
-          reachedBlank = false
-          lastSearchRunnable = Runnable {
-            viewModel.getLogs().value?.let {
-              if (it is SavedLogsViewerViewModel.SavedLogsResult.Success) {
-                runSearchTask(it.logs, newText)
+            if (newText.isBlank()) {
+              reachedBlank = true
+              onSearchViewClose()
+            } else {
+              reachedBlank = false
+              lastSearchRunnable = Runnable {
+                viewModel.getLogs().value?.let {
+                  if (it is SavedLogsViewerViewModel.SavedLogsResult.Success) {
+                    runSearchTask(it.logs, newText)
+                  }
+                }
+              }.also {
+                handler.postDelayed(it, 300)
               }
             }
-          }.also {
-            handler.postDelayed(it, 300)
+            return true
           }
+          override fun onQueryTextSubmit(query: String) = false
+        })
+      }
+
+      override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
+        return when (menuItem.itemId) {
+          R.id.action_search -> {
+            true
+          }
+          else -> false
         }
-        return true
       }
 
-      override fun onQueryTextSubmit(query: String) = false
-    })
 
-    searchView.setOnCloseListener {
-      removeLastSearchRunnableCallback()
-      searchViewActive = false
-      if (!reachedBlank) {
-        onSearchViewClose()
-      }
-      false
-    }
+    }, viewLifecycleOwner, Lifecycle.State.RESUMED)
   }
 
   private fun onSearchViewClose() {
@@ -327,15 +328,6 @@ class SavedLogsViewerFragment : BaseFragment() {
         linearLayoutManager.scrollToPositionWithOffset(lastLogId, 0)
       }
       lastLogId = -1
-    }
-  }
-
-  override fun onOptionsItemSelected(item: MenuItem): Boolean {
-    return when (item.itemId) {
-      R.id.action_search -> {
-        true
-      }
-      else -> return super.onOptionsItemSelected(item)
     }
   }
 

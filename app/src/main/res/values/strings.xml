@@ -42,6 +42,14 @@
         3. Close the app (double back press), and swipe it out of Recents.\n\n
         Please report if there are any issues, thank you!
     </string>
+  <string name="notification_permission_required">Notification permission</string>
+  <string name="notification_permission_required_msg">
+    To see all device logs a notification is required from which you can control
+    the log service. Without the notification the app may not display all logs.
+    \n\nOnly this one notification will be shown after you run this app.\n\nThanks!
+    </string>
+  <string name="ok">OK</string>
+  <string name="cancel">Cancel</string>
   <string name="grant_read_logs_permission_action_using_root">Grant</string>
   <string name="failed">Failed</string>
   <string name="pref_logcat_buffer_dialog_title">Buffers</string>

@@ -5,10 +5,13 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.DialogInterface
+import android.os.Build
+import android.os.Build.VERSION
 import android.os.Bundle
 import androidx.appcompat.app.AlertDialog
 import com.dp.logcat.Log
 import com.dp.logcatapp.R
+import com.dp.logcatapp.activities.FiltersActivity
 import com.dp.logcatapp.fragments.base.BaseDialogFragment
 import com.dp.logcatapp.util.showToast
 
@@ -49,7 +52,11 @@ class CopyToClipboardDialogFragment : BaseDialogFragment(), DialogInterface.OnCl
     dialog: DialogInterface,
     which: Int
   ) {
-    val log = requireArguments().getParcelable<Log>(KEY_LOG)!!
+    val log = if (VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                requireArguments().getParcelable(KEY_LOG, Log::class.java)!!
+              } else {
+                requireArguments().getParcelable<Log>(KEY_LOG)!!
+              }
     val activity = requireActivity()
     val cm = activity.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
     val clip = when (which) {

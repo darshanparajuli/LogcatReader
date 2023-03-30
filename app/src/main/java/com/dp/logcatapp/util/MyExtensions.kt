@@ -9,6 +9,7 @@ import android.content.Intent
 import android.content.SharedPreferences
 import android.graphics.Typeface
 import android.graphics.drawable.Drawable
+import android.hardware.display.DisplayManager
 import android.net.Uri
 import android.os.Build
 import android.os.Build.VERSION.SDK_INT
@@ -23,6 +24,7 @@ import android.widget.Toast
 import androidx.annotation.AttrRes
 import androidx.annotation.LayoutRes
 import androidx.core.content.ContextCompat
+import androidx.core.content.ContextCompat.getSystemService
 import androidx.fragment.app.Fragment
 import androidx.preference.PreferenceManager
 import com.dp.logcatapp.R
@@ -130,7 +132,7 @@ private class ToastWindowManager(
   private val context: Context,
   private val base: WindowManager
 ) : WindowManager {
-  @Suppress("DEPRECATION")
+  @Deprecated("Deprecated in Java")
   override fun getDefaultDisplay(): Display =
     if (SDK_INT >= 30) context.display!! else base.defaultDisplay
 
@@ -227,7 +229,11 @@ fun Context.getFileNameFromUri(uri: Uri): String {
     val cursor = contentResolver.query(uri, null, null, null, null)
     name = cursor?.use {
       if (it.moveToFirst()) {
-        it.getString(it.getColumnIndex(OpenableColumns.DISPLAY_NAME))
+        val columnIndex = it.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+        if (columnIndex >= 0)
+          it.getString(columnIndex)
+        else
+          null
       } else {
         null
       }
@@ -257,7 +263,7 @@ fun Context.inflateLayout(
 //// BEGIN String
 
 @SuppressLint("DefaultLocale")
-fun String.containsIgnoreCase(other: String) = toLowerCase().contains(other.toLowerCase())
+fun String.containsIgnoreCase(other: String) = lowercase().contains(other.lowercase())
 
 //// END String
 

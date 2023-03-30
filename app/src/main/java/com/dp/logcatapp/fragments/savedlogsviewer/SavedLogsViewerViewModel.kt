@@ -21,7 +21,7 @@ internal class SavedLogsViewerViewModel(application: Application) : ScopedAndroi
   var autoScroll = true
   var scrollPosition = 0
 
-  private var logs = MutableLiveData<SavedLogsResult>()
+  private var logs = MutableLiveData<SavedLogsResult?>()
 
   fun init(uri: Uri) {
     launch {
@@ -62,7 +62,7 @@ internal class SavedLogsViewerViewModel(application: Application) : ScopedAndroi
     SavedLogsResult.Success(logs)
   }
 
-  fun getLogs(): LiveData<SavedLogsResult> = logs
+  fun getLogs(): LiveData<SavedLogsResult?> = logs
 
   sealed class SavedLogsResult {
     data class Success(val logs: List<Log>) : SavedLogsResult()

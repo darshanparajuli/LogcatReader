@@ -1,22 +1,30 @@
-apply plugin: 'com.android.application'
-apply plugin: 'kotlin-android'
-apply plugin: 'kotlin-android-extensions'
-apply plugin: 'kotlin-kapt'
+plugins {
+  id 'com.android.application'
+  id 'kotlin-android'
+  id 'kotlin-parcelize'
+  id 'kotlin-kapt'
+}
 
 def fileProvider = "file_provider"
 
 android {
-  compileSdkVersion 30
-  buildToolsVersion "30.0.3"
+  namespace "com.dp.logcatapp"
+
+  compileSdkVersion 33
+  buildToolsVersion "33.0.2"
 
   defaultConfig {
     applicationId "com.dp.logcatapp"
-    minSdkVersion 16
-    targetSdkVersion 30
+    minSdkVersion 21
+    targetSdkVersion 33
     versionCode 33
-    versionName "1.7.2"
+    versionName "1.7.3"
     testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     vectorDrawables.useSupportLibrary = true
+  }
+
+  buildFeatures {
+    viewBinding true
   }
 
   signingConfigs {
@@ -34,22 +42,20 @@ android {
     }
   }
 
-  dexOptions {
-    javaMaxHeapSize "2g"
-  }
-
   lintOptions {
     abortOnError false
     disable 'MissingTranslation'
   }
 
   compileOptions {
-    sourceCompatibility JavaVersion.VERSION_1_8
-    targetCompatibility JavaVersion.VERSION_1_8
+    sourceCompatibility JavaVersion.VERSION_11
+    targetCompatibility JavaVersion.VERSION_11
   }
 
-  kotlinOptions {
-    jvmTarget = JavaVersion.VERSION_1_8
+  kotlin {
+    jvmToolchain {
+      languageVersion.set(JavaLanguageVersion.of("11"))
+    }
   }
 
   buildTypes {
@@ -71,14 +77,13 @@ dependencies {
   implementation project(':collections')
   implementation project(':logcat')
   implementation project(':logger')
-  implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+  implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
   implementation "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
   implementation "androidx.core:core-ktx:$core_ktx_version"
   implementation "androidx.fragment:fragment-ktx:$fragment_ktx_version"
   implementation "androidx.appcompat:appcompat:$appcompat_version"
   implementation "com.google.android.material:material:$material_version"
   implementation "androidx.preference:preference-ktx:$preference_version"
-  implementation "androidx.legacy:legacy-preference-v14:$legacy_preference_v14_version"
   implementation "androidx.lifecycle:lifecycle-common-java8:$lifecycle_version"
   implementation "androidx.lifecycle:lifecycle-extensions:$lifecycle_ext"
   implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycle_version"
@@ -87,6 +92,7 @@ dependencies {
   implementation "androidx.constraintlayout:constraintlayout:$constraint_layout_version"
   implementation "androidx.room:room-runtime:$room_version"
   implementation "androidx.documentfile:documentfile:$documentfile_version"
+  implementation "androidx.core:core-splashscreen:$splashscreen_version"
   kapt "androidx.room:room-compiler:$room_version"
   implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlin_coroutines_core_version"
   implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$kotlin_coroutines_android_version"

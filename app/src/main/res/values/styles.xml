@@ -80,10 +80,9 @@
 
   <style name="MyPreferenceTheme" parent="@style/PreferenceThemeOverlay.v14.Material" />
 
-  <style name="SplashScreenThemeCommon" parent="Theme.AppCompat.NoActionBar">
-    <item name="android:windowBackground">@drawable/splash_screen</item>
+  <style name="SplashScreenTheme" parent="Theme.SplashScreen">
+    <item name="windowSplashScreenAnimatedIcon">@drawable/splash_screen</item>
+    <item name="postSplashScreenTheme">@style/DarkTheme</item>
+    <item name="android:windowBackground">@color/color_primary_dark</item>
   </style>
-
-  <style name="SplashScreenTheme" parent="SplashScreenThemeCommon" />
-
 </resources>

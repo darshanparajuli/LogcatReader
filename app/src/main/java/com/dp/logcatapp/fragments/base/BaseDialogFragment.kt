@@ -48,12 +48,4 @@ open class BaseDialogFragment : DialogFragment() {
       dialog?.setDismissMessage(null)
     super.onDestroyView()
   }
-
-  protected fun runOnUIThread(runnable: () -> Unit) {
-    if (Thread.currentThread() == Looper.getMainLooper().thread) {
-      runnable()
-    } else {
-      handler.post(runnable)
-    }
-  }
 }

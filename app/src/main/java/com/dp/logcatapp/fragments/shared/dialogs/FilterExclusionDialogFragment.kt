@@ -3,6 +3,8 @@ package com.dp.logcatapp.fragments.shared.dialogs
 import android.app.Dialog
 import android.content.DialogInterface
 import android.content.Intent
+import android.os.Build
+import android.os.Build.VERSION
 import android.os.Bundle
 import androidx.appcompat.app.AlertDialog
 import com.dp.logcat.Log
@@ -42,7 +44,11 @@ class FilterExclusionDialogFragment : BaseDialogFragment(), DialogInterface.OnCl
     dialog: DialogInterface,
     which: Int
   ) {
-    val log = requireArguments().getParcelable<Log>(KEY_LOG)!!
+    val log = if (VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                requireArguments().getParcelable(FiltersActivity.KEY_LOG, Log::class.java)!!
+              } else {
+                requireArguments().getParcelable<Log>(FiltersActivity.KEY_LOG)!!
+              }
     when (which) {
       LogContentType.FILTER.ordinal -> moveToFilterActivity(log, false)
       LogContentType.EXCLUDE.ordinal -> moveToFilterActivity(log, true)

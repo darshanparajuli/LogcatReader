@@ -5,11 +5,13 @@ import android.animation.AnimatorListenerAdapter
 import android.os.Bundle
 import android.view.View
 import android.view.animation.DecelerateInterpolator
+import androidx.activity.OnBackPressedCallback
 import androidx.annotation.NonNull
 import androidx.appcompat.widget.Toolbar
 import androidx.fragment.app.commit
 import com.dp.logcatapp.R
 import com.dp.logcatapp.fragments.savedlogs.SavedLogsFragment
+import com.dp.logcatapp.util.showToast
 
 class SavedLogsActivity : BaseActivityWithToolbar() {
 
@@ -40,20 +42,21 @@ class SavedLogsActivity : BaseActivityWithToolbar() {
         replace(R.id.content_frame, SavedLogsFragment(), SavedLogsFragment.TAG)
       }
     }
-  }
 
-  override fun onBackPressed() {
-    if (cabToolbar.visibility == View.VISIBLE) {
-      closeCabToolbar()
-      return
-    }
-
-    super.onBackPressed()
+    onBackPressedDispatcher.addCallback(this, object: OnBackPressedCallback(true) {
+      override fun handleOnBackPressed() {
+        if (cabToolbar.visibility == View.VISIBLE) {
+          closeCabToolbar()
+          return
+        }
+        onBackPressedDispatcher.onBackPressed()
+      }
+    })
   }
 
   fun openCabToolbar(
     callback: CabToolbarCallback,
-    @NonNull menuItemClickListener: Toolbar.OnMenuItemClickListener
+    menuItemClickListener: Toolbar.OnMenuItemClickListener
   ): Boolean {
     cabToolbar.setOnMenuItemClickListener(menuItemClickListener)
     cabToolbarCallback = callback

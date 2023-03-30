@@ -1,16 +1,22 @@
 package com.dp.logcatapp.fragments.filters.dialogs
 
 import android.app.Dialog
+import android.os.Build
+import android.os.Build.VERSION
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
 import android.widget.CheckBox
 import android.widget.EditText
 import androidx.appcompat.app.AlertDialog
+import androidx.core.os.bundleOf
+import androidx.fragment.app.setFragmentResult
 import androidx.lifecycle.ViewModel
 import com.dp.logcat.Log
 import com.dp.logcat.LogPriority
 import com.dp.logcatapp.R
+import com.dp.logcatapp.activities.FiltersActivity
+import com.dp.logcatapp.activities.FiltersActivity.Companion
 import com.dp.logcatapp.fragments.base.BaseDialogFragment
 import com.dp.logcatapp.fragments.filters.FiltersFragment
 import com.dp.logcatapp.model.LogcatMsg
@@ -22,9 +28,13 @@ class FilterDialogFragment : BaseDialogFragment() {
   companion object {
     val TAG = FilterDialogFragment::class.qualifiedName
     private val KEY_LOG = TAG + "_key_log"
+    private var isExclusion = false
+    private val FILTER_DIALOG: String = FiltersFragment.TAG + "_filter_dialog"
+    private val LOG_MSG: String = FiltersFragment.TAG + "_log_msg"
 
-    fun newInstance(log: Log?): FilterDialogFragment {
+    fun newInstance(log: Log?, isExcluded: Boolean): FilterDialogFragment {
       val bundle = Bundle()
+      isExclusion = isExcluded
       bundle.putParcelable(KEY_LOG, log)
 
       val fragment = FilterDialogFragment()
@@ -161,7 +171,7 @@ class FilterDialogFragment : BaseDialogFragment() {
       }
     }
 
-    val title = if ((targetFragment as FiltersFragment).isExclusions()) {
+    val title = if (isExclusion) {
       getString(R.string.exclusion)
     } else {
       getString(R.string.filter)
@@ -182,7 +192,7 @@ class FilterDialogFragment : BaseDialogFragment() {
             logcatMsg.logLevels.add(v)
           }
         }
-        (targetFragment as FiltersFragment).addFilter(logcatMsg)
+        setFragmentResult(FILTER_DIALOG, bundleOf(LOG_MSG to logcatMsg))
       }
       .setNegativeButton(android.R.string.cancel) { _, _ ->
         dismiss()
@@ -199,7 +209,11 @@ class FilterDialogFragment : BaseDialogFragment() {
     }
   }
 
-  fun getLog() = arguments?.getParcelable<Log>(KEY_LOG)
+  fun getLog() = if (VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    arguments?.getParcelable(FiltersActivity.KEY_LOG, Log::class.java)
+                  } else {
+                    arguments?.getParcelable<Log>(FiltersActivity.KEY_LOG)
+                  }
 }
 
 internal class MyViewModel : ViewModel() {

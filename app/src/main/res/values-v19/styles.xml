@@ -12,9 +12,4 @@
   <style name="BlackTheme" parent="BlackThemeCommon">
     <item name="android:windowTranslucentStatus">true</item>
   </style>
-
-  <style name="SplashScreenTheme" parent="SplashScreenThemeCommon">
-    <item name="android:windowTranslucentStatus">true</item>
-  </style>
-
 </resources>
