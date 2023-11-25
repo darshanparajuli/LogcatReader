@@ -10,6 +10,7 @@ import android.app.PendingIntent.FLAG_UPDATE_CURRENT
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
+import android.content.pm.ServiceInfo
 import android.graphics.BitmapFactory
 import android.os.Build.VERSION
 import android.os.Build.VERSION_CODES
@@ -187,7 +188,7 @@ class LogcatService : BaseService() {
 
   override fun onSharedPreferenceChanged(
     sharedPreferences: SharedPreferences,
-    key: String
+    key: String?
   ) {
     super.onSharedPreferenceChanged(sharedPreferences, key)
     when (key) {

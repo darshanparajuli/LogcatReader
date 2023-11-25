@@ -1,23 +1,25 @@
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
-apply plugin: 'kotlin-android-extensions'
+apply plugin: 'kotlin-parcelize'
 apply plugin: 'kotlin-kapt'
 
 def fileProvider = "file_provider"
 
 android {
-  compileSdkVersion 33
-  buildToolsVersion "33.0.1"
-
   defaultConfig {
     applicationId "com.dp.logcatapp"
     minSdkVersion 16
-    targetSdkVersion 33
+    compileSdk 34
+    targetSdkVersion 34
     versionCode 33
     versionName "1.7.2"
     testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     vectorDrawables.useSupportLibrary = true
     multiDexEnabled true
+  }
+
+  buildFeatures {
+    viewBinding true
   }
 
   signingConfigs {
@@ -35,22 +37,18 @@ android {
     }
   }
 
-  dexOptions {
-    javaMaxHeapSize "2g"
-  }
-
   lintOptions {
     abortOnError false
     disable 'MissingTranslation'
   }
 
   compileOptions {
-    sourceCompatibility JavaVersion.VERSION_1_8
-    targetCompatibility JavaVersion.VERSION_1_8
+    sourceCompatibility JavaVersion.VERSION_17
+    targetCompatibility JavaVersion.VERSION_17
   }
 
   kotlinOptions {
-    jvmTarget = JavaVersion.VERSION_1_8
+    jvmTarget = JavaVersion.VERSION_17
   }
 
   buildTypes {
@@ -65,6 +63,7 @@ android {
       proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
     }
   }
+  namespace 'com.dp.logcatapp'
 }
 
 dependencies {

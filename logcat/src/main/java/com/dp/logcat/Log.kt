@@ -1,7 +1,7 @@
 package com.dp.logcat
 
 import android.os.Parcelable
-import kotlinx.android.parcel.Parcelize
+import kotlinx.parcelize.Parcelize
 
 private var logCounter = 0
 
@@ -14,7 +14,7 @@ data class Log(
   val tid: String,
   val priority: String,
   val tag: String,
-  val msg: String
+  val msg: String,
 ) : Parcelable {
 
   fun metadataToString() = "[$date $time $pid:$tid $priority/$tag]"
@@ -24,7 +24,7 @@ data class Log(
   companion object {
     fun parse(
       metadata: String,
-      msg: String
+      msg: String,
     ): Log {
       val date: String
       val time: String

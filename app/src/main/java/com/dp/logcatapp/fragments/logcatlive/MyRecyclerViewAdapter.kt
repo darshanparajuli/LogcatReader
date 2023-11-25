@@ -17,7 +17,7 @@ import com.logcat.collections.FixedCircularArray
 
 internal class MyRecyclerViewAdapter(
   context: Context,
-  initialCapacity: Int
+  initialCapacity: Int,
 ) :
   RecyclerView.Adapter<MyRecyclerViewAdapter.MyViewHolder>(),
   View.OnClickListener,
@@ -50,7 +50,7 @@ internal class MyRecyclerViewAdapter(
 
   override fun onBindViewHolder(
     holder: MyViewHolder,
-    position: Int
+    position: Int,
   ) {
     val log = list[position]
     holder.date.text = log.date
@@ -66,7 +66,7 @@ internal class MyRecyclerViewAdapter(
 
   override fun onCreateViewHolder(
     parent: ViewGroup,
-    viewType: Int
+    viewType: Int,
   ): MyViewHolder {
     val view = LayoutInflater.from(parent.context)
       .inflate(R.layout.fragment_logcat_live_list_item, parent, false)
@@ -115,7 +115,7 @@ internal class MyRecyclerViewAdapter(
 
   override fun onSharedPreferenceChanged(
     sharedPreferences: SharedPreferences,
-    key: String
+    key: String?,
   ) {
     when (key) {
       PreferenceKeys.Logcat.KEY_MAX_LOGS -> {

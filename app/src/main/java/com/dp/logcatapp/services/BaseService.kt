@@ -34,7 +34,7 @@ abstract class BaseService : LifecycleService(),
 
   override fun onSharedPreferenceChanged(
     sharedPreferences: SharedPreferences,
-    key: String
+    key: String?
   ) {
   }
 

@@ -63,7 +63,7 @@ import kotlinx.coroutines.withContext
 
 class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListener {
   companion object {
-    val TAG = LogcatLiveFragment::class.qualifiedName
+    val TAG = LogcatLiveFragment::class.qualifiedName!!
     const val LOGCAT_DIR = "logcat"
 
     private const val SEARCH_FILTER_TAG = "search_filter_tag"
@@ -297,7 +297,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
       }
     }
 
-    viewModel.getFilters().observe(viewLifecycleOwner, Observer { filters ->
+    viewModel.getFilters().observe(viewLifecycleOwner) { filters ->
       if (filters != null) {
         logcatService?.let {
           val logcat = it.logcat
@@ -319,13 +319,14 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
             }
           }
 
+          Logger.debug(TAG, "setting filtered logs")
           adapter.setItems(logcat.getLogsFiltered())
           updateToolbarSubtitle(adapter.itemCount)
           scrollRecyclerView()
           resumeLogcat()
         }
       }
-    })
+    }
   }
 
   override fun onActivityCreated(savedInstanceState: Bundle?) {
@@ -657,6 +658,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
   }
 
   override fun onReceivedLogs(logs: List<Log>) {
+    Logger.debug(TAG, "received logs")
     adapter.addItems(logs)
     updateToolbarSubtitle(adapter.itemCount)
     if (viewModel.autoScroll) {
