@@ -22,7 +22,7 @@
   <string name="about">关于</string>
   <string name="copy_adb_command">复制ADB命令</string>
   <string name="copy_to_clipboard">复制到剪切板</string>
-  <string name="copied_to_clipboard">复制</string>
+  <string name="copied_to_clipboard">已复制</string>
 
   <string name="save_to_file">保存到文件</string>
   <string name="export">导出</string>
