@@ -31,7 +31,7 @@
   <string name="view_log">查看</string>
   <string name="could_not_open_log_file">无法打开log文件</string>
   <string name="failed_to_save_logs">保存log文件错误</string>
-  <string name="nothing_to_save">没有任何内容保存</string>
+  <string name="nothing_to_save">没有内容可保存</string>
   <string name="open_with">用其它应用打开</string>
   <string name="read_logs_permission_required">权限请求</string>
   <string name="grant_read_logs_permission_instruction">要查看所有日志,必须授予READ_LOGS权限.\n\n
@@ -41,7 +41,7 @@
         3. 关闭应用程序(按两下返回键),然后将其的后台关闭.\n\n
         如果有有任何问题请提issue,谢谢!
     </string>
-  <string name="grant_read_logs_permission_action_using_root">Grant</string>
+  <string name="grant_read_logs_permission_action_using_root">授予root权限</string>
   <string name="failed">失败</string>
   <string name="pref_logcat_buffer_dialog_title">Buffer</string>
   <string name="restarting_logcat">重新启动logcat</string>
@@ -60,19 +60,19 @@
   <string name="save">保存</string>
   <string name="error">错误</string>
   <string name="saved">保存</string>
-  <string name="error_saving">错误保存</string>
+  <string name="error_saving">保存错误</string>
   <string name="external_storage_not_mounted_error">没有检测到外置内存卡</string>
   <string name="pref_logcat_max_recent_logs_to_keep_in_memory">
-        最多可保留的最近的日志
+        运行内存中保留的日志上限
     </string>
   <string name="not_a_valid_number">无效的数字</string>
-  <string name="cannot_be_less_than_1000">不能小于1000</string>
+  <string name="cannot_be_less_than_1000">值不能小于1000</string>
   <string name="value_must_be_greater_than_0">值必须大于0</string>
   <string name="value_must_be_a_positive_integer">值必须是一个整数</string>
   <string name="rename">重命名</string>
   <string name="log_count_fmt">%d log</string>
   <string name="log_count_fmt_plural">%d logs</string>
-  <string name="select_all">选择全部</string>
+  <string name="select_all">全选</string>
   <string name="saving">保存中</string>
   <string name="save_location">日志保存位置</string>
   <string name="save_location_internal">应用内部</string>
@@ -112,7 +112,7 @@
   <string name="app_restart_dialog_msg_body">点击确定将终止该应用程序。 从现在开始，您应该会看到完整的日志列表。</string>
   <string name="select_export_format">选择导出格式</string>
   <string name="export_format_default">默认</string>
-  <string name="export_format_single_line">Single line</string>
+  <string name="export_format_single_line">单行</string>
   <string name="error_opening_source">来源打开错误</string>
   <string name="unsupported_source">不支持的来源</string>
 </resources>
