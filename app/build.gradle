@@ -8,9 +8,9 @@ def fileProvider = "file_provider"
 android {
   defaultConfig {
     applicationId "com.dp.logcatapp"
-    minSdkVersion 16
-    compileSdk 34
+    compileSdk 35
     targetSdkVersion 34
+    minSdkVersion 21
     versionCode 33
     versionName "1.7.2"
     testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
@@ -71,28 +71,28 @@ dependencies {
   implementation project(':collections')
   implementation project(':logcat')
   implementation project(':logger')
-  implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
-  implementation "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
-  implementation "androidx.core:core-ktx:$core_ktx_version"
-  implementation "androidx.fragment:fragment-ktx:$fragment_ktx_version"
-  implementation "androidx.appcompat:appcompat:$appcompat_version"
-  implementation "com.google.android.material:material:$material_version"
-  implementation "androidx.preference:preference-ktx:$preference_version"
-  implementation "androidx.legacy:legacy-preference-v14:$legacy_preference_v14_version"
-  implementation "androidx.lifecycle:lifecycle-common-java8:$lifecycle_version"
-  implementation "androidx.lifecycle:lifecycle-extensions:$lifecycle_ext"
-  implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycle_version"
-  implementation "androidx.lifecycle:lifecycle-service:$lifecycle_version"
-  implementation "androidx.lifecycle:lifecycle-runtime-ktx:$lifecycle_version"
-  implementation "androidx.constraintlayout:constraintlayout:$constraint_layout_version"
-  implementation "androidx.room:room-runtime:$room_version"
-  implementation "androidx.documentfile:documentfile:$documentfile_version"
-  kapt "androidx.room:room-compiler:$room_version"
-  implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlin_coroutines_core_version"
-  implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$kotlin_coroutines_android_version"
-  implementation "androidx.multidex:multidex:$multidex_version"
+  implementation libs.kotlin.stdlib.jdk7
+  implementation libs.kotlin.reflect
+  implementation libs.core.ktx
+  implementation libs.fragment.ktx
+  implementation libs.appcompat
+  implementation libs.material
+  implementation libs.preference.ktx
+  implementation libs.legacy.preference.v14
+  implementation libs.lifecycle.common.java8
+  implementation libs.lifecycle.extensions
+  implementation libs.lifecycle.viewmodel.ktx
+  implementation libs.lifecycle.service
+  implementation libs.lifecycle.runtime.ktx
+  implementation libs.kotlinx.coroutines.core
+  implementation libs.constraintlayout
+  implementation libs.room.runtime
+  implementation libs.documentfile
+  implementation libs.kotlinx.coroutines.android
+  implementation libs.multidex
+  kapt libs.room.compiler
 
-  testImplementation "junit:junit:$junit_version"
-  androidTestImplementation "androidx.test:runner:$runner_version"
-  androidTestImplementation "androidx.test.espresso:espresso-core:$espresso_core_version"
+  testImplementation libs.junit
+  androidTestImplementation libs.runner
+  androidTestImplementation libs.espresso.core
 }

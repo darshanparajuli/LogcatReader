@@ -4,7 +4,7 @@ apply plugin: 'kotlin-android'
 android {
   defaultConfig {
     compileSdk 34
-    minSdkVersion 16
+    minSdkVersion 21
 
     testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
   }
@@ -26,11 +26,11 @@ android {
 dependencies {
   implementation fileTree(dir: 'libs', include: ['*.jar'])
   implementation project(':logger')
-  implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
-  implementation "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
-  implementation "androidx.appcompat:appcompat:$appcompat_version"
+  implementation libs.kotlin.stdlib.jdk7
+  implementation libs.kotlin.reflect
+  implementation libs.appcompat
 
-  testImplementation "junit:junit:$junit_version"
-  androidTestImplementation "androidx.test:runner:$runner_version"
-  androidTestImplementation "androidx.test.espresso:espresso-core:$espresso_core_version"
+  testImplementation libs.junit
+  androidTestImplementation libs.runner
+  androidTestImplementation libs.espresso.core
 }

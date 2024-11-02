@@ -1,14 +1,13 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 
 buildscript {
-  ext.kotlin_version = '1.9.10'
   repositories {
     google()
     mavenCentral()
   }
   dependencies {
-    classpath 'com.android.tools.build:gradle:8.1.4'
-    classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    classpath libs.gradle
+    classpath libs.kotlin.gradle.plugin
 
     // NOTE: Do not place your application dependencies here; they belong
     // in the individual module build.gradle files
@@ -22,28 +21,6 @@ allprojects {
   }
 }
 
-ext {
-  appcompat_version = "1.6.1"
-  constraint_layout_version = "2.1.4"
-  core_ktx_version = "1.12.0"
-  documentfile_version = "1.0.1"
-  fragment_ktx_version = "1.6.2"
-  kotlin_coroutines_android_version = "1.7.1"
-  kotlin_coroutines_core_version = "1.7.1"
-  legacy_preference_v14_version = "1.0.0"
-  lifecycle_ext = "2.2.0"
-  lifecycle_version = "2.6.2"
-  material_version = "1.10.0"
-  multidex_version = "2.0.1"
-  preference_version = "1.2.1"
-  room_version = "2.6.0"
-
-  // test dependencies
-  junit_version = "4.13.2"
-  runner_version = "1.5.2"
-  espresso_core_version = "3.5.1"
-}
-
-task clean(type: Delete) {
+tasks.register('clean', Delete) {
   delete rootProject.buildDir
 }
