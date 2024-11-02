@@ -1,5 +1,6 @@
 package com.dp.logcatapp.activities
 
+import android.app.ComponentCaller
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
@@ -73,7 +74,7 @@ class MainActivity : BaseActivityWithToolbar() {
     }
   }
 
-  override fun onNewIntent(intent: Intent?) {
+  override fun onNewIntent(intent: Intent, caller: ComponentCaller) {
     super.onNewIntent(intent)
     checkShouldTheAppExit(intent)
     handleStopRecordingIntent(intent)
@@ -117,6 +118,7 @@ class MainActivity : BaseActivityWithToolbar() {
       startActivity(Intent(this, SettingsActivity::class.java))
       true
     }
+
     else -> super.onOptionsItemSelected(item)
   }
 

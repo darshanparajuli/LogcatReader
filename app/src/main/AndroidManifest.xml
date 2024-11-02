@@ -6,7 +6,8 @@
   <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
   <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
   <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
-  <uses-permission android:name="android.permission.READ_LOGS" />
+  <uses-permission android:name="android.permission.READ_LOGS"
+      tools:ignore="ProtectedPermissions" />
 
   <application
       android:name=".LogcatApp"
@@ -30,6 +31,9 @@
     </activity>
     <activity
         android:name=".activities.MainActivity"
+        android:launchMode="singleTask" />
+    <activity
+        android:name=".activities.LogcatComposeActivity"
         android:launchMode="singleTask" />
     <activity
         android:name=".activities.SettingsActivity"

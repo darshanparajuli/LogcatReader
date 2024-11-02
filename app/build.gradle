@@ -1,7 +1,10 @@
-apply plugin: 'com.android.application'
-apply plugin: 'kotlin-android'
-apply plugin: 'kotlin-parcelize'
-apply plugin: 'kotlin-kapt'
+plugins {
+  id 'com.android.application'
+  id 'kotlin-android'
+  id 'kotlin-parcelize'
+  id 'kotlin-kapt'
+  alias(libs.plugins.compose.compiler)
+}
 
 def fileProvider = "file_provider"
 
@@ -20,6 +23,7 @@ android {
 
   buildFeatures {
     viewBinding true
+    compose true
   }
 
   signingConfigs {
@@ -91,6 +95,35 @@ dependencies {
   implementation libs.kotlinx.coroutines.android
   implementation libs.multidex
   kapt libs.room.compiler
+
+  // Compose
+  def composeBom = platform(libs.compose.bom)
+  implementation composeBom
+  androidTestImplementation composeBom
+  // Material Design 3
+  implementation 'androidx.compose.material3:material3'
+
+  // Android Studio Preview support
+  implementation 'androidx.compose.ui:ui-tooling-preview'
+  debugImplementation 'androidx.compose.ui:ui-tooling'
+
+  // UI Tests
+  androidTestImplementation 'androidx.compose.ui:ui-test-junit4'
+  debugImplementation 'androidx.compose.ui:ui-test-manifest'
+
+  // Optional - Included automatically by material, only add when you need
+  // the icons but not the material library (e.g. when using Material3 or a
+  // custom design system based on Foundation)
+  implementation 'androidx.compose.material:material-icons-core'
+  // Optional - Add full set of material icons
+  implementation 'androidx.compose.material:material-icons-extended'
+  // Optional - Add window size utils
+  implementation 'androidx.compose.material3.adaptive:adaptive'
+
+  // Optional - Integration with activities
+  implementation 'androidx.activity:activity-compose:1.9.2'
+  // Optional - Integration with ViewModels
+  implementation 'androidx.lifecycle:lifecycle-viewmodel-compose:2.8.5'
 
   testImplementation libs.junit
   androidTestImplementation libs.runner

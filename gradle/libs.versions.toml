@@ -1,5 +1,6 @@
 [versions]
 appcompatVersion = "1.7.0"
+composeBomVersion = "2024.10.01"
 constraintLayoutVersion = "2.2.0"
 coreKtxVersion = "1.15.0"
 documentFileVersion = "1.0.1"
@@ -21,6 +22,7 @@ testRunnerVersion = "1.6.2"
 
 [libraries]
 appcompat = { module = "androidx.appcompat:appcompat", version.ref = "appcompatVersion" }
+compose-bom = { module = "androidx.compose:compose-bom", version.ref = "composeBomVersion" }
 constraintlayout = { module = "androidx.constraintlayout:constraintlayout", version.ref = "constraintLayoutVersion" }
 core-ktx = { module = "androidx.core:core-ktx", version.ref = "coreKtxVersion" }
 documentfile = { module = "androidx.documentfile:documentfile", version.ref = "documentFileVersion" }
@@ -47,4 +49,4 @@ room-compiler = { module = "androidx.room:room-compiler", version.ref = "roomVer
 runner = { module = "androidx.test:runner", version.ref = "testRunnerVersion" }
 
 [plugins]
-
+compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlinVersion" }

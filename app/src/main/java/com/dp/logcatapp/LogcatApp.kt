@@ -10,3 +10,7 @@ class LogcatApp : Application() {
     Logger.init("LogcatReader")
   }
 }
+
+object Features {
+  val useComposeForUi: Boolean = false
+}
