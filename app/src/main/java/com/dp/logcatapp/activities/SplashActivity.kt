@@ -10,7 +10,7 @@ open class SplashActivity : AppCompatActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     if (Features.useComposeForUi) {
-      startActivity(Intent(this, LogcatComposeActivity::class.java))
+      startActivity(Intent(this, ComposeMainActivity::class.java))
     } else {
       startActivity(Intent(this, MainActivity::class.java))
     }

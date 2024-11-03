@@ -33,7 +33,7 @@
         android:name=".activities.MainActivity"
         android:launchMode="singleTask" />
     <activity
-        android:name=".activities.LogcatComposeActivity"
+        android:name=".activities.ComposeMainActivity"
         android:launchMode="singleTask" />
     <activity
         android:name=".activities.SettingsActivity"
