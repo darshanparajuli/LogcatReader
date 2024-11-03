@@ -446,7 +446,7 @@ class Logcat(initialCapacity: Int = INITIAL_LOG_CAPACITY) : Closeable {
 
       Logger.debug(
         Logcat::class, "Available buffers: " +
-        AVAILABLE_BUFFERS.contentToString()
+          AVAILABLE_BUFFERS.contentToString()
       )
       Logger.debug(Logcat::class, "Default buffers: $DEFAULT_BUFFERS")
     }

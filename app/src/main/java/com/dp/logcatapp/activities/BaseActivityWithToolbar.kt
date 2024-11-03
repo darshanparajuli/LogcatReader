@@ -3,7 +3,6 @@ package com.dp.logcatapp.activities
 import android.annotation.SuppressLint
 import android.os.Build
 import android.os.Bundle
-import android.os.Handler
 import android.util.DisplayMetrics
 import android.view.MenuItem
 import android.view.View
@@ -74,19 +73,19 @@ abstract class BaseActivityWithToolbar : AppCompatActivity() {
   }
 
   override fun onOptionsItemSelected(item: MenuItem): Boolean = when (item.itemId) {
-      android.R.id.home -> {
-          val upIntent = NavUtils.getParentActivityIntent(this)
-          if (upIntent != null) {
-              if (NavUtils.shouldUpRecreateTask(this, upIntent)) {
-                  TaskStackBuilder.create(this)
-                    .addNextIntentWithParentStack(upIntent)
-                    .startActivities()
-              } else {
-                  NavUtils.navigateUpTo(this, upIntent)
-              }
-          }
-          true
+    android.R.id.home -> {
+      val upIntent = NavUtils.getParentActivityIntent(this)
+      if (upIntent != null) {
+        if (NavUtils.shouldUpRecreateTask(this, upIntent)) {
+          TaskStackBuilder.create(this)
+            .addNextIntentWithParentStack(upIntent)
+            .startActivities()
+        } else {
+          NavUtils.navigateUpTo(this, upIntent)
+        }
       }
+      true
+    }
     else -> super.onOptionsItemSelected(item)
   }
 }

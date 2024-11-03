@@ -11,7 +11,8 @@ import com.dp.logcat.Log
 import com.dp.logcat.LogPriority
 import com.dp.logcatapp.R
 
-internal class MyRecyclerViewAdapter(context: Context) : RecyclerView.Adapter<MyRecyclerViewAdapter.MyViewHolder>(),
+internal class MyRecyclerViewAdapter(context: Context) :
+  RecyclerView.Adapter<MyRecyclerViewAdapter.MyViewHolder>(),
   View.OnClickListener {
   private val data = mutableListOf<Log>()
   private var onClickListener: ((View) -> Unit)? = null
