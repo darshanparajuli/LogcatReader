@@ -34,6 +34,7 @@
         android:launchMode="singleTask" />
     <activity
         android:name=".activities.ComposeMainActivity"
+        android:windowSoftInputMode="adjustResize"
         android:launchMode="singleTask" />
     <activity
         android:name=".activities.SettingsActivity"

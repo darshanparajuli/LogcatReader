@@ -1,5 +1,8 @@
 package com.dp.logcatapp.ui.screens
 
+import android.content.ComponentName
+import android.content.ServiceConnection
+import android.os.IBinder
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -10,7 +13,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -35,6 +40,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -48,38 +54,67 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.dp.logcat.Log
 import com.dp.logcat.LogPriority
+import com.dp.logcat.Logcat
+import com.dp.logcat.LogsReceivedListener
+import com.dp.logcatapp.services.LogcatService
+import com.dp.logcatapp.services.getService
+import com.dp.logcatapp.ui.theme.AppTypography
 import com.dp.logcatapp.ui.theme.LogPriorityColors
 import com.dp.logcatapp.ui.theme.LogcatReaderTheme
 import com.dp.logcatapp.ui.theme.RobotoMonoFontFamily
+import com.dp.logcatapp.util.ServiceBinder
 import com.dp.logger.Logger
+import kotlinx.coroutines.channels.SendChannel
+import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
-const val SNAP_SCROLL_HIDE_DELAY_MS = 2000L
+private const val TAG = "HomeScreen"
+private const val SNAP_SCROLL_HIDE_DELAY_MS = 2000L
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
   modifier: Modifier,
 ) {
+  val lazyListState = rememberLazyListState()
+  val logsState = remember { mutableStateListOf<Log>() }
+  val coroutineScope = rememberCoroutineScope()
+  var snapToBottom by remember { mutableStateOf(true) }
+  val snapScrollInfo = rememberSnapScrollInfo(
+    lazyListState = lazyListState,
+    snapToBottom = snapToBottom,
+  )
+
   Scaffold(
     modifier = modifier,
     topBar = {
       TopAppBar(
         title = {
-          Text(text = "Logcat Reader")
+          Column {
+            Text(
+              text = "Logcat Reader",
+            )
+            Text(
+              text = logsState.size.toString(),
+              style = AppTypography.titleSmall,
+            )
+          }
         },
         colors = TopAppBarDefaults.topAppBarColors()
           .copy(
@@ -87,40 +122,96 @@ fun HomeScreen(
             titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
           )
       )
-    }
-  ) { padding ->
-    val logs = remember { mutableStateListOf<Log>() }
-    val state = rememberLazyListState()
-
-    // TODO: use actual logs.
-    LaunchedEffect(Unit) {
-      launch {
-        var i = 0
-        while (i < 50) {
-          logs += Log(
-            id = i,
-            priority = "D",
-            tag = "Tag",
-            msg = "This is a log - $i",
-            date = "01-12",
-            time = "21:10:46.123",
-            pid = "1600",
-            tid = "123123",
-          )
-          delay(100)
-          i += 1
+    },
+    floatingActionButton = {
+      AnimatedVisibility(
+        visible = snapScrollInfo.isScrollSnapperVisible,
+        enter = fadeIn(),
+        exit = fadeOut(),
+      ) {
+        FloatingActionButton(
+          modifier = Modifier.size(48.dp),
+          onClick = {
+            coroutineScope.launch {
+              if (snapScrollInfo.shouldSnapScrollUp) {
+                lazyListState.scrollToItem(0)
+              } else if (snapScrollInfo.shouldSnapScrollDown) {
+                if (lazyListState.layoutInfo.totalItemsCount > 0) {
+                  snapToBottom = true
+                  lazyListState.scrollToItem(lazyListState.layoutInfo.totalItemsCount - 1)
+                }
+              }
+            }
+          }
+        ) {
+          when {
+            snapScrollInfo.shouldSnapScrollUp -> Icon(
+              Icons.Filled.KeyboardArrowUp,
+              contentDescription = null
+            )
+            snapScrollInfo.shouldSnapScrollDown -> Icon(
+              Icons.Filled.KeyboardArrowDown,
+              contentDescription = null
+            )
+          }
         }
+      }
+    },
+  ) { innerPadding ->
+    val logcatService = rememberLogcatServiceConnection()
+
+    val lifecycleOwner = LocalLifecycleOwner.current
+    logcatService?.let { service ->
+      LaunchedEffect(service) {
+        val logcat = service.logcat
+        logcat.pause() // resume on updateFilters callback
+
+        if (logsState.isEmpty()) {
+          logsState += logcat.getLogsFiltered()
+        } else if (service.restartedLogcat) {
+          service.restartedLogcat = false
+          logsState.clear()
+        }
+
+        launch {
+          logcat.logs()
+            .collect {
+              logsState += it
+            }
+        }
+
+        logcat.bind(lifecycleOwner)
+
+        // if (viewModel.stopRecording || arguments?.getBoolean(STOP_RECORDING) == true) {
+        //   arguments?.putBoolean(STOP_RECORDING, false)
+        //   stopRecording()
+        // }
+        //
+        // viewModel.reloadFilters()
       }
     }
 
     LogsList(
       modifier = Modifier
         .fillMaxSize()
-        .padding(padding),
-      logs = logs,
+        .consumeWindowInsets(innerPadding)
+        .pointerInput(Unit) {
+          awaitPointerEventScope {
+            while (true) {
+              val event = awaitPointerEvent()
+              when (event.type) {
+                PointerEventType.Press -> {
+                  snapToBottom = false
+                }
+              }
+            }
+          }
+        },
+      contentPadding = innerPadding,
+      logs = logsState,
       onClick = {},
       onLongClick = {},
-      state = state,
+      state = lazyListState,
     )
   }
 }
@@ -129,170 +220,50 @@ fun HomeScreen(
 @Composable
 private fun LogsList(
   modifier: Modifier,
+  contentPadding: PaddingValues,
   logs: List<Log>,
   onClick: (Int) -> Unit,
   onLongClick: (Int) -> Unit,
   state: LazyListState = rememberLazyListState(),
 ) {
-  Box(
+  LazyColumn(
     modifier = modifier,
+    state = state,
+    contentPadding = contentPadding,
   ) {
-    var isScrollDownVisible by remember { mutableStateOf(false) }
-    var isScrollUpVisible by remember { mutableStateOf(false) }
-    var snapToBottom by remember { mutableStateOf(true) }
-
-    if (snapToBottom) {
-      LaunchedEffect(state) {
-        isScrollDownVisible = false
-        isScrollUpVisible = false
-        snapshotFlow { state.layoutInfo.totalItemsCount }
-          .filter { lastIndex -> lastIndex > 0 }
-          .collect { lastIndex ->
-            state.scrollToItem(lastIndex)
-          }
+    itemsIndexed(
+      items = logs,
+      key = { index, _ -> logs[index].id }
+    ) { index, item ->
+      if (index > 0) {
+        HorizontalDivider()
       }
-    } else {
-      LaunchedEffect(state) {
-        data class ItemOffsetInfo(
-          val viewportEndOffset: Int,
-          val isLastItem: Boolean,
-          val size: Int,
-          val offset: Int,
-        )
-        launch {
-          snapshotFlow {
-            val layoutInfo = state.layoutInfo
-            layoutInfo.visibleItemsInfo.lastOrNull()?.let { info ->
-              ItemOffsetInfo(
-                viewportEndOffset = layoutInfo.viewportEndOffset,
-                isLastItem = info.index == layoutInfo.totalItemsCount - 1,
-                size = info.size,
-                offset = info.offset,
-              )
-            }
-          }
-            .filterNotNull()
-            .map { offsetInfo ->
-              Logger.debug("darshan", offsetInfo.toString())
-              !offsetInfo.isLastItem ||
-                (offsetInfo.offset + offsetInfo.size) > offsetInfo.viewportEndOffset
-            }
-            .collectLatest { canScrollDown ->
-              isScrollDownVisible = canScrollDown
-              if (isScrollDownVisible) {
-                delay(SNAP_SCROLL_HIDE_DELAY_MS)
-                isScrollDownVisible = false
-              }
-            }
-        }
-
-        snapshotFlow { state.firstVisibleItemIndex to state.firstVisibleItemScrollOffset }
-          .map { (index, offset) ->
-            index != 0 || offset > 0
-          }
-          .collectLatest { canScrollUp ->
-            isScrollUpVisible = canScrollUp
-            if (isScrollUpVisible) {
-              delay(SNAP_SCROLL_HIDE_DELAY_MS)
-              isScrollUpVisible = false
-            }
-          }
-      }
-    }
-
-    LazyColumn(
-      modifier = Modifier.fillMaxSize(),
-      state = state,
-    ) {
-      itemsIndexed(
-        items = logs,
-        key = { index, _ -> logs[index].id }
-      ) { index, item ->
-        if (index > 0) {
-          HorizontalDivider()
-        }
-        LogItem(
-          modifier = Modifier
-            .fillMaxWidth()
-            .combinedClickable(
-              onLongClick = { onLongClick(index) },
-              onClick = { onClick(index) },
-            )
-            .pointerInput(Unit) {
-              awaitPointerEventScope {
-                when (currentEvent.type) {
-                  PointerEventType.Press -> {
-                    snapToBottom = false
-                  }
-                }
-              }
-            }
-            .wrapContentHeight(),
-          priority = item.priority,
-          tag = item.tag,
-          message = item.msg,
-          date = item.date,
-          time = item.time,
-          pid = item.pid,
-          tid = item.tid,
-          priorityColor = when (item.priority) {
-            LogPriority.ASSERT -> LogPriorityColors.priorityAssert
-            LogPriority.DEBUG -> LogPriorityColors.priorityDebug
-            LogPriority.ERROR -> LogPriorityColors.priorityError
-            LogPriority.FATAL -> LogPriorityColors.priorityFatal
-            LogPriority.INFO -> LogPriorityColors.priorityInfo
-            LogPriority.VERBOSE -> LogPriorityColors.priorityVerbose
-            LogPriority.WARNING -> LogPriorityColors.priorityWarning
-            else -> LogPriorityColors.prioritySilent
-          },
-        )
-      }
-    }
-
-    val coroutineScope = rememberCoroutineScope()
-
-    AnimatedVisibility(
-      visible = isScrollUpVisible,
-      modifier = Modifier
-        .padding(16.dp)
-        .align(Alignment.TopEnd),
-      enter = fadeIn(),
-      exit = fadeOut(),
-    ) {
-      FloatingActionButton(
-        modifier = Modifier.size(48.dp),
-        onClick = {
-          isScrollUpVisible = false
-          coroutineScope.launch {
-            state.scrollToItem(0)
-          }
-        }
-      ) {
-        Icon(Icons.Filled.KeyboardArrowUp, contentDescription = null)
-      }
-    }
-
-    AnimatedVisibility(
-      visible = isScrollDownVisible,
-      modifier = Modifier
-        .padding(16.dp)
-        .align(Alignment.BottomEnd),
-      enter = fadeIn(),
-      exit = fadeOut(),
-    ) {
-      FloatingActionButton(
-        modifier = Modifier.size(48.dp),
-        onClick = {
-          coroutineScope.launch {
-            if (state.layoutInfo.totalItemsCount > 0) {
-              snapToBottom = true
-              state.scrollToItem(state.layoutInfo.totalItemsCount - 1)
-            }
-          }
-        }
-      ) {
-        Icon(Icons.Filled.KeyboardArrowDown, contentDescription = null)
-      }
+      LogItem(
+        modifier = Modifier
+          .fillMaxWidth()
+          .combinedClickable(
+            onLongClick = { onLongClick(index) },
+            onClick = { onClick(index) },
+          )
+          .wrapContentHeight(),
+        priority = item.priority,
+        tag = item.tag,
+        message = item.msg,
+        date = item.date,
+        time = item.time,
+        pid = item.pid,
+        tid = item.tid,
+        priorityColor = when (item.priority) {
+          LogPriority.ASSERT -> LogPriorityColors.priorityAssert
+          LogPriority.DEBUG -> LogPriorityColors.priorityDebug
+          LogPriority.ERROR -> LogPriorityColors.priorityError
+          LogPriority.FATAL -> LogPriorityColors.priorityFatal
+          LogPriority.INFO -> LogPriorityColors.priorityInfo
+          LogPriority.VERBOSE -> LogPriorityColors.priorityVerbose
+          LogPriority.WARNING -> LogPriorityColors.priorityWarning
+          else -> LogPriorityColors.prioritySilent
+        },
+      )
     }
   }
 }
@@ -396,6 +367,151 @@ private fun LogItem(
         )
       }
     }
+  }
+}
+
+@Composable
+private fun rememberLogcatServiceConnection(): LogcatService? {
+  var logcatService by remember { mutableStateOf<LogcatService?>(null) }
+  // Connect to service.
+  val context = LocalContext.current
+  DisposableEffect(Unit) {
+    val serviceBinder = ServiceBinder(LogcatService::class.java, object : ServiceConnection {
+      override fun onServiceConnected(
+        name: ComponentName?,
+        service: IBinder,
+      ) {
+        Logger.debug(TAG, "onServiceConnected")
+        logcatService = service.getService()
+      }
+
+      override fun onServiceDisconnected(name: ComponentName) {
+        Logger.debug(TAG, "onServiceDisconnected")
+        logcatService = null
+      }
+    })
+    serviceBinder.bind(context)
+
+    onDispose {
+      serviceBinder.unbind(context)
+    }
+  }
+
+  return logcatService
+}
+
+private fun Logcat.logs(): Flow<List<Log>> = callbackFlow {
+  val receiver = object : LogsReceivedListener {
+    override fun onReceivedLogs(logs: List<Log>) {
+      trySendOrFail(logs)
+    }
+  }
+  addEventListener(receiver)
+  awaitClose {
+    removeEventListener(receiver)
+  }
+}
+
+data class SnapScrollInfo(
+  val isScrollSnapperVisible: Boolean = false,
+  val shouldSnapScrollDown: Boolean = false,
+  val shouldSnapScrollUp: Boolean = false,
+)
+
+@Composable
+private fun rememberSnapScrollInfo(
+  lazyListState: LazyListState,
+  snapToBottom: Boolean,
+): SnapScrollInfo {
+  var snapScrollInfo by remember { mutableStateOf(SnapScrollInfo()) }
+
+  if (snapToBottom) {
+    LaunchedEffect(lazyListState) {
+      snapScrollInfo = SnapScrollInfo()
+      snapshotFlow { lazyListState.layoutInfo.totalItemsCount }
+        .filter { lastIndex -> lastIndex > 0 }
+        .collect { lastIndex ->
+          lazyListState.scrollToItem(lastIndex)
+        }
+    }
+  } else {
+    LaunchedEffect(lazyListState) {
+      data class LastItemOffsetInfo(
+        val lastItem: Boolean,
+        val lastItemSize: Int,
+        val lastVisibleOffset: Int,
+      )
+
+      data class ItemOffsetInfo(
+        val viewportEndOffset: Int,
+        val firstVisibleIndex: Int,
+        val firstVisibleOffset: Int,
+        val lastItemInfo: LastItemOffsetInfo?,
+        val lastScrolledForward: Boolean,
+        val lastScrolledBackward: Boolean,
+      )
+
+      launch {
+        snapshotFlow {
+          val layoutInfo = lazyListState.layoutInfo
+          ItemOffsetInfo(
+            viewportEndOffset = layoutInfo.viewportEndOffset,
+            firstVisibleIndex = lazyListState.firstVisibleItemIndex,
+            firstVisibleOffset = lazyListState.firstVisibleItemScrollOffset,
+            lastItemInfo = layoutInfo.visibleItemsInfo.lastOrNull()?.let { info ->
+              LastItemOffsetInfo(
+                lastItem = info.index == layoutInfo.totalItemsCount - 1,
+                lastItemSize = info.size,
+                lastVisibleOffset = info.offset,
+              )
+            },
+            lastScrolledForward = lazyListState.lastScrolledForward,
+            lastScrolledBackward = lazyListState.lastScrolledBackward,
+          )
+        }
+          .filterNotNull()
+          .collectLatest { offsetInfo ->
+            var shouldSnapScrollUp = false
+            var shouldSnapScrollDown = false
+            if (offsetInfo.lastScrolledForward) {
+              val lastItemInfo = offsetInfo.lastItemInfo
+              if (lastItemInfo != null) {
+                val canScrollDown = !lastItemInfo.lastItem ||
+                  (lastItemInfo.lastVisibleOffset + lastItemInfo.lastItemSize) > offsetInfo.viewportEndOffset
+                shouldSnapScrollUp = false
+                shouldSnapScrollDown = canScrollDown
+              } else {
+                shouldSnapScrollDown = false
+              }
+            } else if (offsetInfo.lastScrolledBackward) {
+              val canScrollUp =
+                offsetInfo.firstVisibleIndex != 0 || offsetInfo.firstVisibleOffset > 0
+              shouldSnapScrollDown = false
+              shouldSnapScrollUp = canScrollUp
+            }
+            var isScrollSnapperVisible = shouldSnapScrollUp || shouldSnapScrollDown
+            snapScrollInfo = snapScrollInfo.copy(
+              shouldSnapScrollUp = shouldSnapScrollUp,
+              shouldSnapScrollDown = shouldSnapScrollDown,
+              isScrollSnapperVisible = isScrollSnapperVisible,
+            )
+            if (isScrollSnapperVisible) {
+              delay(SNAP_SCROLL_HIDE_DELAY_MS)
+              snapScrollInfo = snapScrollInfo.copy(
+                isScrollSnapperVisible = false,
+              )
+            }
+          }
+      }
+    }
+  }
+  return snapScrollInfo
+}
+
+private fun <E> SendChannel<E>.trySendOrFail(e: E) {
+  val result = trySend(e)
+  if (result.isFailure) {
+    error("Failed sending $e, closed: ${result.isClosed}")
   }
 }
 

@@ -5,7 +5,6 @@ import android.net.Uri
 import android.os.ConditionVariable
 import android.os.Handler
 import android.os.Looper
-import androidx.appcompat.app.AppCompatActivity
 import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
@@ -285,12 +284,12 @@ class Logcat(initialCapacity: Int = INITIAL_LOG_CAPACITY) : Closeable {
     }
   }
 
-  fun bind(activity: AppCompatActivity?) {
-    activity?.lifecycle?.addObserver(lifeCycleObserver)
+  fun bind(lifecycleOwner: LifecycleOwner?) {
+    lifecycleOwner?.lifecycle?.addObserver(lifeCycleObserver)
   }
 
-  fun unbind(activity: AppCompatActivity?) {
-    activity?.lifecycle?.removeObserver(lifeCycleObserver)
+  fun unbind(lifecycleOwner: LifecycleOwner?) {
+    lifecycleOwner?.lifecycle?.removeObserver(lifeCycleObserver)
   }
 
   override fun close() {
