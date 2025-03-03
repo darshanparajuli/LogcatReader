@@ -8,6 +8,7 @@ import android.content.Context
 import android.content.ContextWrapper
 import android.content.Intent
 import android.content.SharedPreferences
+import android.content.res.Configuration
 import android.graphics.Typeface
 import android.graphics.drawable.Drawable
 import android.net.Uri
@@ -36,7 +37,6 @@ import com.google.android.material.snackbar.Snackbar
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
-import java.util.Calendar
 import java.util.Locale
 
 //// BEGIN Activity
@@ -190,21 +190,24 @@ fun Context.getAttributeDrawable(@AttrRes attrId: Int): Drawable? {
 fun Context.getDefaultSharedPreferences(): SharedPreferences =
   PreferenceManager.getDefaultSharedPreferences(this)
 
-private fun isDarkThemeTime() = Calendar.getInstance().get(Calendar.HOUR_OF_DAY) !in 7..17
-
 fun Context.isDarkThemeOn(): Boolean {
   val theme = getDefaultSharedPreferences()
     .getString(PreferenceKeys.Appearance.KEY_THEME, PreferenceKeys.Appearance.Default.THEME)
   return theme == PreferenceKeys.Appearance.Theme.DARK ||
-    (theme == PreferenceKeys.Appearance.Theme.AUTO && isDarkThemeTime())
+    (theme == PreferenceKeys.Appearance.Theme.AUTO && isSystemDarkThemeOn())
 }
 
 private fun Context.setThemeAuto() {
-  if (isDarkThemeTime()) {
+  if (isSystemDarkThemeOn()) {
     setThemeDark()
   } else {
     setThemeLight()
   }
+}
+
+private fun Context.isSystemDarkThemeOn(): Boolean {
+  return resources.configuration.uiMode and
+    Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES
 }
 
 private fun Context.setThemeDark() {
