@@ -25,7 +25,10 @@ import androidx.core.view.WindowInsetsCompat.Type.systemBars
 import androidx.core.view.updateLayoutParams
 import androidx.core.view.updatePadding
 import androidx.fragment.app.FragmentResultListener
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.Observer
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -69,6 +72,9 @@ import kotlinx.coroutines.Dispatchers.Default
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.Runnable
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -99,7 +105,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
   private lateinit var fabUp: FloatingActionButton
   private lateinit var fabDown: FloatingActionButton
   private lateinit var snackBarProgress: IndeterminateProgressSnackBar
-  private var logcatService: LogcatService? = null
+  private val logcatService = MutableStateFlow<LogcatService?>(null)
   private var ignoreScrollEvent = false
   private var searchViewActive = false
   private var lastLogId = -1
@@ -235,7 +241,40 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
     inflater: LayoutInflater,
     container: ViewGroup?,
     savedInstanceState: Bundle?
-  ): View = inflateLayout(R.layout.fragment_logcat_live)
+  ): View {
+    val view = inflateLayout(R.layout.fragment_logcat_live)
+    recyclerView = view.findViewById(R.id.recyclerView)
+    ViewCompat.setOnApplyWindowInsetsListener(recyclerView) { v, insets ->
+      val bars = insets.getInsets(systemBars() or displayCutout())
+      v.updatePadding(
+        left = bars.left,
+        right = bars.right,
+        bottom = bars.bottom,
+      )
+      WindowInsetsCompat.CONSUMED
+    }
+    fabDown = view.findViewById(R.id.fabDown)
+    ViewCompat.setOnApplyWindowInsetsListener(fabDown) { v, windowInsets ->
+      val insets = windowInsets.getInsets(systemBars())
+      v.updateLayoutParams<MarginLayoutParams> {
+        leftMargin += insets.left
+        rightMargin += insets.right
+        bottomMargin += insets.bottom
+      }
+      WindowInsetsCompat.CONSUMED
+    }
+    fabUp = view.findViewById(R.id.fabUp)
+    ViewCompat.setOnApplyWindowInsetsListener(fabUp) { v, windowInsets ->
+      val insets = windowInsets.getInsets(systemBars())
+      v.updateLayoutParams<MarginLayoutParams> {
+        leftMargin += insets.left
+        rightMargin += insets.right
+        bottomMargin += insets.bottom
+      }
+      WindowInsetsCompat.CONSUMED
+    }
+    return view
+  }
 
   override fun onViewCreated(
     view: View,
@@ -278,12 +317,12 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
     }
 
     fabDown.setOnClickListener {
-      logcatService?.logcat?.pause()
+      logcatService.value?.logcat?.pause()
       hideFabDown()
       ignoreScrollEvent = true
       viewModel.autoScroll = true
       linearLayoutManager.scrollToPosition(adapter.itemCount - 1)
-      resumeLogcat()
+      logcatService.value?.resumeLogcat()
     }
 
     snackBarProgress = IndeterminateProgressSnackBar(view, getString(R.string.saving))
@@ -299,11 +338,11 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
       WindowInsetsCompat.CONSUMED
     }
     fabUp.setOnClickListener {
-      logcatService?.logcat?.pause()
+      logcatService.value?.logcat?.pause()
       hideFabUp()
       viewModel.autoScroll = false
       linearLayoutManager.scrollToPositionWithOffset(0, 0)
-      resumeLogcat()
+      logcatService.value?.resumeLogcat()
     }
 
     hideFabUp()
@@ -334,34 +373,38 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
       NeedPermissionDialogFragment().show(parentFragmentManager, NeedPermissionDialogFragment.TAG)
     }
 
-    viewModel.getFilters().observe(viewLifecycleOwner) { filters ->
-      if (filters != null) {
-        logcatService?.let {
-          val logcat = it.logcat
-          logcat.pause()
-          logcat.clearFilters(exclude = SEARCH_FILTER_TAG)
-          logcat.clearExclusions()
-
-          for (filter in filters) {
-            if (filter.exclude) {
-              logcat.addExclusion(
-                "${filter.hashCode()}",
-                LogFilter(filter)
-              )
-            } else {
-              logcat.addFilter(
-                "${filter.hashCode()}",
-                LogFilter(filter)
-              )
-            }
+    lifecycleScope.launch {
+      repeatOnLifecycle(Lifecycle.State.RESUMED) {
+        viewModel.filters
+          .combine(logcatService.filterNotNull()) { filters, logcatService ->
+            filters to logcatService
           }
+          .collect { (filters, logcatService) ->
+            val logcat = logcatService.logcat
+            logcat.pause()
+            logcat.clearFilters(exclude = SEARCH_FILTER_TAG)
+            logcat.clearExclusions()
 
-          Logger.debug(TAG, "setting filtered logs")
-          adapter.setItems(logcat.getLogsFiltered())
-          updateToolbarSubtitle(adapter.itemCount)
-          scrollRecyclerView()
-          resumeLogcat()
-        }
+            for (filter in filters) {
+              if (filter.exclude) {
+                logcat.addExclusion(
+                  "${filter.hashCode()}",
+                  LogFilter(filter)
+                )
+              } else {
+                logcat.addFilter(
+                  "${filter.hashCode()}",
+                  LogFilter(filter)
+                )
+              }
+            }
+
+            Logger.debug(TAG, "setting filtered logs")
+            adapter.setItems(logcat.getLogsFiltered())
+            updateToolbarSubtitle(adapter.itemCount)
+            scrollRecyclerView()
+            logcatService.resumeLogcat()
+          }
       }
     }
 
@@ -425,7 +468,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
           onSearchViewClose()
         } else {
           reachedBlank = false
-          logcatService?.logcat?.let {
+          logcatService.value?.logcat?.let {
             lastSearchRunnable = Runnable {
               runSearchTask(it, newText)
             }.also {
@@ -465,7 +508,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
         true
       }
       R.id.action_play_pause -> {
-        logcatService?.let {
+        logcatService.value?.let {
           val newPausedState = !it.paused
           if (newPausedState) {
             it.logcat.pause()
@@ -478,7 +521,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
         true
       }
       R.id.action_record_toggle -> {
-        logcatService?.let {
+        logcatService.value?.let {
           val recording = !it.recording
 
           if (recording && it.paused) {
@@ -504,7 +547,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
         true
       }
       R.id.clear_action -> {
-        logcatService?.logcat?.clearLogs {
+        logcatService.value?.logcat?.clearLogs {
           adapter.clear()
           updateToolbarSubtitle(adapter.itemCount)
         }
@@ -528,7 +571,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
       }
       R.id.action_restart_logcat -> {
         adapter.clear()
-        logcatService?.logcat?.restart()
+        logcatService.value?.logcat?.restart()
         true
       }
       else -> false
@@ -536,7 +579,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
   }
 
   private fun onSearchViewClose() {
-    logcatService?.logcat?.let {
+    logcatService.value?.logcat?.let {
       it.pause()
       it.removeFilter(SEARCH_FILTER_TAG)
 
@@ -555,7 +598,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
       }
     }
 
-    resumeLogcat()
+    logcatService.value?.resumeLogcat()
   }
 
   override fun onPrepareMenu(menu: Menu) {
@@ -563,7 +606,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
     val recordToggleItem = menu.findItem(R.id.action_record_toggle)
 
     val context = requireContext()
-    logcatService?.let {
+    logcatService.value?.let {
       if (it.paused) {
         playPauseItem.icon = ContextCompat.getDrawable(
           context,
@@ -608,7 +651,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
   }
 
   private fun stopRecording() {
-    logcatService?.let {
+    logcatService.value?.let {
       if (it.recording) {
         it.updateNotification(false)
         saveToFile(true)
@@ -622,9 +665,9 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
   private fun saveToFile(recorded: Boolean) {
     viewModel.save {
       if (recorded) {
-        logcatService?.logcat?.stopRecording()
+        logcatService.value?.logcat?.stopRecording()
       } else {
-        logcatService?.logcat?.getLogsFiltered()
+        logcatService.value?.logcat?.getLogsFiltered()
       }
     }
   }
@@ -655,7 +698,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
     searchTask?.cancel()
 
     recyclerView.removeOnScrollListener(onScrollListener)
-    logcatService?.let {
+    logcatService.value?.let {
       it.logcat.removeEventListener(this)
       it.logcat.unbind(activity as AppCompatActivity)
     }
@@ -667,16 +710,16 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
     service: IBinder
   ) {
     Logger.debug(LogcatLiveFragment::class, "onServiceConnected")
-    logcatService = service.getService()
-    val logcat = logcatService!!.logcat
+    val logcatService = service.getService<LogcatService>()
+    val logcat = logcatService.logcat
     logcat.pause() // resume on updateFilters callback
 
     if (adapter.itemCount == 0) {
       Logger.debug(LogcatLiveFragment::class, "Added all logs")
       addAllLogs(logcat.getLogsFiltered())
-    } else if (logcatService!!.restartedLogcat) {
+    } else if (logcatService.restartedLogcat) {
       Logger.debug(LogcatLiveFragment::class, "Logcat restarted")
-      logcatService!!.restartedLogcat = false
+      logcatService.restartedLogcat = false
       adapter.clear()
     }
 
@@ -689,8 +732,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
       arguments?.putBoolean(STOP_RECORDING, false)
       stopRecording()
     }
-
-    viewModel.reloadFilters()
+    this.logcatService.value = logcatService
   }
 
   override fun onReceivedLogs(logs: List<Log>) {
@@ -723,17 +765,15 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
     }
   }
 
-  private fun resumeLogcat() {
-    logcatService?.let {
-      if (!it.paused) {
-        it.logcat.resume()
-      }
+  private fun LogcatService.resumeLogcat() {
+    if (!paused) {
+      logcat.resume()
     }
   }
 
   override fun onServiceDisconnected(name: ComponentName) {
     Logger.debug(LogcatLiveFragment::class, "onServiceDisconnected")
-    logcatService = null
+    logcatService.value = null
   }
 
   private class SearchFilter(private val searchText: String) : Filter {
@@ -757,7 +797,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
       viewModel.autoScroll = false
       linearLayoutManager.scrollToPositionWithOffset(0, 0)
 
-      resumeLogcat()
+      logcatService.value?.resumeLogcat()
     }
   }
 

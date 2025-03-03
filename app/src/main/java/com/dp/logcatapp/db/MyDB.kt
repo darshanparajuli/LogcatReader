@@ -17,6 +17,7 @@ import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.dp.logcatapp.fragments.filters.FilterType
+import kotlinx.coroutines.flow.Flow
 
 @Entity(
   primaryKeys = ["type", "value", "exclude"], tableName = "filters",
@@ -34,11 +35,11 @@ interface FilterDao {
   @Query("SELECT * FROM filters WHERE `exclude` = 0")
   fun getFilters(): List<FilterInfo>
 
+  @Query("SELECT * FROM filters")
+  fun filters(): Flow<List<FilterInfo>>
+
   @Query("SELECT * FROM filters WHERE `exclude` = 1")
   fun getExclusions(): List<FilterInfo>
-
-  @Query("SELECT * FROM filters")
-  fun getAll(): List<FilterInfo>
 
   @Insert(onConflict = OnConflictStrategy.REPLACE)
   fun insert(vararg info: FilterInfo)

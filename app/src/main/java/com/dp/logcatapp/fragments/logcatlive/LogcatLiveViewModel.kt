@@ -2,7 +2,6 @@ package com.dp.logcatapp.fragments.logcatlive
 
 import android.app.Application
 import android.net.Uri
-import android.os.Build
 import androidx.core.net.toFile
 import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
@@ -19,8 +18,8 @@ import com.dp.logcatapp.util.ScopedAndroidViewModel
 import com.dp.logcatapp.util.Utils
 import com.dp.logcatapp.util.getDefaultSharedPreferences
 import kotlinx.coroutines.Dispatchers.IO
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -38,28 +37,8 @@ internal class LogcatLiveViewModel(application: Application) : ScopedAndroidView
   var alreadySaved = true
     private set
 
-  private lateinit var filters: MutableLiveData<List<FilterInfo>>
-  private var loadFiltersJob: Job? = null
-
-  fun getFilters(): LiveData<List<FilterInfo>> {
-    if (this::filters.isInitialized) {
-      return filters
-    }
-
-    filters = MutableLiveData()
-    reloadFilters()
-    return filters
-  }
-
-  fun reloadFilters() {
-    loadFiltersJob?.cancel()
-    loadFiltersJob = launch {
-      val db = MyDB.getInstance(getApplication())
-      filters.value = withContext(IO) {
-        db.filterDao().getAll()
-      }
-    }
-  }
+  val filters: Flow<List<FilterInfo>>
+    get() = MyDB.getInstance(getApplication()).filterDao().filters()
 
   fun getFileSaveNotifier(): LiveData<SaveInfo> = fileSaveNotifier
 
@@ -84,7 +63,7 @@ internal class LogcatLiveViewModel(application: Application) : ScopedAndroidView
 
         val context = getApplication<Application>()
         val isUsingCustomLocation = Utils.isUsingCustomSaveLocation(context)
-        val result = if (isUsingCustomLocation && Build.VERSION.SDK_INT >= 21) {
+        val result = if (isUsingCustomLocation) {
           Logcat.writeToFile(context, logs, uri)
         } else {
           Logcat.writeToFile(logs, uri.toFile())
@@ -92,7 +71,7 @@ internal class LogcatLiveViewModel(application: Application) : ScopedAndroidView
 
         saveInfo.result = SaveInfo.ERROR_SAVING
         if (result) {
-          val fileName = if (isUsingCustomLocation && Build.VERSION.SDK_INT >= 21) {
+          val fileName = if (isUsingCustomLocation) {
             DocumentFile.fromSingleUri(context, uri)?.name
           } else {
             uri.toFile().name
@@ -133,15 +112,9 @@ internal class LogcatLiveViewModel(application: Application) : ScopedAndroidView
       file.mkdirs()
       File(file, "$fileName.txt").toUri()
     } else {
-      if (Build.VERSION.SDK_INT >= 21) {
-        val documentFile = DocumentFile.fromTreeUri(context, Uri.parse(saveLocationPref))
-        val file = documentFile?.createFile("text/plain", fileName)
-        file?.uri
-      } else {
-        val file = File(saveLocationPref, LOGCAT_DIR)
-        file.mkdirs()
-        File(file, "$fileName.txt").toUri()
-      }
+      val documentFile = DocumentFile.fromTreeUri(context, Uri.parse(saveLocationPref))
+      val file = documentFile?.createFile("text/plain", fileName)
+      file?.uri
     }
   }
 }
