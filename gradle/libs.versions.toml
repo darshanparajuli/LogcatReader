@@ -1,26 +1,31 @@
 [versions]
+activityComposeVersion = "1.10.1"
 appcompatVersion = "1.7.0"
-composeBomVersion = "2024.10.01"
-constraintLayoutVersion = "2.2.0"
+composeBomVersion = "2025.02.00"
+constraintLayoutVersion = "2.2.1"
 coreKtxVersion = "1.15.0"
 documentFileVersion = "1.0.1"
 espressoCoreVersion = "3.6.1"
-fragmentKtxVersion = "1.8.5"
-gradleVersion = "8.7.2"
+fragmentKtxVersion = "1.8.6"
+gradleVersion = "8.8.2"
 junitVersion = "4.13.2"
-kotlinVersion = "2.0.20"
+kotlinVersion = "2.0.21"
 coroutinesAndroidVersion = "1.7.3"
 coroutinesCoreVersion = "1.7.1"
 legacyPreferenceV14Version = "1.0.0"
 lifecycleCommonJava8Version = "2.8.7"
 lifecycleExtensionsVersion = "2.2.0"
+lifecycleViewmodelComposeVersion = "2.8.7"
 materialVersion = "1.12.0"
 multidexVersion = "2.0.1"
 preferenceKtxVersion = "1.2.1"
 roomVersion = "2.6.1"
 testRunnerVersion = "1.6.2"
+kspVersion = "2.0.21-1.0.25"
 
 [libraries]
+activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activityComposeVersion" }
+adaptive = { module = "androidx.compose.material3.adaptive:adaptive" }
 appcompat = { module = "androidx.appcompat:appcompat", version.ref = "appcompatVersion" }
 compose-bom = { module = "androidx.compose:compose-bom", version.ref = "composeBomVersion" }
 constraintlayout = { module = "androidx.constraintlayout:constraintlayout", version.ref = "constraintLayoutVersion" }
@@ -40,13 +45,23 @@ lifecycle-common-java8 = { module = "androidx.lifecycle:lifecycle-common-java8",
 lifecycle-extensions = { module = "androidx.lifecycle:lifecycle-extensions", version.ref = "lifecycleExtensionsVersion" }
 lifecycle-runtime-ktx = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version.ref = "lifecycleCommonJava8Version" }
 lifecycle-service = { module = "androidx.lifecycle:lifecycle-service", version.ref = "lifecycleCommonJava8Version" }
+lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycleViewmodelComposeVersion" }
 lifecycle-viewmodel-ktx = { module = "androidx.lifecycle:lifecycle-viewmodel-ktx", version.ref = "lifecycleCommonJava8Version" }
+material-icons-extended = { module = "androidx.compose.material:material-icons-extended" }
+material-icons-core = { module = "androidx.compose.material:material-icons-core" }
+material3 = { module = "androidx.compose.material3:material3" }
 multidex = { module = "androidx.multidex:multidex", version.ref = "multidexVersion" }
 preference-ktx = { module = "androidx.preference:preference-ktx", version.ref = "preferenceKtxVersion" }
 material = { module = "com.google.android.material:material", version.ref = "materialVersion" }
 room-runtime = { module = "androidx.room:room-runtime", version.ref = "roomVersion" }
+room-ktx = { module = "androidx.room:room-ktx", version.ref = "roomVersion" }
 room-compiler = { module = "androidx.room:room-compiler", version.ref = "roomVersion" }
 runner = { module = "androidx.test:runner", version.ref = "testRunnerVersion" }
+ui-test-manifest = { module = "androidx.compose.ui:ui-test-manifest" }
+ui-test-junit4 = { module = "androidx.compose.ui:ui-test-junit4" }
+ui-tooling = { module = "androidx.compose.ui:ui-tooling" }
+ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview" }
 
 [plugins]
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlinVersion" }
+ksp = { id = "com.google.devtools.ksp", version.ref = "kspVersion" }

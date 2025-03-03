@@ -2,8 +2,8 @@ plugins {
   id 'com.android.application'
   id 'kotlin-android'
   id 'kotlin-parcelize'
-  id 'kotlin-kapt'
   alias(libs.plugins.compose.compiler)
+  alias(libs.plugins.ksp)
 }
 
 def fileProvider = "file_provider"
@@ -24,6 +24,7 @@ android {
   buildFeatures {
     viewBinding true
     compose true
+    buildConfig true
   }
 
   signingConfigs {
@@ -91,39 +92,40 @@ dependencies {
   implementation libs.kotlinx.coroutines.core
   implementation libs.constraintlayout
   implementation libs.room.runtime
+  implementation libs.room.ktx
   implementation libs.documentfile
   implementation libs.kotlinx.coroutines.android
   implementation libs.multidex
-  kapt libs.room.compiler
+  ksp libs.room.compiler
 
   // Compose
   def composeBom = platform(libs.compose.bom)
   implementation composeBom
   androidTestImplementation composeBom
   // Material Design 3
-  implementation 'androidx.compose.material3:material3'
+  implementation libs.material3
 
   // Android Studio Preview support
-  implementation 'androidx.compose.ui:ui-tooling-preview'
-  debugImplementation 'androidx.compose.ui:ui-tooling'
+  implementation libs.ui.tooling.preview
+  debugImplementation libs.ui.tooling
 
   // UI Tests
-  androidTestImplementation 'androidx.compose.ui:ui-test-junit4'
-  debugImplementation 'androidx.compose.ui:ui-test-manifest'
+  androidTestImplementation libs.ui.test.junit4
+  debugImplementation libs.ui.test.manifest
 
   // Optional - Included automatically by material, only add when you need
   // the icons but not the material library (e.g. when using Material3 or a
   // custom design system based on Foundation)
-  implementation 'androidx.compose.material:material-icons-core'
+  implementation libs.material.icons.core
   // Optional - Add full set of material icons
-  implementation 'androidx.compose.material:material-icons-extended'
+  implementation libs.material.icons.extended
   // Optional - Add window size utils
-  implementation 'androidx.compose.material3.adaptive:adaptive'
+  implementation libs.adaptive
 
   // Optional - Integration with activities
-  implementation 'androidx.activity:activity-compose:1.9.2'
+  implementation libs.activity.compose
   // Optional - Integration with ViewModels
-  implementation 'androidx.lifecycle:lifecycle-viewmodel-compose:2.8.5'
+  implementation libs.lifecycle.viewmodel.compose
 
   testImplementation libs.junit
   androidTestImplementation libs.runner
