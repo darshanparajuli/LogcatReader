@@ -55,6 +55,7 @@ class FiltersFragment : BaseFragment(), MenuProvider, FragmentResultListener {
   }
 
   private lateinit var viewModel: FiltersViewModel
+  private lateinit var recyclerView: RecyclerView
   private lateinit var recyclerViewAdapter: MyRecyclerViewAdapter
   private lateinit var linearLayoutManager: LinearLayoutManager
   private lateinit var emptyMessage: TextView
@@ -132,13 +133,13 @@ class FiltersFragment : BaseFragment(), MenuProvider, FragmentResultListener {
     emptyMessage = rootView.findViewById(R.id.textViewEmpty)
 
     val activity = requireActivity()
-    val recyclerView = rootView.findViewById<RecyclerView>(R.id.recyclerView)
-    ViewCompat.setOnApplyWindowInsetsListener(recyclerView) { v, insets ->
-      val bars = insets.getInsets(systemBars() or displayCutout())
+    recyclerView = rootView.findViewById<RecyclerView>(R.id.recyclerView)
+    ViewCompat.setOnApplyWindowInsetsListener(recyclerView) { v, windowInsets ->
+      val insets = windowInsets.getInsets(systemBars() or displayCutout())
       v.updatePadding(
-        left = bars.left,
-        right = bars.right,
-        bottom = bars.bottom,
+        left = insets.left,
+        right = insets.right,
+        bottom = insets.bottom,
       )
       WindowInsetsCompat.CONSUMED
     }
@@ -168,6 +169,7 @@ class FiltersFragment : BaseFragment(), MenuProvider, FragmentResultListener {
     when (requestKey) {
       REQ_ADD_FILTER -> {
         addFilter(requireNotNull(result.getParcelableSafe(LOGCAT_MSG)))
+        recyclerView.clearFocus()
       }
     }
   }
