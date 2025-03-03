@@ -4,9 +4,15 @@ import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.os.Bundle
 import android.view.View
+import android.view.ViewGroup.MarginLayoutParams
 import android.view.animation.DecelerateInterpolator
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.widget.Toolbar
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsCompat.Type.displayCutout
+import androidx.core.view.WindowInsetsCompat.Type.systemBars
+import androidx.core.view.updateLayoutParams
 import androidx.fragment.app.commit
 import com.dp.logcatapp.R
 import com.dp.logcatapp.fragments.savedlogs.SavedLogsFragment
@@ -38,6 +44,15 @@ class SavedLogsActivity : BaseActivityWithToolbar() {
     })
 
     cabToolbar = findViewById(R.id.cabToolbar)
+    ViewCompat.setOnApplyWindowInsetsListener(cabToolbar) { v, windowInsets ->
+      val insets = windowInsets.getInsets(systemBars() or displayCutout())
+      v.updateLayoutParams<MarginLayoutParams> {
+        topMargin = insets.top
+        leftMargin = insets.left
+        rightMargin = insets.right
+      }
+      WindowInsetsCompat.CONSUMED
+    }
     cabToolbar.inflateMenu(R.menu.saved_logs_cab)
     cabToolbar.isClickable = true
     cabToolbar.setNavigationIcon(R.drawable.ic_clear_white_24dp)
