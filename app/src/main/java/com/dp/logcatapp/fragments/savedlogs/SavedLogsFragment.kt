@@ -110,17 +110,8 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
     inflater: LayoutInflater,
     container: ViewGroup?,
     savedInstanceState: Bundle?
-  ): View? =
-    inflateLayout(R.layout.fragment_saved_logs)
-
-  override fun onViewCreated(
-    view: View,
-    savedInstanceState: Bundle?
-  ) {
-    super.onViewCreated(view, savedInstanceState)
-    emptyView = view.findViewById(R.id.textViewEmpty)
-    progressBar = view.findViewById(R.id.progressBar)
-
+  ): View {
+    val view = inflateLayout(R.layout.fragment_saved_logs)
     recyclerView = view.findViewById(R.id.recyclerView)
     ViewCompat.setOnApplyWindowInsetsListener(recyclerView) { v, insets ->
       val bars = insets.getInsets(systemBars() or displayCutout())
@@ -131,6 +122,17 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
       )
       WindowInsetsCompat.CONSUMED
     }
+    return view
+  }
+
+  override fun onViewCreated(
+    view: View,
+    savedInstanceState: Bundle?
+  ) {
+    super.onViewCreated(view, savedInstanceState)
+    emptyView = view.findViewById(R.id.textViewEmpty)
+    progressBar = view.findViewById(R.id.progressBar)
+
     linearLayoutManager = LinearLayoutManager(context)
     recyclerView.itemAnimator = null
     recyclerView.layoutManager = linearLayoutManager

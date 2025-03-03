@@ -187,18 +187,8 @@ class SavedLogsViewerFragment : BaseFragment(), MenuProvider {
     inflater: LayoutInflater,
     container: ViewGroup?,
     savedInstanceState: Bundle?
-  ): View? =
-    inflateLayout(R.layout.fragment_saved_logs_viewer)
-
-  override fun onViewCreated(
-    view: View,
-    savedInstanceState: Bundle?
-  ) {
-    super.onViewCreated(view, savedInstanceState)
-
-    progressBar = view.findViewById(R.id.progressBar)
-    textViewEmpty = view.findViewById(R.id.textViewEmpty)
-
+  ): View {
+    val view = inflateLayout(R.layout.fragment_saved_logs_viewer)
     recyclerView = view.findViewById(R.id.recyclerView)
     ViewCompat.setOnApplyWindowInsetsListener(recyclerView) { v, insets ->
       val bars = insets.getInsets(systemBars() or displayCutout())
@@ -209,6 +199,36 @@ class SavedLogsViewerFragment : BaseFragment(), MenuProvider {
       )
       WindowInsetsCompat.CONSUMED
     }
+    ViewCompat.setOnApplyWindowInsetsListener(view.findViewById(R.id.fabDownContainer)) { v, windowInsets ->
+      val insets = windowInsets.getInsets(systemBars())
+      v.updateLayoutParams<MarginLayoutParams> {
+        leftMargin = insets.left
+        rightMargin = insets.right
+        bottomMargin = insets.bottom
+      }
+      WindowInsetsCompat.CONSUMED
+    }
+    ViewCompat.setOnApplyWindowInsetsListener(view.findViewById(R.id.fabUpContainer)) { v, windowInsets ->
+      val insets = windowInsets.getInsets(systemBars())
+      v.updateLayoutParams<MarginLayoutParams> {
+        leftMargin = insets.left
+        rightMargin = insets.right
+        bottomMargin = insets.bottom
+      }
+      WindowInsetsCompat.CONSUMED
+    }
+    return view
+  }
+
+  override fun onViewCreated(
+    view: View,
+    savedInstanceState: Bundle?
+  ) {
+    super.onViewCreated(view, savedInstanceState)
+
+    progressBar = view.findViewById(R.id.progressBar)
+    textViewEmpty = view.findViewById(R.id.textViewEmpty)
+
     linearLayoutManager = LinearLayoutManager(activity)
     recyclerView.layoutManager = linearLayoutManager
     recyclerView.itemAnimator = null
@@ -223,15 +243,6 @@ class SavedLogsViewerFragment : BaseFragment(), MenuProvider {
     recyclerView.addOnScrollListener(onScrollListener)
 
     fabDown = view.findViewById(R.id.fabDown)
-    ViewCompat.setOnApplyWindowInsetsListener(fabDown) { v, windowInsets ->
-      val insets = windowInsets.getInsets(systemBars())
-      v.updateLayoutParams<MarginLayoutParams> {
-        leftMargin += insets.left
-        rightMargin += insets.right
-        bottomMargin += insets.bottom
-      }
-      WindowInsetsCompat.CONSUMED
-    }
     fabDown.setOnClickListener {
       hideFabDown()
       ignoreScrollEvent = true
@@ -240,15 +251,6 @@ class SavedLogsViewerFragment : BaseFragment(), MenuProvider {
     }
 
     fabUp = view.findViewById(R.id.fabUp)
-    ViewCompat.setOnApplyWindowInsetsListener(fabUp) { v, windowInsets ->
-      val insets = windowInsets.getInsets(systemBars())
-      v.updateLayoutParams<MarginLayoutParams> {
-        leftMargin += insets.left
-        rightMargin += insets.right
-        bottomMargin += insets.bottom
-      }
-      WindowInsetsCompat.CONSUMED
-    }
     fabUp.setOnClickListener {
       hideFabUp()
       viewModel.autoScroll = false

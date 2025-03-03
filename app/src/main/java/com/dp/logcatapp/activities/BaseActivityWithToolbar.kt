@@ -2,9 +2,7 @@ package com.dp.logcatapp.activities
 
 import android.annotation.SuppressLint
 import android.os.Bundle
-import android.util.DisplayMetrics
 import android.view.MenuItem
-import android.view.ViewGroup
 import android.view.ViewGroup.MarginLayoutParams
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
@@ -44,25 +42,17 @@ abstract class BaseActivityWithToolbar : AppCompatActivity() {
 
   protected fun setupToolbar() {
     toolbar = findViewById(getToolbarIdRes())
-    ViewCompat.setOnApplyWindowInsetsListener(toolbar) { v, insets ->
-      val bars = insets.getInsets(systemBars() or displayCutout())
+    ViewCompat.setOnApplyWindowInsetsListener(toolbar) { v, windowInsets ->
+      val insets = windowInsets.getInsets(systemBars() or displayCutout())
       v.updateLayoutParams<MarginLayoutParams> {
-        topMargin += bars.top
-        leftMargin += bars.left
-        rightMargin += bars.right
+        topMargin = insets.top
+        leftMargin = insets.left
+        rightMargin = insets.right
       }
       WindowInsetsCompat.CONSUMED
     }
     setSupportActionBar(toolbar)
     supportActionBar?.title = getToolbarTitle()
-  }
-
-  @Suppress("DEPRECATION")
-  private fun setAppBarPaddingForKitkat(viewGroup: ViewGroup) {
-    val dm = DisplayMetrics()
-    windowManager.defaultDisplay.getMetrics(dm)
-    val topPadding = (dm.scaledDensity * 25).toInt()
-    viewGroup.setPadding(0, topPadding, 0, 0)
   }
 
   protected abstract fun getToolbarIdRes(): Int
