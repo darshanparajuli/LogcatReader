@@ -22,6 +22,11 @@ import androidx.appcompat.widget.Toolbar
 import androidx.core.content.ContextCompat.getColor
 import androidx.core.net.toFile
 import androidx.core.net.toUri
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsCompat.Type.displayCutout
+import androidx.core.view.WindowInsetsCompat.Type.systemBars
+import androidx.core.view.updatePadding
 import androidx.documentfile.provider.DocumentFile
 import androidx.fragment.app.FragmentResultListener
 import androidx.fragment.app.setFragmentResult
@@ -117,6 +122,15 @@ class SavedLogsFragment : BaseFragment(), View.OnClickListener, View.OnLongClick
     progressBar = view.findViewById(R.id.progressBar)
 
     recyclerView = view.findViewById(R.id.recyclerView)
+    ViewCompat.setOnApplyWindowInsetsListener(recyclerView) { v, insets ->
+      val bars = insets.getInsets(systemBars() or displayCutout())
+      v.updatePadding(
+        left = bars.left,
+        right = bars.right,
+        bottom = bars.bottom,
+      )
+      WindowInsetsCompat.CONSUMED
+    }
     linearLayoutManager = LinearLayoutManager(context)
     recyclerView.itemAnimator = null
     recyclerView.layoutManager = linearLayoutManager

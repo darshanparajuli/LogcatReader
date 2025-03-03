@@ -11,6 +11,11 @@ import android.view.ViewGroup
 import android.widget.ImageButton
 import android.widget.TextView
 import androidx.core.view.MenuProvider
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsCompat.Type.displayCutout
+import androidx.core.view.WindowInsetsCompat.Type.systemBars
+import androidx.core.view.updatePadding
 import androidx.fragment.app.FragmentResultListener
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.DiffUtil
@@ -128,6 +133,15 @@ class FiltersFragment : BaseFragment(), MenuProvider, FragmentResultListener {
 
     val activity = requireActivity()
     val recyclerView = rootView.findViewById<RecyclerView>(R.id.recyclerView)
+    ViewCompat.setOnApplyWindowInsetsListener(recyclerView) { v, insets ->
+      val bars = insets.getInsets(systemBars() or displayCutout())
+      v.updatePadding(
+        left = bars.left,
+        right = bars.right,
+        bottom = bars.bottom,
+      )
+      WindowInsetsCompat.CONSUMED
+    }
     recyclerView.addItemDecoration(
       DividerItemDecoration(
         activity,

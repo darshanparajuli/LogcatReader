@@ -14,6 +14,7 @@
         android:id="@+id/recyclerView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:clipToPadding="false"
         />
 
     <com.dp.logcatapp.views.CustomTextView

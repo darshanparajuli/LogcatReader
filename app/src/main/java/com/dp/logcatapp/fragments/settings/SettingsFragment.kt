@@ -15,6 +15,11 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
 import androidx.core.content.edit
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsCompat.Type.displayCutout
+import androidx.core.view.WindowInsetsCompat.Type.systemBars
+import androidx.core.view.updatePadding
 import androidx.fragment.app.FragmentResultListener
 import androidx.fragment.app.setFragmentResult
 import androidx.preference.ListPreference
@@ -79,7 +84,17 @@ class SettingsFragment : PreferenceFragmentCompat(), FragmentResultListener {
   ): View {
     parentFragmentManager
       .setFragmentResultListener(REQ_SETUP_SAVE_LOCATION, viewLifecycleOwner, this)
-    return super.onCreateView(inflater, container, savedInstanceState)
+    val view = super.onCreateView(inflater, container, savedInstanceState)
+    ViewCompat.setOnApplyWindowInsetsListener(view) { v, insets ->
+      val bars = insets.getInsets(systemBars() or displayCutout())
+      v.updatePadding(
+        left = bars.left,
+        right = bars.right,
+        bottom = bars.bottom,
+      )
+      WindowInsetsCompat.CONSUMED
+    }
+    return view
   }
 
   override fun onCreatePreferences(

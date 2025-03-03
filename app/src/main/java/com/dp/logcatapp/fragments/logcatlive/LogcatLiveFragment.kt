@@ -13,10 +13,17 @@ import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
+import android.view.ViewGroup.MarginLayoutParams
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
 import androidx.core.content.ContextCompat
 import androidx.core.view.MenuProvider
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsCompat.Type.displayCutout
+import androidx.core.view.WindowInsetsCompat.Type.systemBars
+import androidx.core.view.updateLayoutParams
+import androidx.core.view.updatePadding
 import androidx.fragment.app.FragmentResultListener
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.DividerItemDecoration
@@ -228,8 +235,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
     inflater: LayoutInflater,
     container: ViewGroup?,
     savedInstanceState: Bundle?
-  ): View? =
-    inflateLayout(R.layout.fragment_logcat_live)
+  ): View = inflateLayout(R.layout.fragment_logcat_live)
 
   override fun onViewCreated(
     view: View,
@@ -238,6 +244,15 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
     super.onViewCreated(view, savedInstanceState)
     parentFragmentManager.setFragmentResultListener(REQ_ROOT_METHOD, viewLifecycleOwner, this)
     recyclerView = view.findViewById(R.id.recyclerView)
+    ViewCompat.setOnApplyWindowInsetsListener(recyclerView) { v, insets ->
+      val bars = insets.getInsets(systemBars() or displayCutout())
+      v.updatePadding(
+        left = bars.left,
+        right = bars.right,
+        bottom = bars.bottom,
+      )
+      WindowInsetsCompat.CONSUMED
+    }
     linearLayoutManager = LinearLayoutManager(activity)
     recyclerView.layoutManager = linearLayoutManager
     recyclerView.itemAnimator = null
@@ -252,6 +267,16 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
     recyclerView.addOnScrollListener(onScrollListener)
 
     fabDown = view.findViewById(R.id.fabDown)
+    ViewCompat.setOnApplyWindowInsetsListener(fabDown) { v, windowInsets ->
+      val insets = windowInsets.getInsets(systemBars())
+      v.updateLayoutParams<MarginLayoutParams> {
+        leftMargin += insets.left
+        rightMargin += insets.right
+        bottomMargin += insets.bottom
+      }
+      WindowInsetsCompat.CONSUMED
+    }
+
     fabDown.setOnClickListener {
       logcatService?.logcat?.pause()
       hideFabDown()
@@ -264,6 +289,15 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
     snackBarProgress = IndeterminateProgressSnackBar(view, getString(R.string.saving))
 
     fabUp = view.findViewById(R.id.fabUp)
+    ViewCompat.setOnApplyWindowInsetsListener(fabUp) { v, windowInsets ->
+      val insets = windowInsets.getInsets(systemBars())
+      v.updateLayoutParams<MarginLayoutParams> {
+        leftMargin += insets.left
+        rightMargin += insets.right
+        bottomMargin += insets.bottom
+      }
+      WindowInsetsCompat.CONSUMED
+    }
     fabUp.setOnClickListener {
       logcatService?.logcat?.pause()
       hideFabUp()
