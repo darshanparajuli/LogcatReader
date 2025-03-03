@@ -102,7 +102,7 @@ class MainActivity : BaseActivityWithToolbar() {
 
   override fun onDestroy() {
     super.onDestroy()
-    if (backPressedCallback.isEnabled) {
+    if (!backPressedCallback.isEnabled) {
       stopService(Intent(this, LogcatService::class.java))
     }
   }
