@@ -12,7 +12,7 @@ android {
   defaultConfig {
     applicationId "com.dp.logcatapp"
     compileSdk 35
-    targetSdkVersion 34
+    targetSdkVersion 35
     minSdkVersion 21
     versionCode 34
     versionName "1.8.0"
