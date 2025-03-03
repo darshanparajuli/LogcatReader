@@ -6,6 +6,7 @@ import android.os.Build
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
+import androidx.activity.OnBackPressedCallback
 import androidx.core.app.ActivityCompat
 import com.dp.logcatapp.R
 import com.dp.logcatapp.fragments.logcatlive.LogcatLiveFragment
@@ -16,10 +17,17 @@ import com.dp.logcatapp.util.setKeepScreenOn
 import com.dp.logcatapp.util.showToast
 
 class MainActivity : BaseActivityWithToolbar() {
-  private var canExit = false
+
+  private val backPressedCallback: OnBackPressedCallback = object : OnBackPressedCallback(true) {
+    override fun handleOnBackPressed() {
+      isEnabled = false
+      showToast(getString(R.string.press_back_again_to_exit))
+      handler.postDelayed(exitRunnable, EXIT_DOUBLE_PRESS_DELAY)
+    }
+  }
 
   private val exitRunnable = Runnable {
-    canExit = false
+    backPressedCallback.isEnabled = true
   }
 
   override fun onCreate(savedInstanceState: Bundle?) {
@@ -30,6 +38,8 @@ class MainActivity : BaseActivityWithToolbar() {
     if (checkShouldTheAppExit(intent)) {
       return
     }
+
+    onBackPressedDispatcher.addCallback(this, backPressedCallback)
 
     val logcatServiceIntent = Intent(this, LogcatService::class.java)
     if (Build.VERSION.SDK_INT >= 26) {
@@ -58,7 +68,7 @@ class MainActivity : BaseActivityWithToolbar() {
 
   private fun checkShouldTheAppExit(intent: Intent?): Boolean =
     if (intent?.getBooleanExtra(EXIT_EXTRA, false) == true) {
-      canExit = true
+      backPressedCallback.isEnabled = false
       ActivityCompat.finishAfterTransition(this)
       true
     } else {
@@ -92,19 +102,8 @@ class MainActivity : BaseActivityWithToolbar() {
 
   override fun onDestroy() {
     super.onDestroy()
-    if (canExit) {
+    if (backPressedCallback.isEnabled) {
       stopService(Intent(this, LogcatService::class.java))
-    }
-  }
-
-  override fun onBackPressed() {
-    if (canExit) {
-      handler.removeCallbacks(exitRunnable)
-      super.onBackPressed()
-    } else {
-      canExit = true
-      showToast(getString(R.string.press_back_again_to_exit))
-      handler.postDelayed(exitRunnable, EXIT_DOUBLE_PRESS_DELAY)
     }
   }
 

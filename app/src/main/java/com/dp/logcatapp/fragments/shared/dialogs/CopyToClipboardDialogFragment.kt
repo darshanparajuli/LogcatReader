@@ -10,6 +10,7 @@ import androidx.appcompat.app.AlertDialog
 import com.dp.logcat.Log
 import com.dp.logcatapp.R
 import com.dp.logcatapp.fragments.base.BaseDialogFragment
+import com.dp.logcatapp.util.getParcelableSafe
 import com.dp.logcatapp.util.showToast
 
 class CopyToClipboardDialogFragment : BaseDialogFragment(), DialogInterface.OnClickListener {
@@ -49,7 +50,7 @@ class CopyToClipboardDialogFragment : BaseDialogFragment(), DialogInterface.OnCl
     dialog: DialogInterface,
     which: Int
   ) {
-    val log = requireArguments().getParcelable<Log>(KEY_LOG)!!
+    val log = requireNotNull(requireArguments().getParcelableSafe<Log>(KEY_LOG))
     val activity = requireActivity()
     val cm = activity.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
     val clip = when (which) {

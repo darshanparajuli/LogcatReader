@@ -11,6 +11,7 @@ import android.view.ViewGroup
 import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.appcompat.widget.SearchView
+import androidx.core.view.MenuProvider
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -30,7 +31,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class SavedLogsViewerFragment : BaseFragment() {
+class SavedLogsViewerFragment : BaseFragment(), MenuProvider {
   companion object {
     val TAG = SavedLogsViewerFragment::class.qualifiedName
 
@@ -169,7 +170,7 @@ class SavedLogsViewerFragment : BaseFragment() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    setHasOptionsMenu(true)
+    requireActivity().addMenuProvider(this, this)
     adapter = MyRecyclerViewAdapter(requireActivity())
     viewModel = getAndroidViewModel()
     viewModel.init(Uri.parse(requireArguments().getString(KEY_FILE_URI)))
@@ -259,13 +260,8 @@ class SavedLogsViewerFragment : BaseFragment() {
     })
   }
 
-  override fun onCreateOptionsMenu(
-    menu: Menu,
-    inflater: MenuInflater
-  ) {
-    super.onCreateOptionsMenu(menu, inflater)
-
-    inflater.inflate(R.menu.saved_logs_viewer, menu)
+  override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
+    menuInflater.inflate(R.menu.saved_logs_viewer, menu)
     val searchItem = menu.findItem(R.id.action_search)
     val searchView = searchItem.actionView as SearchView
 
@@ -330,12 +326,10 @@ class SavedLogsViewerFragment : BaseFragment() {
     }
   }
 
-  override fun onOptionsItemSelected(item: MenuItem): Boolean {
-    return when (item.itemId) {
-      R.id.action_search -> {
-        true
-      }
-      else -> return super.onOptionsItemSelected(item)
+  override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
+    return when (menuItem.itemId) {
+      R.id.action_search -> true
+      else -> false
     }
   }
 

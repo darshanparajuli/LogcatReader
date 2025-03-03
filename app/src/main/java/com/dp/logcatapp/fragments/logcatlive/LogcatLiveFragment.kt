@@ -16,6 +16,8 @@ import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
 import androidx.core.content.ContextCompat
+import androidx.core.view.MenuProvider
+import androidx.fragment.app.setFragmentResultListener
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -35,6 +37,8 @@ import com.dp.logcatapp.fragments.filters.FilterType
 import com.dp.logcatapp.fragments.logcatlive.dialogs.AskingForRootAccessDialogFragment
 import com.dp.logcatapp.fragments.logcatlive.dialogs.ManualMethodToGrantPermissionDialogFragment
 import com.dp.logcatapp.fragments.logcatlive.dialogs.NeedPermissionDialogFragment
+import com.dp.logcatapp.fragments.logcatlive.dialogs.NeedPermissionDialogFragment.Companion.REQ_ROOT_METHOD
+import com.dp.logcatapp.fragments.logcatlive.dialogs.NeedPermissionDialogFragment.Companion.RESULT_ROOT_METHOD
 import com.dp.logcatapp.fragments.logcatlive.dialogs.OnSavedBottomSheetDialogFragment
 import com.dp.logcatapp.fragments.logcatlive.dialogs.RestartAppMessageDialogFragment
 import com.dp.logcatapp.fragments.shared.dialogs.CopyToClipboardDialogFragment
@@ -61,7 +65,7 @@ import kotlinx.coroutines.Runnable
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListener {
+class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListener, MenuProvider {
   companion object {
     val TAG = LogcatLiveFragment::class.qualifiedName!!
     const val LOGCAT_DIR = "logcat"
@@ -204,7 +208,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    setHasOptionsMenu(true)
+    requireActivity().addMenuProvider(this, this)
     serviceBinder = ServiceBinder(LogcatService::class.java, this)
 
     val activity = requireActivity()
@@ -291,9 +295,15 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
 
     if (!checkReadLogsPermission() && !viewModel.showedGrantPermissionInstruction) {
       viewModel.showedGrantPermissionInstruction = true
-      NeedPermissionDialogFragment().let {
-        it.setTargetFragment(this, 0)
-        it.show(parentFragmentManager, NeedPermissionDialogFragment.TAG)
+      NeedPermissionDialogFragment().let { frag ->
+        frag.setFragmentResultListener(REQ_ROOT_METHOD) { requestKey, bundle ->
+          if (requestKey == REQ_ROOT_METHOD) {
+            if (bundle.getBoolean(RESULT_ROOT_METHOD)) {
+              useRootToGrantPermission()
+            }
+          }
+        }
+        frag.show(parentFragmentManager, NeedPermissionDialogFragment.TAG)
       }
     }
 
@@ -327,10 +337,6 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
         }
       }
     }
-  }
-
-  override fun onActivityCreated(savedInstanceState: Bundle?) {
-    super.onActivityCreated(savedInstanceState)
 
     viewModel.getFileSaveNotifier().observe(viewLifecycleOwner, Observer { saveInfo ->
       saveInfo?.let {
@@ -366,13 +372,8 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
     Manifest.permission.READ_LOGS
   ) == PackageManager.PERMISSION_GRANTED
 
-  override fun onCreateOptionsMenu(
-    menu: Menu,
-    inflater: MenuInflater
-  ) {
-    super.onCreateOptionsMenu(menu, inflater)
-
-    inflater.inflate(R.menu.logcat_live, menu)
+  override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
+    menuInflater.inflate(R.menu.logcat_live, menu)
     val searchItem = menu.findItem(R.id.action_search)
     val searchView = searchItem.actionView as SearchView
 
@@ -421,69 +422,8 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
     }
   }
 
-  private fun onSearchViewClose() {
-    logcatService?.logcat?.let {
-      it.pause()
-      it.removeFilter(SEARCH_FILTER_TAG)
-
-      adapter.clear()
-      addAllLogs(it.getLogsFiltered())
-      if (lastLogId == -1) {
-        scrollRecyclerView()
-      } else {
-        viewModel.autoScroll = linearLayoutManager.findLastCompletelyVisibleItemPosition() ==
-          adapter.itemCount - 1
-        if (!viewModel.autoScroll) {
-          viewModel.scrollPosition = lastLogId
-          linearLayoutManager.scrollToPositionWithOffset(lastLogId, 0)
-        }
-        lastLogId = -1
-      }
-    }
-
-    resumeLogcat()
-  }
-
-  override fun onPrepareOptionsMenu(menu: Menu) {
-    super.onPrepareOptionsMenu(menu)
-
-    val playPauseItem = menu.findItem(R.id.action_play_pause)
-    val recordToggleItem = menu.findItem(R.id.action_record_toggle)
-
-    val context = requireContext()
-    logcatService?.let {
-      if (it.paused) {
-        playPauseItem.icon = ContextCompat.getDrawable(
-          context,
-          R.drawable.ic_play_arrow_white_24dp
-        )
-        playPauseItem.title = getString(R.string.resume)
-      } else {
-        playPauseItem.icon = ContextCompat.getDrawable(
-          context,
-          R.drawable.ic_pause_white_24dp
-        )
-        playPauseItem.title = getString(R.string.pause)
-      }
-
-      if (it.recording) {
-        recordToggleItem.icon = ContextCompat.getDrawable(
-          context,
-          R.drawable.ic_stop_white_24dp
-        )
-        recordToggleItem.title = getString(R.string.stop_recording)
-      } else {
-        recordToggleItem.icon = ContextCompat.getDrawable(
-          context,
-          R.drawable.ic_fiber_manual_record_white_24dp
-        )
-        recordToggleItem.title = getString(R.string.start_recording)
-      }
-    }
-  }
-
-  override fun onOptionsItemSelected(item: MenuItem): Boolean {
-    return when (item.itemId) {
+  override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
+    return when (menuItem.itemId) {
       R.id.action_search -> {
         true
       }
@@ -554,7 +494,66 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
         logcatService?.logcat?.restart()
         true
       }
-      else -> return super.onOptionsItemSelected(item)
+      else -> false
+    }
+  }
+
+  private fun onSearchViewClose() {
+    logcatService?.logcat?.let {
+      it.pause()
+      it.removeFilter(SEARCH_FILTER_TAG)
+
+      adapter.clear()
+      addAllLogs(it.getLogsFiltered())
+      if (lastLogId == -1) {
+        scrollRecyclerView()
+      } else {
+        viewModel.autoScroll = linearLayoutManager.findLastCompletelyVisibleItemPosition() ==
+          adapter.itemCount - 1
+        if (!viewModel.autoScroll) {
+          viewModel.scrollPosition = lastLogId
+          linearLayoutManager.scrollToPositionWithOffset(lastLogId, 0)
+        }
+        lastLogId = -1
+      }
+    }
+
+    resumeLogcat()
+  }
+
+  override fun onPrepareMenu(menu: Menu) {
+    val playPauseItem = menu.findItem(R.id.action_play_pause)
+    val recordToggleItem = menu.findItem(R.id.action_record_toggle)
+
+    val context = requireContext()
+    logcatService?.let {
+      if (it.paused) {
+        playPauseItem.icon = ContextCompat.getDrawable(
+          context,
+          R.drawable.ic_play_arrow_white_24dp
+        )
+        playPauseItem.title = getString(R.string.resume)
+      } else {
+        playPauseItem.icon = ContextCompat.getDrawable(
+          context,
+          R.drawable.ic_pause_white_24dp
+        )
+        playPauseItem.title = getString(R.string.pause)
+      }
+
+      if (it.recording) {
+        recordToggleItem.icon = ContextCompat.getDrawable(
+          context,
+          R.drawable.ic_stop_white_24dp
+        )
+        recordToggleItem.title = getString(R.string.stop_recording)
+      } else {
+        recordToggleItem.icon = ContextCompat.getDrawable(
+          context,
+          R.drawable.ic_fiber_manual_record_white_24dp
+        )
+        recordToggleItem.title = getString(R.string.start_recording)
+      }
     }
   }
 

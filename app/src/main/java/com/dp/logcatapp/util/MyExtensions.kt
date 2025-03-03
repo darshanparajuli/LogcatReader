@@ -2,6 +2,7 @@ package com.dp.logcatapp.util
 
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.app.Activity.OVERRIDE_TRANSITION_CLOSE
 import android.app.TaskStackBuilder
 import android.content.Context
 import android.content.ContextWrapper
@@ -45,7 +46,16 @@ fun Activity.restartApp() {
     .addNextIntent(Intent(this, MainActivity::class.java))
     .addNextIntent(Intent(this, SettingsActivity::class.java))
   finish()
-  overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
+  if (SDK_INT >= 34) {
+    overrideActivityTransition(
+      OVERRIDE_TRANSITION_CLOSE,
+      android.R.anim.fade_in,
+      android.R.anim.fade_out
+    )
+  } else {
+    @Suppress("DEPRECATION")
+    overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
+  }
   taskBuilder.startActivities()
 }
 
@@ -105,10 +115,12 @@ fun Context.showToast(
   val toast = Toast.makeText(this, msg, length)
   if (SDK_INT <= 25) {
     try {
+      @SuppressLint("DiscouragedPrivateApi")
       val field = View::class.java.getDeclaredField("mContext")
       field.isAccessible = true
+      @Suppress("DEPRECATION")
       field.set(toast.view, ToastViewContextWrapper(this))
-    } catch (e: Exception) {
+    } catch (_: Exception) {
     }
   }
   toast.show()
@@ -121,7 +133,7 @@ private class ToastViewContextWrapper(base: Context) : ContextWrapper(base) {
 
 private class ToastViewApplicationContextWrapper(base: Context) : ContextWrapper(base) {
   override fun getSystemService(name: String): Any {
-    return if (name == Context.WINDOW_SERVICE) {
+    return if (name == WINDOW_SERVICE) {
       ToastWindowManager(baseContext, baseContext.getSystemService(name) as WindowManager)
     } else {
       super.getSystemService(name)
@@ -133,9 +145,9 @@ private class ToastWindowManager(
   private val context: Context,
   private val base: WindowManager
 ) : WindowManager {
-  @Suppress("DEPRECATION")
+  @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
   override fun getDefaultDisplay(): Display =
-    if (SDK_INT >= 30) context.display!! else base.defaultDisplay
+    if (SDK_INT >= 30) context.display else base.defaultDisplay
 
   override fun addView(
     view: View?,
@@ -143,7 +155,7 @@ private class ToastWindowManager(
   ) {
     try {
       base.addView(view, params)
-    } catch (e: WindowManager.BadTokenException) {
+    } catch (_: WindowManager.BadTokenException) {
       Logger.error("Toast", "caught BadTokenException crash")
     }
   }
@@ -197,8 +209,7 @@ private fun Context.setThemeAuto() {
 
 private fun Context.setThemeDark() {
   val useBlackTheme = getDefaultSharedPreferences().getBoolean(
-    PreferenceKeys
-      .Appearance.KEY_USE_BLACK_THEME, PreferenceKeys.Appearance.Default.USE_BLACK_THEME
+    PreferenceKeys.Appearance.KEY_USE_BLACK_THEME, PreferenceKeys.Appearance.Default.USE_BLACK_THEME
   )
   if (useBlackTheme) {
     setTheme(R.style.BlackTheme)
@@ -275,14 +286,14 @@ fun String.containsIgnoreCase(other: String) =
 fun InputStream.closeQuietly() {
   try {
     close()
-  } catch (e: IOException) {
+  } catch (_: IOException) {
   }
 }
 
 fun OutputStream.closeQuietly() {
   try {
     close()
-  } catch (e: IOException) {
+  } catch (_: IOException) {
   }
 }
 

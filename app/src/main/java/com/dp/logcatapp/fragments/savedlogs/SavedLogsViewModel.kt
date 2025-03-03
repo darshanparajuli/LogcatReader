@@ -3,7 +3,6 @@ package com.dp.logcatapp.fragments.savedlogs
 import android.app.Application
 import android.content.Context
 import android.net.Uri
-import android.os.Build
 import androidx.core.net.toFile
 import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.LiveData
@@ -53,7 +52,7 @@ internal class SavedLogsViewModel(application: Application) : ScopedAndroidViewM
     val application = getApplication<Application>()
     val savedLogInfoList = db.savedLogsDao().getAllSync()
     for (info in savedLogInfoList) {
-      if (info.isCustom && Build.VERSION.SDK_INT >= 21) {
+      if (info.isCustom) {
         val file = DocumentFile.fromSingleUri(application, Uri.parse(info.path))
         if (file == null || file.name == null) {
           Logger.debug(this::class, "file name is null")
@@ -114,7 +113,7 @@ internal class SavedLogsViewModel(application: Application) : ScopedAndroidViewM
       }
 
       logs.size.toLong()
-    } catch (e: IOException) {
+    } catch (_: IOException) {
       0L
     }
   }
@@ -138,7 +137,7 @@ internal class SavedLogsViewModel(application: Application) : ScopedAndroidViewM
       }
 
       logs.size.toLong()
-    } catch (e: IOException) {
+    } catch (_: IOException) {
       0L
     }
   }

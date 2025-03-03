@@ -1,7 +1,7 @@
 package com.dp.logcatapp
 
-import androidx.test.InstrumentationRegistry
-import androidx.test.runner.AndroidJUnit4
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -16,7 +16,7 @@ class ExampleInstrumentedTest {
   @Test
   fun useAppContext() {
     // Context of the app under test.
-    val appContext = InstrumentationRegistry.getTargetContext()
+    val appContext = InstrumentationRegistry.getInstrumentation().targetContext
     assertEquals("com.dp.logcatapp", appContext.packageName)
   }
 }

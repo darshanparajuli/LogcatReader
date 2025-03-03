@@ -5,7 +5,7 @@ import android.animation.AnimatorListenerAdapter
 import android.os.Bundle
 import android.view.View
 import android.view.animation.DecelerateInterpolator
-import androidx.annotation.NonNull
+import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.widget.Toolbar
 import androidx.fragment.app.commit
 import com.dp.logcatapp.R
@@ -27,6 +27,16 @@ class SavedLogsActivity : BaseActivityWithToolbar() {
     setupToolbar()
     enableDisplayHomeAsUp()
 
+    onBackPressedDispatcher.addCallback(object : OnBackPressedCallback(true) {
+      override fun handleOnBackPressed() {
+        if (cabToolbar.visibility == View.VISIBLE) {
+          closeCabToolbar()
+          return
+        }
+        finish()
+      }
+    })
+
     cabToolbar = findViewById(R.id.cabToolbar)
     cabToolbar.inflateMenu(R.menu.saved_logs_cab)
     cabToolbar.isClickable = true
@@ -42,18 +52,9 @@ class SavedLogsActivity : BaseActivityWithToolbar() {
     }
   }
 
-  override fun onBackPressed() {
-    if (cabToolbar.visibility == View.VISIBLE) {
-      closeCabToolbar()
-      return
-    }
-
-    super.onBackPressed()
-  }
-
   fun openCabToolbar(
     callback: CabToolbarCallback,
-    @NonNull menuItemClickListener: Toolbar.OnMenuItemClickListener
+    menuItemClickListener: Toolbar.OnMenuItemClickListener
   ): Boolean {
     cabToolbar.setOnMenuItemClickListener(menuItemClickListener)
     cabToolbarCallback = callback

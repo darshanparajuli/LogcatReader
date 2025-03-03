@@ -3,9 +3,9 @@ package com.dp.logcatapp.fragments.logcatlive.dialogs
 import android.app.Dialog
 import android.os.Bundle
 import androidx.appcompat.app.AlertDialog
+import androidx.fragment.app.setFragmentResult
 import com.dp.logcatapp.R
 import com.dp.logcatapp.fragments.base.BaseDialogFragment
-import com.dp.logcatapp.fragments.logcatlive.LogcatLiveFragment
 
 class NeedPermissionDialogFragment : BaseDialogFragment() {
 
@@ -20,12 +20,16 @@ class NeedPermissionDialogFragment : BaseDialogFragment() {
         )
       }
       .setNegativeButton(R.string.root_method) { _, _ ->
-        (targetFragment as LogcatLiveFragment).useRootToGrantPermission()
+        setFragmentResult(
+          RESULT_ROOT_METHOD,
+          Bundle().apply { putBoolean(RESULT_ROOT_METHOD, true) })
       }
       .create()
   }
 
   companion object {
     val TAG = NeedPermissionDialogFragment::class.qualifiedName
+    const val REQ_ROOT_METHOD = "req-root-method"
+    const val RESULT_ROOT_METHOD = "result-root-method"
   }
 }

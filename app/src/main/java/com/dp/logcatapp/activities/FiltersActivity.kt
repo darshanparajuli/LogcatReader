@@ -5,6 +5,7 @@ import androidx.fragment.app.commit
 import com.dp.logcat.Log
 import com.dp.logcatapp.R
 import com.dp.logcatapp.fragments.filters.FiltersFragment
+import com.dp.logcatapp.util.getParcelableExtraSafe
 
 class FiltersActivity : BaseActivityWithToolbar() {
 
@@ -32,7 +33,7 @@ class FiltersActivity : BaseActivityWithToolbar() {
 
   private fun isExclusions() = intent != null && intent.getBooleanExtra(EXTRA_EXCLUSIONS, false)
 
-  private fun getLog() = intent.getParcelableExtra<Log>(KEY_LOG)
+  private fun getLog() = intent.getParcelableExtraSafe<Log>(KEY_LOG)
 
   override fun getToolbarIdRes() = R.id.toolbar
 

@@ -10,6 +10,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageButton
 import android.widget.TextView
+import androidx.core.view.MenuProvider
+import androidx.fragment.app.setFragmentResultListener
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.DividerItemDecoration
@@ -20,11 +22,14 @@ import com.dp.logcatapp.R
 import com.dp.logcatapp.db.FilterInfo
 import com.dp.logcatapp.fragments.base.BaseFragment
 import com.dp.logcatapp.fragments.filters.dialogs.FilterDialogFragment
+import com.dp.logcatapp.fragments.filters.dialogs.FilterDialogFragment.Companion.LOGCAT_MSG
+import com.dp.logcatapp.fragments.filters.dialogs.FilterDialogFragment.Companion.REQ_ADD_FILTER
 import com.dp.logcatapp.model.LogcatMsg
 import com.dp.logcatapp.util.getAndroidViewModel
+import com.dp.logcatapp.util.getParcelableSafe
 import com.dp.logcatapp.util.inflateLayout
 
-class FiltersFragment : BaseFragment() {
+class FiltersFragment : BaseFragment(), MenuProvider {
 
   companion object {
     val TAG = FiltersFragment::class.qualifiedName
@@ -51,10 +56,28 @@ class FiltersFragment : BaseFragment() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    setHasOptionsMenu(true)
+    requireActivity().addMenuProvider(this, this)
     viewModel = requireActivity().getAndroidViewModel()
     recyclerViewAdapter = MyRecyclerViewAdapter {
       onRemoveClicked(it)
+    }
+  }
+
+  override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
+    menuInflater.inflate(R.menu.filters, menu)
+  }
+
+  override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
+    return when (menuItem.itemId) {
+      R.id.add_action -> {
+        showAddFilter()
+        true
+      }
+      R.id.clear_action -> {
+        viewModel.deleteAllFilters(isExclusions())
+        true
+      }
+      else -> false
     }
   }
 
@@ -80,9 +103,9 @@ class FiltersFragment : BaseFragment() {
     if (getLog() != null) showAddFilter()
   }
 
-  fun isExclusions() = arguments?.getBoolean(KEY_EXCLUSIONS) ?: false
+  fun isExclusions() = arguments?.getBoolean(KEY_EXCLUSIONS) == true
 
-  private fun getLog() = arguments?.getParcelable<Log>(KEY_LOG)
+  private fun getLog() = arguments?.getParcelableSafe<Log>(KEY_LOG)
 
   @SuppressLint("CheckResult")
   private fun onRemoveClicked(v: View) {
@@ -117,37 +140,16 @@ class FiltersFragment : BaseFragment() {
     return rootView
   }
 
-  override fun onCreateOptionsMenu(
-    menu: Menu,
-    inflater: MenuInflater
-  ) {
-    inflater.inflate(R.menu.filters, menu)
-    super.onCreateOptionsMenu(menu, inflater)
-  }
-
-  override fun onOptionsItemSelected(item: MenuItem): Boolean {
-    return when (item.itemId) {
-      R.id.add_action -> {
-        showAddFilter()
-        true
-      }
-      R.id.clear_action -> {
-        viewModel.deleteAllFilters(isExclusions())
-        true
-      }
-      else -> super.onOptionsItemSelected(item)
-    }
-  }
-
   private fun showAddFilter() {
     var frag =
       parentFragmentManager.findFragmentByTag(FilterDialogFragment.TAG) as? FilterDialogFragment
     if (frag == null) {
-      frag = FilterDialogFragment.newInstance(getLog())
+      frag = FilterDialogFragment.newInstance(requestKey = REQ_ADD_FILTER, log = getLog())
     }
-
-    frag.setTargetFragment(this, 0)
-    frag.show(parentFragmentManager, FilterDialogFragment.TAG)
+    frag.setFragmentResultListener(REQ_ADD_FILTER) { requestKey, bundle ->
+      addFilter(requireNotNull(bundle.getParcelableSafe(LOGCAT_MSG)))
+    }
+    frag.show(childFragmentManager, FilterDialogFragment.TAG)
   }
 
   @SuppressLint("CheckResult")
