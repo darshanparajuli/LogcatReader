@@ -11,7 +11,7 @@ import android.view.ViewGroup
 import android.widget.ImageButton
 import android.widget.TextView
 import androidx.core.view.MenuProvider
-import androidx.fragment.app.setFragmentResultListener
+import androidx.fragment.app.FragmentResultListener
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.DividerItemDecoration
@@ -29,7 +29,7 @@ import com.dp.logcatapp.util.getAndroidViewModel
 import com.dp.logcatapp.util.getParcelableSafe
 import com.dp.logcatapp.util.inflateLayout
 
-class FiltersFragment : BaseFragment(), MenuProvider {
+class FiltersFragment : BaseFragment(), MenuProvider, FragmentResultListener {
 
   companion object {
     val TAG = FiltersFragment::class.qualifiedName
@@ -86,6 +86,7 @@ class FiltersFragment : BaseFragment(), MenuProvider {
     savedInstanceState: Bundle?
   ) {
     super.onViewCreated(view, savedInstanceState)
+    parentFragmentManager.setFragmentResultListener(REQ_ADD_FILTER, viewLifecycleOwner, this)
     viewModel.getFilters(isExclusions()).observe(viewLifecycleOwner, Observer {
       if (it != null) {
         if (it.isEmpty()) {
@@ -146,10 +147,15 @@ class FiltersFragment : BaseFragment(), MenuProvider {
     if (frag == null) {
       frag = FilterDialogFragment.newInstance(requestKey = REQ_ADD_FILTER, log = getLog())
     }
-    frag.setFragmentResultListener(REQ_ADD_FILTER) { requestKey, bundle ->
-      addFilter(requireNotNull(bundle.getParcelableSafe(LOGCAT_MSG)))
+    frag.show(parentFragmentManager, FilterDialogFragment.TAG)
+  }
+
+  override fun onFragmentResult(requestKey: String, result: Bundle) {
+    when (requestKey) {
+      REQ_ADD_FILTER -> {
+        addFilter(requireNotNull(result.getParcelableSafe(LOGCAT_MSG)))
+      }
     }
-    frag.show(childFragmentManager, FilterDialogFragment.TAG)
   }
 
   @SuppressLint("CheckResult")

@@ -17,7 +17,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
 import androidx.core.content.ContextCompat
 import androidx.core.view.MenuProvider
-import androidx.fragment.app.setFragmentResultListener
+import androidx.fragment.app.FragmentResultListener
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -65,7 +65,8 @@ import kotlinx.coroutines.Runnable
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListener, MenuProvider {
+class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListener, MenuProvider,
+  FragmentResultListener {
   companion object {
     val TAG = LogcatLiveFragment::class.qualifiedName!!
     const val LOGCAT_DIR = "logcat"
@@ -235,6 +236,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
     savedInstanceState: Bundle?
   ) {
     super.onViewCreated(view, savedInstanceState)
+    parentFragmentManager.setFragmentResultListener(REQ_ROOT_METHOD, viewLifecycleOwner, this)
     recyclerView = view.findViewById(R.id.recyclerView)
     linearLayoutManager = LinearLayoutManager(activity)
     recyclerView.layoutManager = linearLayoutManager
@@ -295,16 +297,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
 
     if (!checkReadLogsPermission() && !viewModel.showedGrantPermissionInstruction) {
       viewModel.showedGrantPermissionInstruction = true
-      NeedPermissionDialogFragment().let { frag ->
-        frag.setFragmentResultListener(REQ_ROOT_METHOD) { requestKey, bundle ->
-          if (requestKey == REQ_ROOT_METHOD) {
-            if (bundle.getBoolean(RESULT_ROOT_METHOD)) {
-              useRootToGrantPermission()
-            }
-          }
-        }
-        frag.show(parentFragmentManager, NeedPermissionDialogFragment.TAG)
-      }
+      NeedPermissionDialogFragment().show(parentFragmentManager, NeedPermissionDialogFragment.TAG)
     }
 
     viewModel.getFilters().observe(viewLifecycleOwner) { filters ->
@@ -365,6 +358,16 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
         }
       }
     })
+  }
+
+  override fun onFragmentResult(requestKey: String, result: Bundle) {
+    when (requestKey) {
+      REQ_ROOT_METHOD -> {
+        if (result.getBoolean(RESULT_ROOT_METHOD)) {
+          useRootToGrantPermission()
+        }
+      }
+    }
   }
 
   private fun checkReadLogsPermission() = ContextCompat.checkSelfPermission(
