@@ -1,5 +1,6 @@
 package com.dp.logcatapp.activities
 
+import android.Manifest
 import android.app.ComponentCaller
 import android.content.Intent
 import android.os.Build
@@ -7,6 +8,7 @@ import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
 import androidx.activity.OnBackPressedCallback
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.ActivityCompat
 import com.dp.logcatapp.R
 import com.dp.logcatapp.fragments.logcatlive.LogcatLiveFragment
@@ -41,11 +43,18 @@ class MainActivity : BaseActivityWithToolbar() {
 
     onBackPressedDispatcher.addCallback(this, backPressedCallback)
 
-    val logcatServiceIntent = Intent(this, LogcatService::class.java)
-    if (Build.VERSION.SDK_INT >= 26) {
-      startForegroundService(logcatServiceIntent)
+    if (Build.VERSION.SDK_INT >= 33) {
+      registerForActivityResult(ActivityResultContracts.RequestPermission()) {
+        val logcatServiceIntent = Intent(this, LogcatService::class.java)
+        startForegroundService(logcatServiceIntent)
+      }.launch(Manifest.permission.POST_NOTIFICATIONS)
     } else {
-      startService(logcatServiceIntent)
+      val logcatServiceIntent = Intent(this, LogcatService::class.java)
+      if (Build.VERSION.SDK_INT >= 26) {
+        startForegroundService(logcatServiceIntent)
+      } else {
+        startService(logcatServiceIntent)
+      }
     }
 
     if (savedInstanceState == null) {
