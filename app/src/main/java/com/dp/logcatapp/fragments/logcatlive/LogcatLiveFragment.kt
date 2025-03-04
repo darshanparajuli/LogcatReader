@@ -16,6 +16,8 @@ import android.view.ViewGroup
 import android.view.ViewGroup.MarginLayoutParams
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
+import androidx.compose.ui.text.intl.Locale
+import androidx.compose.ui.text.toLowerCase
 import androidx.core.content.ContextCompat
 import androidx.core.view.MenuProvider
 import androidx.core.view.ViewCompat
@@ -111,6 +113,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
   private var lastLogId = -1
   private var lastSearchRunnable: Runnable? = null
   private var searchTask: Job? = null
+  private var appliedFilters = false
 
   private val hideFabUpRunnable: Runnable = Runnable {
     fabUp.hide()
@@ -353,6 +356,8 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
             logcat.pause()
             logcat.clearFilters(exclude = SEARCH_FILTER_TAG)
             logcat.clearExclusions()
+
+            appliedFilters = filters.isNotEmpty()
 
             for (filter in filters) {
               if (filter.exclude) {
@@ -648,6 +653,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
 
   override fun onStop() {
     super.onStop()
+    logcatService.value = null
     serviceBinder.unbind(requireActivity())
   }
 
@@ -728,7 +734,9 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
 
   private fun updateToolbarSubtitle(count: Int) {
     if (count > 1) {
-      (activity as BaseActivityWithToolbar).toolbar.subtitle = "$count"
+      val filteredText =
+        if (appliedFilters) "[${getString(R.string.filtered).toLowerCase(Locale.current)}] " else ""
+      (activity as BaseActivityWithToolbar).toolbar.subtitle = "$filteredText$count"
     } else {
       (activity as BaseActivityWithToolbar).toolbar.subtitle = null
     }
