@@ -617,19 +617,13 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
     startActivity(intent)
   }
 
-  fun tryStopRecording() {
+  fun stopRecording() {
     viewModel.stopRecording = true
-    if (logcatService != null) {
-      stopRecording()
-    }
-  }
-
-  private fun stopRecording() {
-    logcatService.value?.let {
-      if (it.recording) {
-        it.updateNotification(false)
+    logcatService.value?.let { service ->
+      if (service.recording) {
+        service.updateNotification(false)
         saveToFile(true)
-        it.recording = false
+        service.recording = false
         activity?.invalidateOptionsMenu()
       }
     }

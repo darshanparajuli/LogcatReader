@@ -88,7 +88,7 @@ class MainActivity : BaseActivityWithToolbar() {
     if (intent?.getBooleanExtra(STOP_RECORDING_EXTRA, false) == true) {
       val fragment = supportFragmentManager.findFragmentByTag(LogcatLiveFragment.TAG)
       if (fragment != null) {
-        (fragment as LogcatLiveFragment).tryStopRecording()
+        (fragment as LogcatLiveFragment).stopRecording()
       }
     }
   }
