@@ -727,7 +727,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
   }
 
   private fun updateToolbarSubtitle(count: Int) {
-    if (count > 1) {
+    if (count > 1 || appliedFilters) {
       val filteredText =
         if (appliedFilters) "[${getString(R.string.filtered).toLowerCase(Locale.current)}] " else ""
       (activity as BaseActivityWithToolbar).toolbar.subtitle = "$filteredText$count"
