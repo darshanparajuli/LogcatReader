@@ -7,8 +7,8 @@ import androidx.core.net.toFile
 import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import com.dp.logcat.Logcat
 import com.dp.logcat.LogcatStreamReader
+import com.dp.logcat.LogcatUtil
 import com.dp.logcatapp.db.MyDB
 import com.dp.logcatapp.db.SavedLogInfo
 import com.dp.logcatapp.fragments.logcatlive.LogcatLiveFragment
@@ -99,7 +99,7 @@ internal class SavedLogsViewModel(application: Application) : ScopedAndroidViewM
   }
 
   private fun countLogs(file: File): Long {
-    val logCount = Logcat.getLogCountFromHeader(file)
+    val logCount = LogcatUtil.getLogCountFromHeader(file)
     if (logCount != -1L) {
       return logCount
     }
@@ -108,7 +108,7 @@ internal class SavedLogsViewModel(application: Application) : ScopedAndroidViewM
       val reader = LogcatStreamReader(FileInputStream(file))
       val logs = reader.asSequence().toList()
 
-      if (!Logcat.writeToFile(logs, file)) {
+      if (!LogcatUtil.writeToFile(logs, file)) {
         Logger.debug(SavedLogsViewModel::class, "Failed to write log header")
       }
 
@@ -122,7 +122,7 @@ internal class SavedLogsViewModel(application: Application) : ScopedAndroidViewM
     context: Context,
     file: DocumentFile
   ): Long {
-    val logCount = Logcat.getLogCountFromHeader(context, file)
+    val logCount = LogcatUtil.getLogCountFromHeader(context, file)
     if (logCount != -1L) {
       return logCount
     }
@@ -132,7 +132,7 @@ internal class SavedLogsViewModel(application: Application) : ScopedAndroidViewM
       val reader = LogcatStreamReader(inputStream!!)
       val logs = reader.asSequence().toList()
 
-      if (!Logcat.writeToFile(context, logs, file.uri)) {
+      if (!LogcatUtil.writeToFile(context, logs, file.uri)) {
         Logger.debug(SavedLogsViewModel::class, "Failed to write log header")
       }
 

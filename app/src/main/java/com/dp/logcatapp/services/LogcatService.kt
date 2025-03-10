@@ -17,6 +17,7 @@ import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.edit
 import com.dp.logcat.Logcat
+import com.dp.logcat.LogcatUtil
 import com.dp.logcatapp.R
 import com.dp.logcatapp.activities.MainActivity
 import com.dp.logcatapp.util.PreferenceKeys
@@ -50,7 +51,7 @@ class LogcatService : BaseService() {
 
   override fun onPreRegisterSharedPreferenceChangeListener() {
     val defaultBuffers = PreferenceKeys.Logcat.Default.BUFFERS
-    if (defaultBuffers.isNotEmpty() && Logcat.AVAILABLE_BUFFERS.isNotEmpty()) {
+    if (defaultBuffers.isNotEmpty() && LogcatUtil.AVAILABLE_BUFFERS.isNotEmpty()) {
       val buffers = getDefaultSharedPreferences()
         .getStringSet(PreferenceKeys.Logcat.KEY_BUFFERS, emptySet())
       if (buffers == null || buffers.isEmpty()) {
@@ -220,7 +221,7 @@ class LogcatService : BaseService() {
     key: String
   ) {
     val bufferValues = sharedPreferences.getStringSet(key, PreferenceKeys.Logcat.Default.BUFFERS)!!
-    val buffers = Logcat.AVAILABLE_BUFFERS
+    val buffers = LogcatUtil.AVAILABLE_BUFFERS
 
     showToast(getString(R.string.restarting_logcat))
 
@@ -248,7 +249,7 @@ class LogcatService : BaseService() {
     logcat = Logcat(maxLogs)
     logcat.setPollInterval(pollInterval)
 
-    val buffers = Logcat.AVAILABLE_BUFFERS
+    val buffers = LogcatUtil.AVAILABLE_BUFFERS
     logcat.logcatBuffers = bufferValues.mapNotNull { e ->
       buffers.getOrNull(e.toInt())
         ?.lowercase(Locale.getDefault())
@@ -259,7 +260,7 @@ class LogcatService : BaseService() {
           PreferenceKeys.Logcat.Default.BUFFERS
         )
       }
-      Logcat.DEFAULT_BUFFERS
+      LogcatUtil.DEFAULT_BUFFERS
     }
     logcat.start()
   }

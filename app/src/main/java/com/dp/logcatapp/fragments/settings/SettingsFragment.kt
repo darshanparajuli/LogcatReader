@@ -26,7 +26,7 @@ import androidx.preference.ListPreference
 import androidx.preference.MultiSelectListPreference
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
-import com.dp.logcat.Logcat
+import com.dp.logcat.LogcatUtil
 import com.dp.logcatapp.BuildConfig
 import com.dp.logcatapp.R
 import com.dp.logcatapp.fragments.base.BaseDialogFragment
@@ -174,7 +174,7 @@ class SettingsFragment : PreferenceFragmentCompat(), FragmentResultListener {
         }
       }
 
-    val availableBuffers = Logcat.AVAILABLE_BUFFERS
+    val availableBuffers = LogcatUtil.AVAILABLE_BUFFERS
     val defaultBuffers = PreferenceKeys.Logcat.Default.BUFFERS
     if (availableBuffers.isNotEmpty() && defaultBuffers.isNotEmpty()) {
       val bufferValues = preferenceScreen.sharedPreferences!!

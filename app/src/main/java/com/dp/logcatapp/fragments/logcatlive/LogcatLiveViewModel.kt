@@ -8,7 +8,7 @@ import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.dp.logcat.Log
-import com.dp.logcat.Logcat
+import com.dp.logcat.LogcatUtil
 import com.dp.logcatapp.db.FilterInfo
 import com.dp.logcatapp.db.MyDB
 import com.dp.logcatapp.db.SavedLogInfo
@@ -64,9 +64,9 @@ internal class LogcatLiveViewModel(application: Application) : ScopedAndroidView
         val context = getApplication<Application>()
         val isUsingCustomLocation = Utils.isUsingCustomSaveLocation(context)
         val result = if (isUsingCustomLocation) {
-          Logcat.writeToFile(context, logs, uri)
+          LogcatUtil.writeToFile(context, logs, uri)
         } else {
-          Logcat.writeToFile(logs, uri.toFile())
+          LogcatUtil.writeToFile(logs, uri.toFile())
         }
 
         saveInfo.result = SaveInfo.ERROR_SAVING

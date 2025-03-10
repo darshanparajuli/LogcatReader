@@ -1,8 +1,7 @@
 package com.dp.logcatapp.util
 
-import com.dp.logcat.Logcat.Companion.AVAILABLE_BUFFERS
-import com.dp.logcat.Logcat.Companion.DEFAULT_BUFFERS
 import com.dp.logcat.Logcat.Companion.INITIAL_LOG_CAPACITY
+import com.dp.logcat.LogcatUtil
 
 object PreferenceKeys {
 
@@ -49,7 +48,7 @@ object PreferenceKeys {
 
       private fun getDefaultBufferValues(): Set<String> {
         val bufferValues = mutableSetOf<String>()
-        DEFAULT_BUFFERS.map { AVAILABLE_BUFFERS.indexOf(it) }
+        LogcatUtil.DEFAULT_BUFFERS.map { LogcatUtil.AVAILABLE_BUFFERS.indexOf(it) }
           .filter { it != -1 }
           .forEach { bufferValues += it.toString() }
         return bufferValues
