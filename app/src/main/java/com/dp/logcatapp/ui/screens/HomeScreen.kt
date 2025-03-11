@@ -33,10 +33,13 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.Pause
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -93,6 +96,7 @@ fun HomeScreen(
   val logsState = remember { mutableStateListOf<Log>() }
   val coroutineScope = rememberCoroutineScope()
   var snapToBottom by remember { mutableStateOf(true) }
+  var logcatPaused by remember { mutableStateOf(false) }
   val snapScrollInfo = rememberSnapScrollInfo(
     lazyListState = lazyListState,
     snapToBottom = snapToBottom,
@@ -117,6 +121,19 @@ fun HomeScreen(
           containerColor = MaterialTheme.colorScheme.primaryContainer,
           titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
         ),
+        actions = {
+          IconButton(
+            onClick = {
+              logcatPaused = !logcatPaused
+            }
+          ) {
+            if (logcatPaused) {
+              Icon(Icons.Default.PlayArrow, contentDescription = null)
+            } else {
+              Icon(Icons.Default.Pause, contentDescription = null)
+            }
+          }
+        }
       )
     },
     floatingActionButton = {
@@ -163,10 +180,13 @@ fun HomeScreen(
     val logcatService = rememberLogcatServiceConnection()
 
     if (logcatService != null) {
-      LaunchedEffect(logcatService) {
-        val session = logcatService.logcatSession
-        session.logs.collect { logs ->
-          logsState += logs
+      if (!logcatPaused) {
+        LaunchedEffect(logcatService) {
+          val session = logcatService.logcatSession
+          logsState.clear()
+          session.logs.collect { logs ->
+            logsState += logs
+          }
         }
       }
     }
