@@ -6,6 +6,8 @@ import android.os.IBinder
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
@@ -15,6 +17,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -119,30 +122,36 @@ fun HomeScreen(
     floatingActionButton = {
       AnimatedVisibility(
         visible = snapScrollInfo.isScrollSnapperVisible,
-        enter = fadeIn(),
-        exit = fadeOut(),
+        enter = fadeIn() + slideInHorizontally(initialOffsetX = { it }),
+        exit = fadeOut() + slideOutHorizontally(targetOffsetX = { it }),
       ) {
-        FloatingActionButton(
-          modifier = Modifier.size(48.dp),
-          onClick = {
-            coroutineScope.launch {
-              if (snapScrollInfo.shouldSnapScrollUp) {
+        Column {
+          FloatingActionButton(
+            modifier = Modifier.size(48.dp),
+            onClick = {
+              coroutineScope.launch {
                 lazyListState.scrollToItem(0)
-              } else if (snapScrollInfo.shouldSnapScrollDown) {
+              }
+            }
+          ) {
+            Icon(
+              Icons.Filled.KeyboardArrowUp,
+              contentDescription = null
+            )
+          }
+          Spacer(modifier = Modifier.height(12.dp))
+          FloatingActionButton(
+            modifier = Modifier.size(48.dp),
+            onClick = {
+              coroutineScope.launch {
                 if (lazyListState.layoutInfo.totalItemsCount > 0) {
                   snapToBottom = true
                   lazyListState.scrollToItem(lazyListState.layoutInfo.totalItemsCount - 1)
                 }
               }
             }
-          }
-        ) {
-          when {
-            snapScrollInfo.shouldSnapScrollUp -> Icon(
-              Icons.Filled.KeyboardArrowUp,
-              contentDescription = null
-            )
-            snapScrollInfo.shouldSnapScrollDown -> Icon(
+          ) {
+            Icon(
               Icons.Filled.KeyboardArrowDown,
               contentDescription = null
             )
