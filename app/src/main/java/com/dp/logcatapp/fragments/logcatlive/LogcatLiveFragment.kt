@@ -647,6 +647,7 @@ class LogcatLiveFragment : BaseFragment(), ServiceConnection, LogsReceivedListen
 
   override fun onStop() {
     super.onStop()
+    logcatService.value?.logcat?.removeEventListener(this)
     logcatService.value = null
     serviceBinder.unbind(requireActivity())
   }
