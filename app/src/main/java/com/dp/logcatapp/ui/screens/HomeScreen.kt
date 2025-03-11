@@ -168,13 +168,6 @@ fun HomeScreen(
         session.logs.collect { logs ->
           logsState += logs
         }
-
-        // if (viewModel.stopRecording || arguments?.getBoolean(STOP_RECORDING) == true) {
-        //   arguments?.putBoolean(STOP_RECORDING, false)
-        //   stopRecording()
-        // }
-        //
-        // viewModel.reloadFilters()
       }
     }
 
