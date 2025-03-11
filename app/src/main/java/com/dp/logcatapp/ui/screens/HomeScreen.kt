@@ -61,11 +61,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.dp.logcat.Log
 import com.dp.logcat.LogPriority
-import com.dp.logcat.Logcat
-import com.dp.logcat.LogsReceivedListener
 import com.dp.logcatapp.services.LogcatService
 import com.dp.logcatapp.services.getService
 import com.dp.logcatapp.ui.theme.AppTypography
@@ -75,10 +72,7 @@ import com.dp.logcatapp.ui.theme.RobotoMonoFontFamily
 import com.dp.logcatapp.util.ServiceBinder
 import com.dp.logger.Logger
 import kotlinx.coroutines.channels.SendChannel
-import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
@@ -159,28 +153,12 @@ fun HomeScreen(
   ) { innerPadding ->
     val logcatService = rememberLogcatServiceConnection()
 
-    val lifecycleOwner = LocalLifecycleOwner.current
-    logcatService?.let { service ->
-      LaunchedEffect(service) {
-        val logcat = service.logcat
-        logcat.pause() // resume on updateFilters callback
-
-        if (logsState.isEmpty()) {
-          logsState += logcat.getLogsFiltered()
-        } else if (service.restartedLogcat) {
-          service.restartedLogcat = false
-          logsState.clear()
+    if (logcatService != null) {
+      LaunchedEffect(logcatService) {
+        val session = logcatService.logcatSession
+        session.logs.collect { logs ->
+          logsState += logs
         }
-
-        launch {
-          logcat.logs()
-            .collect {
-              logsState += it
-            }
-        }
-
-        logcat.bind(lifecycleOwner)
-        logcat.resume()
 
         // if (viewModel.stopRecording || arguments?.getBoolean(STOP_RECORDING) == true) {
         //   arguments?.putBoolean(STOP_RECORDING, false)
@@ -398,18 +376,6 @@ private fun rememberLogcatServiceConnection(): LogcatService? {
   }
 
   return logcatService
-}
-
-private fun Logcat.logs(): Flow<List<Log>> = callbackFlow {
-  val receiver = object : LogsReceivedListener {
-    override fun onReceivedLogs(logs: List<Log>) {
-      trySendOrFail(logs)
-    }
-  }
-  addEventListener(receiver)
-  awaitClose {
-    removeEventListener(receiver)
-  }
 }
 
 data class SnapScrollInfo(

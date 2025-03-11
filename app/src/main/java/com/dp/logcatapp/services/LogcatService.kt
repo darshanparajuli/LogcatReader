@@ -17,12 +17,17 @@ import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.edit
 import com.dp.logcat.Logcat
+import com.dp.logcat.LogcatSession
 import com.dp.logcat.LogcatUtil
 import com.dp.logcatapp.R
 import com.dp.logcatapp.activities.MainActivity
 import com.dp.logcatapp.util.PreferenceKeys
 import com.dp.logcatapp.util.getDefaultSharedPreferences
 import com.dp.logcatapp.util.showToast
+import kotlinx.coroutines.CoroutineName
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.plus
 import java.util.Locale
 
 class LogcatService : BaseService() {
@@ -36,6 +41,10 @@ class LogcatService : BaseService() {
   lateinit var logcat: Logcat
     private set
   var restartedLogcat = false
+
+  private val logcatSessionScope = MainScope() + CoroutineName("LogcatSessionScope")
+  lateinit var logcatSession: LogcatSession
+    private set
 
   var paused = false
   var recording = false
@@ -161,7 +170,7 @@ class LogcatService : BaseService() {
 
   @TargetApi(26)
   private fun createNotificationChannel() {
-    val nm = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+    val nm = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
     val nc = NotificationChannel(
       NOTIFICATION_CHANNEL,
       getString(R.string.logcat_service_channel_name), NotificationManager.IMPORTANCE_LOW
@@ -173,13 +182,14 @@ class LogcatService : BaseService() {
 
   @TargetApi(26)
   private fun deleteNotificationChannel() {
-    val nm = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+    val nm = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
     nm.deleteNotificationChannel(NOTIFICATION_CHANNEL)
   }
 
   override fun onDestroy() {
     super.onDestroy()
     logcat.close()
+    logcatSessionScope.cancel("Service destroyed")
 
     if (VERSION.SDK_INT >= 26) {
       deleteNotificationChannel()
@@ -250,7 +260,7 @@ class LogcatService : BaseService() {
     logcat.setPollInterval(pollInterval)
 
     val buffers = LogcatUtil.AVAILABLE_BUFFERS
-    logcat.logcatBuffers = bufferValues.mapNotNull { e ->
+    val logcatBuffers = bufferValues.mapNotNull { e ->
       buffers.getOrNull(e.toInt())
         ?.lowercase(Locale.getDefault())
     }.toSet().ifEmpty {
@@ -262,6 +272,9 @@ class LogcatService : BaseService() {
       }
       LogcatUtil.DEFAULT_BUFFERS
     }
+    logcat.logcatBuffers = logcatBuffers
     logcat.start()
+
+    logcatSession = LogcatSession(logcatSessionScope, logcatBuffers)
   }
 }
