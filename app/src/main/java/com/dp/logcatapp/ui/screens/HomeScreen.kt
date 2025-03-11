@@ -116,11 +116,10 @@ fun HomeScreen(
             )
           }
         },
-        colors = TopAppBarDefaults.topAppBarColors()
-          .copy(
-            containerColor = MaterialTheme.colorScheme.primaryContainer,
-            titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-          )
+        colors = TopAppBarDefaults.topAppBarColors(
+          containerColor = MaterialTheme.colorScheme.primaryContainer,
+          titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+        ),
       )
     },
     floatingActionButton = {
@@ -181,6 +180,7 @@ fun HomeScreen(
         }
 
         logcat.bind(lifecycleOwner)
+        logcat.resume()
 
         // if (viewModel.stopRecording || arguments?.getBoolean(STOP_RECORDING) == true) {
         //   arguments?.putBoolean(STOP_RECORDING, false)

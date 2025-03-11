@@ -7,7 +7,6 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import com.dp.logcatapp.services.LogcatService
 import com.dp.logcatapp.ui.screens.HomeScreen
@@ -30,11 +29,9 @@ class ComposeMainActivity : ComponentActivity() {
 
     setContent {
       LogcatReaderTheme {
-        Surface {
-          HomeScreen(
-            modifier = Modifier.fillMaxSize(),
-          )
-        }
+        HomeScreen(
+          modifier = Modifier.fillMaxSize(),
+        )
       }
     }
   }

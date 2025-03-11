@@ -12,5 +12,5 @@ class LogcatApp : Application() {
 }
 
 object Features {
-  val useComposeForUi: Boolean = false
+  val useComposeForUi: Boolean = true
 }
