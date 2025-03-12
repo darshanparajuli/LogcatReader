@@ -1,5 +1,6 @@
 package com.dp.logcatapp.ui.theme
 
+import androidx.compose.material3.Typography
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle.Companion.Italic
@@ -8,7 +9,7 @@ import androidx.compose.ui.text.font.FontWeight.Companion.Light
 import androidx.compose.ui.text.font.FontWeight.Companion.Medium
 import com.dp.logcatapp.R
 
-val AppTypography = androidx.compose.material3.Typography()
+val AppTypography = Typography()
 
 val RobotoFontFamily = FontFamily(
   Font(resId = R.font.roboto_regular),

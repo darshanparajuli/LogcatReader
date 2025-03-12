@@ -33,8 +33,11 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
@@ -61,6 +64,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -69,6 +73,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.dp.logcat.Log
 import com.dp.logcat.LogPriority
+import com.dp.logcatapp.R
 import com.dp.logcatapp.services.LogcatService
 import com.dp.logcatapp.services.getService
 import com.dp.logcatapp.ui.theme.AppTypography
@@ -96,6 +101,7 @@ fun HomeScreen(
   val logsState = remember { mutableStateListOf<Log>() }
   val coroutineScope = rememberCoroutineScope()
   var snapToBottom by remember { mutableStateOf(true) }
+  var showDropDownMenu by remember { mutableStateOf(false) }
   var logcatPaused by remember { mutableStateOf(false) }
   val snapScrollInfo = rememberSnapScrollInfo(
     lazyListState = lazyListState,
@@ -133,6 +139,30 @@ fun HomeScreen(
               Icon(Icons.Default.Pause, contentDescription = null)
             }
           }
+          IconButton(
+            onClick = {
+              showDropDownMenu = true
+            }
+          ) {
+            Icon(Icons.Default.MoreVert, contentDescription = null)
+          }
+          DropdownMenu(
+            expanded = showDropDownMenu,
+            onDismissRequest = { showDropDownMenu = false }
+          ) {
+            DropdownMenuItem(
+              text = {
+                Text(
+                  text = stringResource(R.string.clear),
+                  style = AppTypography.bodyLarge,
+                )
+              },
+              onClick = {
+                logsState.clear()
+              }
+            )
+          }
+
         }
       )
     },
