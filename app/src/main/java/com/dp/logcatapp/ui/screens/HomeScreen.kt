@@ -31,11 +31,19 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.FiberManualRecord
+import androidx.compose.material.icons.filled.FilterList
+import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.RestartAlt
+import androidx.compose.material.icons.filled.Save
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -102,6 +110,8 @@ fun HomeScreen(
   val coroutineScope = rememberCoroutineScope()
   var snapToBottom by remember { mutableStateOf(true) }
   var showDropDownMenu by remember { mutableStateOf(false) }
+  var showSearchBar by remember { mutableStateOf(false) }
+  var recordLogs by remember { mutableStateOf(false) }
   var logcatPaused by remember { mutableStateOf(false) }
   val snapScrollInfo = rememberSnapScrollInfo(
     lazyListState = lazyListState,
@@ -130,6 +140,13 @@ fun HomeScreen(
         actions = {
           IconButton(
             onClick = {
+              showSearchBar = true
+            }
+          ) {
+            Icon(Icons.Default.Search, contentDescription = null)
+          }
+          IconButton(
+            onClick = {
               logcatPaused = !logcatPaused
             }
           ) {
@@ -141,28 +158,115 @@ fun HomeScreen(
           }
           IconButton(
             onClick = {
-              showDropDownMenu = true
+              recordLogs = true
             }
           ) {
-            Icon(Icons.Default.MoreVert, contentDescription = null)
+            Icon(Icons.Default.FiberManualRecord, contentDescription = null)
           }
-          DropdownMenu(
-            expanded = showDropDownMenu,
-            onDismissRequest = { showDropDownMenu = false }
-          ) {
-            DropdownMenuItem(
-              text = {
-                Text(
-                  text = stringResource(R.string.clear),
-                  style = AppTypography.bodyLarge,
-                )
-              },
+          Box {
+            IconButton(
               onClick = {
-                logsState.clear()
+                showDropDownMenu = true
               }
-            )
+            ) {
+              Icon(Icons.Default.MoreVert, contentDescription = null)
+            }
+            DropdownMenu(
+              expanded = showDropDownMenu,
+              onDismissRequest = { showDropDownMenu = false }
+            ) {
+              DropdownMenuItem(
+                leadingIcon = {
+                  Icon(Icons.Default.Clear, contentDescription = null)
+                },
+                text = {
+                  Text(
+                    text = stringResource(R.string.clear),
+                    style = AppTypography.bodyLarge,
+                  )
+                },
+                onClick = {
+                  logsState.clear()
+                  showDropDownMenu = false
+                }
+              )
+              DropdownMenuItem(
+                leadingIcon = {
+                  Icon(Icons.Default.FilterList, contentDescription = null)
+                },
+                text = {
+                  Text(
+                    text = stringResource(R.string.filters),
+                    style = AppTypography.bodyLarge,
+                  )
+                },
+                onClick = {
+                  showDropDownMenu = false
+                  // TODO: also handle exclusions in this screen
+                }
+              )
+              DropdownMenuItem(
+                leadingIcon = {
+                  Icon(Icons.Default.Save, contentDescription = null)
+                },
+                text = {
+                  Text(
+                    text = stringResource(R.string.save),
+                    style = AppTypography.bodyLarge,
+                  )
+                },
+                onClick = {
+                  showDropDownMenu = false
+                  // TODO
+                }
+              )
+              DropdownMenuItem(
+                leadingIcon = {
+                  Icon(Icons.Default.FolderOpen, contentDescription = null)
+                },
+                text = {
+                  Text(
+                    text = stringResource(R.string.saved_logs),
+                    style = AppTypography.bodyLarge,
+                  )
+                },
+                onClick = {
+                  showDropDownMenu = false
+                  // TODO
+                }
+              )
+              DropdownMenuItem(
+                leadingIcon = {
+                  Icon(Icons.Default.RestartAlt, contentDescription = null)
+                },
+                text = {
+                  Text(
+                    text = stringResource(R.string.restart_logcat),
+                    style = AppTypography.bodyLarge,
+                  )
+                },
+                onClick = {
+                  showDropDownMenu = false
+                  // TODO
+                }
+              )
+              DropdownMenuItem(
+                leadingIcon = {
+                  Icon(Icons.Default.Settings, contentDescription = null)
+                },
+                text = {
+                  Text(
+                    text = stringResource(R.string.settings),
+                    style = AppTypography.bodyLarge,
+                  )
+                },
+                onClick = {
+                  showDropDownMenu = false
+                  // TODO
+                }
+              )
+            }
           }
-
         }
       )
     },
