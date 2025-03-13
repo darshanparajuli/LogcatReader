@@ -33,8 +33,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.text.selection.LocalTextSelectionColors
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDownward
+import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.FiberManualRecord
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.FolderOpen
@@ -54,16 +58,21 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -71,12 +80,19 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -87,12 +103,17 @@ import com.dp.logcat.LogPriority
 import com.dp.logcatapp.R
 import com.dp.logcatapp.services.LogcatService
 import com.dp.logcatapp.services.getService
+import com.dp.logcatapp.ui.screens.SearchHitKey.LogComponent
 import com.dp.logcatapp.ui.theme.AppTypography
 import com.dp.logcatapp.ui.theme.LogPriorityColors
 import com.dp.logcatapp.ui.theme.LogcatReaderTheme
 import com.dp.logcatapp.ui.theme.RobotoMonoFontFamily
+import com.dp.logcatapp.ui.theme.currentSearchHitColor
 import com.dp.logcatapp.util.ServiceBinder
 import com.dp.logger.Logger
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.SharingStarted.Companion.Eagerly
 import kotlinx.coroutines.flow.collectLatest
@@ -100,6 +121,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 private const val TAG = "HomeScreen"
 private const val SNAP_SCROLL_HIDE_DELAY_MS = 2000L
@@ -109,6 +131,7 @@ private const val SNAP_SCROLL_HIDE_DELAY_MS = 2000L
 fun HomeScreen(
   modifier: Modifier,
 ) {
+
   val lazyListState = rememberLazyListState()
   val logsState = remember { mutableStateListOf<Log>() }
   val coroutineScope = rememberCoroutineScope()
@@ -119,6 +142,11 @@ fun HomeScreen(
   var logcatPaused by remember { mutableStateOf(false) }
   val snapUpInteractionSource = remember { MutableInteractionSource() }
   val snapDownInteractionSource = remember { MutableInteractionSource() }
+  var searchQuery by remember { mutableStateOf("") }
+  val searchHits = remember { mutableStateMapOf<SearchHitKey, Pair<Int, Int>>() }
+  var currentSearchHitIndex by remember { mutableIntStateOf(-1) }
+  var currentSearchHitLogId by remember { mutableIntStateOf(-1) }
+  var showHitCount by remember { mutableStateOf(false) }
   val snapScrollInfo = rememberSnapScrollInfo(
     lazyListState = lazyListState,
     snapToBottom = snapToBottom,
@@ -277,6 +305,100 @@ fun HomeScreen(
           }
         }
       )
+      AnimatedVisibility(
+        visible = showSearchBar,
+        enter = fadeIn(),
+        exit = fadeOut(),
+      ) {
+        val focusRequester = remember { FocusRequester() }
+        val focusManager = LocalFocusManager.current
+        LaunchedEffect(focusRequester) {
+          focusRequester.requestFocus()
+        }
+
+        TopAppBar(
+          modifier = Modifier.fillMaxWidth(),
+          navigationIcon = {
+            IconButton(
+              onClick = {
+                showSearchBar = false
+                searchHits.clear()
+                currentSearchHitIndex = -1
+                currentSearchHitLogId = -1
+                searchQuery = ""
+              },
+            ) {
+              Icon(imageVector = Icons.Default.Close, contentDescription = null)
+            }
+          },
+          title = {
+            TextField(
+              modifier = Modifier.focusRequester(focusRequester),
+              value = requireNotNull(searchQuery),
+              onValueChange = { query ->
+                searchQuery = query
+              },
+              maxLines = 1,
+              singleLine = true,
+              placeholder = {
+                Row(modifier = Modifier.fillMaxHeight()) {
+                  Text(
+                    modifier = Modifier.align(Alignment.CenterVertically),
+                    text = "Search",
+                  )
+                }
+              },
+              colors = TextFieldDefaults.colors(
+                focusedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                unfocusedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                focusedIndicatorColor = Color.Transparent,
+                unfocusedIndicatorColor = Color.Transparent,
+              ),
+              textStyle = LocalTextStyle.current.copy(
+                fontSize = 18.sp,
+              ),
+              suffix = {
+                val current = currentSearchHitIndex.takeIf { it != -1 }?.let { it + 1 } ?: 0
+                Text(
+                  modifier = Modifier.alpha(
+                    if (showHitCount) 1f else 0f
+                  ),
+                  text = "$current/${searchHits.size}",
+                  style = AppTypography.bodySmall,
+                )
+              }
+            )
+          },
+          actions = {
+            IconButton(
+              onClick = {
+                focusManager.clearFocus()
+                if (currentSearchHitIndex - 1 >= 0) {
+                  currentSearchHitIndex -= 1
+                } else {
+                  currentSearchHitIndex = searchHits.size - 1
+                }
+              },
+              enabled = searchHits.isNotEmpty(),
+            ) {
+              Icon(imageVector = Icons.Default.KeyboardArrowUp, contentDescription = null)
+            }
+            IconButton(
+              onClick = {
+                focusManager.clearFocus()
+                currentSearchHitIndex = (currentSearchHitIndex + 1) % searchHits.size
+              },
+              enabled = searchHits.isNotEmpty(),
+            ) {
+              Icon(imageVector = Icons.Default.KeyboardArrowDown, contentDescription = null)
+            }
+          },
+          colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer,
+            titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+          ),
+        )
+      }
     },
     floatingActionButton = {
       AnimatedVisibility(
@@ -295,7 +417,7 @@ fun HomeScreen(
             interactionSource = snapUpInteractionSource,
           ) {
             Icon(
-              Icons.Filled.KeyboardArrowUp,
+              imageVector = Icons.Filled.ArrowUpward,
               contentDescription = null
             )
           }
@@ -305,7 +427,9 @@ fun HomeScreen(
             onClick = {
               coroutineScope.launch {
                 if (lazyListState.layoutInfo.totalItemsCount > 0) {
-                  snapToBottom = true
+                  if (!showSearchBar) {
+                    snapToBottom = true
+                  }
                   lazyListState.scrollToItem(lazyListState.layoutInfo.totalItemsCount - 1)
                 }
               }
@@ -313,7 +437,7 @@ fun HomeScreen(
             interactionSource = snapDownInteractionSource,
           ) {
             Icon(
-              Icons.Filled.KeyboardArrowDown,
+              imageVector = Icons.Filled.ArrowDownward,
               contentDescription = null
             )
           }
@@ -330,6 +454,76 @@ fun HomeScreen(
           session.logs.collect { logs ->
             logsState += logs
           }
+        }
+      }
+    }
+
+    if (showSearchBar) {
+      LaunchedEffect(Unit) {
+        snapshotFlow { searchQuery }
+          .collectLatest { searchQuery ->
+            delay(100L)
+            showHitCount = searchQuery.isNotEmpty()
+            if (searchQuery.isNotEmpty()) {
+              var scrolled = false
+              snapshotFlow { logsState.toList() }
+                .collect { logs ->
+                  val map = withContext(Dispatchers.Default) {
+                    val map = mutableMapOf<SearchHitKey, Pair<Int, Int>>()
+                    val deferred = logs.map { log ->
+                      async {
+                        val msgIndex = log.msg.indexOf(string = searchQuery, ignoreCase = true)
+                        val tagIndex = log.tag.indexOf(string = searchQuery, ignoreCase = true)
+                        Triple(log.id, msgIndex, tagIndex)
+                      }
+                    }
+                    deferred.awaitAll().forEach { (logId, msgIndex, tagIndex) ->
+                      if (msgIndex != -1) {
+                        map[SearchHitKey(logId = logId, component = LogComponent.MSG)] =
+                          Pair(msgIndex, msgIndex + searchQuery.length)
+                      }
+                      if (tagIndex != -1) {
+                        map[SearchHitKey(logId = logId, component = LogComponent.TAG)] =
+                          Pair(tagIndex, tagIndex + searchQuery.length)
+                      }
+                    }
+                    map
+                  }
+                  searchHits.clear()
+                  searchHits.putAll(map)
+
+                  if (!scrolled) {
+                    if (searchHits.isNotEmpty()) {
+                      currentSearchHitIndex = 0
+                      currentSearchHitLogId = searchHits.keys.minByOrNull { it.logId }!!.logId
+                      snapToBottom = false
+                      scrolled = true
+                    } else {
+                      currentSearchHitIndex = -1
+                      currentSearchHitLogId = -1
+                    }
+                  }
+                }
+            } else {
+              searchHits.clear()
+              currentSearchHitIndex = -1
+              currentSearchHitLogId = -1
+            }
+          }
+      }
+      if (searchQuery.isNotEmpty()) {
+        LaunchedEffect(lazyListState, searchQuery) {
+          snapshotFlow {
+            searchHits.toMap() to currentSearchHitIndex
+          }
+            .filter { (_, index) -> index != -1 }
+            .collectLatest { (hitsMap, index) ->
+              val hits = hitsMap.keys.sortedBy { it.logId }
+              if (index < hits.size) {
+                currentSearchHitLogId = hits[index].logId
+                lazyListState.scrollToItem(currentSearchHitLogId)
+              }
+            }
         }
       }
     }
@@ -352,9 +546,11 @@ fun HomeScreen(
         },
       contentPadding = innerPadding,
       logs = logsState,
+      searchHits = searchHits,
       onClick = {},
       onLongClick = {},
       state = lazyListState,
+      currentSearchHitLogId = currentSearchHitLogId,
     )
   }
 }
@@ -365,10 +561,14 @@ private fun LogsList(
   modifier: Modifier,
   contentPadding: PaddingValues,
   logs: List<Log>,
+  searchHits: Map<SearchHitKey, Pair<Int, Int>>,
+  currentSearchHitLogId: Int,
   onClick: (Int) -> Unit,
   onLongClick: (Int) -> Unit,
   state: LazyListState = rememberLazyListState(),
 ) {
+  val textSelectionColors = LocalTextSelectionColors.current
+  val currentSearchHitColor = currentSearchHitColor()
   LazyColumn(
     modifier = modifier,
     state = state,
@@ -381,6 +581,30 @@ private fun LogsList(
       if (index > 0) {
         HorizontalDivider()
       }
+
+      fun maybeHighlightSearchHit(target: String, searchHitKey: SearchHitKey): AnnotatedString {
+        val hit = if (searchHits.isNotEmpty()) searchHits[searchHitKey] else null
+        return if (hit != null) {
+          buildAnnotatedString {
+            append(target)
+            val color = if (index == currentSearchHitLogId) {
+              currentSearchHitColor
+            } else {
+              textSelectionColors.backgroundColor
+            }
+            addStyle(
+              SpanStyle(
+                background = color
+              ),
+              start = hit.first,
+              end = hit.second
+            )
+          }
+        } else {
+          AnnotatedString(target)
+        }
+      }
+
       LogItem(
         modifier = Modifier
           .fillMaxWidth()
@@ -390,8 +614,14 @@ private fun LogsList(
           )
           .wrapContentHeight(),
         priority = item.priority,
-        tag = item.tag,
-        message = item.msg,
+        tag = maybeHighlightSearchHit(
+          target = item.tag,
+          searchHitKey = SearchHitKey(logId = item.id, component = LogComponent.TAG),
+        ),
+        message = maybeHighlightSearchHit(
+          target = item.msg,
+          searchHitKey = SearchHitKey(logId = item.id, component = LogComponent.MSG),
+        ),
         date = item.date,
         time = item.time,
         pid = item.pid,
@@ -415,8 +645,8 @@ private fun LogsList(
 private fun LogItem(
   modifier: Modifier,
   priority: String,
-  tag: String,
-  message: String,
+  tag: AnnotatedString,
+  message: AnnotatedString,
   date: String,
   time: String,
   pid: String,
@@ -648,6 +878,16 @@ private fun rememberSnapScrollInfo(
   return snapScrollInfo
 }
 
+data class SearchHitKey(
+  val logId: Int,
+  val component: LogComponent,
+) {
+  enum class LogComponent {
+    MSG,
+    TAG,
+  }
+}
+
 @Preview(showBackground = true)
 @Composable
 private fun LogItemPreview() {
@@ -657,8 +897,8 @@ private fun LogItemPreview() {
         .fillMaxWidth()
         .wrapContentHeight(),
       priority = "D",
-      tag = "Tag",
-      message = "This is a log",
+      tag = AnnotatedString("Tag"),
+      message = AnnotatedString("This is a log"),
       date = "01-12",
       time = "21:10:46.123",
       pid = "1600",
