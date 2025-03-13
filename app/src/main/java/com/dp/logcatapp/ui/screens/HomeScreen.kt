@@ -1,8 +1,14 @@
 package com.dp.logcatapp.ui.screens
 
+import android.Manifest
 import android.content.ComponentName
+import android.content.Context
+import android.content.Intent
 import android.content.ServiceConnection
+import android.os.Build
 import android.os.IBinder
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts.RequestPermission
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -90,7 +96,6 @@ import com.dp.logcatapp.ui.theme.LogcatReaderTheme
 import com.dp.logcatapp.ui.theme.RobotoMonoFontFamily
 import com.dp.logcatapp.util.ServiceBinder
 import com.dp.logger.Logger
-import kotlinx.coroutines.channels.SendChannel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.filter
@@ -117,6 +122,8 @@ fun HomeScreen(
     lazyListState = lazyListState,
     snapToBottom = snapToBottom,
   )
+
+  val serviceStarted = startLogcatService()
 
   Scaffold(
     modifier = modifier,
@@ -311,15 +318,16 @@ fun HomeScreen(
       }
     },
   ) { innerPadding ->
-    val logcatService = rememberLogcatServiceConnection()
-
-    if (logcatService != null) {
-      if (!logcatPaused) {
-        LaunchedEffect(logcatService) {
-          val session = logcatService.logcatSession
-          logsState.clear()
-          session.logs.collect { logs ->
-            logsState += logs
+    if (serviceStarted) {
+      val logcatService = rememberLogcatServiceConnection()
+      if (logcatService != null) {
+        if (!logcatPaused) {
+          LaunchedEffect(logcatService) {
+            val session = logcatService.logcatSession
+            logsState.clear()
+            session.logs.collect { logs ->
+              logsState += logs
+            }
           }
         }
       }
@@ -630,11 +638,38 @@ private fun rememberSnapScrollInfo(
   return snapScrollInfo
 }
 
-private fun <E> SendChannel<E>.trySendOrFail(e: E) {
-  val result = trySend(e)
-  if (result.isFailure) {
-    error("Failed sending $e, closed: ${result.isClosed}")
+@Composable
+private fun startLogcatService(): Boolean {
+  var serviceStarted by remember { mutableStateOf(false) }
+
+  fun startLogcatService(context: Context) {
+    val logcatServiceIntent = Intent(context, LogcatService::class.java)
+    if (Build.VERSION.SDK_INT >= 26) {
+      context.startForegroundService(logcatServiceIntent)
+    } else {
+      context.startService(logcatServiceIntent)
+    }
   }
+
+  val context = LocalContext.current
+  if (Build.VERSION.SDK_INT >= 33) {
+    val launcher = rememberLauncherForActivityResult(RequestPermission()) { granted ->
+      if (granted) {
+        startLogcatService(context)
+        serviceStarted = true
+      }
+    }
+
+    LaunchedEffect(launcher, context) {
+      launcher.launch(Manifest.permission.POST_NOTIFICATIONS)
+    }
+  } else {
+    LaunchedEffect(context) {
+      startLogcatService(context)
+      serviceStarted = true
+    }
+  }
+  return serviceStarted
 }
 
 @Preview(showBackground = true)
