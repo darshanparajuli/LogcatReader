@@ -1,14 +1,8 @@
 package com.dp.logcatapp.ui.screens
 
-import android.Manifest
 import android.content.ComponentName
-import android.content.Context
-import android.content.Intent
 import android.content.ServiceConnection
-import android.os.Build
 import android.os.IBinder
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts.RequestPermission
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -17,6 +11,9 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.interaction.InteractionSource
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.PressInteraction.Press
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -97,9 +94,11 @@ import com.dp.logcatapp.ui.theme.RobotoMonoFontFamily
 import com.dp.logcatapp.util.ServiceBinder
 import com.dp.logger.Logger
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.SharingStarted.Companion.Eagerly
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 private const val TAG = "HomeScreen"
@@ -118,12 +117,14 @@ fun HomeScreen(
   var showSearchBar by remember { mutableStateOf(false) }
   var recordLogs by remember { mutableStateOf(false) }
   var logcatPaused by remember { mutableStateOf(false) }
+  val snapUpInteractionSource = remember { MutableInteractionSource() }
+  val snapDownInteractionSource = remember { MutableInteractionSource() }
   val snapScrollInfo = rememberSnapScrollInfo(
     lazyListState = lazyListState,
     snapToBottom = snapToBottom,
+    snapUpInteractionSource = snapUpInteractionSource,
+    snapDownInteractionSource = snapDownInteractionSource,
   )
-
-  val serviceStarted = startLogcatService()
 
   Scaffold(
     modifier = modifier,
@@ -290,7 +291,8 @@ fun HomeScreen(
               coroutineScope.launch {
                 lazyListState.scrollToItem(0)
               }
-            }
+            },
+            interactionSource = snapUpInteractionSource,
           ) {
             Icon(
               Icons.Filled.KeyboardArrowUp,
@@ -307,7 +309,8 @@ fun HomeScreen(
                   lazyListState.scrollToItem(lazyListState.layoutInfo.totalItemsCount - 1)
                 }
               }
-            }
+            },
+            interactionSource = snapDownInteractionSource,
           ) {
             Icon(
               Icons.Filled.KeyboardArrowDown,
@@ -318,16 +321,14 @@ fun HomeScreen(
       }
     },
   ) { innerPadding ->
-    if (serviceStarted) {
-      val logcatService = rememberLogcatServiceConnection()
-      if (logcatService != null) {
-        if (!logcatPaused) {
-          LaunchedEffect(logcatService) {
-            val session = logcatService.logcatSession
-            logsState.clear()
-            session.logs.collect { logs ->
-              logsState += logs
-            }
+    val logcatService = rememberLogcatServiceConnection()
+    if (logcatService != null) {
+      if (!logcatPaused) {
+        LaunchedEffect(logcatService) {
+          val session = logcatService.logcatSession
+          logsState.clear()
+          session.logs.collect { logs ->
+            logsState += logs
           }
         }
       }
@@ -552,6 +553,8 @@ data class SnapScrollInfo(
 private fun rememberSnapScrollInfo(
   lazyListState: LazyListState,
   snapToBottom: Boolean,
+  snapUpInteractionSource: InteractionSource,
+  snapDownInteractionSource: InteractionSource,
 ): SnapScrollInfo {
   var snapScrollInfo by remember { mutableStateOf(SnapScrollInfo()) }
 
@@ -565,7 +568,7 @@ private fun rememberSnapScrollInfo(
         }
     }
   } else {
-    LaunchedEffect(lazyListState) {
+    LaunchedEffect(lazyListState, snapUpInteractionSource, snapDownInteractionSource) {
       data class LastItemOffsetInfo(
         val lastItem: Boolean,
         val lastItemSize: Int,
@@ -582,94 +585,67 @@ private fun rememberSnapScrollInfo(
       )
 
       launch {
-        snapshotFlow {
-          val layoutInfo = lazyListState.layoutInfo
-          ItemOffsetInfo(
-            viewportEndOffset = layoutInfo.viewportEndOffset,
-            firstVisibleIndex = lazyListState.firstVisibleItemIndex,
-            firstVisibleOffset = lazyListState.firstVisibleItemScrollOffset,
-            lastItemInfo = layoutInfo.visibleItemsInfo.lastOrNull()?.let { info ->
-              LastItemOffsetInfo(
-                lastItem = info.index == layoutInfo.totalItemsCount - 1,
-                lastItemSize = info.size,
-                lastVisibleOffset = info.offset,
-              )
-            },
-            lastScrolledForward = lazyListState.lastScrolledForward,
-            lastScrolledBackward = lazyListState.lastScrolledBackward,
-          )
-        }
-          .filterNotNull()
-          .collectLatest { offsetInfo ->
-            var shouldSnapScrollUp = false
-            var shouldSnapScrollDown = false
-            if (offsetInfo.lastScrolledForward) {
-              val lastItemInfo = offsetInfo.lastItemInfo
-              if (lastItemInfo != null) {
-                val canScrollDown = !lastItemInfo.lastItem ||
-                  (lastItemInfo.lastVisibleOffset + lastItemInfo.lastItemSize) > offsetInfo.viewportEndOffset
-                shouldSnapScrollUp = false
-                shouldSnapScrollDown = canScrollDown
-              } else {
-                shouldSnapScrollDown = false
-              }
-            } else if (offsetInfo.lastScrolledBackward) {
-              val canScrollUp =
-                offsetInfo.firstVisibleIndex != 0 || offsetInfo.firstVisibleOffset > 0
-              shouldSnapScrollDown = false
-              shouldSnapScrollUp = canScrollUp
-            }
-            var isScrollSnapperVisible = shouldSnapScrollUp || shouldSnapScrollDown
-            snapScrollInfo = snapScrollInfo.copy(
-              shouldSnapScrollUp = shouldSnapScrollUp,
-              shouldSnapScrollDown = shouldSnapScrollDown,
-              isScrollSnapperVisible = isScrollSnapperVisible,
+        combine(
+          snapshotFlow {
+            val layoutInfo = lazyListState.layoutInfo
+            ItemOffsetInfo(
+              viewportEndOffset = layoutInfo.viewportEndOffset,
+              firstVisibleIndex = lazyListState.firstVisibleItemIndex,
+              firstVisibleOffset = lazyListState.firstVisibleItemScrollOffset,
+              lastItemInfo = layoutInfo.visibleItemsInfo.lastOrNull()?.let { info ->
+                LastItemOffsetInfo(
+                  lastItem = info.index == layoutInfo.totalItemsCount - 1,
+                  lastItemSize = info.size,
+                  lastVisibleOffset = info.offset,
+                )
+              },
+              lastScrolledForward = lazyListState.lastScrolledForward,
+              lastScrolledBackward = lazyListState.lastScrolledBackward,
             )
-            if (isScrollSnapperVisible) {
-              delay(SNAP_SCROLL_HIDE_DELAY_MS)
-              snapScrollInfo = snapScrollInfo.copy(
-                isScrollSnapperVisible = false,
-              )
+          },
+          snapUpInteractionSource.interactions.stateIn(this, Eagerly, null),
+          snapDownInteractionSource.interactions.stateIn(this, Eagerly, null),
+        ) { offsetInfo, snapUpInteraction, snapDownInteraction ->
+          Triple(offsetInfo, snapUpInteraction, snapDownInteraction)
+        }.collectLatest { (offsetInfo, snapUpInteraction, snapDownInteraction) ->
+          var shouldSnapScrollUp = false
+          var shouldSnapScrollDown = false
+          if (offsetInfo.lastScrolledForward) {
+            val lastItemInfo = offsetInfo.lastItemInfo
+            if (lastItemInfo != null) {
+              val canScrollDown = !lastItemInfo.lastItem ||
+                (lastItemInfo.lastVisibleOffset + lastItemInfo.lastItemSize) > offsetInfo.viewportEndOffset
+              shouldSnapScrollUp = false
+              shouldSnapScrollDown = canScrollDown
+            } else {
+              shouldSnapScrollDown = false
             }
+          } else if (offsetInfo.lastScrolledBackward) {
+            val canScrollUp =
+              offsetInfo.firstVisibleIndex != 0 || offsetInfo.firstVisibleOffset > 0
+            shouldSnapScrollDown = false
+            shouldSnapScrollUp = canScrollUp
           }
+          var isScrollSnapperVisible = shouldSnapScrollUp || shouldSnapScrollDown
+          snapScrollInfo = snapScrollInfo.copy(
+            shouldSnapScrollUp = shouldSnapScrollUp,
+            shouldSnapScrollDown = shouldSnapScrollDown,
+            isScrollSnapperVisible = isScrollSnapperVisible,
+          )
+
+          // Do not hide while the FABs are being pressed.
+          val isFabPressed = snapUpInteraction is Press || snapDownInteraction is Press
+          if (isScrollSnapperVisible && !isFabPressed) {
+            delay(SNAP_SCROLL_HIDE_DELAY_MS)
+            snapScrollInfo = snapScrollInfo.copy(
+              isScrollSnapperVisible = false,
+            )
+          }
+        }
       }
     }
   }
   return snapScrollInfo
-}
-
-@Composable
-private fun startLogcatService(): Boolean {
-  var serviceStarted by remember { mutableStateOf(false) }
-
-  fun startLogcatService(context: Context) {
-    val logcatServiceIntent = Intent(context, LogcatService::class.java)
-    if (Build.VERSION.SDK_INT >= 26) {
-      context.startForegroundService(logcatServiceIntent)
-    } else {
-      context.startService(logcatServiceIntent)
-    }
-  }
-
-  val context = LocalContext.current
-  if (Build.VERSION.SDK_INT >= 33) {
-    val launcher = rememberLauncherForActivityResult(RequestPermission()) { granted ->
-      if (granted) {
-        startLogcatService(context)
-        serviceStarted = true
-      }
-    }
-
-    LaunchedEffect(launcher, context) {
-      launcher.launch(Manifest.permission.POST_NOTIFICATIONS)
-    }
-  } else {
-    LaunchedEffect(context) {
-      startLogcatService(context)
-      serviceStarted = true
-    }
-  }
-  return serviceStarted
 }
 
 @Preview(showBackground = true)
