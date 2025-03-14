@@ -51,6 +51,7 @@ import androidx.compose.material.icons.filled.RestartAlt
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -80,7 +81,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
@@ -114,8 +114,6 @@ import com.dp.logcatapp.ui.theme.currentSearchHitColor
 import com.dp.logcatapp.util.ServiceBinder
 import com.dp.logger.Logger
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.SharingStarted.Companion.Eagerly
 import kotlinx.coroutines.flow.collectLatest
@@ -145,10 +143,12 @@ fun HomeScreen(
   val snapUpInteractionSource = remember { MutableInteractionSource() }
   val snapDownInteractionSource = remember { MutableInteractionSource() }
   var searchQuery by remember { mutableStateOf("") }
-  val searchHits = remember { mutableStateMapOf<SearchHitKey, Pair<Int, Int>>() }
+  val searchHitsMap = remember { mutableStateMapOf<SearchHitKey, Pair<Int, Int>>() }
+  var sortedHitsByLogIdsState by remember { mutableStateOf<List<Int>>(emptyList()) }
   var currentSearchHitIndex by remember { mutableIntStateOf(-1) }
   var currentSearchHitLogId by remember { mutableIntStateOf(-1) }
   var showHitCount by remember { mutableStateOf(false) }
+  var searchInProgress by remember { mutableStateOf(false) }
   val snapScrollInfo = rememberSnapScrollInfo(
     lazyListState = lazyListState,
     snapToBottom = snapToBottom,
@@ -324,7 +324,8 @@ fun HomeScreen(
             IconButton(
               onClick = {
                 showSearchBar = false
-                searchHits.clear()
+                searchHitsMap.clear()
+                sortedHitsByLogIdsState = emptyList()
                 currentSearchHitIndex = -1
                 currentSearchHitLogId = -1
                 searchQuery = ""
@@ -360,14 +361,18 @@ fun HomeScreen(
                 fontSize = 18.sp,
               ),
               suffix = {
-                val current = currentSearchHitIndex.takeIf { it != -1 }?.let { it + 1 } ?: 0
-                Text(
-                  modifier = Modifier.alpha(
-                    if (showHitCount) 1f else 0f
-                  ),
-                  text = "$current/${searchHits.size}",
-                  style = AppTypography.bodySmall,
-                )
+                if (searchInProgress) {
+                  CircularProgressIndicator(
+                    modifier = Modifier.size(20.dp),
+                    strokeWidth = 2.dp,
+                  )
+                } else if (showHitCount) {
+                  val current = currentSearchHitIndex.takeIf { it != -1 }?.let { it + 1 } ?: 0
+                  Text(
+                    text = "$current/${searchHitsMap.size}",
+                    style = AppTypography.bodySmall,
+                  )
+                }
               }
             )
           },
@@ -378,19 +383,19 @@ fun HomeScreen(
                 if (currentSearchHitIndex - 1 >= 0) {
                   currentSearchHitIndex -= 1
                 } else {
-                  currentSearchHitIndex = searchHits.size - 1
+                  currentSearchHitIndex = searchHitsMap.size - 1
                 }
               },
-              enabled = searchHits.isNotEmpty(),
+              enabled = searchHitsMap.isNotEmpty(),
             ) {
               Icon(imageVector = Icons.Default.KeyboardArrowUp, contentDescription = null)
             }
             IconButton(
               onClick = {
                 focusManager.clearFocus()
-                currentSearchHitIndex = (currentSearchHitIndex + 1) % searchHits.size
+                currentSearchHitIndex = (currentSearchHitIndex + 1) % searchHitsMap.size
               },
-              enabled = searchHits.isNotEmpty(),
+              enabled = searchHitsMap.isNotEmpty(),
             ) {
               Icon(imageVector = Icons.Default.KeyboardArrowDown, contentDescription = null)
             }
@@ -467,37 +472,35 @@ fun HomeScreen(
             delay(100L)
             showHitCount = searchQuery.isNotEmpty()
             if (searchQuery.isNotEmpty()) {
+              searchInProgress = true
               var scrolled = false
               snapshotFlow { logsState.toList() }
                 .collect { logs ->
-                  val map = withContext(Dispatchers.Default) {
+                  val (map, sortedHitsByLogId) = withContext(Dispatchers.Default) {
                     val map = mutableMapOf<SearchHitKey, Pair<Int, Int>>()
-                    val deferred = logs.map { log ->
-                      async {
-                        val msgIndex = log.msg.indexOf(string = searchQuery, ignoreCase = true)
-                        val tagIndex = log.tag.indexOf(string = searchQuery, ignoreCase = true)
-                        Triple(log.id, msgIndex, tagIndex)
-                      }
-                    }
-                    deferred.awaitAll().forEach { (logId, msgIndex, tagIndex) ->
+                    logs.forEach { log ->
+                      val msgIndex = log.msg.indexOf(string = searchQuery, ignoreCase = true)
+                      val tagIndex = log.tag.indexOf(string = searchQuery, ignoreCase = true)
                       if (msgIndex != -1) {
-                        map[SearchHitKey(logId = logId, component = LogComponent.MSG)] =
+                        map[SearchHitKey(logId = log.id, component = LogComponent.MSG)] =
                           Pair(msgIndex, msgIndex + searchQuery.length)
                       }
                       if (tagIndex != -1) {
-                        map[SearchHitKey(logId = logId, component = LogComponent.TAG)] =
+                        map[SearchHitKey(logId = log.id, component = LogComponent.TAG)] =
                           Pair(tagIndex, tagIndex + searchQuery.length)
                       }
                     }
-                    map
+                    Pair(map, map.keys.map { it.logId }.sorted())
                   }
-                  searchHits.clear()
-                  searchHits.putAll(map)
+                  searchHitsMap.clear()
+                  searchHitsMap.putAll(map)
+                  sortedHitsByLogIdsState = sortedHitsByLogId
 
                   if (!scrolled) {
-                    if (searchHits.isNotEmpty()) {
+                    searchInProgress = false
+                    if (sortedHitsByLogIdsState.isNotEmpty()) {
                       currentSearchHitIndex = 0
-                      currentSearchHitLogId = searchHits.keys.minByOrNull { it.logId }!!.logId
+                      currentSearchHitLogId = sortedHitsByLogIdsState.first()
                       snapToBottom = false
                       scrolled = true
                     } else {
@@ -507,7 +510,9 @@ fun HomeScreen(
                   }
                 }
             } else {
-              searchHits.clear()
+              searchInProgress = false
+              searchHitsMap.clear()
+              sortedHitsByLogIdsState = emptyList()
               currentSearchHitIndex = -1
               currentSearchHitLogId = -1
             }
@@ -516,13 +521,12 @@ fun HomeScreen(
       if (searchQuery.isNotEmpty()) {
         LaunchedEffect(lazyListState, searchQuery) {
           snapshotFlow {
-            searchHits.toMap() to currentSearchHitIndex
+            sortedHitsByLogIdsState to currentSearchHitIndex
           }
             .filter { (_, index) -> index != -1 }
-            .collectLatest { (hitsMap, index) ->
-              val hits = hitsMap.keys.sortedBy { it.logId }
+            .collectLatest { (hits, index) ->
               if (index < hits.size) {
-                currentSearchHitLogId = hits[index].logId
+                currentSearchHitLogId = hits[index]
                 lazyListState.scrollToItem(currentSearchHitLogId)
               }
             }
@@ -553,7 +557,7 @@ fun HomeScreen(
         },
       contentPadding = innerPadding,
       logs = logsState,
-      searchHits = searchHits,
+      searchHits = searchHitsMap,
       onClick = {},
       onLongClick = {},
       state = lazyListState,
