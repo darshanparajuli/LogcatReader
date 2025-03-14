@@ -98,6 +98,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.dp.logcat.Log
 import com.dp.logcat.LogPriority
 import com.dp.logcatapp.R
@@ -528,17 +530,22 @@ fun HomeScreen(
       }
     }
 
+    val lifecycle = LocalLifecycleOwner.current.lifecycle
     LogsList(
       modifier = Modifier
         .fillMaxSize()
         .consumeWindowInsets(innerPadding)
         .pointerInput(Unit) {
-          awaitPointerEventScope {
-            while (true) {
-              val event = awaitPointerEvent()
-              when (event.type) {
-                PointerEventType.Press -> {
-                  snapToBottom = false
+          lifecycle.currentStateFlow.collectLatest { state ->
+            if (state == Lifecycle.State.RESUMED) {
+              awaitPointerEventScope {
+                while (true) {
+                  val event = awaitPointerEvent()
+                  when (event.type) {
+                    PointerEventType.Press -> {
+                      snapToBottom = false
+                    }
+                  }
                 }
               }
             }
