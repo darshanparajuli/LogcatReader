@@ -155,6 +155,7 @@ fun HomeScreen(
     snapUpInteractionSource = snapUpInteractionSource,
     snapDownInteractionSource = snapDownInteractionSource,
   )
+  val focusManager = LocalFocusManager.current
 
   Scaffold(
     modifier = modifier,
@@ -313,7 +314,6 @@ fun HomeScreen(
         exit = fadeOut(),
       ) {
         val focusRequester = remember { FocusRequester() }
-        val focusManager = LocalFocusManager.current
         LaunchedEffect(focusRequester) {
           focusRequester.requestFocus()
         }
@@ -328,7 +328,7 @@ fun HomeScreen(
                 sortedHitsByLogIdsState = emptyList()
                 currentSearchHitIndex = -1
                 currentSearchHitLogId = -1
-                searchQuery = ""
+                focusManager.clearFocus()
               },
             ) {
               Icon(imageVector = Icons.Default.Close, contentDescription = null)
@@ -548,6 +548,7 @@ fun HomeScreen(
                   when (event.type) {
                     PointerEventType.Press -> {
                       snapToBottom = false
+                      focusManager.clearFocus()
                     }
                   }
                 }
