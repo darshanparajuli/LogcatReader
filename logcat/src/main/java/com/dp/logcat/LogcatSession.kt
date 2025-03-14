@@ -30,13 +30,12 @@ class LogcatSession(
     }
   }
 
-  private val pendingLogs = mutableListOf<Log>()
-  private val _allLogs = mutableListOf<Log>()
+  @Volatile private var record = false
+  val isRecording: Boolean get() = record
 
-  val allLogs: List<Log>
-    get() = lock.withLock {
-      _allLogs.toList()
-    }
+  private val recordBuffer = mutableListOf<Log>()
+
+  private val pendingLogs = mutableListOf<Log>()
 
   @Volatile private var active = false
 
@@ -110,9 +109,13 @@ class LogcatSession(
   private fun poll(onReceivedNewLogs: (logs: List<Log>) -> Unit) {
     while (active) {
       val pending = lock.withLock {
-        _allLogs += pendingLogs
         val pending = pendingLogs.toList()
         pendingLogs.clear()
+
+        // If recording is enabled, then add to record buffer.
+        if (record) {
+          recordBuffer += pending
+        }
         pending
       }
       onReceivedNewLogs(pending)
@@ -120,9 +123,10 @@ class LogcatSession(
     }
   }
 
-  fun stop() {
+  private fun stop() {
     Logger.debug(LogcatSession::class, "stopping")
     active = false
+    record = false
     if (Build.VERSION.SDK_INT >= 26) {
       logcatProcess?.destroyForcibly()
     } else {
@@ -133,6 +137,23 @@ class LogcatSession(
     logcatThread = null
     pollerThread?.join(5_000L)
     pollerThread = null
+    lock.withLock {
+      pendingLogs.clear()
+      recordBuffer.clear()
+    }
     Logger.debug(LogcatSession::class, "stopped")
+  }
+
+  fun startRecording() {
+    record = true
+  }
+
+  fun stopRecording(): List<Log> {
+    record = false
+    return lock.withLock {
+      val result = recordBuffer.toList()
+      recordBuffer.clear()
+      result
+    }
   }
 }

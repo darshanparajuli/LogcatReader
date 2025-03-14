@@ -1,8 +1,12 @@
 package com.dp.logcatapp.ui.screens
 
 import android.content.ComponentName
+import android.content.Context
+import android.content.Intent
 import android.content.ServiceConnection
+import android.net.Uri
 import android.os.IBinder
+import androidx.annotation.WorkerThread
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -10,6 +14,7 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.InteractionSource
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -35,6 +40,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.selection.LocalTextSelectionColors
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ViewList
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.Clear
@@ -51,6 +57,8 @@ import androidx.compose.material.icons.filled.RestartAlt
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -59,9 +67,16 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -98,11 +113,22 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.net.toFile
+import androidx.core.net.toUri
+import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.dp.logcat.Log
 import com.dp.logcat.LogPriority
+import com.dp.logcat.LogcatUtil
 import com.dp.logcatapp.R
+import com.dp.logcatapp.activities.FiltersActivity
+import com.dp.logcatapp.activities.SavedLogsActivity
+import com.dp.logcatapp.activities.SavedLogsViewerActivity
+import com.dp.logcatapp.activities.SettingsActivity
+import com.dp.logcatapp.db.MyDB
+import com.dp.logcatapp.db.SavedLogInfo
+import com.dp.logcatapp.fragments.logcatlive.LogcatLiveFragment.Companion.LOGCAT_DIR
 import com.dp.logcatapp.services.LogcatService
 import com.dp.logcatapp.services.getService
 import com.dp.logcatapp.ui.screens.SearchHitKey.LogComponent
@@ -111,17 +137,27 @@ import com.dp.logcatapp.ui.theme.LogPriorityColors
 import com.dp.logcatapp.ui.theme.LogcatReaderTheme
 import com.dp.logcatapp.ui.theme.RobotoMonoFontFamily
 import com.dp.logcatapp.ui.theme.currentSearchHitColor
+import com.dp.logcatapp.util.PreferenceKeys
 import com.dp.logcatapp.util.ServiceBinder
+import com.dp.logcatapp.util.ShareUtils
+import com.dp.logcatapp.util.getDefaultSharedPreferences
 import com.dp.logger.Logger
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted.Companion.Eagerly
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.io.File
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 private const val TAG = "HomeScreen"
 private const val SNAP_SCROLL_HIDE_DELAY_MS = 2000L
@@ -131,31 +167,53 @@ private const val SNAP_SCROLL_HIDE_DELAY_MS = 2000L
 fun HomeScreen(
   modifier: Modifier,
 ) {
-
-  val lazyListState = rememberLazyListState()
-  val logsState = remember { mutableStateListOf<Log>() }
+  val context = LocalContext.current
   val coroutineScope = rememberCoroutineScope()
+  val focusManager = LocalFocusManager.current
+
+  val logcatService = rememberLogcatServiceConnection()
+  val lazyListState = rememberLazyListState()
+
   var snapToBottom by remember { mutableStateOf(true) }
-  var showDropDownMenu by remember { mutableStateOf(false) }
-  var showSearchBar by remember { mutableStateOf(false) }
-  var recordLogs by remember { mutableStateOf(false) }
-  var logcatPaused by remember { mutableStateOf(false) }
   val snapUpInteractionSource = remember { MutableInteractionSource() }
   val snapDownInteractionSource = remember { MutableInteractionSource() }
-  var searchQuery by remember { mutableStateOf("") }
-  val searchHitsMap = remember { mutableStateMapOf<SearchHitKey, Pair<Int, Int>>() }
-  var sortedHitsByLogIdsState by remember { mutableStateOf<List<Int>>(emptyList()) }
-  var currentSearchHitIndex by remember { mutableIntStateOf(-1) }
-  var currentSearchHitLogId by remember { mutableIntStateOf(-1) }
-  var showHitCount by remember { mutableStateOf(false) }
-  var searchInProgress by remember { mutableStateOf(false) }
   val snapScrollInfo = rememberSnapScrollInfo(
     lazyListState = lazyListState,
     snapToBottom = snapToBottom,
     snapUpInteractionSource = snapUpInteractionSource,
     snapDownInteractionSource = snapDownInteractionSource,
   )
-  val focusManager = LocalFocusManager.current
+
+  val logsState = remember { mutableStateListOf<Log>() }
+  var searchInProgress by remember { mutableStateOf(false) }
+  var showDropDownMenu by remember { mutableStateOf(false) }
+  var showSearchBar by remember { mutableStateOf(false) }
+  var logcatPaused by remember { mutableStateOf(false) }
+  var searchQuery by remember { mutableStateOf("") }
+  val searchHitsMap = remember { mutableStateMapOf<SearchHitKey, Pair<Int, Int>>() }
+  var sortedHitsByLogIdsState by remember { mutableStateOf<List<Int>>(emptyList()) }
+  var currentSearchHitIndex by remember { mutableIntStateOf(-1) }
+  var currentSearchHitLogId by remember { mutableIntStateOf(-1) }
+  var showHitCount by remember { mutableStateOf(false) }
+  var recordStatus by remember { mutableStateOf<RecordStatus>(RecordStatus.Idle) }
+  val snackbarHostState = remember { SnackbarHostState() }
+  var savedLogsSheetState by remember {
+    mutableStateOf<SavedLogsBottomSheetState>(SavedLogsBottomSheetState.Hide)
+  }
+  if (logcatService != null) {
+    if (!logcatPaused) {
+      LaunchedEffect(logcatService) {
+        val session = logcatService.logcatSession
+        if (session.isRecording) {
+          recordStatus = RecordStatus.RecordingInProgress
+        }
+        logsState.clear()
+        session.logs.collect { logs ->
+          logsState += logs
+        }
+      }
+    }
+  }
 
   Scaffold(
     modifier = modifier,
@@ -164,7 +222,7 @@ fun HomeScreen(
         title = {
           Column {
             Text(
-              text = "Logcat Reader",
+              text = stringResource(R.string.app_name),
             )
             Text(
               text = logsState.size.toString(),
@@ -180,14 +238,21 @@ fun HomeScreen(
           IconButton(
             onClick = {
               showSearchBar = true
-            }
+            },
+            colors = IconButtonDefaults.iconButtonColors(
+              contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+            ),
           ) {
             Icon(Icons.Default.Search, contentDescription = null)
           }
           IconButton(
             onClick = {
               logcatPaused = !logcatPaused
-            }
+            },
+            enabled = recordStatus is RecordStatus.Idle,
+            colors = IconButtonDefaults.iconButtonColors(
+              contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+            ),
           ) {
             if (logcatPaused) {
               Icon(Icons.Default.PlayArrow, contentDescription = null)
@@ -195,18 +260,113 @@ fun HomeScreen(
               Icon(Icons.Default.Pause, contentDescription = null)
             }
           }
+
+          val startedRecordingMessage = stringResource(R.string.started_recording)
+          val saveFailedMessage = stringResource(R.string.failed_to_save_logs)
+          val noNewLogsMessage = stringResource(R.string.no_new_logs)
+          LaunchedEffect(Unit) {
+            var lastShownSnackBar: Job? = null
+            snapshotFlow { recordStatus }
+              .collect { status ->
+                when (status) {
+                  RecordStatus.Idle -> Unit
+                  RecordStatus.RecordingInProgress -> {
+                    lastShownSnackBar?.cancel()
+                    lastShownSnackBar = launch {
+                      snackbarHostState.showSnackbar(
+                        message = startedRecordingMessage,
+                        withDismissAction = true,
+                        duration = SnackbarDuration.Short,
+                      )
+                    }
+                  }
+                  is RecordStatus.SaveRecordedLogs -> {
+                    saveLogsToFile(context, status.logs).collect { result ->
+                      when (result) {
+                        SaveResult.InProgress -> Unit
+                        is SaveResult.Success -> {
+                          lastShownSnackBar?.cancel()
+                          lastShownSnackBar = null
+                          recordStatus = RecordStatus.Idle
+                          savedLogsSheetState = SavedLogsBottomSheetState.Show(
+                            fileName = result.fileName,
+                            uri = result.uri,
+                            isCustomLocation = result.isCustomLocation,
+                          )
+                        }
+                        is SaveResult.Failure -> {
+                          recordStatus = RecordStatus.Idle
+                          lastShownSnackBar?.cancel()
+                          if (result.emptyLogs) {
+                            lastShownSnackBar = launch {
+                              snackbarHostState.showSnackbar(
+                                message = noNewLogsMessage,
+                                withDismissAction = true,
+                                duration = SnackbarDuration.Short,
+                              )
+                            }
+                          } else {
+                            lastShownSnackBar = launch {
+                              snackbarHostState.showSnackbar(
+                                message = saveFailedMessage,
+                                withDismissAction = true,
+                                duration = SnackbarDuration.Short,
+                              )
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+          }
+
           IconButton(
             onClick = {
-              recordLogs = true
-            }
+              when (recordStatus) {
+                RecordStatus.Idle -> {
+                  logcatService?.logcatSession?.startRecording()
+                  recordStatus = RecordStatus.RecordingInProgress
+                }
+                RecordStatus.RecordingInProgress -> {
+                  val logs = logcatService?.logcatSession?.stopRecording() ?: emptyList()
+                  recordStatus = RecordStatus.SaveRecordedLogs(logs = logs)
+                }
+                else -> {
+                  // Do nothing.
+                }
+              }
+            },
+            enabled = !logcatPaused && logcatService != null &&
+              recordStatus !is RecordStatus.SaveRecordedLogs,
+            colors = IconButtonDefaults.iconButtonColors(
+              contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+            ),
           ) {
-            Icon(Icons.Default.FiberManualRecord, contentDescription = null)
+            when (recordStatus) {
+              RecordStatus.Idle -> {
+                Icon(Icons.Default.FiberManualRecord, contentDescription = null)
+              }
+              RecordStatus.RecordingInProgress -> {
+                Icon(Icons.Default.Stop, contentDescription = null)
+              }
+              is RecordStatus.SaveRecordedLogs -> {
+                CircularProgressIndicator(
+                  modifier = Modifier.size(20.dp),
+                  strokeWidth = 2.dp,
+                )
+              }
+            }
           }
           Box {
             IconButton(
               onClick = {
                 showDropDownMenu = true
-              }
+              },
+              colors = IconButtonDefaults.iconButtonColors(
+                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+              ),
             ) {
               Icon(Icons.Default.MoreVert, contentDescription = null)
             }
@@ -241,7 +401,26 @@ fun HomeScreen(
                 },
                 onClick = {
                   showDropDownMenu = false
-                  // TODO: also handle exclusions in this screen
+                  val intent = Intent(context, FiltersActivity::class.java)
+                  intent.putExtra(FiltersActivity.EXTRA_EXCLUSIONS, false)
+                  context.startActivity(intent)
+                }
+              )
+              DropdownMenuItem(
+                leadingIcon = {
+                  Icon(Icons.Default.FilterList, contentDescription = null)
+                },
+                text = {
+                  Text(
+                    text = stringResource(R.string.exclusions),
+                    style = AppTypography.bodyLarge,
+                  )
+                },
+                onClick = {
+                  showDropDownMenu = false
+                  val intent = Intent(context, FiltersActivity::class.java)
+                  intent.putExtra(FiltersActivity.EXTRA_EXCLUSIONS, true)
+                  context.startActivity(intent)
                 }
               )
               DropdownMenuItem(
@@ -257,7 +436,8 @@ fun HomeScreen(
                 onClick = {
                   showDropDownMenu = false
                   // TODO
-                }
+                },
+                enabled = logcatService != null,
               )
               DropdownMenuItem(
                 leadingIcon = {
@@ -271,7 +451,7 @@ fun HomeScreen(
                 },
                 onClick = {
                   showDropDownMenu = false
-                  // TODO
+                  context.startActivity(Intent(context, SavedLogsActivity::class.java))
                 }
               )
               DropdownMenuItem(
@@ -287,7 +467,8 @@ fun HomeScreen(
                 onClick = {
                   showDropDownMenu = false
                   // TODO
-                }
+                },
+                enabled = logcatService != null && recordStatus is RecordStatus.Idle,
               )
               DropdownMenuItem(
                 leadingIcon = {
@@ -301,7 +482,7 @@ fun HomeScreen(
                 },
                 onClick = {
                   showDropDownMenu = false
-                  // TODO
+                  context.startActivity(Intent(context, SettingsActivity::class.java))
                 }
               )
             }
@@ -451,20 +632,10 @@ fun HomeScreen(
         }
       }
     },
-  ) { innerPadding ->
-    val logcatService = rememberLogcatServiceConnection()
-    if (logcatService != null) {
-      if (!logcatPaused) {
-        LaunchedEffect(logcatService) {
-          val session = logcatService.logcatSession
-          logsState.clear()
-          session.logs.collect { logs ->
-            logsState += logs
-          }
-        }
-      }
+    snackbarHost = {
+      SnackbarHost(hostState = snackbarHostState)
     }
-
+  ) { innerPadding ->
     if (showSearchBar) {
       LaunchedEffect(Unit) {
         snapshotFlow { searchQuery }
@@ -531,6 +702,70 @@ fun HomeScreen(
               }
             }
         }
+      }
+    }
+
+    if (savedLogsSheetState is SavedLogsBottomSheetState.Show) {
+      val saveInfo = savedLogsSheetState as SavedLogsBottomSheetState.Show
+      ModalBottomSheet(
+        onDismissRequest = {
+          savedLogsSheetState = SavedLogsBottomSheetState.Hide
+        },
+        containerColor = MaterialTheme.colorScheme.surfaceContainer,
+      ) {
+        ListItem(
+          modifier = Modifier.fillMaxWidth(),
+          headlineContent = {
+            Text(
+              modifier = Modifier.weight(1f),
+              text = stringResource(R.string.saved_as_filename).format(saveInfo.fileName),
+              style = AppTypography.titleMedium,
+            )
+          },
+          colors = ListItemDefaults.colors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainer,
+          ),
+        )
+        ListItem(
+          modifier = Modifier
+            .fillMaxWidth()
+            .clickable {
+              savedLogsSheetState = SavedLogsBottomSheetState.Hide
+              val intent = Intent(context, SavedLogsViewerActivity::class.java)
+              intent.setDataAndType(saveInfo.uri, "text/plain")
+              context.startActivity(intent)
+            },
+          leadingContent = {
+            Icon(imageVector = Icons.AutoMirrored.Default.ViewList, contentDescription = null)
+          },
+          headlineContent = {
+            Text(text = stringResource(R.string.view_log))
+          },
+          colors = ListItemDefaults.colors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainer,
+          ),
+        )
+        ListItem(
+          modifier = Modifier
+            .fillMaxWidth()
+            .clickable {
+              savedLogsSheetState = SavedLogsBottomSheetState.Hide
+              ShareUtils.shareSavedLogs(
+                context = context,
+                uri = saveInfo.uri,
+                isCustom = saveInfo.isCustomLocation,
+              )
+            },
+          leadingContent = {
+            Icon(imageVector = Icons.Default.Share, contentDescription = null)
+          },
+          headlineContent = {
+            Text(text = stringResource(R.string.share))
+          },
+          colors = ListItemDefaults.colors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainer,
+          ),
+        )
       }
     }
 
@@ -890,6 +1125,104 @@ private fun rememberSnapScrollInfo(
   return snapScrollInfo
 }
 
+sealed interface SaveResult {
+  data object InProgress : SaveResult
+  data class Success(
+    val fileName: String,
+    val uri: Uri,
+    val isCustomLocation: Boolean,
+  ) : SaveResult
+
+  data class Failure(
+    val emptyLogs: Boolean = false,
+  ) : SaveResult
+}
+
+@WorkerThread
+private fun saveLogsToFile(context: Context, logs: List<Log>): Flow<SaveResult> = flow {
+  emit(SaveResult.InProgress)
+
+  if (logs.isEmpty()) {
+    emit(SaveResult.Failure(emptyLogs = true))
+    return@flow
+  }
+
+  val (uri, isUsingCustomLocation) = createFile(context)
+  if (uri == null) {
+    emit(SaveResult.Failure())
+    return@flow
+  }
+
+  val success = withContext(Dispatchers.IO) {
+    if (isUsingCustomLocation) {
+      LogcatUtil.writeToFile(context, logs, uri)
+    } else {
+      LogcatUtil.writeToFile(logs, uri.toFile())
+    }
+  }
+
+  if (success) {
+    val fileName = if (isUsingCustomLocation) {
+      DocumentFile.fromSingleUri(context, uri)?.name
+    } else {
+      uri.toFile().name
+    }
+
+    if (fileName == null) {
+      emit(SaveResult.Failure())
+      return@flow
+    }
+
+    val db = MyDB.getInstance(context)
+    withContext(Dispatchers.IO) {
+      db.savedLogsDao().insert(
+        SavedLogInfo(
+          fileName,
+          uri.toString(), isUsingCustomLocation
+        )
+      )
+    }
+
+    emit(
+      SaveResult.Success(
+        fileName = fileName,
+        uri = uri,
+        isCustomLocation = isUsingCustomLocation,
+      )
+    )
+  } else {
+    emit(SaveResult.Failure())
+  }
+}
+
+// Returns a pair of Uri and custom save location flag (true if custom save location is used).
+@WorkerThread
+private fun createFile(context: Context): Pair<Uri?, Boolean> {
+  val timeStamp = SimpleDateFormat("MM-dd-yyyy_HH-mm-ss", Locale.getDefault())
+    .format(Date())
+  val fileName = "logcat_$timeStamp"
+
+  val customSaveLocation = context.getDefaultSharedPreferences().getString(
+    PreferenceKeys.Logcat.KEY_SAVE_LOCATION,
+    PreferenceKeys.Logcat.Default.SAVE_LOCATION
+  )!!
+
+  return if (customSaveLocation.isEmpty()) {
+    val file = File(context.filesDir, LOGCAT_DIR)
+    file.mkdirs()
+    Pair(File(file, "$fileName.txt").toUri(), false)
+  } else {
+    val documentFile = DocumentFile.fromTreeUri(context, customSaveLocation.toUri())
+    Pair(documentFile?.createFile("text/plain", fileName)?.uri, true)
+  }
+}
+
+sealed interface RecordStatus {
+  data object Idle : RecordStatus
+  data object RecordingInProgress : RecordStatus
+  data class SaveRecordedLogs(val logs: List<Log>) : RecordStatus
+}
+
 data class SearchHitKey(
   val logId: Int,
   val component: LogComponent,
@@ -898,6 +1231,15 @@ data class SearchHitKey(
     MSG,
     TAG,
   }
+}
+
+sealed interface SavedLogsBottomSheetState {
+  data object Hide : SavedLogsBottomSheetState
+  data class Show(
+    val fileName: String,
+    val uri: Uri,
+    val isCustomLocation: Boolean,
+  ) : SavedLogsBottomSheetState
 }
 
 @Preview(showBackground = true)
