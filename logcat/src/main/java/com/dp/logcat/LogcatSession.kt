@@ -3,7 +3,6 @@ package com.dp.logcat
 import android.os.Build
 import com.dp.logger.Logger
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted.Companion.Lazily
@@ -23,12 +22,6 @@ class LogcatSession(
 
   private val lock = ReentrantLock()
   private var pollIntervalMs = 250L
-
-  init {
-    checkNotNull(coroutineScope.coroutineContext[Job]).invokeOnCompletion { cause ->
-      stop()
-    }
-  }
 
   @Volatile private var record = false
   val isRecording: Boolean get() = record
@@ -50,7 +43,9 @@ class LogcatSession(
         Logger.debug(LogcatSession::class, "failed to send new log")
       }
     }
-    awaitClose()
+    awaitClose {
+      stop()
+    }
   }.buffer(capacity = Int.MAX_VALUE)
     .shareIn(
       scope = coroutineScope,
