@@ -15,6 +15,10 @@ import java.io.InputStreamReader
 import java.io.OutputStreamWriter
 
 object LogcatUtil {
+  private val POSSIBLE_BUFFERS = setOf(
+    "main", "system", "radio", "events", "crash", "security", "kernel",
+  )
+
   val DEFAULT_BUFFERS: Set<String> by lazy {
     getDefaultBuffers().also { buffers ->
       Logger.debug(Logcat::class, "Default buffers: $buffers")
@@ -153,53 +157,24 @@ object LogcatUtil {
       stdoutList = stdoutList, redirectStderr = true
     )
 
-    val helpText = getBufferHelpText(stdoutList)
-
-    val buffers = mutableListOf<String>()
-    if (helpText.firstOrNull()?.run {
-        contains("request alternate ring buffer", ignoreCase = true) &&
-          endsWith(":")
-      } == true
-    ) {
-      if (helpText.size >= 2) {
-        buffers += helpText[1].split(" ")
+    val bufferHelpIndex = stdoutList.indexOfFirst { it.trim().startsWith("-b") }
+    var bufferHelpEndIndex = bufferHelpIndex
+    if (bufferHelpIndex != -1) {
+      bufferHelpEndIndex += 1
+      while (bufferHelpEndIndex < stdoutList.size && !stdoutList[bufferHelpEndIndex].trim()
+          .startsWith("-")
+      ) {
+        bufferHelpEndIndex += 1
       }
+
+      val stdout = stdoutList.subList(bufferHelpIndex, bufferHelpEndIndex)
+        .joinToString(separator = "\n")
+      return POSSIBLE_BUFFERS.filter { buffer ->
+        stdout.contains(buffer)
+      }.toTypedArray()
+        .sortedArray()
     }
 
-    val pattern = "'[a-z]+'".toRegex()
-    for (s in helpText) {
-      pattern.findAll(s).forEach { match ->
-        match.value.let {
-          buffers += it.substring(1, it.length - 1)
-        }
-      }
-    }
-
-    buffers -= "default"
-    buffers -= "all"
-
-    return buffers.toTypedArray().sortedArray()
-  }
-
-  private fun getBufferHelpText(stdout: List<String>): List<String> {
-    val startPattern = "^\\s+-b,?.*<buffer>\\s+".toRegex()
-    val start = stdout.indexOfFirst {
-      startPattern.find(it)?.range?.start == 0
-    }
-    if (start == -1) {
-      return emptyList()
-    }
-
-    val endPattern = "^\\s+-[a-zA-Z],?\\s+".toRegex()
-    var end = stdout.subList(start + 1, stdout.size).indexOfFirst {
-      endPattern.find(it)?.range?.start == 0
-    }
-    if (end == -1) {
-      end = stdout.size
-    } else {
-      end += start + 1
-    }
-
-    return stdout.subList(start, end).map { it.trim() }.toList()
+    return emptyArray()
   }
 }
