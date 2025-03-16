@@ -16,15 +16,19 @@ class LogcatSession(
   private val buffers: Set<String>,
 ) {
 
-  private val lock = ReentrantLock()
   private var pollIntervalMs = 250L
 
   @Volatile private var record = false
   val isRecording: Boolean get() = record
 
+  private val lock = ReentrantLock() // locks {
   private val recordBuffer = mutableListOf<Log>()
-
+  private val allLogs = mutableListOf<Log>()
   private val pendingLogs = mutableListOf<Log>()
+  private var onNewLog: ((List<Log>) -> Unit)? = null
+  private val filters = mutableListOf<Filter>()
+  private val exclusions = mutableListOf<Filter>()
+  // }
 
   @Volatile private var active = false
 
@@ -33,18 +37,20 @@ class LogcatSession(
   private var pollerThread: Thread? = null
 
   val logs: Flow<List<Log>> = channelFlow {
-    start { logs ->
-      val result = trySend(logs)
-      if (result.isFailure) {
-        Logger.debug(LogcatSession::class, "failed to send new log")
+    lock.withLock {
+      trySend(allLogs.filtered())
+      onNewLog = { logs ->
+        trySend(logs.filtered())
       }
     }
     awaitClose {
-      stop()
+      lock.withLock {
+        onNewLog = null
+      }
     }
   }.buffer(capacity = Int.MAX_VALUE)
 
-  private fun start(onReceivedNewLogs: (logs: List<Log>) -> Unit) {
+  fun start() {
     Logger.debug(LogcatSession::class, "starting")
     check(!active) { "Logcat is already active!" }
     active = true
@@ -53,8 +59,21 @@ class LogcatSession(
       Logger.debug(LogcatSession::class, "stopped logcat thread")
     }
     pollerThread = thread {
-      poll(onReceivedNewLogs)
+      poll()
       Logger.debug(LogcatSession::class, "stopped polling thread")
+    }
+  }
+
+  fun restart() {
+    stop()
+    start()
+  }
+
+  private fun List<Log>.filtered(): List<Log> {
+    return filter { e ->
+      !exclusions.any { it.apply(e) }
+    }.filter { e ->
+      filters.all { it.apply(e) }
     }
   }
 
@@ -92,24 +111,26 @@ class LogcatSession(
     readerThread.join(5_000L)
   }
 
-  private fun poll(onReceivedNewLogs: (logs: List<Log>) -> Unit) {
+  private fun poll() {
     while (active) {
-      val pending = lock.withLock {
+      lock.withLock {
         val pending = pendingLogs.toList()
         pendingLogs.clear()
+
+        allLogs += pending
 
         // If recording is enabled, then add to record buffer.
         if (record) {
           recordBuffer += pending
         }
-        pending
+
+        onNewLog?.invoke(pending)
       }
-      onReceivedNewLogs(pending)
       Thread.sleep(pollIntervalMs)
     }
   }
 
-  private fun stop() {
+  fun stop() {
     Logger.debug(LogcatSession::class, "stopping")
     active = false
     record = false
@@ -124,6 +145,7 @@ class LogcatSession(
     pollerThread?.join(5_000L)
     pollerThread = null
     lock.withLock {
+      allLogs.clear()
       pendingLogs.clear()
       recordBuffer.clear()
     }
@@ -132,6 +154,18 @@ class LogcatSession(
 
   fun startRecording() {
     record = true
+  }
+
+  fun setFilters(filters: List<Filter>, exclusion: Boolean = false) {
+    lock.withLock {
+      if (exclusion) {
+        exclusions.clear()
+        exclusions += filters
+      } else {
+        this.filters.clear()
+        this.filters += filters
+      }
+    }
   }
 
   fun stopRecording(): List<Log> {

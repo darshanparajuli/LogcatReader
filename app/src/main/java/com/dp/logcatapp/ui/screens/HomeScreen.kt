@@ -118,6 +118,7 @@ import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import com.dp.logcat.Filter
 import com.dp.logcat.Log
 import com.dp.logcat.LogPriority
 import com.dp.logcat.LogcatUtil
@@ -126,8 +127,10 @@ import com.dp.logcatapp.activities.FiltersActivity
 import com.dp.logcatapp.activities.SavedLogsActivity
 import com.dp.logcatapp.activities.SavedLogsViewerActivity
 import com.dp.logcatapp.activities.SettingsActivity
+import com.dp.logcatapp.db.FilterInfo
 import com.dp.logcatapp.db.MyDB
 import com.dp.logcatapp.db.SavedLogInfo
+import com.dp.logcatapp.fragments.filters.FilterType
 import com.dp.logcatapp.fragments.logcatlive.LogcatLiveFragment.Companion.LOGCAT_DIR
 import com.dp.logcatapp.services.LogcatService
 import com.dp.logcatapp.services.getService
@@ -140,6 +143,7 @@ import com.dp.logcatapp.ui.theme.currentSearchHitColor
 import com.dp.logcatapp.util.PreferenceKeys
 import com.dp.logcatapp.util.ServiceBinder
 import com.dp.logcatapp.util.ShareUtils
+import com.dp.logcatapp.util.containsIgnoreCase
 import com.dp.logcatapp.util.getDefaultSharedPreferences
 import com.dp.logger.Logger
 import kotlinx.coroutines.Dispatchers
@@ -204,23 +208,41 @@ fun HomeScreen(
   var savedLogsSheetState by remember {
     mutableStateOf<SavedLogsBottomSheetState>(SavedLogsBottomSheetState.Hide)
   }
-  val restartTrigger = remember { Channel<Unit>(capacity = 1) }
+
+  val restartTrigger = remember { Channel<Boolean>(capacity = 1) }
   if (logcatService != null) {
     val logcatSession = logcatService.logcatSession
+    val db = remember(context) { MyDB.getInstance(context) }
     LaunchedEffect(logcatSession) {
       restartTrigger.consumeAsFlow()
-        .onStart { emit(Unit) }
-        .collectLatest {
+        .onStart { emit(false) }
+        .collectLatest { restart ->
+          if (restart) {
+            withContext(Dispatchers.Default) {
+              logcatSession.restart()
+            }
+          }
           if (logcatSession.isRecording) {
             recordStatus = RecordStatus.RecordingInProgress
           }
-          logsState.clear()
-          logcatSession.logs.collect { logs ->
-            if (logcatPaused) {
-              snapshotFlow { logcatPaused }.first { !it }
+          db.filterDao().filters()
+            .collectLatest { filters ->
+              logcatSession.setFilters(
+                filters = filters.filterNot { it.exclude }.map(::LogFilter),
+                exclusion = false
+              )
+              logcatSession.setFilters(
+                filters = filters.filter { it.exclude }.map(::LogFilter),
+                exclusion = true
+              )
+              logsState.clear()
+              logcatSession.logs.collect { logs ->
+                if (logcatPaused) {
+                  snapshotFlow { logcatPaused }.first { !it }
+                }
+                logsState += logs
+              }
             }
-            logsState += logs
-          }
         }
     }
   }
@@ -476,7 +498,7 @@ fun HomeScreen(
                 },
                 onClick = {
                   showDropDownMenu = false
-                  restartTrigger.trySend(Unit)
+                  restartTrigger.trySend(true)
                 },
                 enabled = logcatService != null && recordStatus is RecordStatus.Idle,
               )
@@ -1250,6 +1272,35 @@ sealed interface SavedLogsBottomSheetState {
     val uri: Uri,
     val isCustomLocation: Boolean,
   ) : SavedLogsBottomSheetState
+}
+
+private class LogFilter(
+  filterInfo: FilterInfo,
+) : Filter {
+  private val type = filterInfo.type
+  private val content = filterInfo.content
+  private val priorities: Set<String> = if (type == FilterType.LOG_LEVELS) {
+    filterInfo.content.split(",").toSet()
+  } else {
+    emptySet()
+  }
+
+  override fun apply(log: Log): Boolean {
+    if (content.isEmpty()) {
+      return true
+    }
+
+    return when (type) {
+      FilterType.LOG_LEVELS -> {
+        log.priority in priorities
+      }
+      FilterType.KEYWORD -> log.msg.containsIgnoreCase(content)
+      FilterType.TAG -> log.tag.containsIgnoreCase(content)
+      FilterType.PID -> log.pid.containsIgnoreCase(content)
+      FilterType.TID -> log.tid.containsIgnoreCase(content)
+      else -> false
+    }
+  }
 }
 
 @Preview(showBackground = true)

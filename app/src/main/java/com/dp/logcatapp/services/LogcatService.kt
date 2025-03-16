@@ -184,6 +184,7 @@ class LogcatService : BaseService() {
   override fun onDestroy() {
     super.onDestroy()
     logcat.close()
+    logcatSession.stop()
 
     if (VERSION.SDK_INT >= 26) {
       deleteNotificationChannel()
@@ -270,5 +271,6 @@ class LogcatService : BaseService() {
     logcat.start()
 
     logcatSession = LogcatSession(logcatBuffers)
+    logcatSession.start()
   }
 }
