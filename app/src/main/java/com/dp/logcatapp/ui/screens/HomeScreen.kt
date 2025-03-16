@@ -150,6 +150,7 @@ import kotlinx.coroutines.flow.SharingStarted.Companion.Eagerly
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -201,17 +202,19 @@ fun HomeScreen(
     mutableStateOf<SavedLogsBottomSheetState>(SavedLogsBottomSheetState.Hide)
   }
   if (logcatService != null) {
-    if (!logcatPaused) {
-      LaunchedEffect(logcatService) {
-        val session = logcatService.logcatSession
-        if (session.isRecording) {
-          recordStatus = RecordStatus.RecordingInProgress
-        }
-        logsState.clear()
-        session.logs.collect { logs ->
+    LaunchedEffect(logcatService.logcatSession) {
+      val session = logcatService.logcatSession
+      if (session.isRecording) {
+        recordStatus = RecordStatus.RecordingInProgress
+      }
+      logsState.clear()
+      session.logs
+        .collect { logs ->
+          if (logcatPaused) {
+            snapshotFlow { logcatPaused }.first { !it }
+          }
           logsState += logs
         }
-      }
     }
   }
 
