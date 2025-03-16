@@ -569,6 +569,8 @@ fun HomeScreen(
                 unfocusedContainerColor = MaterialTheme.colorScheme.primaryContainer,
                 focusedIndicatorColor = Color.Transparent,
                 unfocusedIndicatorColor = Color.Transparent,
+                focusedTextColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                unfocusedTextColor = MaterialTheme.colorScheme.onPrimaryContainer,
               ),
               textStyle = LocalTextStyle.current.copy(
                 fontSize = 18.sp,
@@ -584,6 +586,7 @@ fun HomeScreen(
                   Text(
                     text = "$current/${searchHitsMap.size}",
                     style = AppTypography.bodySmall,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
                   )
                 }
               }
@@ -600,6 +603,9 @@ fun HomeScreen(
                 }
               },
               enabled = searchHitsMap.isNotEmpty(),
+              colors = IconButtonDefaults.iconButtonColors(
+                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+              ),
             ) {
               Icon(imageVector = Icons.Default.KeyboardArrowUp, contentDescription = null)
             }
@@ -609,6 +615,9 @@ fun HomeScreen(
                 currentSearchHitIndex = (currentSearchHitIndex + 1) % searchHitsMap.size
               },
               enabled = searchHitsMap.isNotEmpty(),
+              colors = IconButtonDefaults.iconButtonColors(
+                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+              ),
             ) {
               Icon(imageVector = Icons.Default.KeyboardArrowDown, contentDescription = null)
             }
