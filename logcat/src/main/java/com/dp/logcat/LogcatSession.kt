@@ -2,13 +2,10 @@ package com.dp.logcat
 
 import android.os.Build
 import com.dp.logger.Logger
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.awaitClose
-import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.SharingStarted.Companion.Lazily
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.channelFlow
-import kotlinx.coroutines.flow.shareIn
 import java.io.IOException
 import java.io.InterruptedIOException
 import java.util.concurrent.locks.ReentrantLock
@@ -16,7 +13,6 @@ import kotlin.concurrent.thread
 import kotlin.concurrent.withLock
 
 class LogcatSession(
-  coroutineScope: CoroutineScope,
   private val buffers: Set<String>,
 ) {
 
@@ -36,7 +32,7 @@ class LogcatSession(
   private var logcatThread: Thread? = null
   private var pollerThread: Thread? = null
 
-  val logs: SharedFlow<List<Log>> = channelFlow {
+  val logs: Flow<List<Log>> = channelFlow {
     start { logs ->
       val result = trySend(logs)
       if (result.isFailure) {
@@ -47,11 +43,6 @@ class LogcatSession(
       stop()
     }
   }.buffer(capacity = Int.MAX_VALUE)
-    .shareIn(
-      scope = coroutineScope,
-      started = Lazily,
-      replay = Int.MAX_VALUE, // Replay _all_ logs.
-    )
 
   private fun start(onReceivedNewLogs: (logs: List<Log>) -> Unit) {
     Logger.debug(LogcatSession::class, "starting")

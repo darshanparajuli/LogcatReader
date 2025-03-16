@@ -24,10 +24,6 @@ import com.dp.logcatapp.activities.MainActivity
 import com.dp.logcatapp.util.PreferenceKeys
 import com.dp.logcatapp.util.getDefaultSharedPreferences
 import com.dp.logcatapp.util.showToast
-import kotlinx.coroutines.CoroutineName
-import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.plus
 import java.util.Locale
 
 class LogcatService : BaseService() {
@@ -42,7 +38,6 @@ class LogcatService : BaseService() {
     private set
   var restartedLogcat = false
 
-  private val logcatSessionScope = MainScope() + CoroutineName("LogcatSessionScope")
   lateinit var logcatSession: LogcatSession
     private set
 
@@ -189,7 +184,6 @@ class LogcatService : BaseService() {
   override fun onDestroy() {
     super.onDestroy()
     logcat.close()
-    logcatSessionScope.cancel("Service destroyed")
 
     if (VERSION.SDK_INT >= 26) {
       deleteNotificationChannel()
@@ -275,6 +269,6 @@ class LogcatService : BaseService() {
     logcat.logcatBuffers = logcatBuffers
     logcat.start()
 
-    logcatSession = LogcatSession(logcatSessionScope, logcatBuffers)
+    logcatSession = LogcatSession(logcatBuffers)
   }
 }

@@ -144,14 +144,17 @@ import com.dp.logcatapp.util.getDefaultSharedPreferences
 import com.dp.logger.Logger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted.Companion.Eagerly
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.consumeAsFlow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -201,19 +204,23 @@ fun HomeScreen(
   var savedLogsSheetState by remember {
     mutableStateOf<SavedLogsBottomSheetState>(SavedLogsBottomSheetState.Hide)
   }
+  val restartTrigger = remember { Channel<Unit>(capacity = 1) }
   if (logcatService != null) {
-    LaunchedEffect(logcatService.logcatSession) {
-      val session = logcatService.logcatSession
-      if (session.isRecording) {
-        recordStatus = RecordStatus.RecordingInProgress
-      }
-      logsState.clear()
-      session.logs
-        .collect { logs ->
-          if (logcatPaused) {
-            snapshotFlow { logcatPaused }.first { !it }
+    val logcatSession = logcatService.logcatSession
+    LaunchedEffect(logcatSession) {
+      restartTrigger.consumeAsFlow()
+        .onStart { emit(Unit) }
+        .collectLatest {
+          if (logcatSession.isRecording) {
+            recordStatus = RecordStatus.RecordingInProgress
           }
-          logsState += logs
+          logsState.clear()
+          logcatSession.logs.collect { logs ->
+            if (logcatPaused) {
+              snapshotFlow { logcatPaused }.first { !it }
+            }
+            logsState += logs
+          }
         }
     }
   }
@@ -469,7 +476,7 @@ fun HomeScreen(
                 },
                 onClick = {
                   showDropDownMenu = false
-                  // TODO
+                  restartTrigger.trySend(Unit)
                 },
                 enabled = logcatService != null && recordStatus is RecordStatus.Idle,
               )
