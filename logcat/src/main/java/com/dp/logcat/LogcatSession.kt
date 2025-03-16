@@ -2,6 +2,7 @@ package com.dp.logcat
 
 import android.os.Build
 import com.dp.logger.Logger
+import com.logcat.collections.FixedCircularArray
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.buffer
@@ -13,18 +14,25 @@ import kotlin.concurrent.thread
 import kotlin.concurrent.withLock
 
 class LogcatSession(
+  initialCapacity: Int,
   private val buffers: Set<String>,
+  @Volatile
+  var pollIntervalMs: Long = 250L,
 ) {
-
-  private var pollIntervalMs = 250L
 
   @Volatile private var record = false
   val isRecording: Boolean get() = record
 
   private val lock = ReentrantLock() // locks {
   private val recordBuffer = mutableListOf<Log>()
-  private val allLogs = mutableListOf<Log>()
-  private val pendingLogs = mutableListOf<Log>()
+  private val allLogs = FixedCircularArray<Log>(
+    capacity = initialCapacity,
+    initialSize = 1000,
+  )
+  private val pendingLogs = FixedCircularArray<Log>(
+    capacity = initialCapacity,
+    initialSize = 1000,
+  )
   private var onNewLog: ((List<Log>) -> Unit)? = null
   private val filters = mutableListOf<Filter>()
   private val exclusions = mutableListOf<Filter>()
@@ -69,7 +77,7 @@ class LogcatSession(
     start()
   }
 
-  private fun List<Log>.filtered(): List<Log> {
+  private fun Iterable<Log>.filtered(): List<Log> {
     return filter { e ->
       !exclusions.any { it.apply(e) }
     }.filter { e ->

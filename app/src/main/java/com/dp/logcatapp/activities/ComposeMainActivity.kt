@@ -31,6 +31,9 @@ class ComposeMainActivity : ComponentActivity() {
       return
     }
 
+    // TODO(darshan): Handle back press properly.
+    // Maybe don't stop the service if recording is active?
+
     val stopRecording = intent?.shouldStopRecording()
     // TODO(darshan): handle stop recording
 

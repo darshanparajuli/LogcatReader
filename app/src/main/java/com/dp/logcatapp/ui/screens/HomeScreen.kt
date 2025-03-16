@@ -157,6 +157,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.consumeAsFlow
 import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.onStart
@@ -212,37 +213,40 @@ fun HomeScreen(
 
   val restartTrigger = remember { Channel<Boolean>(capacity = 1) }
   if (logcatService != null) {
-    val logcatSession = logcatService.logcatSession
     val db = remember(context) { MyDB.getInstance(context) }
-    LaunchedEffect(logcatSession) {
+    LaunchedEffect(logcatService) {
       restartTrigger.consumeAsFlow()
         .onStart { emit(false) }
         .collectLatest { restart ->
-          if (restart) {
-            withContext(Dispatchers.Default) {
-              logcatSession.restart()
-            }
-          }
-          if (logcatSession.isRecording) {
-            recordStatus = RecordStatus.RecordingInProgress
-          }
-          db.filterDao().filters()
-            .collectLatest { filters ->
-              logcatSession.setFilters(
-                filters = filters.filterNot { it.exclude }.map(::LogFilter),
-                exclusion = false
-              )
-              logcatSession.setFilters(
-                filters = filters.filter { it.exclude }.map(::LogFilter),
-                exclusion = true
-              )
-              logsState.clear()
-              logcatSession.logs.collect { logs ->
-                if (logcatPaused) {
-                  snapshotFlow { logcatPaused }.first { !it }
+          logcatService.logcatSession
+            .filterNotNull()
+            .collectLatest { logcatSession ->
+              if (restart) {
+                withContext(Dispatchers.Default) {
+                  logcatSession.restart()
                 }
-                logsState += logs
               }
+              if (logcatSession.isRecording) {
+                recordStatus = RecordStatus.RecordingInProgress
+              }
+              db.filterDao().filters()
+                .collectLatest { filters ->
+                  logcatSession.setFilters(
+                    filters = filters.filterNot { it.exclude }.map(::LogFilter),
+                    exclusion = false
+                  )
+                  logcatSession.setFilters(
+                    filters = filters.filter { it.exclude }.map(::LogFilter),
+                    exclusion = true
+                  )
+                  logsState.clear()
+                  logcatSession.logs.collect { logs ->
+                    if (logcatPaused) {
+                      snapshotFlow { logcatPaused }.first { !it }
+                    }
+                    logsState += logs
+                  }
+                }
             }
         }
     }
@@ -359,11 +363,11 @@ fun HomeScreen(
             onClick = {
               when (recordStatus) {
                 RecordStatus.Idle -> {
-                  logcatService?.logcatSession?.startRecording()
+                  logcatService?.logcatSession?.value?.startRecording()
                   recordStatus = RecordStatus.RecordingInProgress
                 }
                 RecordStatus.RecordingInProgress -> {
-                  val logs = logcatService?.logcatSession?.stopRecording() ?: emptyList()
+                  val logs = logcatService?.logcatSession?.value?.stopRecording() ?: emptyList()
                   recordStatus = RecordStatus.SaveRecordedLogs(logs = logs)
                 }
                 else -> {
