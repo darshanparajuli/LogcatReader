@@ -155,6 +155,7 @@ import kotlinx.coroutines.flow.SharingStarted.Companion.Eagerly
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.consumeAsFlow
+import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
@@ -732,10 +733,9 @@ fun HomeScreen(
       }
       if (searchQuery.isNotEmpty()) {
         LaunchedEffect(lazyListState, searchQuery) {
-          snapshotFlow {
-            sortedHitsByLogIdsState to currentSearchHitIndex
-          }
+          snapshotFlow { sortedHitsByLogIdsState to currentSearchHitIndex }
             .filter { (_, index) -> index != -1 }
+            .distinctUntilChangedBy { (_, index) -> index }
             .collectLatest { (hits, index) ->
               if (index < hits.size) {
                 currentSearchHitLogId = hits[index]
