@@ -656,7 +656,7 @@ fun HomeScreen(
             onClick = {
               coroutineScope.launch {
                 if (lazyListState.layoutInfo.totalItemsCount > 0) {
-                  if (!showSearchBar) {
+                  if (!showSearchBar || searchQuery.isEmpty()) {
                     snapToBottom = true
                   }
                   lazyListState.scrollToItem(lazyListState.layoutInfo.totalItemsCount - 1)
