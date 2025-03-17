@@ -10,10 +10,11 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.core.app.ActivityCompat
-import com.dp.logcatapp.activities.MainActivity.Companion.EXIT_EXTRA
-import com.dp.logcatapp.activities.MainActivity.Companion.STOP_RECORDING_EXTRA
 import com.dp.logcatapp.services.LogcatService
 import com.dp.logcatapp.ui.screens.HomeScreen
 import com.dp.logcatapp.ui.theme.LogcatReaderTheme
@@ -23,6 +24,9 @@ import com.dp.logcatapp.util.setKeepScreenOn
 
 class ComposeMainActivity : ComponentActivity() {
 
+  private var recordingIsActive = true
+  private var stopRecordingSignal by mutableStateOf(false)
+
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     enableEdgeToEdge()
@@ -31,11 +35,9 @@ class ComposeMainActivity : ComponentActivity() {
       return
     }
 
-    // TODO(darshan): Handle back press properly.
-    // Maybe don't stop the service if recording is active?
-
-    val stopRecording = intent?.shouldStopRecording()
-    // TODO(darshan): handle stop recording
+    if (intent.shouldStopRecording()) {
+      stopRecordingSignal = true
+    }
 
     if (Build.VERSION.SDK_INT >= 33) {
       registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
@@ -54,10 +56,19 @@ class ComposeMainActivity : ComponentActivity() {
       }
     }
 
+    addOnNewIntentListener { }
     setContent {
       LogcatReaderTheme {
         HomeScreen(
           modifier = Modifier.fillMaxSize(),
+          onStartRecording = {
+            recordingIsActive = true
+          },
+          onStopRecording = {
+            recordingIsActive = false
+            stopRecordingSignal = false
+          },
+          stopRecordingSignal = stopRecordingSignal,
         )
       }
     }
@@ -85,7 +96,7 @@ class ComposeMainActivity : ComponentActivity() {
 
   private fun handleStopRecordingIntent(intent: Intent?) {
     if (intent.shouldStopRecording()) {
-      // TODO(darshan): stop recording
+      stopRecordingSignal = true
     }
   }
 
@@ -99,6 +110,13 @@ class ComposeMainActivity : ComponentActivity() {
 
   override fun onDestroy() {
     super.onDestroy()
-    stopService(Intent(this, LogcatService::class.java))
+    if (!recordingIsActive) {
+      stopService(Intent(this, LogcatService::class.java))
+    }
+  }
+
+  companion object {
+    const val EXIT_EXTRA = "exit_extra"
+    const val STOP_RECORDING_EXTRA = "stop_recording_extra"
   }
 }

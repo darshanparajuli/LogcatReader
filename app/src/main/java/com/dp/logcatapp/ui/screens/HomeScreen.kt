@@ -92,6 +92,7 @@ import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
@@ -160,6 +161,8 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -176,6 +179,9 @@ private const val SNAP_SCROLL_HIDE_DELAY_MS = 2000L
 @Composable
 fun HomeScreen(
   modifier: Modifier,
+  stopRecordingSignal: Boolean,
+  onStartRecording: () -> Unit,
+  onStopRecording: () -> Unit,
 ) {
   val context = LocalContext.current
   val coroutineScope = rememberCoroutineScope()
@@ -183,6 +189,10 @@ fun HomeScreen(
 
   val logcatService = rememberLogcatServiceConnection()
   val lazyListState = rememberLazyListState()
+
+  val updatedOnStartRecording by rememberUpdatedState(onStartRecording)
+  val updatedOnStopRecording by rememberUpdatedState(onStopRecording)
+  val updatedStopRecordingSignal by rememberUpdatedState(stopRecordingSignal)
 
   var snapToBottom by remember { mutableStateOf(true) }
   val snapUpInteractionSource = remember { MutableInteractionSource() }
@@ -226,9 +236,21 @@ fun HomeScreen(
                   logcatSession.restart()
                 }
               }
+
               if (logcatSession.isRecording) {
                 recordStatus = RecordStatus.RecordingInProgress
               }
+
+              if (updatedStopRecordingSignal) {
+                if (recordStatus == RecordStatus.RecordingInProgress) {
+                  if (logcatSession.isRecording) {
+                    recordStatus = RecordStatus.SaveRecordedLogs
+                  } else {
+                    recordStatus = RecordStatus.Idle
+                  }
+                }
+              }
+
               db.filterDao().filters()
                 .collectLatest { filters ->
                   logcatSession.setFilters(
@@ -286,7 +308,7 @@ fun HomeScreen(
             onClick = {
               logcatPaused = !logcatPaused
             },
-            enabled = recordStatus is RecordStatus.Idle,
+            enabled = recordStatus == RecordStatus.Idle,
             colors = IconButtonDefaults.iconButtonColors(
               contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
             ),
@@ -301,13 +323,29 @@ fun HomeScreen(
           val startedRecordingMessage = stringResource(R.string.started_recording)
           val saveFailedMessage = stringResource(R.string.failed_to_save_logs)
           val noNewLogsMessage = stringResource(R.string.no_new_logs)
-          LaunchedEffect(Unit) {
+
+          if (logcatService != null) {
+            LaunchedEffect(logcatService) {
+              snapshotFlow { recordStatus }
+                .map { it == RecordStatus.RecordingInProgress }
+                .collect { isRecording ->
+                  logcatService.updateNotification(showStopRecording = isRecording)
+                }
+            }
+          }
+
+          LaunchedEffect(logcatService) {
             var lastShownSnackBar: Job? = null
             snapshotFlow { recordStatus }
               .collect { status ->
                 when (status) {
                   RecordStatus.Idle -> Unit
                   RecordStatus.RecordingInProgress -> {
+                    val logcatSession = snapshotFlow { logcatService }.filterNotNull()
+                      .mapNotNull { it.logcatSession.filterNotNull().first() }
+                      .first()
+                    logcatSession.startRecording()
+                    updatedOnStartRecording()
                     lastShownSnackBar?.cancel()
                     lastShownSnackBar = launch {
                       snackbarHostState.showSnackbar(
@@ -317,8 +355,12 @@ fun HomeScreen(
                       )
                     }
                   }
-                  is RecordStatus.SaveRecordedLogs -> {
-                    saveLogsToFile(context, status.logs).collect { result ->
+                  RecordStatus.SaveRecordedLogs -> {
+                    val logcatSession = snapshotFlow { logcatService }.filterNotNull()
+                      .mapNotNull { it.logcatSession.filterNotNull().first() }
+                      .first()
+                    val logs = logcatSession.stopRecording()
+                    saveLogsToFile(context, logs).collect { result ->
                       when (result) {
                         SaveResult.InProgress -> Unit
                         is SaveResult.Success -> {
@@ -354,6 +396,7 @@ fun HomeScreen(
                         }
                       }
                     }
+                    updatedOnStopRecording()
                   }
                 }
               }
@@ -363,12 +406,10 @@ fun HomeScreen(
             onClick = {
               when (recordStatus) {
                 RecordStatus.Idle -> {
-                  logcatService?.logcatSession?.value?.startRecording()
                   recordStatus = RecordStatus.RecordingInProgress
                 }
                 RecordStatus.RecordingInProgress -> {
-                  val logs = logcatService?.logcatSession?.value?.stopRecording() ?: emptyList()
-                  recordStatus = RecordStatus.SaveRecordedLogs(logs = logs)
+                  recordStatus = RecordStatus.SaveRecordedLogs
                 }
                 else -> {
                   // Do nothing.
@@ -376,7 +417,7 @@ fun HomeScreen(
               }
             },
             enabled = !logcatPaused && logcatService != null &&
-              recordStatus !is RecordStatus.SaveRecordedLogs,
+              recordStatus != RecordStatus.SaveRecordedLogs,
             colors = IconButtonDefaults.iconButtonColors(
               contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
             ),
@@ -388,7 +429,7 @@ fun HomeScreen(
               RecordStatus.RecordingInProgress -> {
                 Icon(Icons.Default.Stop, contentDescription = null)
               }
-              is RecordStatus.SaveRecordedLogs -> {
+              RecordStatus.SaveRecordedLogs -> {
                 CircularProgressIndicator(
                   modifier = Modifier.size(20.dp),
                   strokeWidth = 2.dp,
@@ -505,7 +546,7 @@ fun HomeScreen(
                   showDropDownMenu = false
                   restartTrigger.trySend(true)
                 },
-                enabled = logcatService != null && recordStatus is RecordStatus.Idle,
+                enabled = logcatService != null && recordStatus == RecordStatus.Idle,
               )
               DropdownMenuItem(
                 leadingIcon = {
@@ -1262,10 +1303,10 @@ private fun createFile(context: Context): Pair<Uri?, Boolean> {
   }
 }
 
-sealed interface RecordStatus {
-  data object Idle : RecordStatus
-  data object RecordingInProgress : RecordStatus
-  data class SaveRecordedLogs(val logs: List<Log>) : RecordStatus
+enum class RecordStatus {
+  Idle,
+  RecordingInProgress,
+  SaveRecordedLogs,
 }
 
 data class SearchHitKey(
