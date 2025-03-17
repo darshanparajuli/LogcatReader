@@ -589,6 +589,9 @@ fun HomeScreen(
                 currentSearchHitLogId = -1
                 focusManager.clearFocus()
               },
+              colors = IconButtonDefaults.iconButtonColors(
+                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+              ),
             ) {
               Icon(imageVector = Icons.Default.Close, contentDescription = null)
             }
