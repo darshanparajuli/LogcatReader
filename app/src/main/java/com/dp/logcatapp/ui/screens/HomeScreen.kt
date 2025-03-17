@@ -195,13 +195,13 @@ fun HomeScreen(
   val updatedStopRecordingSignal by rememberUpdatedState(stopRecordingSignal)
 
   var snapToBottom by remember { mutableStateOf(true) }
-  val snapUpInteractionSource = remember { MutableInteractionSource() }
-  val snapDownInteractionSource = remember { MutableInteractionSource() }
+  val scrollToTopInteractionSource = remember { MutableInteractionSource() }
+  val scrollToBottomInteractionSource = remember { MutableInteractionSource() }
   val snapScrollInfo = rememberSnapScrollInfo(
     lazyListState = lazyListState,
     snapToBottom = snapToBottom,
-    snapUpInteractionSource = snapUpInteractionSource,
-    snapDownInteractionSource = snapDownInteractionSource,
+    snapUpInteractionSource = scrollToTopInteractionSource,
+    snapDownInteractionSource = scrollToBottomInteractionSource,
   )
 
   val logsState = remember { mutableStateListOf<Log>() }
@@ -283,455 +283,211 @@ fun HomeScreen(
   Scaffold(
     modifier = modifier,
     topBar = {
-      TopAppBar(
-        title = {
-          Column {
-            Text(
-              text = stringResource(R.string.device_logs),
-            )
-            Text(
-              text = buildString {
-                append(logsState.size)
-                if (appliedFilters) {
-                  append(" [${stringResource(R.string.filtered).lowercase()}]")
-                }
-              },
-              style = AppTypography.titleSmall,
-            )
-          }
-        },
-        colors = TopAppBarDefaults.topAppBarColors(
-          containerColor = MaterialTheme.colorScheme.primaryContainer,
-          titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-        ),
-        actions = {
-          IconButton(
-            onClick = {
-              showSearchBar = true
-            },
-            colors = IconButtonDefaults.iconButtonColors(
-              contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-            ),
-          ) {
-            Icon(Icons.Default.Search, contentDescription = null)
-          }
-          IconButton(
-            onClick = {
-              logcatPaused = !logcatPaused
-            },
-            enabled = recordStatus == RecordStatus.Idle,
-            colors = IconButtonDefaults.iconButtonColors(
-              contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-            ),
-          ) {
-            if (logcatPaused) {
-              Icon(Icons.Default.PlayArrow, contentDescription = null)
-            } else {
-              Icon(Icons.Default.Pause, contentDescription = null)
+      val startedRecordingMessage = stringResource(R.string.started_recording)
+      val saveFailedMessage = stringResource(R.string.failed_to_save_logs)
+      val noNewLogsMessage = stringResource(R.string.no_new_logs)
+
+      if (logcatService != null) {
+        LaunchedEffect(logcatService) {
+          snapshotFlow { recordStatus }
+            .map { it == RecordStatus.RecordingInProgress }
+            .collect { isRecording ->
+              logcatService.updateNotification(showStopRecording = isRecording)
             }
-          }
+        }
+      }
 
-          val startedRecordingMessage = stringResource(R.string.started_recording)
-          val saveFailedMessage = stringResource(R.string.failed_to_save_logs)
-          val noNewLogsMessage = stringResource(R.string.no_new_logs)
-
-          if (logcatService != null) {
-            LaunchedEffect(logcatService) {
-              snapshotFlow { recordStatus }
-                .map { it == RecordStatus.RecordingInProgress }
-                .collect { isRecording ->
-                  logcatService.updateNotification(showStopRecording = isRecording)
+      LaunchedEffect(logcatService) {
+        var lastShownSnackBar: Job? = null
+        snapshotFlow { recordStatus }
+          .collect { status ->
+            when (status) {
+              RecordStatus.Idle -> Unit
+              RecordStatus.RecordingInProgress -> {
+                val logcatSession = snapshotFlow { logcatService }.filterNotNull()
+                  .mapNotNull { it.logcatSession.filterNotNull().first() }
+                  .first()
+                logcatSession.startRecording()
+                updatedOnStartRecording()
+                lastShownSnackBar?.cancel()
+                lastShownSnackBar = launch {
+                  snackbarHostState.showSnackbar(
+                    message = startedRecordingMessage,
+                    withDismissAction = true,
+                    duration = SnackbarDuration.Short,
+                  )
                 }
-            }
-          }
-
-          LaunchedEffect(logcatService) {
-            var lastShownSnackBar: Job? = null
-            snapshotFlow { recordStatus }
-              .collect { status ->
-                when (status) {
-                  RecordStatus.Idle -> Unit
-                  RecordStatus.RecordingInProgress -> {
-                    val logcatSession = snapshotFlow { logcatService }.filterNotNull()
-                      .mapNotNull { it.logcatSession.filterNotNull().first() }
-                      .first()
-                    logcatSession.startRecording()
-                    updatedOnStartRecording()
-                    lastShownSnackBar?.cancel()
-                    lastShownSnackBar = launch {
-                      snackbarHostState.showSnackbar(
-                        message = startedRecordingMessage,
-                        withDismissAction = true,
-                        duration = SnackbarDuration.Short,
+              }
+              RecordStatus.SaveRecordedLogs -> {
+                val logcatSession = snapshotFlow { logcatService }.filterNotNull()
+                  .mapNotNull { it.logcatSession.filterNotNull().first() }
+                  .first()
+                val logs = logcatSession.stopRecording()
+                saveLogsToFile(context, logs).collect { result ->
+                  when (result) {
+                    SaveResult.InProgress -> Unit
+                    is SaveResult.Success -> {
+                      lastShownSnackBar?.cancel()
+                      lastShownSnackBar = null
+                      recordStatus = RecordStatus.Idle
+                      savedLogsSheetState = SavedLogsBottomSheetState.Show(
+                        fileName = result.fileName,
+                        uri = result.uri,
+                        isCustomLocation = result.isCustomLocation,
                       )
                     }
-                  }
-                  RecordStatus.SaveRecordedLogs -> {
-                    val logcatSession = snapshotFlow { logcatService }.filterNotNull()
-                      .mapNotNull { it.logcatSession.filterNotNull().first() }
-                      .first()
-                    val logs = logcatSession.stopRecording()
-                    saveLogsToFile(context, logs).collect { result ->
-                      when (result) {
-                        SaveResult.InProgress -> Unit
-                        is SaveResult.Success -> {
-                          lastShownSnackBar?.cancel()
-                          lastShownSnackBar = null
-                          recordStatus = RecordStatus.Idle
-                          savedLogsSheetState = SavedLogsBottomSheetState.Show(
-                            fileName = result.fileName,
-                            uri = result.uri,
-                            isCustomLocation = result.isCustomLocation,
+                    is SaveResult.Failure -> {
+                      recordStatus = RecordStatus.Idle
+                      lastShownSnackBar?.cancel()
+                      if (result.emptyLogs) {
+                        lastShownSnackBar = launch {
+                          snackbarHostState.showSnackbar(
+                            message = noNewLogsMessage,
+                            withDismissAction = true,
+                            duration = SnackbarDuration.Short,
                           )
                         }
-                        is SaveResult.Failure -> {
-                          recordStatus = RecordStatus.Idle
-                          lastShownSnackBar?.cancel()
-                          if (result.emptyLogs) {
-                            lastShownSnackBar = launch {
-                              snackbarHostState.showSnackbar(
-                                message = noNewLogsMessage,
-                                withDismissAction = true,
-                                duration = SnackbarDuration.Short,
-                              )
-                            }
-                          } else {
-                            lastShownSnackBar = launch {
-                              snackbarHostState.showSnackbar(
-                                message = saveFailedMessage,
-                                withDismissAction = true,
-                                duration = SnackbarDuration.Short,
-                              )
-                            }
-                          }
+                      } else {
+                        lastShownSnackBar = launch {
+                          snackbarHostState.showSnackbar(
+                            message = saveFailedMessage,
+                            withDismissAction = true,
+                            duration = SnackbarDuration.Short,
+                          )
                         }
                       }
                     }
-                    updatedOnStopRecording()
                   }
                 }
+                updatedOnStopRecording()
               }
+            }
           }
+      }
 
-          IconButton(
-            onClick = {
-              when (recordStatus) {
-                RecordStatus.Idle -> {
-                  recordStatus = RecordStatus.RecordingInProgress
-                }
-                RecordStatus.RecordingInProgress -> {
-                  recordStatus = RecordStatus.SaveRecordedLogs
-                }
-                else -> {
-                  // Do nothing.
-                }
-              }
-            },
-            enabled = !logcatPaused && logcatService != null &&
-              recordStatus != RecordStatus.SaveRecordedLogs,
-            colors = IconButtonDefaults.iconButtonColors(
-              contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-            ),
-          ) {
-            when (recordStatus) {
-              RecordStatus.Idle -> {
-                Icon(Icons.Default.FiberManualRecord, contentDescription = null)
-              }
-              RecordStatus.RecordingInProgress -> {
-                Icon(Icons.Default.Stop, contentDescription = null)
-              }
-              RecordStatus.SaveRecordedLogs -> {
-                CircularProgressIndicator(
-                  modifier = Modifier.size(20.dp),
-                  strokeWidth = 2.dp,
-                )
-              }
-            }
+      AppBar(
+        title = stringResource(R.string.device_logs),
+        subtitle = buildString {
+          append(logsState.size)
+          if (appliedFilters) {
+            append(" [${stringResource(R.string.filtered).lowercase()}]")
           }
-          Box {
-            IconButton(
-              onClick = {
-                showDropDownMenu = true
-              },
-              colors = IconButtonDefaults.iconButtonColors(
-                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-              ),
-            ) {
-              Icon(Icons.Default.MoreVert, contentDescription = null)
+        },
+        isPaused = logcatPaused,
+        pauseEnabled = recordStatus == RecordStatus.Idle,
+        recordEnabled = !logcatPaused && logcatService != null &&
+          recordStatus != RecordStatus.SaveRecordedLogs,
+        recordStatus = recordStatus,
+        showDropDownMenu = showDropDownMenu,
+        saveEnabled = logcatService != null,
+        restartLogcatEnabled = logcatService != null && recordStatus == RecordStatus.Idle,
+        onClickSearch = {
+          showSearchBar = true
+        },
+        onClickPause = {
+          logcatPaused = !logcatPaused
+        },
+        onClickRecord = {
+          when (recordStatus) {
+            RecordStatus.Idle -> {
+              recordStatus = RecordStatus.RecordingInProgress
             }
-            DropdownMenu(
-              expanded = showDropDownMenu,
-              onDismissRequest = { showDropDownMenu = false }
-            ) {
-              DropdownMenuItem(
-                leadingIcon = {
-                  Icon(Icons.Default.Clear, contentDescription = null)
-                },
-                text = {
-                  Text(
-                    text = stringResource(R.string.clear),
-                    style = AppTypography.bodyLarge,
-                  )
-                },
-                onClick = {
-                  logsState.clear()
-                  showDropDownMenu = false
-                }
-              )
-              DropdownMenuItem(
-                leadingIcon = {
-                  Icon(Icons.Default.FilterList, contentDescription = null)
-                },
-                text = {
-                  Text(
-                    text = stringResource(R.string.filters),
-                    style = AppTypography.bodyLarge,
-                  )
-                },
-                onClick = {
-                  showDropDownMenu = false
-                  val intent = Intent(context, FiltersActivity::class.java)
-                  intent.putExtra(FiltersActivity.EXTRA_EXCLUSIONS, false)
-                  context.startActivity(intent)
-                }
-              )
-              DropdownMenuItem(
-                leadingIcon = {
-                  Icon(Icons.Default.FilterList, contentDescription = null)
-                },
-                text = {
-                  Text(
-                    text = stringResource(R.string.exclusions),
-                    style = AppTypography.bodyLarge,
-                  )
-                },
-                onClick = {
-                  showDropDownMenu = false
-                  val intent = Intent(context, FiltersActivity::class.java)
-                  intent.putExtra(FiltersActivity.EXTRA_EXCLUSIONS, true)
-                  context.startActivity(intent)
-                }
-              )
-              DropdownMenuItem(
-                leadingIcon = {
-                  Icon(Icons.Default.Save, contentDescription = null)
-                },
-                text = {
-                  Text(
-                    text = stringResource(R.string.save),
-                    style = AppTypography.bodyLarge,
-                  )
-                },
-                onClick = {
-                  showDropDownMenu = false
-                  // TODO
-                },
-                enabled = logcatService != null,
-              )
-              DropdownMenuItem(
-                leadingIcon = {
-                  Icon(Icons.Default.FolderOpen, contentDescription = null)
-                },
-                text = {
-                  Text(
-                    text = stringResource(R.string.saved_logs),
-                    style = AppTypography.bodyLarge,
-                  )
-                },
-                onClick = {
-                  showDropDownMenu = false
-                  context.startActivity(Intent(context, SavedLogsActivity::class.java))
-                }
-              )
-              DropdownMenuItem(
-                leadingIcon = {
-                  Icon(Icons.Default.RestartAlt, contentDescription = null)
-                },
-                text = {
-                  Text(
-                    text = stringResource(R.string.restart_logcat),
-                    style = AppTypography.bodyLarge,
-                  )
-                },
-                onClick = {
-                  showDropDownMenu = false
-                  restartTrigger.trySend(true)
-                },
-                enabled = logcatService != null && recordStatus == RecordStatus.Idle,
-              )
-              DropdownMenuItem(
-                leadingIcon = {
-                  Icon(Icons.Default.Settings, contentDescription = null)
-                },
-                text = {
-                  Text(
-                    text = stringResource(R.string.settings),
-                    style = AppTypography.bodyLarge,
-                  )
-                },
-                onClick = {
-                  showDropDownMenu = false
-                  context.startActivity(Intent(context, SettingsActivity::class.java))
-                }
-              )
+            RecordStatus.RecordingInProgress -> {
+              recordStatus = RecordStatus.SaveRecordedLogs
             }
+            RecordStatus.SaveRecordedLogs -> Unit
           }
+        },
+        onShowDropdownMenu = {
+          showDropDownMenu = true
+        },
+        onDismissDropdownMenu = {
+          showDropDownMenu = false
+        },
+        onClickClear = {
+          logsState.clear()
+          showDropDownMenu = false
+        },
+        onClickFilter = {
+          showDropDownMenu = false
+          val intent = Intent(context, FiltersActivity::class.java)
+          intent.putExtra(FiltersActivity.EXTRA_EXCLUSIONS, false)
+          context.startActivity(intent)
+        },
+        onClickExclusions = {
+          showDropDownMenu = false
+          val intent = Intent(context, FiltersActivity::class.java)
+          intent.putExtra(FiltersActivity.EXTRA_EXCLUSIONS, true)
+          context.startActivity(intent)
+        },
+        onClickSave = {
+          showDropDownMenu = false
+          TODO("not implemented")
+        },
+        onClickSavedLogs = {
+          showDropDownMenu = false
+          context.startActivity(Intent(context, SavedLogsActivity::class.java))
+        },
+        onClickRestartLogcat = {
+          showDropDownMenu = false
+          restartTrigger.trySend(true)
+        },
+        onClickSettings = {
+          showDropDownMenu = false
+          context.startActivity(Intent(context, SettingsActivity::class.java))
+        },
+      )
+      TopSearchBar(
+        visible = showSearchBar,
+        searchQuery = searchQuery,
+        searchInProgress = searchInProgress,
+        showHitCount = showHitCount,
+        hitCount = searchHitsMap.size,
+        currentHitIndex = currentSearchHitIndex,
+        onQueryChange = { searchQuery = it },
+        onClose = {
+          showSearchBar = false
+          searchHitsMap.clear()
+          sortedHitsByLogIdsState = emptyList()
+          currentSearchHitIndex = -1
+          currentSearchHitLogId = -1
+          focusManager.clearFocus()
+        },
+        onPrevious = {
+          focusManager.clearFocus()
+          if (currentSearchHitIndex - 1 >= 0) {
+            currentSearchHitIndex -= 1
+          } else {
+            currentSearchHitIndex = searchHitsMap.size - 1
+          }
+        },
+        onNext = {
+          focusManager.clearFocus()
+          currentSearchHitIndex = (currentSearchHitIndex + 1) % searchHitsMap.size
         }
       )
-      AnimatedVisibility(
-        visible = showSearchBar,
-        enter = fadeIn(),
-        exit = fadeOut(),
-      ) {
-        val focusRequester = remember { FocusRequester() }
-        LaunchedEffect(focusRequester) {
-          focusRequester.requestFocus()
-        }
-
-        TopAppBar(
-          modifier = Modifier.fillMaxWidth(),
-          navigationIcon = {
-            IconButton(
-              onClick = {
-                showSearchBar = false
-                searchHitsMap.clear()
-                sortedHitsByLogIdsState = emptyList()
-                currentSearchHitIndex = -1
-                currentSearchHitLogId = -1
-                focusManager.clearFocus()
-              },
-              colors = IconButtonDefaults.iconButtonColors(
-                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-              ),
-            ) {
-              Icon(imageVector = Icons.Default.Close, contentDescription = null)
-            }
-          },
-          title = {
-            TextField(
-              modifier = Modifier.focusRequester(focusRequester),
-              value = requireNotNull(searchQuery),
-              onValueChange = { query ->
-                searchQuery = query
-              },
-              maxLines = 1,
-              singleLine = true,
-              placeholder = {
-                Row(modifier = Modifier.fillMaxHeight()) {
-                  Text(
-                    modifier = Modifier.align(Alignment.CenterVertically),
-                    text = "Search",
-                  )
-                }
-              },
-              colors = TextFieldDefaults.colors(
-                focusedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                unfocusedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                focusedIndicatorColor = Color.Transparent,
-                unfocusedIndicatorColor = Color.Transparent,
-                focusedTextColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                unfocusedTextColor = MaterialTheme.colorScheme.onPrimaryContainer,
-              ),
-              textStyle = LocalTextStyle.current.copy(
-                fontSize = 18.sp,
-              ),
-              suffix = {
-                if (searchInProgress) {
-                  CircularProgressIndicator(
-                    modifier = Modifier.size(20.dp),
-                    strokeWidth = 2.dp,
-                  )
-                } else if (showHitCount) {
-                  val current = currentSearchHitIndex.takeIf { it != -1 }?.let { it + 1 } ?: 0
-                  Text(
-                    text = "$current/${searchHitsMap.size}",
-                    style = AppTypography.bodySmall,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer,
-                  )
-                }
-              }
-            )
-          },
-          actions = {
-            IconButton(
-              onClick = {
-                focusManager.clearFocus()
-                if (currentSearchHitIndex - 1 >= 0) {
-                  currentSearchHitIndex -= 1
-                } else {
-                  currentSearchHitIndex = searchHitsMap.size - 1
-                }
-              },
-              enabled = searchHitsMap.isNotEmpty(),
-              colors = IconButtonDefaults.iconButtonColors(
-                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-              ),
-            ) {
-              Icon(imageVector = Icons.Default.KeyboardArrowUp, contentDescription = null)
-            }
-            IconButton(
-              onClick = {
-                focusManager.clearFocus()
-                currentSearchHitIndex = (currentSearchHitIndex + 1) % searchHitsMap.size
-              },
-              enabled = searchHitsMap.isNotEmpty(),
-              colors = IconButtonDefaults.iconButtonColors(
-                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-              ),
-            ) {
-              Icon(imageVector = Icons.Default.KeyboardArrowDown, contentDescription = null)
-            }
-          },
-          colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer,
-            titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-          ),
-        )
-      }
     },
     floatingActionButton = {
-      AnimatedVisibility(
+      FloatingActionButtons(
         visible = snapScrollInfo.isScrollSnapperVisible,
-        enter = fadeIn() + slideInHorizontally(initialOffsetX = { it }),
-        exit = fadeOut() + slideOutHorizontally(targetOffsetX = { it }),
-      ) {
-        Column {
-          FloatingActionButton(
-            modifier = Modifier.size(48.dp),
-            onClick = {
-              coroutineScope.launch {
-                lazyListState.scrollToItem(0)
-              }
-            },
-            interactionSource = snapUpInteractionSource,
-          ) {
-            Icon(
-              imageVector = Icons.Filled.ArrowUpward,
-              contentDescription = null
-            )
+        scrollToTopInteractionSource = scrollToTopInteractionSource,
+        scrollToBottomInteractionSource = scrollToBottomInteractionSource,
+        onClickScrollToTop = {
+          coroutineScope.launch {
+            lazyListState.scrollToItem(0)
           }
-          Spacer(modifier = Modifier.height(12.dp))
-          FloatingActionButton(
-            modifier = Modifier.size(48.dp),
-            onClick = {
-              coroutineScope.launch {
-                if (lazyListState.layoutInfo.totalItemsCount > 0) {
-                  if (!showSearchBar || searchQuery.isEmpty()) {
-                    snapToBottom = true
-                  }
-                  lazyListState.scrollToItem(lazyListState.layoutInfo.totalItemsCount - 1)
-                }
+        },
+        onClickScrollToBottom = {
+          coroutineScope.launch {
+            if (lazyListState.layoutInfo.totalItemsCount > 0) {
+              if (!showSearchBar || searchQuery.isEmpty()) {
+                snapToBottom = true
               }
-            },
-            interactionSource = snapDownInteractionSource,
-          ) {
-            Icon(
-              imageVector = Icons.Filled.ArrowDownward,
-              contentDescription = null
-            )
+              lazyListState.scrollToItem(lazyListState.layoutInfo.totalItemsCount - 1)
+            }
           }
-        }
-      }
+        },
+      )
     },
     snackbarHost = {
       SnackbarHost(hostState = snackbarHostState)
@@ -807,66 +563,14 @@ fun HomeScreen(
 
     if (savedLogsSheetState is SavedLogsBottomSheetState.Show) {
       val saveInfo = savedLogsSheetState as SavedLogsBottomSheetState.Show
-      ModalBottomSheet(
-        onDismissRequest = {
+      SavedLogsBottomSheet(
+        fileName = saveInfo.fileName,
+        uri = saveInfo.uri,
+        isCustomLocation = saveInfo.isCustomLocation,
+        onDismiss = {
           savedLogsSheetState = SavedLogsBottomSheetState.Hide
         },
-        containerColor = MaterialTheme.colorScheme.surfaceContainer,
-      ) {
-        ListItem(
-          modifier = Modifier.fillMaxWidth(),
-          headlineContent = {
-            Text(
-              modifier = Modifier.weight(1f),
-              text = stringResource(R.string.saved_as_filename).format(saveInfo.fileName),
-              style = AppTypography.titleMedium,
-            )
-          },
-          colors = ListItemDefaults.colors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainer,
-          ),
-        )
-        ListItem(
-          modifier = Modifier
-            .fillMaxWidth()
-            .clickable {
-              savedLogsSheetState = SavedLogsBottomSheetState.Hide
-              val intent = Intent(context, SavedLogsViewerActivity::class.java)
-              intent.setDataAndType(saveInfo.uri, "text/plain")
-              context.startActivity(intent)
-            },
-          leadingContent = {
-            Icon(imageVector = Icons.AutoMirrored.Default.ViewList, contentDescription = null)
-          },
-          headlineContent = {
-            Text(text = stringResource(R.string.view_log))
-          },
-          colors = ListItemDefaults.colors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainer,
-          ),
-        )
-        ListItem(
-          modifier = Modifier
-            .fillMaxWidth()
-            .clickable {
-              savedLogsSheetState = SavedLogsBottomSheetState.Hide
-              ShareUtils.shareSavedLogs(
-                context = context,
-                uri = saveInfo.uri,
-                isCustom = saveInfo.isCustomLocation,
-              )
-            },
-          leadingContent = {
-            Icon(imageVector = Icons.Default.Share, contentDescription = null)
-          },
-          headlineContent = {
-            Text(text = stringResource(R.string.share))
-          },
-          colors = ListItemDefaults.colors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainer,
-          ),
-        )
-      }
+      )
     }
 
     if (isLogcatSessionLoading) {
@@ -912,6 +616,410 @@ fun HomeScreen(
         currentSearchHitLogId = currentSearchHitLogId,
       )
     }
+  }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SavedLogsBottomSheet(
+  fileName: String,
+  uri: Uri,
+  isCustomLocation: Boolean,
+  onDismiss: () -> Unit,
+) {
+  val context = LocalContext.current
+  ModalBottomSheet(
+    onDismissRequest = onDismiss,
+    containerColor = MaterialTheme.colorScheme.surfaceContainer,
+  ) {
+    ListItem(
+      modifier = Modifier.fillMaxWidth(),
+      headlineContent = {
+        Text(
+          modifier = Modifier.weight(1f),
+          text = stringResource(R.string.saved_as_filename).format(fileName),
+          style = AppTypography.titleMedium,
+        )
+      },
+      colors = ListItemDefaults.colors(
+        containerColor = MaterialTheme.colorScheme.surfaceContainer,
+      ),
+    )
+    ListItem(
+      modifier = Modifier
+        .fillMaxWidth()
+        .clickable {
+          onDismiss()
+          val intent = Intent(context, SavedLogsViewerActivity::class.java)
+          intent.setDataAndType(uri, "text/plain")
+          context.startActivity(intent)
+        },
+      leadingContent = {
+        Icon(imageVector = Icons.AutoMirrored.Default.ViewList, contentDescription = null)
+      },
+      headlineContent = {
+        Text(text = stringResource(R.string.view_log))
+      },
+      colors = ListItemDefaults.colors(
+        containerColor = MaterialTheme.colorScheme.surfaceContainer,
+      ),
+    )
+    ListItem(
+      modifier = Modifier
+        .fillMaxWidth()
+        .clickable {
+          onDismiss()
+          ShareUtils.shareSavedLogs(
+            context = context,
+            uri = uri,
+            isCustom = isCustomLocation,
+          )
+        },
+      leadingContent = {
+        Icon(imageVector = Icons.Default.Share, contentDescription = null)
+      },
+      headlineContent = {
+        Text(text = stringResource(R.string.share))
+      },
+      colors = ListItemDefaults.colors(
+        containerColor = MaterialTheme.colorScheme.surfaceContainer,
+      ),
+    )
+  }
+}
+
+@Composable
+private fun FloatingActionButtons(
+  visible: Boolean,
+  scrollToTopInteractionSource: MutableInteractionSource,
+  scrollToBottomInteractionSource: MutableInteractionSource,
+  onClickScrollToTop: () -> Unit,
+  onClickScrollToBottom: () -> Unit,
+) {
+  AnimatedVisibility(
+    visible = visible,
+    enter = fadeIn() + slideInHorizontally(initialOffsetX = { it }),
+    exit = fadeOut() + slideOutHorizontally(targetOffsetX = { it }),
+  ) {
+    Column {
+      FloatingActionButton(
+        modifier = Modifier.size(48.dp),
+        onClick = onClickScrollToTop,
+        interactionSource = scrollToTopInteractionSource,
+      ) {
+        Icon(
+          imageVector = Icons.Filled.ArrowUpward,
+          contentDescription = null
+        )
+      }
+      Spacer(modifier = Modifier.height(12.dp))
+      FloatingActionButton(
+        modifier = Modifier.size(48.dp),
+        onClick = onClickScrollToBottom,
+        interactionSource = scrollToBottomInteractionSource,
+      ) {
+        Icon(
+          imageVector = Icons.Filled.ArrowDownward,
+          contentDescription = null
+        )
+      }
+    }
+  }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun AppBar(
+  title: String,
+  subtitle: String,
+  isPaused: Boolean,
+  pauseEnabled: Boolean,
+  recordEnabled: Boolean,
+  recordStatus: RecordStatus,
+  showDropDownMenu: Boolean,
+  saveEnabled: Boolean,
+  restartLogcatEnabled: Boolean,
+  onClickSearch: () -> Unit,
+  onClickPause: () -> Unit,
+  onClickRecord: () -> Unit,
+  onShowDropdownMenu: () -> Unit,
+  onDismissDropdownMenu: () -> Unit,
+  onClickClear: () -> Unit,
+  onClickFilter: () -> Unit,
+  onClickExclusions: () -> Unit,
+  onClickSave: () -> Unit,
+  onClickSavedLogs: () -> Unit,
+  onClickRestartLogcat: () -> Unit,
+  onClickSettings: () -> Unit,
+) {
+  TopAppBar(
+    title = {
+      Column {
+        Text(text = title)
+        Text(
+          text = subtitle,
+          style = AppTypography.titleSmall,
+        )
+      }
+    },
+    colors = TopAppBarDefaults.topAppBarColors(
+      containerColor = MaterialTheme.colorScheme.primaryContainer,
+      titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+    ),
+    actions = {
+      IconButton(
+        onClick = onClickSearch,
+        colors = IconButtonDefaults.iconButtonColors(
+          contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+        ),
+      ) {
+        Icon(Icons.Default.Search, contentDescription = null)
+      }
+      IconButton(
+        onClick = onClickPause,
+        enabled = pauseEnabled,
+        colors = IconButtonDefaults.iconButtonColors(
+          contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+        ),
+      ) {
+        if (isPaused) {
+          Icon(Icons.Default.PlayArrow, contentDescription = null)
+        } else {
+          Icon(Icons.Default.Pause, contentDescription = null)
+        }
+      }
+
+      IconButton(
+        onClick = onClickRecord,
+        enabled = recordEnabled,
+        colors = IconButtonDefaults.iconButtonColors(
+          contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+        ),
+      ) {
+        when (recordStatus) {
+          RecordStatus.Idle -> {
+            Icon(Icons.Default.FiberManualRecord, contentDescription = null)
+          }
+          RecordStatus.RecordingInProgress -> {
+            Icon(Icons.Default.Stop, contentDescription = null)
+          }
+          RecordStatus.SaveRecordedLogs -> {
+            CircularProgressIndicator(
+              modifier = Modifier.size(20.dp),
+              strokeWidth = 2.dp,
+            )
+          }
+        }
+      }
+      Box {
+        IconButton(
+          onClick = onShowDropdownMenu,
+          colors = IconButtonDefaults.iconButtonColors(
+            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+          ),
+        ) {
+          Icon(Icons.Default.MoreVert, contentDescription = null)
+        }
+        DropdownMenu(
+          expanded = showDropDownMenu,
+          onDismissRequest = onDismissDropdownMenu,
+        ) {
+          DropdownMenuItem(
+            leadingIcon = {
+              Icon(Icons.Default.Clear, contentDescription = null)
+            },
+            text = {
+              Text(
+                text = stringResource(R.string.clear),
+                style = AppTypography.bodyLarge,
+              )
+            },
+            onClick = onClickClear,
+          )
+          DropdownMenuItem(
+            leadingIcon = {
+              Icon(Icons.Default.FilterList, contentDescription = null)
+            },
+            text = {
+              Text(
+                text = stringResource(R.string.filters),
+                style = AppTypography.bodyLarge,
+              )
+            },
+            onClick = onClickFilter,
+          )
+          DropdownMenuItem(
+            leadingIcon = {
+              Icon(Icons.Default.FilterList, contentDescription = null)
+            },
+            text = {
+              Text(
+                text = stringResource(R.string.exclusions),
+                style = AppTypography.bodyLarge,
+              )
+            },
+            onClick = onClickExclusions,
+          )
+          DropdownMenuItem(
+            leadingIcon = {
+              Icon(Icons.Default.Save, contentDescription = null)
+            },
+            text = {
+              Text(
+                text = stringResource(R.string.save),
+                style = AppTypography.bodyLarge,
+              )
+            },
+            onClick = onClickSave,
+            enabled = saveEnabled,
+          )
+          DropdownMenuItem(
+            leadingIcon = {
+              Icon(Icons.Default.FolderOpen, contentDescription = null)
+            },
+            text = {
+              Text(
+                text = stringResource(R.string.saved_logs),
+                style = AppTypography.bodyLarge,
+              )
+            },
+            onClick = onClickSavedLogs,
+          )
+          DropdownMenuItem(
+            leadingIcon = {
+              Icon(Icons.Default.RestartAlt, contentDescription = null)
+            },
+            text = {
+              Text(
+                text = stringResource(R.string.restart_logcat),
+                style = AppTypography.bodyLarge,
+              )
+            },
+            onClick = onClickRestartLogcat,
+            enabled = restartLogcatEnabled,
+          )
+          DropdownMenuItem(
+            leadingIcon = {
+              Icon(Icons.Default.Settings, contentDescription = null)
+            },
+            text = {
+              Text(
+                text = stringResource(R.string.settings),
+                style = AppTypography.bodyLarge,
+              )
+            },
+            onClick = onClickSettings,
+          )
+        }
+      }
+    }
+  )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun TopSearchBar(
+  visible: Boolean,
+  searchQuery: String,
+  searchInProgress: Boolean,
+  showHitCount: Boolean,
+  hitCount: Int,
+  currentHitIndex: Int,
+  onQueryChange: (String) -> Unit,
+  onClose: () -> Unit,
+  onPrevious: () -> Unit,
+  onNext: () -> Unit,
+) {
+  AnimatedVisibility(
+    visible = visible,
+    enter = fadeIn(),
+    exit = fadeOut(),
+  ) {
+    val focusRequester = remember { FocusRequester() }
+    LaunchedEffect(focusRequester) {
+      focusRequester.requestFocus()
+    }
+
+    TopAppBar(
+      modifier = Modifier.fillMaxWidth(),
+      navigationIcon = {
+        IconButton(
+          onClick = onClose,
+          colors = IconButtonDefaults.iconButtonColors(
+            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+          ),
+        ) {
+          Icon(imageVector = Icons.Default.Close, contentDescription = null)
+        }
+      },
+      title = {
+        TextField(
+          modifier = Modifier.focusRequester(focusRequester),
+          value = searchQuery,
+          onValueChange = onQueryChange,
+          maxLines = 1,
+          singleLine = true,
+          placeholder = {
+            Row(modifier = Modifier.fillMaxHeight()) {
+              Text(
+                modifier = Modifier.align(Alignment.CenterVertically),
+                text = "Search",
+              )
+            }
+          },
+          colors = TextFieldDefaults.colors(
+            focusedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+            unfocusedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+            focusedIndicatorColor = Color.Transparent,
+            unfocusedIndicatorColor = Color.Transparent,
+            focusedTextColor = MaterialTheme.colorScheme.onPrimaryContainer,
+            unfocusedTextColor = MaterialTheme.colorScheme.onPrimaryContainer,
+          ),
+          textStyle = LocalTextStyle.current.copy(
+            fontSize = 18.sp,
+          ),
+          suffix = {
+            if (searchInProgress) {
+              CircularProgressIndicator(
+                modifier = Modifier.size(20.dp),
+                strokeWidth = 2.dp,
+              )
+            } else if (showHitCount) {
+              val current = currentHitIndex.takeIf { it != -1 }?.let { it + 1 } ?: 0
+              Text(
+                text = "$current/$hitCount",
+                style = AppTypography.bodySmall,
+                color = MaterialTheme.colorScheme.onPrimaryContainer,
+              )
+            }
+          }
+        )
+      },
+      actions = {
+        IconButton(
+          onClick = onPrevious,
+          enabled = hitCount > 0,
+          colors = IconButtonDefaults.iconButtonColors(
+            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+          ),
+        ) {
+          Icon(imageVector = Icons.Default.KeyboardArrowUp, contentDescription = null)
+        }
+        IconButton(
+          onClick = onNext,
+          enabled = hitCount > 0,
+          colors = IconButtonDefaults.iconButtonColors(
+            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+          ),
+        ) {
+          Icon(imageVector = Icons.Default.KeyboardArrowDown, contentDescription = null)
+        }
+      },
+      colors = TopAppBarDefaults.topAppBarColors(
+        containerColor = MaterialTheme.colorScheme.primaryContainer,
+        titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+      ),
+    )
   }
 }
 
