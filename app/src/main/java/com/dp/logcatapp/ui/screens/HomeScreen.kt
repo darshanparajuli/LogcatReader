@@ -221,6 +221,7 @@ fun HomeScreen(
     mutableStateOf<SavedLogsBottomSheetState>(SavedLogsBottomSheetState.Hide)
   }
   var appliedFilters by remember { mutableStateOf(false) }
+  var isLogcatSessionLoading by remember { mutableStateOf(true) }
 
   val restartTrigger = remember { Channel<Boolean>(capacity = 1) }
   if (logcatService != null) {
@@ -229,6 +230,7 @@ fun HomeScreen(
       restartTrigger.consumeAsFlow()
         .onStart { emit(false) }
         .collectLatest { restart ->
+          isLogcatSessionLoading = true
           logcatService.logcatSession
             .filterNotNull()
             .collectLatest { logcatSession ->
@@ -263,12 +265,14 @@ fun HomeScreen(
                     filters = filters.filter { it.exclude }.map(::LogFilter),
                     exclusion = true
                   )
+
                   logsState.clear()
+                  isLogcatSessionLoading = false
                   logcatSession.logs.collect { logs ->
+                    logsState += logs
                     if (logcatPaused) {
                       snapshotFlow { logcatPaused }.first { !it }
                     }
-                    logsState += logs
                   }
                 }
             }
@@ -865,36 +869,49 @@ fun HomeScreen(
       }
     }
 
-    val lifecycle = LocalLifecycleOwner.current.lifecycle
-    LogsList(
-      modifier = Modifier
-        .fillMaxSize()
-        .consumeWindowInsets(innerPadding)
-        .pointerInput(Unit) {
-          lifecycle.currentStateFlow.collectLatest { state ->
-            if (state == Lifecycle.State.RESUMED) {
-              awaitPointerEventScope {
-                while (true) {
-                  val event = awaitPointerEvent()
-                  when (event.type) {
-                    PointerEventType.Press -> {
-                      snapToBottom = false
-                      focusManager.clearFocus()
+    if (isLogcatSessionLoading) {
+      Box(
+        modifier = Modifier
+          .fillMaxSize()
+          .consumeWindowInsets(innerPadding),
+        contentAlignment = Alignment.Center,
+      ) {
+        CircularProgressIndicator(
+          modifier = Modifier.size(48.dp),
+        )
+      }
+    } else {
+      val lifecycle = LocalLifecycleOwner.current.lifecycle
+      LogsList(
+        modifier = Modifier
+          .fillMaxSize()
+          .consumeWindowInsets(innerPadding)
+          .pointerInput(Unit) {
+            lifecycle.currentStateFlow.collectLatest { state ->
+              if (state == Lifecycle.State.RESUMED) {
+                awaitPointerEventScope {
+                  while (true) {
+                    val event = awaitPointerEvent()
+                    when (event.type) {
+                      PointerEventType.Press -> {
+                        snapToBottom = false
+                        focusManager.clearFocus()
+                      }
                     }
                   }
                 }
               }
             }
-          }
-        },
-      contentPadding = innerPadding,
-      logs = logsState,
-      searchHits = searchHitsMap,
-      onClick = {},
-      onLongClick = {},
-      state = lazyListState,
-      currentSearchHitLogId = currentSearchHitLogId,
-    )
+          },
+        contentPadding = innerPadding,
+        logs = logsState,
+        searchHits = searchHitsMap,
+        onClick = {},
+        onLongClick = {},
+        state = lazyListState,
+        currentSearchHitLogId = currentSearchHitLogId,
+      )
+    }
   }
 }
 
