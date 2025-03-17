@@ -146,6 +146,7 @@ import com.dp.logcatapp.util.ServiceBinder
 import com.dp.logcatapp.util.ShareUtils
 import com.dp.logcatapp.util.containsIgnoreCase
 import com.dp.logcatapp.util.getDefaultSharedPreferences
+import com.dp.logcatapp.util.showToast
 import com.dp.logger.Logger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -365,6 +366,8 @@ fun HomeScreen(
           }
       }
 
+      var saveLogsInProgress by remember { mutableStateOf(false) }
+
       AppBar(
         title = stringResource(R.string.device_logs),
         subtitle = buildString {
@@ -380,6 +383,7 @@ fun HomeScreen(
         recordStatus = recordStatus,
         showDropDownMenu = showDropDownMenu,
         saveEnabled = logcatService != null,
+        saveLogsInProgress = saveLogsInProgress,
         restartLogcatEnabled = logcatService != null && recordStatus == RecordStatus.Idle,
         onClickSearch = {
           showSearchBar = true
@@ -421,8 +425,37 @@ fun HomeScreen(
           context.startActivity(intent)
         },
         onClickSave = {
-          showDropDownMenu = false
-          TODO("not implemented")
+          coroutineScope.launch {
+            val logs = logcatService?.logcatSession?.value?.let { logcatSession ->
+              withContext(Dispatchers.Default) { logcatSession.getAllLogs() }
+            }
+            if (logs != null) {
+              saveLogsToFile(context, logs).collect { result ->
+                when (result) {
+                  SaveResult.InProgress -> {
+                    saveLogsInProgress = true
+                  }
+                  is SaveResult.Failure -> {
+                    context.showToast(saveFailedMessage)
+                    saveLogsInProgress = false
+                    showDropDownMenu = false
+                  }
+                  is SaveResult.Success -> {
+                    saveLogsInProgress = false
+                    showDropDownMenu = false
+                    savedLogsSheetState = SavedLogsBottomSheetState.Show(
+                      fileName = result.fileName,
+                      uri = result.uri,
+                      isCustomLocation = result.isCustomLocation,
+                    )
+                  }
+                }
+              }
+            } else {
+              context.showToast(saveFailedMessage)
+              showDropDownMenu = false
+            }
+          }
         },
         onClickSavedLogs = {
           showDropDownMenu = false
@@ -738,6 +771,7 @@ private fun AppBar(
   recordStatus: RecordStatus,
   showDropDownMenu: Boolean,
   saveEnabled: Boolean,
+  saveLogsInProgress: Boolean,
   restartLogcatEnabled: Boolean,
   onClickSearch: () -> Unit,
   onClickPause: () -> Unit,
@@ -862,7 +896,14 @@ private fun AppBar(
           )
           DropdownMenuItem(
             leadingIcon = {
-              Icon(Icons.Default.Save, contentDescription = null)
+              if (saveLogsInProgress) {
+                CircularProgressIndicator(
+                  modifier = Modifier.size(24.dp),
+                  strokeWidth = 2.dp,
+                )
+              } else {
+                Icon(Icons.Default.Save, contentDescription = null)
+              }
             },
             text = {
               Text(
@@ -1359,7 +1400,6 @@ sealed interface SaveResult {
   ) : SaveResult
 }
 
-@WorkerThread
 private fun saveLogsToFile(context: Context, logs: List<Log>): Flow<SaveResult> = flow {
   emit(SaveResult.InProgress)
 
@@ -1368,7 +1408,7 @@ private fun saveLogsToFile(context: Context, logs: List<Log>): Flow<SaveResult> 
     return@flow
   }
 
-  val (uri, isUsingCustomLocation) = createFile(context)
+  val (uri, isUsingCustomLocation) = withContext(Dispatchers.IO) { createFile(context) }
   if (uri == null) {
     emit(SaveResult.Failure())
     return@flow
