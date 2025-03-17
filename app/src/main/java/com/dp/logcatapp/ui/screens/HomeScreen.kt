@@ -281,7 +281,7 @@ fun HomeScreen(
         title = {
           Column {
             Text(
-              text = stringResource(R.string.app_name),
+              text = stringResource(R.string.device_logs),
             )
             Text(
               text = logsState.size.toString(),
