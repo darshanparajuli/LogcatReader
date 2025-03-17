@@ -1,11 +1,16 @@
 package com.dp.logcatapp.ui.screens
 
+import android.Manifest
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.IBinder
+import android.os.Process
 import androidx.annotation.WorkerThread
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
@@ -38,7 +43,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.selection.LocalTextSelectionColors
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ViewList
 import androidx.compose.material.icons.filled.ArrowDownward
@@ -48,6 +55,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.FiberManualRecord
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.FolderOpen
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.MoreVert
@@ -78,6 +86,7 @@ import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
@@ -114,6 +123,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import androidx.core.net.toFile
 import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
@@ -123,6 +133,7 @@ import com.dp.logcat.Filter
 import com.dp.logcat.Log
 import com.dp.logcat.LogPriority
 import com.dp.logcat.LogcatUtil
+import com.dp.logcatapp.BuildConfig
 import com.dp.logcatapp.R
 import com.dp.logcatapp.activities.FiltersActivity
 import com.dp.logcatapp.activities.SavedLogsActivity
@@ -135,6 +146,7 @@ import com.dp.logcatapp.fragments.filters.FilterType
 import com.dp.logcatapp.fragments.logcatlive.LogcatLiveFragment.Companion.LOGCAT_DIR
 import com.dp.logcatapp.services.LogcatService
 import com.dp.logcatapp.services.getService
+import com.dp.logcatapp.ui.common.Dialog
 import com.dp.logcatapp.ui.screens.SearchHitKey.LogComponent
 import com.dp.logcatapp.ui.theme.AppTypography
 import com.dp.logcatapp.ui.theme.LogPriorityColors
@@ -144,11 +156,13 @@ import com.dp.logcatapp.ui.theme.currentSearchHitColor
 import com.dp.logcatapp.util.PreferenceKeys
 import com.dp.logcatapp.util.ServiceBinder
 import com.dp.logcatapp.util.ShareUtils
+import com.dp.logcatapp.util.SuCommander
 import com.dp.logcatapp.util.containsIgnoreCase
 import com.dp.logcatapp.util.getDefaultSharedPreferences
 import com.dp.logcatapp.util.showToast
 import com.dp.logger.Logger
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
@@ -605,6 +619,8 @@ fun HomeScreen(
         },
       )
     }
+
+    MaybeShowPermissionRequiredDialog()
 
     if (isLogcatSessionLoading) {
       Box(
@@ -1252,6 +1268,161 @@ private fun LogItem(
   }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun MaybeShowPermissionRequiredDialog() {
+  val context = LocalContext.current
+  var showPermissionRequiredDialog by remember(context) {
+    mutableStateOf(!isReadLogsPermissionGranted(context))
+  }
+  var showAskingForRootPermissionDialog by remember { mutableStateOf(false) }
+  var showRestartAppDialog by remember { mutableStateOf(false) }
+  var showManualMethodDialog by remember { mutableStateOf(false) }
+  val coroutineScope = rememberCoroutineScope()
+
+  if (showPermissionRequiredDialog) {
+    val failMessage = stringResource(R.string.fail)
+    Dialog(
+      modifier = Modifier.fillMaxWidth(),
+      confirmButton = {
+        TextButton(
+          onClick = {
+            showPermissionRequiredDialog = false
+            showManualMethodDialog = true
+          }
+        ) {
+          Text(stringResource(R.string.manual_method))
+        }
+      },
+      onDismissRequest = {
+        showPermissionRequiredDialog = false
+      },
+      title = { Text(stringResource(R.string.read_logs_permission_required)) },
+      text = { Text(stringResource(R.string.read_logs_permission_required_msg)) },
+      dismissButton = {
+        TextButton(
+          onClick = {
+            showPermissionRequiredDialog = false
+            showAskingForRootPermissionDialog = true
+            coroutineScope.launch {
+              val result = withContext(IO) {
+                val cmd = "pm grant ${BuildConfig.APPLICATION_ID} ${Manifest.permission.READ_LOGS}"
+                SuCommander(cmd).run()
+              }
+              showAskingForRootPermissionDialog = false
+              if (result) {
+                showRestartAppDialog = true
+              } else {
+                showManualMethodDialog = true
+                context.showToast(failMessage)
+              }
+            }
+          }
+        ) {
+          Text(stringResource(R.string.root_method))
+        }
+      },
+      icon = {
+        Icon(Icons.Default.Info, contentDescription = null)
+      }
+    )
+  }
+
+  if (showAskingForRootPermissionDialog) {
+    Dialog(
+      onDismissRequest = {},
+      icon = {
+        CircularProgressIndicator(
+          modifier = Modifier.size(24.dp),
+          strokeWidth = 2.dp,
+        )
+      },
+      text = {
+        Text(stringResource(R.string.asking_permission_for_root_access))
+      }
+    )
+  }
+
+  if (showRestartAppDialog) {
+    Dialog(
+      onDismissRequest = {
+        showRestartAppDialog = false
+      },
+      title = {
+        Text(stringResource(R.string.app_restart_dialog_title))
+      },
+      text = {
+        Text(stringResource(R.string.app_restart_dialog_msg_body))
+      },
+      confirmButton = {
+        TextButton(
+          onClick = {
+            context.stopService(Intent(context, LogcatService::class.java))
+            Process.killProcess(Process.myPid())
+          }
+        ) {
+          Text(stringResource(R.string.restart))
+        }
+      }
+    )
+  }
+
+  if (showManualMethodDialog) {
+    Dialog(
+      onDismissRequest = {
+        showManualMethodDialog = false
+      },
+      title = {
+        Text(stringResource(R.string.manual_method))
+      },
+      text = {
+        Column(
+          modifier = Modifier.verticalScroll(rememberScrollState()),
+        ) {
+          Text(
+            buildAnnotatedString {
+              append(stringResource(R.string.permission_instruction0))
+              appendLine(); appendLine()
+              append(stringResource(R.string.permission_instruction1))
+              appendLine()
+              append(stringResource(R.string.permission_instruction2))
+              appendLine()
+              append(
+                AnnotatedString(
+                  text = stringResource(R.string.permission_instruction3),
+                  spanStyle = SpanStyle(
+                    color = MaterialTheme.colorScheme.tertiary,
+                  )
+                )
+              )
+              appendLine()
+              append(stringResource(R.string.permission_instruction4))
+              appendLine()
+              append(stringResource(R.string.permission_instruction5))
+              appendLine(); appendLine()
+              append(stringResource(R.string.permission_instruction6))
+            }
+          )
+        }
+      },
+      confirmButton = {
+        TextButton(
+          onClick = {
+            showManualMethodDialog = false
+            val cmd = "adb shell pm grant ${BuildConfig.APPLICATION_ID} " +
+              Manifest.permission.READ_LOGS
+            val cm = context.getSystemService(Context.CLIPBOARD_SERVICE)
+              as ClipboardManager
+            cm.setPrimaryClip(ClipData.newPlainText("Adb command", cmd))
+          }
+        ) {
+          Text(stringResource(R.string.copy_adb_command))
+        }
+      }
+    )
+  }
+}
+
 @Composable
 private fun rememberLogcatServiceConnection(): LogcatService? {
   var logcatService by remember { mutableStateOf<LogcatService?>(null) }
@@ -1530,6 +1701,13 @@ private class LogFilter(
       else -> false
     }
   }
+}
+
+private fun isReadLogsPermissionGranted(context: Context): Boolean {
+  return ContextCompat.checkSelfPermission(
+    context,
+    Manifest.permission.READ_LOGS
+  ) == PackageManager.PERMISSION_GRANTED
 }
 
 @Preview(showBackground = true)
