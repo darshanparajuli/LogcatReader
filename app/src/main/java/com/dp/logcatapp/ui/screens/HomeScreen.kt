@@ -220,6 +220,7 @@ fun HomeScreen(
   var savedLogsSheetState by remember {
     mutableStateOf<SavedLogsBottomSheetState>(SavedLogsBottomSheetState.Hide)
   }
+  var appliedFilters by remember { mutableStateOf(false) }
 
   val restartTrigger = remember { Channel<Boolean>(capacity = 1) }
   if (logcatService != null) {
@@ -253,6 +254,7 @@ fun HomeScreen(
 
               db.filterDao().filters()
                 .collectLatest { filters ->
+                  appliedFilters = filters.isNotEmpty()
                   logcatSession.setFilters(
                     filters = filters.filterNot { it.exclude }.map(::LogFilter),
                     exclusion = false
@@ -284,7 +286,12 @@ fun HomeScreen(
               text = stringResource(R.string.device_logs),
             )
             Text(
-              text = logsState.size.toString(),
+              text = buildString {
+                append(logsState.size)
+                if (appliedFilters) {
+                  append(" [${stringResource(R.string.filtered).lowercase()}]")
+                }
+              },
               style = AppTypography.titleSmall,
             )
           }
