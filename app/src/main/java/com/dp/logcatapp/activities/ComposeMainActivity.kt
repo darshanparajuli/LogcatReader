@@ -56,7 +56,6 @@ class ComposeMainActivity : ComponentActivity() {
       }
     }
 
-    addOnNewIntentListener { }
     setContent {
       LogcatReaderTheme {
         HomeScreen(
