@@ -135,7 +135,7 @@ import com.dp.logcat.LogPriority
 import com.dp.logcat.LogcatUtil
 import com.dp.logcatapp.BuildConfig
 import com.dp.logcatapp.R
-import com.dp.logcatapp.activities.FiltersActivity
+import com.dp.logcatapp.activities.ComposeFiltersActivity
 import com.dp.logcatapp.activities.SavedLogsActivity
 import com.dp.logcatapp.activities.SavedLogsViewerActivity
 import com.dp.logcatapp.activities.SettingsActivity
@@ -428,14 +428,7 @@ fun HomeScreen(
         },
         onClickFilter = {
           showDropDownMenu = false
-          val intent = Intent(context, FiltersActivity::class.java)
-          intent.putExtra(FiltersActivity.EXTRA_EXCLUSIONS, false)
-          context.startActivity(intent)
-        },
-        onClickExclusions = {
-          showDropDownMenu = false
-          val intent = Intent(context, FiltersActivity::class.java)
-          intent.putExtra(FiltersActivity.EXTRA_EXCLUSIONS, true)
+          val intent = Intent(context, ComposeFiltersActivity::class.java)
           context.startActivity(intent)
         },
         onClickSave = {
@@ -796,7 +789,6 @@ private fun AppBar(
   onDismissDropdownMenu: () -> Unit,
   onClickClear: () -> Unit,
   onClickFilter: () -> Unit,
-  onClickExclusions: () -> Unit,
   onClickSave: () -> Unit,
   onClickSavedLogs: () -> Unit,
   onClickRestartLogcat: () -> Unit,
@@ -897,18 +889,6 @@ private fun AppBar(
               )
             },
             onClick = onClickFilter,
-          )
-          DropdownMenuItem(
-            leadingIcon = {
-              Icon(Icons.Default.FilterList, contentDescription = null)
-            },
-            text = {
-              Text(
-                text = stringResource(R.string.exclusions),
-                style = AppTypography.bodyLarge,
-              )
-            },
-            onClick = onClickExclusions,
           )
           DropdownMenuItem(
             leadingIcon = {

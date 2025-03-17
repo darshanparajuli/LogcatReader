@@ -49,6 +49,9 @@ interface FilterDao {
 
   @Query("DELETE FROM filters WHERE `exclude` = :exclusions")
   fun deleteAll(exclusions: Boolean)
+
+  @Query("DELETE FROM filters")
+  fun deleteAll()
 }
 
 @Entity(tableName = "saved_logs_info")
