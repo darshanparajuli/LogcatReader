@@ -24,7 +24,7 @@ import com.dp.logcatapp.util.setKeepScreenOn
 
 class ComposeMainActivity : ComponentActivity() {
 
-  private var recordingIsActive = true
+  private var recordingIsActive = false
   private var stopRecordingSignal by mutableStateOf(false)
 
   override fun onCreate(savedInstanceState: Bundle?) {
