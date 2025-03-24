@@ -477,35 +477,40 @@ fun HomeScreen(
           context.startActivity(Intent(context, SettingsActivity::class.java))
         },
       )
-      TopSearchBar(
+      AnimatedVisibility(
         visible = showSearchBar,
-        searchQuery = searchQuery,
-        searchInProgress = searchInProgress,
-        showHitCount = showHitCount,
-        hitCount = searchHitsMap.size,
-        currentHitIndex = currentSearchHitIndex,
-        onQueryChange = { searchQuery = it },
-        onClose = {
-          showSearchBar = false
-          searchHitsMap.clear()
-          sortedHitsByLogIdsState = emptyList()
-          currentSearchHitIndex = -1
-          currentSearchHitLogId = -1
-          focusManager.clearFocus()
-        },
-        onPrevious = {
-          focusManager.clearFocus()
-          if (currentSearchHitIndex - 1 >= 0) {
-            currentSearchHitIndex -= 1
-          } else {
-            currentSearchHitIndex = searchHitsMap.size - 1
+        enter = fadeIn(),
+        exit = fadeOut(),
+      ) {
+        TopSearchBar(
+          searchQuery = searchQuery,
+          searchInProgress = searchInProgress,
+          showHitCount = showHitCount,
+          hitCount = searchHitsMap.size,
+          currentHitIndex = currentSearchHitIndex,
+          onQueryChange = { searchQuery = it },
+          onClose = {
+            showSearchBar = false
+            searchHitsMap.clear()
+            sortedHitsByLogIdsState = emptyList()
+            currentSearchHitIndex = -1
+            currentSearchHitLogId = -1
+            focusManager.clearFocus()
+          },
+          onPrevious = {
+            focusManager.clearFocus()
+            if (currentSearchHitIndex - 1 >= 0) {
+              currentSearchHitIndex -= 1
+            } else {
+              currentSearchHitIndex = searchHitsMap.size - 1
+            }
+          },
+          onNext = {
+            focusManager.clearFocus()
+            currentSearchHitIndex = (currentSearchHitIndex + 1) % searchHitsMap.size
           }
-        },
-        onNext = {
-          focusManager.clearFocus()
-          currentSearchHitIndex = (currentSearchHitIndex + 1) % searchHitsMap.size
-        }
-      )
+        )
+      }
     },
     floatingActionButton = {
       FloatingActionButtons(
@@ -956,7 +961,6 @@ private fun AppBar(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun TopSearchBar(
-  visible: Boolean,
   searchQuery: String,
   searchInProgress: Boolean,
   showHitCount: Boolean,
@@ -967,97 +971,91 @@ private fun TopSearchBar(
   onPrevious: () -> Unit,
   onNext: () -> Unit,
 ) {
-  AnimatedVisibility(
-    visible = visible,
-    enter = fadeIn(),
-    exit = fadeOut(),
-  ) {
-    val focusRequester = remember { FocusRequester() }
-    LaunchedEffect(focusRequester) {
-      focusRequester.requestFocus()
-    }
-
-    TopAppBar(
-      modifier = Modifier.fillMaxWidth(),
-      navigationIcon = {
-        IconButton(
-          onClick = onClose,
-          colors = IconButtonDefaults.iconButtonColors(
-            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-          ),
-        ) {
-          Icon(imageVector = Icons.Default.Close, contentDescription = null)
-        }
-      },
-      title = {
-        TextField(
-          modifier = Modifier.focusRequester(focusRequester),
-          value = searchQuery,
-          onValueChange = onQueryChange,
-          maxLines = 1,
-          singleLine = true,
-          placeholder = {
-            Row(modifier = Modifier.fillMaxHeight()) {
-              Text(
-                modifier = Modifier.align(Alignment.CenterVertically),
-                text = "Search",
-              )
-            }
-          },
-          colors = TextFieldDefaults.colors(
-            focusedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-            unfocusedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-            focusedIndicatorColor = Color.Transparent,
-            unfocusedIndicatorColor = Color.Transparent,
-            focusedTextColor = MaterialTheme.colorScheme.onPrimaryContainer,
-            unfocusedTextColor = MaterialTheme.colorScheme.onPrimaryContainer,
-          ),
-          textStyle = LocalTextStyle.current.copy(
-            fontSize = 18.sp,
-          ),
-          suffix = {
-            if (searchInProgress) {
-              CircularProgressIndicator(
-                modifier = Modifier.size(20.dp),
-                strokeWidth = 2.dp,
-              )
-            } else if (showHitCount) {
-              val current = currentHitIndex.takeIf { it != -1 }?.let { it + 1 } ?: 0
-              Text(
-                text = "$current/$hitCount",
-                style = AppTypography.bodySmall,
-                color = MaterialTheme.colorScheme.onPrimaryContainer,
-              )
-            }
-          }
-        )
-      },
-      actions = {
-        IconButton(
-          onClick = onPrevious,
-          enabled = hitCount > 0,
-          colors = IconButtonDefaults.iconButtonColors(
-            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-          ),
-        ) {
-          Icon(imageVector = Icons.Default.KeyboardArrowUp, contentDescription = null)
-        }
-        IconButton(
-          onClick = onNext,
-          enabled = hitCount > 0,
-          colors = IconButtonDefaults.iconButtonColors(
-            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-          ),
-        ) {
-          Icon(imageVector = Icons.Default.KeyboardArrowDown, contentDescription = null)
-        }
-      },
-      colors = TopAppBarDefaults.topAppBarColors(
-        containerColor = MaterialTheme.colorScheme.primaryContainer,
-        titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-      ),
-    )
+  val focusRequester = remember { FocusRequester() }
+  LaunchedEffect(focusRequester) {
+    focusRequester.requestFocus()
   }
+
+  TopAppBar(
+    modifier = Modifier.fillMaxWidth(),
+    navigationIcon = {
+      IconButton(
+        onClick = onClose,
+        colors = IconButtonDefaults.iconButtonColors(
+          contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+        ),
+      ) {
+        Icon(imageVector = Icons.Default.Close, contentDescription = null)
+      }
+    },
+    title = {
+      TextField(
+        modifier = Modifier.focusRequester(focusRequester),
+        value = searchQuery,
+        onValueChange = onQueryChange,
+        maxLines = 1,
+        singleLine = true,
+        placeholder = {
+          Row(modifier = Modifier.fillMaxHeight()) {
+            Text(
+              modifier = Modifier.align(Alignment.CenterVertically),
+              text = "Search",
+            )
+          }
+        },
+        colors = TextFieldDefaults.colors(
+          focusedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+          unfocusedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+          focusedIndicatorColor = Color.Transparent,
+          unfocusedIndicatorColor = Color.Transparent,
+          focusedTextColor = MaterialTheme.colorScheme.onPrimaryContainer,
+          unfocusedTextColor = MaterialTheme.colorScheme.onPrimaryContainer,
+        ),
+        textStyle = LocalTextStyle.current.copy(
+          fontSize = 18.sp,
+        ),
+        suffix = {
+          if (searchInProgress) {
+            CircularProgressIndicator(
+              modifier = Modifier.size(20.dp),
+              strokeWidth = 2.dp,
+            )
+          } else if (showHitCount) {
+            val current = currentHitIndex.takeIf { it != -1 }?.let { it + 1 } ?: 0
+            Text(
+              text = "$current/$hitCount",
+              style = AppTypography.bodySmall,
+              color = MaterialTheme.colorScheme.onPrimaryContainer,
+            )
+          }
+        }
+      )
+    },
+    actions = {
+      IconButton(
+        onClick = onPrevious,
+        enabled = hitCount > 0,
+        colors = IconButtonDefaults.iconButtonColors(
+          contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+        ),
+      ) {
+        Icon(imageVector = Icons.Default.KeyboardArrowUp, contentDescription = null)
+      }
+      IconButton(
+        onClick = onNext,
+        enabled = hitCount > 0,
+        colors = IconButtonDefaults.iconButtonColors(
+          contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+        ),
+      ) {
+        Icon(imageVector = Icons.Default.KeyboardArrowDown, contentDescription = null)
+      }
+    },
+    colors = TopAppBarDefaults.topAppBarColors(
+      containerColor = MaterialTheme.colorScheme.primaryContainer,
+      titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+    ),
+  )
 }
 
 @OptIn(ExperimentalFoundationApi::class)
