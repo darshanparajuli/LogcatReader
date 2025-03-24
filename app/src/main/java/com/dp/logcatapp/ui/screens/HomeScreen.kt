@@ -136,17 +136,17 @@ import com.dp.logcat.LogcatUtil
 import com.dp.logcatapp.BuildConfig
 import com.dp.logcatapp.R
 import com.dp.logcatapp.activities.ComposeFiltersActivity
-import com.dp.logcatapp.activities.SavedLogsActivity
+import com.dp.logcatapp.activities.ComposeSavedLogsActivity
 import com.dp.logcatapp.activities.SavedLogsViewerActivity
 import com.dp.logcatapp.activities.SettingsActivity
 import com.dp.logcatapp.db.FilterInfo
 import com.dp.logcatapp.db.MyDB
 import com.dp.logcatapp.db.SavedLogInfo
 import com.dp.logcatapp.fragments.filters.FilterType
-import com.dp.logcatapp.fragments.logcatlive.LogcatLiveFragment.Companion.LOGCAT_DIR
 import com.dp.logcatapp.services.LogcatService
 import com.dp.logcatapp.services.getService
 import com.dp.logcatapp.ui.common.Dialog
+import com.dp.logcatapp.ui.common.LOGCAT_DIR
 import com.dp.logcatapp.ui.screens.SearchHitKey.LogComponent
 import com.dp.logcatapp.ui.theme.AppTypography
 import com.dp.logcatapp.ui.theme.LogPriorityColors
@@ -466,7 +466,7 @@ fun HomeScreen(
         },
         onClickSavedLogs = {
           showDropDownMenu = false
-          context.startActivity(Intent(context, SavedLogsActivity::class.java))
+          context.startActivity(Intent(context, ComposeSavedLogsActivity::class.java))
         },
         onClickRestartLogcat = {
           showDropDownMenu = false

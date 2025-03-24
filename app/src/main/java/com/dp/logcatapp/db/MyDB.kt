@@ -54,6 +54,7 @@ interface FilterDao {
   fun deleteAll()
 }
 
+// TODO: store timestamp
 @Entity(tableName = "saved_logs_info")
 data class SavedLogInfo(
   @ColumnInfo(name = "name") val fileName: String,
@@ -66,6 +67,9 @@ interface SavedLogsDao {
 
   @Query("SELECT * FROM saved_logs_info")
   fun getAllSync(): List<SavedLogInfo>
+
+  @Query("SELECT * FROM saved_logs_info")
+  fun savedLogs(): Flow<List<SavedLogInfo>>
 
   @Insert(onConflict = OnConflictStrategy.REPLACE)
   fun insert(vararg savedLogInfo: SavedLogInfo)

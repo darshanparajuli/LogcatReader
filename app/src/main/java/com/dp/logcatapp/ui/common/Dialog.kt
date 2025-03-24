@@ -37,7 +37,7 @@ fun Dialog(
       modifier = Modifier.fillMaxWidth(),
       shape = MaterialTheme.shapes.large,
       color = MaterialTheme.colorScheme.background,
-      tonalElevation = 0.dp,
+      tonalElevation = 2.dp,
       shadowElevation = 8.dp,
     ) {
       Column(
