@@ -113,11 +113,12 @@ fun SavedLogsScreen(
   LaunchedEffect(db) {
     updateDbWithExistingInternalLogFiles(context, db)
     savedLogs(context, db).collect { result ->
-      savedLogs = result
+      savedLogs = result.copy(
+        // TODO: add sort options.
+        logFiles = result.logFiles.sortedBy { it.info.fileName }
+      )
     }
   }
-
-  // TODO: add sort options.
 
   var selected by remember { mutableStateOf<Set<LogFileInfo>>(emptySet()) }
   var renameLog by remember { mutableStateOf<LogFileInfo?>(null) }
@@ -655,11 +656,9 @@ private suspend fun savedLogs(context: Context, db: MyDB): Flow<SavedLogsResult>
         }
       }
 
-      val totalLogCount = logFiles
-        .foldRight(0L) { logFileInfo, acc ->
-          acc + logFileInfo.count
-        }
-      logFiles.sortBy { it.info.fileName }
+      val totalLogCount = logFiles.foldRight(0L) { logFileInfo, acc ->
+        acc + logFileInfo.count
+      }
 
       if (totalSize > 0) {
         Utils.bytesToString(totalSize)
