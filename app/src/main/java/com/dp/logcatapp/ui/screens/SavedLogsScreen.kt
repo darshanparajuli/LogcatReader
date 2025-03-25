@@ -1,6 +1,7 @@
 package com.dp.logcatapp.ui.screens
 
 import android.content.Context
+import android.content.Intent
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts.CreateDocument
 import androidx.compose.animation.AnimatedVisibility
@@ -74,6 +75,7 @@ import androidx.room.withTransaction
 import com.dp.logcat.LogcatStreamReader
 import com.dp.logcat.LogcatUtil
 import com.dp.logcatapp.R
+import com.dp.logcatapp.activities.ComposeSavedLogsViewerActivity
 import com.dp.logcatapp.db.MyDB
 import com.dp.logcatapp.db.SavedLogInfo
 import com.dp.logcatapp.ui.common.Dialog
@@ -262,7 +264,9 @@ fun SavedLogsScreen(
                       selected += item
                     },
                     onClick = {
-                      // TODO: show logs viewer
+                      val intent = Intent(context, ComposeSavedLogsViewerActivity::class.java)
+                      intent.setDataAndType(item.info.path.toUri(), "text/plain")
+                      context.startActivity(intent)
                     }
                   )
                 } else {

@@ -51,8 +51,8 @@ fun LogsList(
   logs: List<Log>,
   searchHits: Map<SearchHitKey, Pair<Int, Int>>,
   currentSearchHitLogId: Int,
-  onClick: (Int) -> Unit,
-  onLongClick: (Int) -> Unit,
+  onClick: ((Int) -> Unit)? = null,
+  onLongClick: ((Int) -> Unit)? = null,
 ) {
   val textSelectionColors = LocalTextSelectionColors.current
   val currentSearchHitColor = currentSearchHitColor()
@@ -96,8 +96,8 @@ fun LogsList(
         modifier = Modifier
           .fillMaxWidth()
           .combinedClickable(
-            onLongClick = { onLongClick(index) },
-            onClick = { onClick(index) },
+            onLongClick = { onLongClick?.invoke(index) },
+            onClick = { onClick?.invoke(index) },
           )
           .wrapContentHeight(),
         priority = item.priority,

@@ -23,10 +23,8 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction.Press
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.consumeWindowInsets
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -40,13 +38,10 @@ import androidx.compose.material.icons.automirrored.filled.ViewList
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.FiberManualRecord
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
@@ -66,7 +61,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
-import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
@@ -75,8 +69,6 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -94,9 +86,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
@@ -106,7 +95,6 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.core.net.toFile
 import androidx.core.net.toUri
@@ -133,6 +121,7 @@ import com.dp.logcatapp.ui.common.LOGCAT_DIR
 import com.dp.logcatapp.ui.common.LogsList
 import com.dp.logcatapp.ui.common.SearchHitKey
 import com.dp.logcatapp.ui.common.SearchHitKey.LogComponent
+import com.dp.logcatapp.ui.common.SearchLogsTopBar
 import com.dp.logcatapp.ui.theme.AppTypography
 import com.dp.logcatapp.util.PreferenceKeys
 import com.dp.logcatapp.util.ServiceBinder
@@ -463,7 +452,7 @@ fun HomeScreen(
         enter = fadeIn(),
         exit = fadeOut(),
       ) {
-        TopSearchBar(
+        SearchLogsTopBar(
           searchQuery = searchQuery,
           searchInProgress = searchInProgress,
           showHitCount = showHitCount,
@@ -477,6 +466,7 @@ fun HomeScreen(
             currentSearchHitIndex = -1
             currentSearchHitLogId = -1
             focusManager.clearFocus()
+            searchQuery = ""
           },
           onPrevious = {
             focusManager.clearFocus()
@@ -638,8 +628,12 @@ fun HomeScreen(
         contentPadding = innerPadding,
         logs = logsState,
         searchHits = searchHitsMap,
-        onClick = {},
-        onLongClick = {},
+        onClick = {
+          // TODO
+        },
+        onLongClick = {
+          // TODO
+        },
         state = lazyListState,
         currentSearchHitLogId = currentSearchHitLogId,
       )
@@ -936,106 +930,6 @@ private fun AppBar(
         }
       }
     }
-  )
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun TopSearchBar(
-  searchQuery: String,
-  searchInProgress: Boolean,
-  showHitCount: Boolean,
-  hitCount: Int,
-  currentHitIndex: Int,
-  onQueryChange: (String) -> Unit,
-  onClose: () -> Unit,
-  onPrevious: () -> Unit,
-  onNext: () -> Unit,
-) {
-  val focusRequester = remember { FocusRequester() }
-  LaunchedEffect(focusRequester) {
-    focusRequester.requestFocus()
-  }
-
-  TopAppBar(
-    modifier = Modifier.fillMaxWidth(),
-    navigationIcon = {
-      IconButton(
-        onClick = onClose,
-        colors = IconButtonDefaults.iconButtonColors(
-          contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-        ),
-      ) {
-        Icon(imageVector = Icons.Default.Close, contentDescription = null)
-      }
-    },
-    title = {
-      TextField(
-        modifier = Modifier.focusRequester(focusRequester),
-        value = searchQuery,
-        onValueChange = onQueryChange,
-        maxLines = 1,
-        singleLine = true,
-        placeholder = {
-          Row(modifier = Modifier.fillMaxHeight()) {
-            Text(
-              modifier = Modifier.align(Alignment.CenterVertically),
-              text = "Search",
-            )
-          }
-        },
-        colors = TextFieldDefaults.colors(
-          focusedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-          unfocusedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-          focusedIndicatorColor = Color.Transparent,
-          unfocusedIndicatorColor = Color.Transparent,
-          focusedTextColor = MaterialTheme.colorScheme.onPrimaryContainer,
-          unfocusedTextColor = MaterialTheme.colorScheme.onPrimaryContainer,
-        ),
-        textStyle = LocalTextStyle.current.copy(
-          fontSize = 18.sp,
-        ),
-        suffix = {
-          if (searchInProgress) {
-            CircularProgressIndicator(
-              modifier = Modifier.size(20.dp),
-              strokeWidth = 2.dp,
-            )
-          } else if (showHitCount) {
-            val current = currentHitIndex.takeIf { it != -1 }?.let { it + 1 } ?: 0
-            Text(
-              text = "$current/$hitCount",
-              style = AppTypography.bodySmall,
-              color = MaterialTheme.colorScheme.onPrimaryContainer,
-            )
-          }
-        }
-      )
-    },
-    actions = {
-      IconButton(
-        onClick = onPrevious,
-        enabled = hitCount > 0,
-        colors = IconButtonDefaults.iconButtonColors(
-          contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-        ),
-      ) {
-        Icon(imageVector = Icons.Default.KeyboardArrowUp, contentDescription = null)
-      }
-      IconButton(
-        onClick = onNext,
-        enabled = hitCount > 0,
-        colors = IconButtonDefaults.iconButtonColors(
-          contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-        ),
-      ) {
-        Icon(imageVector = Icons.Default.KeyboardArrowDown, contentDescription = null)
-      }
-    },
-    colors = TopAppBarDefaults.topAppBarColors(
-      containerColor = MaterialTheme.colorScheme.primaryContainer,
-      titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-    ),
   )
 }
 

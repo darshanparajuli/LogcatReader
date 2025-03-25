@@ -3,11 +3,16 @@
     xmlns:tools="http://schemas.android.com/tools">
 
   <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-  <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-  <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+  <uses-permission
+      android:name="android.permission.READ_EXTERNAL_STORAGE"
+      tools:ignore="ScopedStorage" />
+  <uses-permission
+      android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+      tools:ignore="ScopedStorage" />
   <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
   <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
-  <uses-permission android:name="android.permission.READ_LOGS"
+  <uses-permission
+      android:name="android.permission.READ_LOGS"
       tools:ignore="ProtectedPermissions" />
 
   <application
@@ -43,6 +48,10 @@
         android:launchMode="singleTask" />
     <activity
         android:name=".activities.ComposeSavedLogsActivity"
+        android:windowSoftInputMode="adjustResize"
+        android:launchMode="singleTask" />
+    <activity
+        android:name=".activities.ComposeSavedLogsViewerActivity"
         android:windowSoftInputMode="adjustResize"
         android:launchMode="singleTask" />
     <activity
