@@ -125,7 +125,6 @@ import com.dp.logcatapp.ui.common.SearchHitKey.LogComponent
 import com.dp.logcatapp.ui.common.SearchLogsTopBar
 import com.dp.logcatapp.ui.theme.AppTypography
 import com.dp.logcatapp.util.PreferenceKeys
-import com.dp.logcatapp.util.ServiceBinder
 import com.dp.logcatapp.util.ShareUtils
 import com.dp.logcatapp.util.SuCommander
 import com.dp.logcatapp.util.containsIgnoreCase
@@ -1162,27 +1161,34 @@ private fun MaybeShowPermissionRequiredDialog() {
 @Composable
 private fun rememberLogcatServiceConnection(): LogcatService? {
   var logcatService by remember { mutableStateOf<LogcatService?>(null) }
-  // Connect to service.
   val context = LocalContext.current
   DisposableEffect(context) {
-    val serviceBinder = ServiceBinder(LogcatService::class.java, object : ServiceConnection {
+    val serviceConnection = object : ServiceConnection {
       override fun onServiceConnected(
         name: ComponentName?,
         service: IBinder,
       ) {
-        Logger.debug(TAG, "onServiceConnected")
+        Logger.debug(TAG, "LogcatService - onServiceConnected")
         logcatService = service.getService()
       }
 
       override fun onServiceDisconnected(name: ComponentName) {
-        Logger.debug(TAG, "onServiceDisconnected")
+        Logger.debug(TAG, "LogcatService - onServiceDisconnected")
         logcatService = null
       }
-    })
-    serviceBinder.bind(context)
+    }
+
+    Logger.debug(TAG, "LogcatService - bind")
+    context.bindService(
+      Intent(context, LogcatService::class.java),
+      serviceConnection,
+      Context.BIND_ABOVE_CLIENT,
+    )
 
     onDispose {
-      serviceBinder.unbind(context)
+      Logger.debug(TAG, "LogcatService - unbind")
+      context.unbindService(serviceConnection)
+      logcatService = null
     }
   }
 
