@@ -118,3 +118,8 @@ fun LogcatReaderTheme(
 @Composable
 fun currentSearchHitColor(): Color =
   if (isSystemInDarkTheme()) currentSearchHitColorDark else currentSearchHitColorLight
+
+@ReadOnlyComposable
+@Composable
+fun logListItemSecondaryColor(): Color =
+  if (isSystemInDarkTheme()) logListItemSecondaryColorDark else logListItemSecondaryColorLight

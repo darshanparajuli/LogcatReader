@@ -76,6 +76,9 @@ val surfaceContainerHighDark = Color(0xFF252B2A)
 val surfaceContainerHighestDark = Color(0xFF303635)
 val currentSearchHitColorDark = Color(0xFF796A39)
 
+val logListItemSecondaryColorLight = Color(0x8a000000)
+val logListItemSecondaryColorDark = Color(0xb2ffffff)
+
 object LogPriorityColors {
   val priorityAssert = Color(0xFF512DA8)
   val priorityDebug = Color(0xFF1976D2)

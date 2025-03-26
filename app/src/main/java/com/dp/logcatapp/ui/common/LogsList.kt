@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.selection.LocalTextSelectionColors
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
@@ -41,6 +40,7 @@ import com.dp.logcatapp.ui.theme.LogPriorityColors
 import com.dp.logcatapp.ui.theme.LogcatReaderTheme
 import com.dp.logcatapp.ui.theme.RobotoMonoFontFamily
 import com.dp.logcatapp.ui.theme.currentSearchHitColor
+import com.dp.logcatapp.ui.theme.logListItemSecondaryColor
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -189,13 +189,14 @@ private fun LogItem(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.Absolute.spacedBy(10.dp),
       ) {
+        val textColor = logListItemSecondaryColor()
         Text(
           text = date,
           style = TextStyle.Default.copy(
             fontSize = 12.sp,
             fontFamily = RobotoMonoFontFamily,
             fontWeight = FontWeight.Bold,
-            color = Color.Gray,
+            color = textColor,
           )
         )
         Text(
@@ -204,7 +205,7 @@ private fun LogItem(
             fontSize = 12.sp,
             fontFamily = RobotoMonoFontFamily,
             fontWeight = FontWeight.Bold,
-            color = Color.Gray,
+            color = textColor,
           )
         )
         Text(
@@ -213,8 +214,7 @@ private fun LogItem(
             fontSize = 12.sp,
             fontFamily = RobotoMonoFontFamily,
             fontWeight = FontWeight.Bold,
-            // TODO: use color from the theme
-            color = Color.Gray,
+            color = textColor,
           )
         )
         Text(
@@ -223,7 +223,7 @@ private fun LogItem(
             fontSize = 12.sp,
             fontFamily = RobotoMonoFontFamily,
             fontWeight = FontWeight.Bold,
-            color = Color.Gray,
+            color = textColor,
           )
         )
       }
