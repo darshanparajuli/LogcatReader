@@ -52,6 +52,7 @@ import androidx.compose.ui.unit.dp
 import com.dp.logcat.Log
 import com.dp.logcat.LogcatStreamReader
 import com.dp.logcatapp.R
+import com.dp.logcatapp.ui.common.CopyLogClipboardBottomSheet
 import com.dp.logcatapp.ui.common.LogsList
 import com.dp.logcatapp.ui.common.SearchHitKey
 import com.dp.logcatapp.ui.common.SearchHitKey.LogComponent
@@ -266,6 +267,8 @@ fun SavedLogsViewerScreen(
         }
       }
 
+      var showCopyToClipboardSheet by remember { mutableStateOf<Log?>(null) }
+
       LogsList(
         modifier = Modifier
           .fillMaxSize()
@@ -275,7 +278,17 @@ fun SavedLogsViewerScreen(
         searchHits = searchHitsMap,
         logs = logsState.logs,
         currentSearchHitLogId = currentSearchHitLogId,
+        onClick = { index ->
+          showCopyToClipboardSheet = logsState.logs[index]
+        }
       )
+
+      showCopyToClipboardSheet?.let { log ->
+        CopyLogClipboardBottomSheet(
+          log = log,
+          onDismiss = { showCopyToClipboardSheet = null },
+        )
+      }
     } else if (logsState is LoadLogsState.Loading) {
       Box(
         modifier = Modifier

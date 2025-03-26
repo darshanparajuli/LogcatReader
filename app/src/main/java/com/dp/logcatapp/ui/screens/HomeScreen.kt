@@ -116,6 +116,7 @@ import com.dp.logcatapp.db.SavedLogInfo
 import com.dp.logcatapp.fragments.filters.FilterType
 import com.dp.logcatapp.services.LogcatService
 import com.dp.logcatapp.services.getService
+import com.dp.logcatapp.ui.common.CopyLogClipboardBottomSheet
 import com.dp.logcatapp.ui.common.Dialog
 import com.dp.logcatapp.ui.common.LOGCAT_DIR
 import com.dp.logcatapp.ui.common.LogsList
@@ -603,6 +604,9 @@ fun HomeScreen(
         )
       }
     } else {
+      var showCopyToClipboardSheet by remember { mutableStateOf<Log?>(null) }
+      var showFilterOrExcludeDialog by remember { mutableStateOf<Log?>(null) }
+
       val lifecycle = LocalLifecycleOwner.current.lifecycle
       LogsList(
         modifier = Modifier
@@ -628,16 +632,83 @@ fun HomeScreen(
         contentPadding = innerPadding,
         logs = logsState,
         searchHits = searchHitsMap,
-        onClick = {
-          // TODO
+        onClick = { index ->
+          showCopyToClipboardSheet = logsState[index]
         },
-        onLongClick = {
-          // TODO
+        onLongClick = { index ->
+          showFilterOrExcludeDialog = logsState[index]
         },
         state = lazyListState,
         currentSearchHitLogId = currentSearchHitLogId,
       )
+
+      showCopyToClipboardSheet?.let { log ->
+        CopyLogClipboardBottomSheet(
+          log = log,
+          onDismiss = { showCopyToClipboardSheet = null },
+        )
+      }
+
+      showFilterOrExcludeDialog?.let { log ->
+        FilterOrExcludeSheet(
+          onDismiss = { showFilterOrExcludeDialog = null },
+          onClickFilter = {
+            val intent = Intent(context, ComposeFiltersActivity::class.java)
+            intent.putExtra(ComposeFiltersActivity.EXTRA_LOG, log)
+            intent.putExtra(ComposeFiltersActivity.EXTRA_EXCLUDE, false)
+            context.startActivity(intent)
+            showFilterOrExcludeDialog = null
+          },
+          onClickExclude = {
+            val intent = Intent(context, ComposeFiltersActivity::class.java)
+            intent.putExtra(ComposeFiltersActivity.EXTRA_LOG, log)
+            intent.putExtra(ComposeFiltersActivity.EXTRA_EXCLUDE, true)
+            context.startActivity(intent)
+            showFilterOrExcludeDialog = null
+          }
+        )
+      }
     }
+  }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun FilterOrExcludeSheet(
+  onDismiss: () -> Unit,
+  onClickFilter: () -> Unit,
+  onClickExclude: () -> Unit,
+) {
+  ModalBottomSheet(
+    onDismissRequest = onDismiss,
+    containerColor = MaterialTheme.colorScheme.surfaceContainer,
+  ) {
+    ListItem(
+      modifier = Modifier
+        .fillMaxWidth()
+        .clickable {
+          onClickFilter()
+        },
+      headlineContent = {
+        Text(stringResource(R.string.filter))
+      },
+      colors = ListItemDefaults.colors(
+        containerColor = MaterialTheme.colorScheme.surfaceContainer,
+      ),
+    )
+    ListItem(
+      modifier = Modifier
+        .fillMaxWidth()
+        .clickable {
+          onClickExclude()
+        },
+      headlineContent = {
+        Text(stringResource(R.string.exclude))
+      },
+      colors = ListItemDefaults.colors(
+        containerColor = MaterialTheme.colorScheme.surfaceContainer,
+      ),
+    )
   }
 }
 
@@ -963,7 +1034,7 @@ private fun MaybeShowPermissionRequiredDialog() {
         showPermissionRequiredDialog = false
       },
       title = { Text(stringResource(R.string.read_logs_permission_required)) },
-      text = { Text(stringResource(R.string.read_logs_permission_required_msg)) },
+      content = { Text(stringResource(R.string.read_logs_permission_required_msg)) },
       dismissButton = {
         TextButton(
           onClick = {
@@ -1002,7 +1073,7 @@ private fun MaybeShowPermissionRequiredDialog() {
           strokeWidth = 2.dp,
         )
       },
-      text = {
+      content = {
         Text(stringResource(R.string.asking_permission_for_root_access))
       }
     )
@@ -1016,7 +1087,7 @@ private fun MaybeShowPermissionRequiredDialog() {
       title = {
         Text(stringResource(R.string.app_restart_dialog_title))
       },
-      text = {
+      content = {
         Text(stringResource(R.string.app_restart_dialog_msg_body))
       },
       confirmButton = {
@@ -1040,7 +1111,7 @@ private fun MaybeShowPermissionRequiredDialog() {
       title = {
         Text(stringResource(R.string.manual_method))
       },
-      text = {
+      content = {
         Column(
           modifier = Modifier.verticalScroll(rememberScrollState()),
         ) {

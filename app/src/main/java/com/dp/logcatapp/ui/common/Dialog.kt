@@ -27,7 +27,7 @@ fun Dialog(
   dismissButton: @Composable (() -> Unit)? = null,
   icon: @Composable (() -> Unit)? = null,
   title: @Composable (() -> Unit)? = null,
-  text: @Composable (() -> Unit)? = null,
+  content: @Composable (() -> Unit)? = null,
 ) {
   BasicAlertDialog(
     modifier = modifier,
@@ -70,7 +70,7 @@ fun Dialog(
             }
           }
           CompositionLocalProvider(LocalTextStyle provides AppTypography.bodyMedium) {
-            text?.invoke()
+            content?.invoke()
           }
         }
         Row(

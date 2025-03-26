@@ -507,7 +507,7 @@ private fun RenameLogDialog(
     title = {
       Text(stringResource(R.string.rename))
     },
-    text = {
+    content = {
       TextField(
         modifier = Modifier.fillMaxWidth(),
         value = name,

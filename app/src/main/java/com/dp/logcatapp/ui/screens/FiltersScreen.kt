@@ -74,7 +74,7 @@ import kotlinx.coroutines.withContext
 @Composable
 fun FiltersScreen(
   modifier: Modifier,
-  filterLog: Log?,
+  prepopulateFilterInfo: PrepopulateFilterInfo?,
 ) {
   val context = LocalContext.current
   val db = remember(context) { MyDB.getInstance(context) }
@@ -84,7 +84,7 @@ fun FiltersScreen(
     .map { filters -> filters.map { filter -> filter.toFilterListItem(context) } }
     .collectAsState(null)
 
-  var showAddFilterDialog by remember { mutableStateOf(filterLog != null) }
+  var showAddFilterDialog by remember { mutableStateOf(prepopulateFilterInfo != null) }
   val coroutineScope = rememberCoroutineScope()
 
   Scaffold(
@@ -167,7 +167,7 @@ fun FiltersScreen(
     if (showAddFilterDialog) {
       val selectedLogLevels = remember {
         mutableStateMapOf<LogLevel, Boolean>().apply {
-          filterLog?.priority?.let { p ->
+          prepopulateFilterInfo?.log?.priority?.let { p ->
             LogLevel.entries.find { it.label.startsWith(p) }?.let { level ->
               put(level, true)
             }
@@ -175,10 +175,10 @@ fun FiltersScreen(
         }
       }
       var keyword by remember { mutableStateOf("") }
-      var tag by remember { mutableStateOf(filterLog?.tag.orEmpty()) }
-      var pid by remember { mutableStateOf(filterLog?.pid.orEmpty()) }
-      var tid by remember { mutableStateOf(filterLog?.tid.orEmpty()) }
-      var exclude by remember { mutableStateOf(false) }
+      var tag by remember { mutableStateOf(prepopulateFilterInfo?.log?.tag.orEmpty()) }
+      var pid by remember { mutableStateOf(prepopulateFilterInfo?.log?.pid.orEmpty()) }
+      var tid by remember { mutableStateOf(prepopulateFilterInfo?.log?.tid.orEmpty()) }
+      var exclude by remember { mutableStateOf(prepopulateFilterInfo?.exclude ?: false) }
       ModalBottomSheet(
         onDismissRequest = {
           showAddFilterDialog = false
@@ -455,6 +455,11 @@ private fun FilterInfo.toFilterListItem(
     filterInfo = this
   )
 }
+
+data class PrepopulateFilterInfo(
+  val log: Log,
+  val exclude: Boolean,
+)
 
 private data class FilterListItem(
   val type: String,
