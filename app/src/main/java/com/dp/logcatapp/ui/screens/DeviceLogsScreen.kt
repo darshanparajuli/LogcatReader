@@ -162,7 +162,7 @@ private const val SNAP_SCROLL_HIDE_DELAY_MS = 2000L
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(
+fun DeviceLogsScreen(
   modifier: Modifier,
   stopRecordingSignal: Boolean,
   onStartRecording: () -> Unit,

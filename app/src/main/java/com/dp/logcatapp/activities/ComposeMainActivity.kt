@@ -16,7 +16,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.core.app.ActivityCompat
 import com.dp.logcatapp.services.LogcatService
-import com.dp.logcatapp.ui.screens.HomeScreen
+import com.dp.logcatapp.ui.screens.DeviceLogsScreen
 import com.dp.logcatapp.ui.theme.LogcatReaderTheme
 import com.dp.logcatapp.util.PreferenceKeys
 import com.dp.logcatapp.util.getDefaultSharedPreferences
@@ -58,7 +58,7 @@ class ComposeMainActivity : ComponentActivity() {
 
     setContent {
       LogcatReaderTheme {
-        HomeScreen(
+        DeviceLogsScreen(
           modifier = Modifier.fillMaxSize(),
           onStartRecording = {
             recordingIsActive = true
