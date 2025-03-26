@@ -194,8 +194,6 @@ fun SavedLogsScreen(
       )
     }
 
-
-
     exportLog?.let { logFileInfo ->
       var useSingleLineExportFormat by remember { mutableStateOf(false) }
       var savingInProgress by remember { mutableStateOf(false) }

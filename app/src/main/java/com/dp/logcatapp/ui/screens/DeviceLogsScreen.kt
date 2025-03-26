@@ -132,7 +132,6 @@ import com.dp.logcatapp.util.getDefaultSharedPreferences
 import com.dp.logcatapp.util.showToast
 import com.dp.logger.Logger
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
@@ -1040,7 +1039,7 @@ private fun MaybeShowPermissionRequiredDialog() {
             showPermissionRequiredDialog = false
             showAskingForRootPermissionDialog = true
             coroutineScope.launch {
-              val result = withContext(IO) {
+              val result = withContext(Dispatchers.IO) {
                 val cmd = "pm grant ${BuildConfig.APPLICATION_ID} ${Manifest.permission.READ_LOGS}"
                 SuCommander(cmd).run()
               }
