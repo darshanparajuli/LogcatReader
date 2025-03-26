@@ -1164,7 +1164,7 @@ private fun rememberLogcatServiceConnection(): LogcatService? {
   var logcatService by remember { mutableStateOf<LogcatService?>(null) }
   // Connect to service.
   val context = LocalContext.current
-  DisposableEffect(Unit) {
+  DisposableEffect(context) {
     val serviceBinder = ServiceBinder(LogcatService::class.java, object : ServiceConnection {
       override fun onServiceConnected(
         name: ComponentName?,
