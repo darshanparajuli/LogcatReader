@@ -4,7 +4,6 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
-import com.dp.logcatapp.Features
 
 open class SplashActivity : AppCompatActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
@@ -15,11 +14,7 @@ open class SplashActivity : AppCompatActivity() {
       }
     })
 
-    if (Features.useComposeForUi) {
-      startActivity(Intent(this, ComposeMainActivity::class.java))
-    } else {
-      startActivity(Intent(this, MainActivity::class.java))
-    }
+    startActivity(Intent(this, ComposeMainActivity::class.java))
     finish()
   }
 }

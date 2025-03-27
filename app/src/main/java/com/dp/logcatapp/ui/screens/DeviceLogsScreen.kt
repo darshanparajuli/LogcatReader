@@ -108,11 +108,12 @@ import com.dp.logcatapp.BuildConfig
 import com.dp.logcatapp.R
 import com.dp.logcatapp.activities.ComposeFiltersActivity
 import com.dp.logcatapp.activities.ComposeSavedLogsActivity
+import com.dp.logcatapp.activities.ComposeSavedLogsViewerActivity
 import com.dp.logcatapp.activities.ComposeSettingsActivity
-import com.dp.logcatapp.activities.SavedLogsViewerActivity
 import com.dp.logcatapp.db.FilterInfo
 import com.dp.logcatapp.db.MyDB
 import com.dp.logcatapp.db.SavedLogInfo
+import com.dp.logcatapp.model.FilterType
 import com.dp.logcatapp.services.LogcatService
 import com.dp.logcatapp.services.getService
 import com.dp.logcatapp.ui.common.CopyLogClipboardBottomSheet
@@ -740,7 +741,7 @@ private fun SavedLogsBottomSheet(
         .fillMaxWidth()
         .clickable {
           onDismiss()
-          val intent = Intent(context, SavedLogsViewerActivity::class.java)
+          val intent = Intent(context, ComposeSavedLogsViewerActivity::class.java)
           intent.setDataAndType(uri, "text/plain")
           context.startActivity(intent)
         },
@@ -1430,14 +1431,6 @@ private class LogFilter(
       FilterType.TID -> log.tid.containsIgnoreCase(content)
       else -> false
     }
-  }
-
-  object FilterType {
-    const val KEYWORD = 0
-    const val TAG = 1
-    const val PID = 2
-    const val TID = 3
-    const val LOG_LEVELS = 4
   }
 }
 

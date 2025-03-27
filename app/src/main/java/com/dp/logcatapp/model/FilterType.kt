@@ -1,4 +1,4 @@
-package com.dp.logcatapp.fragments.filters
+package com.dp.logcatapp.model
 
 object FilterType {
   const val KEYWORD = 0

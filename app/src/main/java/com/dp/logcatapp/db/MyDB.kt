@@ -16,7 +16,7 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
-import com.dp.logcatapp.fragments.filters.FilterType
+import com.dp.logcatapp.model.FilterType
 import kotlinx.coroutines.flow.Flow
 
 @Entity(

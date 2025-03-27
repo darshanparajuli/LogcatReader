@@ -62,7 +62,7 @@ import com.dp.logcat.LogPriority
 import com.dp.logcatapp.R
 import com.dp.logcatapp.db.FilterInfo
 import com.dp.logcatapp.db.MyDB
-import com.dp.logcatapp.fragments.filters.FilterType
+import com.dp.logcatapp.model.FilterType
 import com.dp.logcatapp.ui.theme.AppTypography
 import com.dp.logcatapp.util.findActivity
 import kotlinx.coroutines.Dispatchers

@@ -30,8 +30,6 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.preference.PreferenceManager
 import com.dp.logcatapp.R
-import com.dp.logcatapp.activities.MainActivity
-import com.dp.logcatapp.activities.SettingsActivity
 import com.dp.logger.Logger
 import com.google.android.material.snackbar.Snackbar
 import java.io.IOException
@@ -40,24 +38,6 @@ import java.io.OutputStream
 import java.util.Locale
 
 //// BEGIN Activity
-
-fun Activity.restartApp() {
-  val taskBuilder = TaskStackBuilder.create(this)
-    .addNextIntent(Intent(this, MainActivity::class.java))
-    .addNextIntent(Intent(this, SettingsActivity::class.java))
-  finish()
-  if (SDK_INT >= 34) {
-    overrideActivityTransition(
-      OVERRIDE_TRANSITION_CLOSE,
-      android.R.anim.fade_in,
-      android.R.anim.fade_out
-    )
-  } else {
-    @Suppress("DEPRECATION")
-    overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
-  }
-  taskBuilder.startActivities()
-}
 
 fun Activity.setKeepScreenOn(enabled: Boolean) {
   if (enabled) {
