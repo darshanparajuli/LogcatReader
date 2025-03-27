@@ -113,7 +113,6 @@ import com.dp.logcatapp.activities.SavedLogsViewerActivity
 import com.dp.logcatapp.db.FilterInfo
 import com.dp.logcatapp.db.MyDB
 import com.dp.logcatapp.db.SavedLogInfo
-import com.dp.logcatapp.fragments.filters.FilterType
 import com.dp.logcatapp.services.LogcatService
 import com.dp.logcatapp.services.getService
 import com.dp.logcatapp.ui.common.CopyLogClipboardBottomSheet
@@ -1431,6 +1430,14 @@ private class LogFilter(
       FilterType.TID -> log.tid.containsIgnoreCase(content)
       else -> false
     }
+  }
+
+  object FilterType {
+    const val KEYWORD = 0
+    const val TAG = 1
+    const val PID = 2
+    const val TID = 3
+    const val LOG_LEVELS = 4
   }
 }
 
