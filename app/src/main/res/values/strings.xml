@@ -120,4 +120,5 @@
   <string name="export_format_single_line">Single line</string>
   <string name="error_opening_source">Error opening source</string>
   <string name="unsupported_source">Unsupported source</string>
+  <string name="version_fmt">Version %s</string>
 </resources>

@@ -108,8 +108,8 @@ import com.dp.logcatapp.BuildConfig
 import com.dp.logcatapp.R
 import com.dp.logcatapp.activities.ComposeFiltersActivity
 import com.dp.logcatapp.activities.ComposeSavedLogsActivity
+import com.dp.logcatapp.activities.ComposeSettingsActivity
 import com.dp.logcatapp.activities.SavedLogsViewerActivity
-import com.dp.logcatapp.activities.SettingsActivity
 import com.dp.logcatapp.db.FilterInfo
 import com.dp.logcatapp.db.MyDB
 import com.dp.logcatapp.db.SavedLogInfo
@@ -443,7 +443,7 @@ fun DeviceLogsScreen(
         },
         onClickSettings = {
           showDropDownMenu = false
-          context.startActivity(Intent(context, SettingsActivity::class.java))
+          context.startActivity(Intent(context, ComposeSettingsActivity::class.java))
         },
       )
       AnimatedVisibility(

@@ -78,7 +78,7 @@ fun Dialog(
           horizontalArrangement = Arrangement.spacedBy(8.dp, alignment = Alignment.End),
           verticalAlignment = Alignment.CenterVertically,
         ) {
-          CompositionLocalProvider(LocalTextStyle provides AppTypography.bodySmall) {
+          CompositionLocalProvider(LocalTextStyle provides AppTypography.bodyMedium) {
             dismissButton?.invoke()
             confirmButton?.invoke()
           }
