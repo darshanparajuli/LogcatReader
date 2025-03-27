@@ -21,12 +21,12 @@ object LogcatUtil {
 
   val DEFAULT_BUFFERS: Set<String> by lazy {
     getDefaultBuffers().also { buffers ->
-      Logger.debug(Logcat::class, "Default buffers: $buffers")
+      Logger.debug(LogcatUtil::class, "Default buffers: $buffers")
     }
   }
   val AVAILABLE_BUFFERS: Array<String> by lazy {
     getAvailableBuffers().also { buffers ->
-      Logger.debug(Logcat::class, "Available buffers: ${buffers.contentToString()}")
+      Logger.debug(LogcatUtil::class, "Available buffers: ${buffers.contentToString()}")
     }
   }
 

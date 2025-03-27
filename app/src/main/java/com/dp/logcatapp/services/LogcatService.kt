@@ -15,7 +15,6 @@ import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.edit
-import com.dp.logcat.Logcat
 import com.dp.logcat.LogcatSession
 import com.dp.logcat.LogcatUtil
 import com.dp.logcatapp.R
@@ -31,19 +30,12 @@ import java.util.Locale
 class LogcatService : BaseService() {
 
   companion object {
-    val TAG = LogcatService::class.qualifiedName
     private const val NOTIFICATION_CHANNEL = "logcat_channel_01"
     private const val NOTIFICATION_ID = 1
   }
 
   private val _logcatSession = MutableStateFlow<LogcatSession?>(null)
   val logcatSession = _logcatSession.asStateFlow()
-
-  // TODO: remove these!
-  val logcat = Logcat()
-  var paused = false
-  var recording = false
-  var restartedLogcat = false
 
   override fun onCreate() {
     super.onCreate()
