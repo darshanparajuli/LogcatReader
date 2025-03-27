@@ -103,7 +103,7 @@ private val darkScheme = darkColorScheme(
 @Composable
 fun LogcatReaderTheme(
   darkTheme: Boolean = isSystemInDarkTheme(),
-  dynamicColor: Boolean = false,
+  dynamicColor: Boolean = true,
   content: @Composable() () -> Unit
 ) {
 
@@ -142,8 +142,16 @@ fun LogcatReaderTheme(
         else -> lightScheme
       }
     }
-    Theme.DARK -> darkScheme
-    else -> lightScheme
+    Theme.DARK -> if (dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+      dynamicDarkColorScheme(context)
+    } else {
+      darkScheme
+    }
+    else -> if (dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+      dynamicLightColorScheme(context)
+    } else {
+      lightScheme
+    }
   }
 
   MaterialTheme(
