@@ -4,8 +4,6 @@ import com.dp.logcat.LogcatUtil
 
 object PreferenceKeys {
 
-  const val MAIN_PREF_SCREEN = "pref_key_main_screen"
-
   object General {
     const val KEY_KEEP_SCREEN_ON = "pref_key_general_keep_screen_on"
 
@@ -53,10 +51,5 @@ object PreferenceKeys {
         return bufferValues
       }
     }
-  }
-
-  object About {
-    const val KEY_VERSION_NAME = "pref_key_about_version_name"
-    const val KEY_GITHUB_PAGE = "pref_key_about_github_repo"
   }
 }
