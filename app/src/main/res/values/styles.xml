@@ -3,56 +3,17 @@
 <resources>
 
   <style name="LightThemeCommon" parent="Theme.AppCompat.Light.NoActionBar">
-    <item name="colorAccent">@color/color_accent</item>
-    <item name="colorPrimary">@color/color_primary</item>
-    <item name="colorPrimaryDark">@color/color_primary_dark</item>
     <item name="preferenceTheme">@style/MyPreferenceTheme</item>
-    <item name="android:windowBackground">@color/light_window_bg</item>
-    <item name="background_color">@color/light_window_bg</item>
-
-    <item name="toolbar_shadow">@drawable/toolbar_shadow_light</item>
     <item name="android:textViewStyle">@style/LightTextViewStyle</item>
-    <item name="divider_color">@color/divider_light</item>
-    <item name="list_item_selector">@drawable/list_item_selector_light</item>
-    <item name="primary_text_color">@color/primary_text_color_light</item>
-    <item name="secondary_text_color">@color/secondary_text_color_light</item>
-    <item name="ripple_mask_color">@color/light_window_bg</item>
-    <item name="toolbar_popup_theme">@style/LightToolbarPopupTheme</item>
-    <item name="icon_tint">@color/icon_tint_light</item>
-    <item name="ic_view_list">@drawable/ic_view_list_grey_600_24dp</item>
-    <item name="ic_share">@drawable/ic_share_grey_600_24dp</item>
-    <item name="ic_folder">@drawable/ic_folder_grey_600_24dp</item>
-    <item name="ic_insert_drive_file">@drawable/ic_insert_drive_file_grey_600_24dp</item>
   </style>
 
   <style name="DarkThemeCommon" parent="Theme.AppCompat.NoActionBar">
-    <item name="colorAccent">@color/color_accent</item>
-    <item name="colorPrimary">@color/color_primary_dark_mode</item>
-    <item name="colorPrimaryDark">@color/color_primary_dark_mode_dark</item>
     <item name="preferenceTheme">@style/MyPreferenceTheme</item>
-    <item name="android:windowBackground">@color/dark_window_bg</item>
-    <item name="background_color">@color/dark_window_bg</item>
-    <item name="icon_tint">@color/icon_tint_dark</item>
 
-    <item name="toolbar_shadow">@drawable/toolbar_shadow_dark</item>
     <item name="android:textViewStyle">@style/DarkTextViewStyle</item>
-    <item name="divider_color">@color/divider_dark</item>
-    <item name="list_item_selector">@drawable/list_item_selector_dark</item>
-    <item name="primary_text_color">@color/primary_text_color_dark</item>
-    <item name="secondary_text_color">@color/secondary_text_color_dark</item>
-    <item name="ripple_mask_color">@color/dark_window_bg</item>
-    <item name="toolbar_popup_theme">@style/DarkToolbarPopupTheme</item>
-    <item name="ic_view_list">@drawable/ic_view_list_grey_300_24dp</item>
-    <item name="ic_share">@drawable/ic_share_grey_300_24dp</item>
-    <item name="ic_folder">@drawable/ic_folder_grey_300_24dp</item>
-    <item name="ic_insert_drive_file">@drawable/ic_insert_drive_file_grey_300_24dp</item>
   </style>
 
-  <style name="BlackThemeCommon" parent="DarkThemeCommon">
-    <item name="android:windowBackground">@color/black_window_bg</item>
-    <item name="background_color">@color/black_window_bg</item>
-    <item name="ripple_mask_color">@color/black_window_bg</item>
-  </style>
+  <style name="BlackThemeCommon" parent="DarkThemeCommon" />
 
   <style name="LightTheme" parent="LightThemeCommon" />
 
@@ -61,14 +22,10 @@
   <style name="BlackTheme" parent="BlackThemeCommon" />
 
   <style name="LightTextViewStyle" parent="android:Widget.TextView">
-    <item name="android:textColorPrimary">@color/primary_text_color_light</item>
-    <item name="android:textColorSecondary">@color/secondary_text_color_light</item>
     <item name="android:textColorHint">#61000000</item>
   </style>
 
   <style name="DarkTextViewStyle" parent="android:Widget.TextView">
-    <item name="android:textColorPrimary">@color/primary_text_color_dark</item>
-    <item name="android:textColorSecondary">@color/secondary_text_color_dark</item>
     <item name="android:textColorHint">#80ffffff</item>
   </style>
 

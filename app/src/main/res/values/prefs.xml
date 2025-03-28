@@ -11,8 +11,4 @@
     <item>1</item>
     <item>2</item>
   </string-array>
-
-  <string-array name="pref_logcat_log_buffers"></string-array>
-
-  <string-array name="pref_logcat_log_buffers_values"></string-array>
 </resources>
