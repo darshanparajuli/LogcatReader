@@ -91,32 +91,36 @@ class LogcatSession(
       buffersArg += "-b"
       buffersArg += buffer
     }
-    val process = ProcessBuilder(
-      "logcat", "-v", "long",
-      *buffersArg.toTypedArray()
-    ).start()
-    logcatProcess = process
+    try {
+      val process = ProcessBuilder(
+        "logcat", "-v", "long",
+        *buffersArg.toTypedArray()
+      ).start()
+      logcatProcess = process
 
-    val inputStream = process.inputStream
-    val readerThread = thread {
-      LogcatStreamReader(inputStream).use { logs ->
-        try {
-          logs.forEach { log ->
-            lock.withLock {
-              pendingLogs += log
+      val inputStream = process.inputStream
+      val readerThread = thread {
+        LogcatStreamReader(inputStream).use { logs ->
+          try {
+            logs.forEach { log ->
+              lock.withLock {
+                pendingLogs += log
+              }
             }
+          } catch (_: InterruptedIOException) {
+          } catch (_: IOException) {
           }
-        } catch (_: InterruptedIOException) {
-        } catch (_: IOException) {
         }
+        Logger.debug(LogcatSession::class, "stopped logcat reader thread")
       }
-      Logger.debug(LogcatSession::class, "stopped logcat reader thread")
-    }
 
-    // We don't care about the exit value as the process doesn't exit normally.
-    process.waitFor()
-    inputStream.close()
-    readerThread.join(5_000L)
+      // We don't care about the exit value as the process doesn't exit normally.
+      process.waitFor()
+      inputStream.close()
+      readerThread.join(5_000L)
+    } catch (e: IOException) {
+      e.printStackTrace()
+    }
   }
 
   private fun poll() {
