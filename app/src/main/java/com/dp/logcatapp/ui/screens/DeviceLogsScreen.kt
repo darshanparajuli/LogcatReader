@@ -11,6 +11,7 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.IBinder
 import android.os.Process
+import androidx.activity.compose.BackHandler
 import androidx.annotation.WorkerThread
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
@@ -208,6 +209,10 @@ fun DeviceLogsScreen(
   var appliedFilters by remember { mutableStateOf(false) }
   var isLogcatSessionLoading by remember { mutableStateOf(true) }
   var errorStartingLogcat by remember { mutableStateOf(false) }
+
+  if (showSearchBar) {
+    BackHandler { showSearchBar = false }
+  }
 
   if (logcatService != null) {
     val db = remember(context) { MyDB.getInstance(context) }

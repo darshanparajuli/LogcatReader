@@ -2,6 +2,7 @@ package com.dp.logcatapp.ui.screens
 
 import android.content.Context
 import android.content.Intent
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts.CreateDocument
 import androidx.compose.animation.AnimatedVisibility
@@ -125,6 +126,12 @@ fun SavedLogsScreen(
   var selected by remember { mutableStateOf<Set<LogFileInfo>>(emptySet()) }
   var renameLog by remember { mutableStateOf<LogFileInfo?>(null) }
   var exportLog by remember { mutableStateOf<LogFileInfo?>(null) }
+
+  if (selected.isNotEmpty()) {
+    BackHandler {
+      selected = emptySet()
+    }
+  }
 
   Scaffold(
     modifier = modifier,
