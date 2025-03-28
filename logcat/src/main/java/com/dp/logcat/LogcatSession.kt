@@ -82,11 +82,6 @@ class LogcatSession(
     return status
   }
 
-  fun restart() {
-    stop()
-    start()
-  }
-
   private fun Iterable<Log>.filtered(): List<Log> {
     return filter { e ->
       !exclusions.any { it.apply(e) }

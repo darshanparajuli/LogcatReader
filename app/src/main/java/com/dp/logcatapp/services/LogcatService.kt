@@ -21,13 +21,19 @@ import com.dp.logcatapp.R
 import com.dp.logcatapp.activities.ComposeMainActivity
 import com.dp.logcatapp.util.PreferenceKeys
 import com.dp.logcatapp.util.getDefaultSharedPreferences
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.channels.BufferOverflow.DROP_OLDEST
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.getAndUpdate
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.Locale
 
 class LogcatService : BaseService() {
@@ -49,6 +55,7 @@ class LogcatService : BaseService() {
   val logcatSessionStatus = _logcatSession.asStateFlow()
 
   private val coroutineScope = MainScope()
+  private val restartTrigger = Channel<Unit>(capacity = 1, onBufferOverflow = DROP_OLDEST)
 
   override fun onCreate() {
     super.onCreate()
@@ -58,7 +65,18 @@ class LogcatService : BaseService() {
 
     coroutineScope.launch {
       startNewLogcatSession()
+      restartTrigger.consumeEach {
+        val current = _logcatSession.getAndUpdate { null }
+        current?.sessionOrNull?.let { session ->
+          withContext(Dispatchers.Default) { session.stop() }
+        }
+        startNewLogcatSession()
+      }
     }
+  }
+
+  fun restartLogcatSession() {
+    restartTrigger.trySend(Unit)
   }
 
   private suspend fun startNewLogcatSession() {
@@ -227,14 +245,7 @@ class LogcatService : BaseService() {
       }
       PreferenceKeys.Logcat.KEY_BUFFERS,
       PreferenceKeys.Logcat.KEY_MAX_LOGS -> {
-        _logcatSession.update { status ->
-          status?.sessionOrNull?.stop()
-          null
-
-        }
-        coroutineScope.launch {
-          startNewLogcatSession()
-        }
+        restartTrigger.trySend(Unit)
       }
     }
   }

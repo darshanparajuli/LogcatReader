@@ -136,13 +136,11 @@ import com.dp.logcatapp.util.showToast
 import com.dp.logger.Logger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted.Companion.Eagerly
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.consumeAsFlow
 import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterIsInstance
@@ -151,7 +149,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
-import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -212,65 +209,53 @@ fun DeviceLogsScreen(
   var isLogcatSessionLoading by remember { mutableStateOf(true) }
   var errorStartingLogcat by remember { mutableStateOf(false) }
 
-  val restartTrigger = remember { Channel<Boolean>(capacity = 1) }
   if (logcatService != null) {
     val db = remember(context) { MyDB.getInstance(context) }
     LaunchedEffect(logcatService) {
-      restartTrigger.consumeAsFlow()
-        .onStart { emit(false) }
-        .collectLatest { restart ->
-          isLogcatSessionLoading = true
-          logcatService.logcatSessionStatus
-            .filterNotNull()
-            .collectLatest { status ->
-              if (status is LogcatSessionStatus.Started) {
-                val logcatSession = status.session
-                if (restart) {
-                  withContext(Dispatchers.Default) {
-                    logcatSession.restart()
-                  }
-                }
+      logcatService.logcatSessionStatus
+        .filterNotNull()
+        .collectLatest { status ->
+          if (status is LogcatSessionStatus.Started) {
+            val logcatSession = status.session
+            if (logcatSession.isRecording) {
+              recordStatus = RecordStatus.RecordingInProgress
+            }
 
+            if (updatedStopRecordingSignal) {
+              if (recordStatus == RecordStatus.RecordingInProgress) {
                 if (logcatSession.isRecording) {
-                  recordStatus = RecordStatus.RecordingInProgress
+                  recordStatus = RecordStatus.SaveRecordedLogs
+                } else {
+                  recordStatus = RecordStatus.Idle
                 }
-
-                if (updatedStopRecordingSignal) {
-                  if (recordStatus == RecordStatus.RecordingInProgress) {
-                    if (logcatSession.isRecording) {
-                      recordStatus = RecordStatus.SaveRecordedLogs
-                    } else {
-                      recordStatus = RecordStatus.Idle
-                    }
-                  }
-                }
-
-                db.filterDao().filters()
-                  .collectLatest { filters ->
-                    appliedFilters = filters.isNotEmpty()
-                    logcatSession.setFilters(
-                      filters = filters.filterNot { it.exclude }.map(::LogFilter),
-                      exclusion = false
-                    )
-                    logcatSession.setFilters(
-                      filters = filters.filter { it.exclude }.map(::LogFilter),
-                      exclusion = true
-                    )
-
-                    logsState.clear()
-                    isLogcatSessionLoading = false
-                    logcatSession.logs.collect { logs ->
-                      logsState += logs
-                      if (logcatPaused) {
-                        snapshotFlow { logcatPaused }.first { !it }
-                      }
-                    }
-                  }
-              } else {
-                errorStartingLogcat = true
-                isLogcatSessionLoading = false
               }
             }
+
+            db.filterDao().filters()
+              .collectLatest { filters ->
+                appliedFilters = filters.isNotEmpty()
+                logcatSession.setFilters(
+                  filters = filters.filterNot { it.exclude }.map(::LogFilter),
+                  exclusion = false
+                )
+                logcatSession.setFilters(
+                  filters = filters.filter { it.exclude }.map(::LogFilter),
+                  exclusion = true
+                )
+
+                logsState.clear()
+                isLogcatSessionLoading = false
+                logcatSession.logs.collect { logs ->
+                  logsState += logs
+                  if (logcatPaused) {
+                    snapshotFlow { logcatPaused }.first { !it }
+                  }
+                }
+              }
+          } else {
+            errorStartingLogcat = true
+            isLogcatSessionLoading = false
+          }
         }
     }
   }
@@ -457,7 +442,10 @@ fun DeviceLogsScreen(
         },
         onClickRestartLogcat = {
           showDropDownMenu = false
-          restartTrigger.trySend(true)
+          if (logcatService != null) {
+            isLogcatSessionLoading = true
+            logcatService.restartLogcatSession()
+          }
         },
         onClickSettings = {
           showDropDownMenu = false
