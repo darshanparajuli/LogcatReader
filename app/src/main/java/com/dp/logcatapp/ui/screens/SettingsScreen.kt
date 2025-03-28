@@ -50,7 +50,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEachIndexed
 import androidx.core.content.edit
 import androidx.core.net.toUri
-import androidx.preference.PreferenceManager
 import com.dp.logcatapp.BuildConfig
 import com.dp.logcatapp.R
 import com.dp.logcatapp.ui.common.Dialog
@@ -61,6 +60,7 @@ import com.dp.logcatapp.ui.theme.AppTypography
 import com.dp.logcatapp.ui.theme.Shapes
 import com.dp.logcatapp.util.PreferenceKeys
 import com.dp.logcatapp.util.findActivity
+import com.dp.logcatapp.util.getDefaultSharedPreferences
 import com.dp.logcatapp.util.showToast
 import java.text.NumberFormat
 
@@ -101,9 +101,7 @@ fun SettingsScreen(
       )
     }
   ) { innerPadding ->
-    val sharedPrefs = remember(context) {
-      PreferenceManager.getDefaultSharedPreferences(context)
-    }
+    val sharedPrefs = remember(context) { context.getDefaultSharedPreferences() }
     LazyColumn(
       modifier = Modifier
         .fillMaxSize()

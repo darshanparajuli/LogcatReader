@@ -17,9 +17,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.preference.PreferenceManager
 import com.dp.logcatapp.util.PreferenceKeys
 import com.dp.logcatapp.util.PreferenceKeys.Appearance.Theme
+import com.dp.logcatapp.util.getDefaultSharedPreferences
 
 private val lightScheme = lightColorScheme(
   primary = primaryLight,
@@ -110,13 +110,13 @@ fun LogcatReaderTheme(
   val context = LocalContext.current
   var appThemeSetting by remember(context) {
     mutableStateOf(
-      PreferenceManager.getDefaultSharedPreferences(context)
+      context.getDefaultSharedPreferences()
         .getString(PreferenceKeys.Appearance.KEY_THEME, PreferenceKeys.Appearance.Default.THEME)
     )
   }
 
   DisposableEffect(context) {
-    val preferences = PreferenceManager.getDefaultSharedPreferences(context)
+    val preferences = context.getDefaultSharedPreferences()
     val listener = SharedPreferences.OnSharedPreferenceChangeListener { prefs, key ->
       if (key == PreferenceKeys.Appearance.KEY_THEME) {
         appThemeSetting = prefs.getString(
