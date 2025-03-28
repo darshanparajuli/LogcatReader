@@ -121,4 +121,5 @@
   <string name="error_opening_source">Error opening source</string>
   <string name="unsupported_source">Unsupported source</string>
   <string name="version_fmt">Version %s</string>
+  <string name="unable_to_start_logcat_error_msg">Unable to start logcat process and read logs</string>
 </resources>

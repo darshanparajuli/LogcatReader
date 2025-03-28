@@ -21,10 +21,13 @@ import com.dp.logcatapp.R
 import com.dp.logcatapp.activities.ComposeMainActivity
 import com.dp.logcatapp.util.PreferenceKeys
 import com.dp.logcatapp.util.getDefaultSharedPreferences
-import com.dp.logcatapp.util.showToast
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import java.util.Locale
 
 class LogcatService : BaseService() {
@@ -34,8 +37,18 @@ class LogcatService : BaseService() {
     private const val NOTIFICATION_ID = 1
   }
 
-  private val _logcatSession = MutableStateFlow<LogcatSession?>(null)
-  val logcatSession = _logcatSession.asStateFlow()
+  sealed interface LogcatSessionStatus {
+    data class Started(val session: LogcatSession) : LogcatSessionStatus
+    data object FailedToStart : LogcatSessionStatus
+
+    val sessionOrNull: LogcatSession?
+      get() = (this as? Started)?.session
+  }
+
+  private val _logcatSession = MutableStateFlow<LogcatSessionStatus?>(null)
+  val logcatSessionStatus = _logcatSession.asStateFlow()
+
+  private val coroutineScope = MainScope()
 
   override fun onCreate() {
     super.onCreate()
@@ -43,7 +56,18 @@ class LogcatService : BaseService() {
       createNotificationChannel()
     }
 
-    _logcatSession.value = newLogcatSession().also { it.start() }
+    coroutineScope.launch {
+      startNewLogcatSession()
+    }
+  }
+
+  private suspend fun startNewLogcatSession() {
+    val logcatSession = newLogcatSession()
+    if (logcatSession.start().first().success) {
+      _logcatSession.value = LogcatSessionStatus.Started(logcatSession)
+    } else {
+      _logcatSession.value = LogcatSessionStatus.FailedToStart
+    }
   }
 
   override fun onPreRegisterSharedPreferenceChangeListener() {
@@ -67,7 +91,7 @@ class LogcatService : BaseService() {
     super.onStartCommand(intent, flags, startId)
     startForeground(
       NOTIFICATION_ID,
-      createNotification(_logcatSession.value?.isRecording == true)
+      createNotification(_logcatSession.value?.sessionOrNull?.isRecording == true)
     )
     return START_STICKY
   }
@@ -177,8 +201,9 @@ class LogcatService : BaseService() {
 
   override fun onDestroy() {
     super.onDestroy()
-    _logcatSession.update { logcatSession ->
-      logcatSession?.stop()
+    coroutineScope.cancel()
+    _logcatSession.update { status ->
+      status?.sessionOrNull?.stop()
       null
     }
 
@@ -198,16 +223,17 @@ class LogcatService : BaseService() {
           key,
           PreferenceKeys.Logcat.Default.POLL_INTERVAL
         )!!.trim().toLong()
-        _logcatSession.update { logcatSession ->
-          logcatSession?.apply { pollIntervalMs = pollInterval }
-        }
+        _logcatSession.value?.sessionOrNull?.apply { pollIntervalMs = pollInterval }
       }
       PreferenceKeys.Logcat.KEY_BUFFERS,
       PreferenceKeys.Logcat.KEY_MAX_LOGS -> {
-        showToast(getString(R.string.restarting_logcat))
-        _logcatSession.update { logcatSession ->
-          logcatSession?.stop()
-          newLogcatSession().also { it.start() }
+        _logcatSession.update { status ->
+          status?.sessionOrNull?.stop()
+          null
+
+        }
+        coroutineScope.launch {
+          startNewLogcatSession()
         }
       }
     }

@@ -5,6 +5,7 @@ import com.dp.logger.Logger
 import com.logcat.collections.FixedCircularArray
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.channelFlow
 import java.io.IOException
@@ -58,18 +59,27 @@ class LogcatSession(
     }
   }.buffer(capacity = Int.MAX_VALUE)
 
-  fun start() {
+  @JvmInline
+  value class Status(val success: Boolean)
+
+  fun start(): Flow<Status> {
     Logger.debug(LogcatSession::class, "starting")
     check(!active) { "Logcat is already active!" }
     active = true
+    val status = MutableSharedFlow<Status>(extraBufferCapacity = 1)
     logcatThread = thread {
-      runLogcat()
+      val process = startLogcatProcess()
+      status.tryEmit(Status(process != null))
+      if (process != null) {
+        readLogs(process)
+      }
       Logger.debug(LogcatSession::class, "stopped logcat thread")
     }
     pollerThread = thread {
       poll()
       Logger.debug(LogcatSession::class, "stopped polling thread")
     }
+    return status
   }
 
   fun restart() {
@@ -85,19 +95,27 @@ class LogcatSession(
     }
   }
 
-  private fun runLogcat() {
+  private fun startLogcatProcess(): Process? {
     val buffersArg = mutableListOf<String>()
     for (buffer in buffers) {
       buffersArg += "-b"
       buffersArg += buffer
     }
-    try {
-      val process = ProcessBuilder(
+    return try {
+      ProcessBuilder(
         "logcat", "-v", "long",
         *buffersArg.toTypedArray()
-      ).start()
-      logcatProcess = process
+      ).start().also { process ->
+        logcatProcess = process
+      }
+    } catch (e: IOException) {
+      Logger.debug(LogcatSession::class, "error starting logcat process")
+      null
+    }
+  }
 
+  private fun readLogs(process: Process) {
+    try {
       val inputStream = process.inputStream
       val readerThread = thread {
         LogcatStreamReader(inputStream).use { logs ->
@@ -118,8 +136,8 @@ class LogcatSession(
       process.waitFor()
       inputStream.close()
       readerThread.join(5_000L)
-    } catch (e: IOException) {
-      e.printStackTrace()
+    } catch (_: Exception) {
+      Logger.debug(LogcatSession::class, "error reading logs")
     }
   }
 
