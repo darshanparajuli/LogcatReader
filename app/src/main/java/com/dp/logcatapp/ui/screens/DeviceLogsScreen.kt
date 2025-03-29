@@ -1388,7 +1388,8 @@ private fun saveLogsToFile(context: Context, logs: List<Log>): Flow<SaveResult> 
       db.savedLogsDao().insert(
         SavedLogInfo(
           fileName,
-          uri.toString(), isUsingCustomLocation
+          uri.toString(),
+          isUsingCustomLocation,
         )
       )
     }

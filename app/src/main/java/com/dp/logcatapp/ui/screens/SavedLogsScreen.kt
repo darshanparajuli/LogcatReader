@@ -2,6 +2,8 @@ package com.dp.logcatapp.ui.screens
 
 import android.content.Context
 import android.content.Intent
+import android.icu.text.SimpleDateFormat
+import android.os.Build
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts.CreateDocument
@@ -297,6 +299,17 @@ fun SavedLogsScreen(
                 Text(logsFormatToUse.format(item.count))
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(item.sizeStr)
+                Spacer(modifier = Modifier.width(8.dp))
+                if (Build.VERSION.SDK_INT >= 24) {
+                  val dateTimeFormat = remember {
+                    SimpleDateFormat.getDateTimeInstance(
+                      SimpleDateFormat.SHORT, SimpleDateFormat.SHORT
+                    )
+                  }
+                  Text(dateTimeFormat.format(item.lastModified))
+                } else {
+                  // TODO: support pre API 24
+                }
               }
             },
             trailingContent = if (selected.isNotEmpty()) {
@@ -651,15 +664,29 @@ private suspend fun savedLogs(context: Context, db: MyDB): Flow<SavedLogsResult>
           }
 
           val size = file.length()
+          val lastModified = file.lastModified()
           val count = countLogs(context, file)
-          val fileInfo = LogFileInfo(info, size, Utils.bytesToString(size), count)
+          val fileInfo = LogFileInfo(
+            info = info,
+            size = size,
+            sizeStr = Utils.bytesToString(size),
+            count = count,
+            lastModified = lastModified,
+          )
           logFiles += fileInfo
           totalSize += fileInfo.size
         } else {
           val file = info.path.toUri().toFile()
           val size = file.length()
+          val lastModified = file.lastModified()
           val count = countLogs(file)
-          val fileInfo = LogFileInfo(info, size, Utils.bytesToString(size), count)
+          val fileInfo = LogFileInfo(
+            info = info,
+            size = size,
+            sizeStr = Utils.bytesToString(size),
+            count = count,
+            lastModified = lastModified,
+          )
           logFiles += fileInfo
           totalSize += fileInfo.size
         }
@@ -808,7 +835,8 @@ data class LogFileInfo(
   val info: SavedLogInfo,
   val size: Long,
   val sizeStr: String,
-  val count: Long
+  val count: Long,
+  val lastModified: Long,
 )
 
 data class SavedLogsResult(

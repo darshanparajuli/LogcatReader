@@ -45,7 +45,6 @@ interface FilterDao {
   fun deleteAll()
 }
 
-// TODO: store timestamp
 @Entity(tableName = "saved_logs_info")
 data class SavedLogInfo(
   @ColumnInfo(name = "name") val fileName: String,
