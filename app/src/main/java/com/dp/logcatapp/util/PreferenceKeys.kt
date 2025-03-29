@@ -14,8 +14,8 @@ object PreferenceKeys {
 
   object Appearance {
 
-    const val KEY_THEME = "pref_key_appearance_theme"
-    const val KEY_USE_BLACK_THEME = "pref_key_appearance_use_black_theme"
+    const val KEY_THEME = "pref_key_appearance_color"
+    const val KEY_DYNAMIC_COLOR = "pref_key_appearance_dynamic_color"
 
     object Theme {
 
@@ -27,7 +27,7 @@ object PreferenceKeys {
     object Default {
 
       const val THEME = Theme.AUTO
-      const val USE_BLACK_THEME = false
+      const val DYNAMIC_COLOR = true
     }
   }
 

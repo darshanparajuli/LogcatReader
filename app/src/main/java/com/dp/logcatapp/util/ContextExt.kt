@@ -62,14 +62,7 @@ private fun Context.isSystemDarkThemeOn(): Boolean {
 }
 
 private fun Context.setThemeDark() {
-  val useBlackTheme = getDefaultSharedPreferences().getBoolean(
-    PreferenceKeys.Appearance.KEY_USE_BLACK_THEME, PreferenceKeys.Appearance.Default.USE_BLACK_THEME
-  )
-  if (useBlackTheme) {
-    setTheme(R.style.BlackTheme)
-  } else {
-    setTheme(R.style.DarkTheme)
-  }
+  setTheme(R.style.DarkTheme)
 }
 
 private fun Context.setThemeLight() {

@@ -103,7 +103,6 @@ private val darkScheme = darkColorScheme(
 @Composable
 fun LogcatReaderTheme(
   darkTheme: Boolean = isSystemInDarkTheme(),
-  dynamicColor: Boolean = true,
   content: @Composable() () -> Unit
 ) {
 
@@ -115,16 +114,35 @@ fun LogcatReaderTheme(
     )
   }
 
+  var dynamicColor by remember(context) {
+    mutableStateOf(
+      context.getDefaultSharedPreferences()
+        .getBoolean(
+          PreferenceKeys.Appearance.KEY_DYNAMIC_COLOR,
+          PreferenceKeys.Appearance.Default.DYNAMIC_COLOR
+        )
+    )
+  }
+
   DisposableEffect(context) {
     val preferences = context.getDefaultSharedPreferences()
     val listener = SharedPreferences.OnSharedPreferenceChangeListener { prefs, key ->
-      if (key == PreferenceKeys.Appearance.KEY_THEME) {
-        appThemeSetting = prefs.getString(
-          PreferenceKeys.Appearance.KEY_THEME,
-          PreferenceKeys.Appearance.Default.THEME
-        )
+      when (key) {
+        PreferenceKeys.Appearance.KEY_THEME -> {
+          appThemeSetting = prefs.getString(
+            PreferenceKeys.Appearance.KEY_THEME,
+            PreferenceKeys.Appearance.Default.THEME
+          )
+        }
+        PreferenceKeys.Appearance.KEY_DYNAMIC_COLOR -> {
+          dynamicColor = preferences.getBoolean(
+            PreferenceKeys.Appearance.KEY_DYNAMIC_COLOR,
+            PreferenceKeys.Appearance.Default.DYNAMIC_COLOR
+          )
+        }
       }
     }
+
     preferences.registerOnSharedPreferenceChangeListener(listener)
     onDispose {
       preferences.unregisterOnSharedPreferenceChangeListener(listener)
@@ -134,7 +152,7 @@ fun LogcatReaderTheme(
   val colorScheme = when (appThemeSetting) {
     Theme.AUTO -> {
       when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
+        dynamicColor && isDynamicThemeAvailable() -> {
           val context = LocalContext.current
           if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         }
@@ -142,12 +160,12 @@ fun LogcatReaderTheme(
         else -> lightScheme
       }
     }
-    Theme.DARK -> if (dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+    Theme.DARK -> if (dynamicColor && isDynamicThemeAvailable()) {
       dynamicDarkColorScheme(context)
     } else {
       darkScheme
     }
-    else -> if (dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+    else -> if (dynamicColor && isDynamicThemeAvailable()) {
       dynamicLightColorScheme(context)
     } else {
       lightScheme
@@ -161,6 +179,8 @@ fun LogcatReaderTheme(
     content = content,
   )
 }
+
+fun isDynamicThemeAvailable() = Build.VERSION.SDK_INT >= 31
 
 @ReadOnlyComposable
 @Composable

@@ -58,6 +58,7 @@ import com.dp.logcatapp.ui.screens.Preference.SectionDivider
 import com.dp.logcatapp.ui.screens.Preference.SectionName
 import com.dp.logcatapp.ui.theme.AppTypography
 import com.dp.logcatapp.ui.theme.Shapes
+import com.dp.logcatapp.ui.theme.isDynamicThemeAvailable
 import com.dp.logcatapp.util.PreferenceKeys
 import com.dp.logcatapp.util.findActivity
 import com.dp.logcatapp.util.getDefaultSharedPreferences
@@ -126,6 +127,7 @@ fun SettingsScreen(
           is PreferenceRow -> when (item.type) {
             PreferenceType.KeepScreenOn -> KeepScreenOn(sharedPrefs)
             PreferenceType.Theme -> Theme(sharedPrefs)
+            PreferenceType.DynamicColor -> DynamicColor(sharedPrefs)
             PreferenceType.PollInterval -> PollInterval(sharedPrefs)
             PreferenceType.MaxLogs -> MaxLogs(sharedPrefs)
             PreferenceType.SaveLocation -> SaveLocation(sharedPrefs)
@@ -218,6 +220,36 @@ private fun Theme(
       }
     )
   }
+}
+
+@Composable
+private fun DynamicColor(
+  preferences: SharedPreferences,
+  modifier: Modifier = Modifier,
+) {
+  val preference = remember {
+    BooleanPreferenceState(
+      key = PreferenceKeys.Appearance.KEY_DYNAMIC_COLOR,
+      default = PreferenceKeys.Appearance.Default.DYNAMIC_COLOR,
+      preferences = preferences,
+    )
+  }
+  ListItem(
+    modifier = modifier
+      .fillMaxWidth()
+      .clickable {
+        preference.value = !preference.value
+      },
+    headlineContent = {
+      Text(stringResource(R.string.pref_dynamic_color))
+    },
+    trailingContent = {
+      Switch(
+        checked = preference.value,
+        onCheckedChange = null,
+      )
+    }
+  )
 }
 
 @Composable
@@ -524,12 +556,15 @@ private fun SelectionDialog(
   )
 }
 
-private val settingRows = listOf<Preference>(
+private val settingRows = listOfNotNull<Preference>(
   SectionName(R.string.pref_cat_general),
   PreferenceRow(PreferenceType.KeepScreenOn),
   SectionDivider,
   SectionName(R.string.pref_cat_appearance),
   PreferenceRow(PreferenceType.Theme),
+  if (isDynamicThemeAvailable()) {
+    PreferenceRow(PreferenceType.DynamicColor)
+  } else null,
   SectionDivider,
   SectionName(R.string.logcat),
   PreferenceRow(PreferenceType.PollInterval),
@@ -544,6 +579,7 @@ private val settingRows = listOf<Preference>(
 private enum class PreferenceType {
   KeepScreenOn,
   Theme,
+  DynamicColor,
   PollInterval,
   MaxLogs,
   SaveLocation,
