@@ -32,23 +32,14 @@ data class FilterInfo(
 @Dao
 interface FilterDao {
 
-  @Query("SELECT * FROM filters WHERE `exclude` = 0")
-  fun getFilters(): List<FilterInfo>
-
   @Query("SELECT * FROM filters")
   fun filters(): Flow<List<FilterInfo>>
-
-  @Query("SELECT * FROM filters WHERE `exclude` = 1")
-  fun getExclusions(): List<FilterInfo>
 
   @Insert(onConflict = OnConflictStrategy.REPLACE)
   fun insert(vararg info: FilterInfo)
 
   @Delete
   fun delete(vararg info: FilterInfo)
-
-  @Query("DELETE FROM filters WHERE `exclude` = :exclusions")
-  fun deleteAll(exclusions: Boolean)
 
   @Query("DELETE FROM filters")
   fun deleteAll()
@@ -64,9 +55,6 @@ data class SavedLogInfo(
 
 @Dao
 interface SavedLogsDao {
-
-  @Query("SELECT * FROM saved_logs_info")
-  fun getAllSync(): List<SavedLogInfo>
 
   @Query("SELECT * FROM saved_logs_info")
   fun savedLogs(): Flow<List<SavedLogInfo>>
