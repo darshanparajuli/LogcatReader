@@ -1,44 +1,61 @@
 package com.dp.logcatapp.services
 
-import android.annotation.TargetApi
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.PendingIntent.FLAG_IMMUTABLE
 import android.app.PendingIntent.FLAG_UPDATE_CURRENT
-import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.graphics.BitmapFactory
 import android.os.Build.VERSION
 import android.os.Build.VERSION_CODES
+import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.edit
-import com.dp.logcat.Logcat
+import com.dp.logcat.LogcatSession
 import com.dp.logcat.LogcatUtil
 import com.dp.logcatapp.R
-import com.dp.logcatapp.activities.MainActivity
+import com.dp.logcatapp.activities.ComposeMainActivity
 import com.dp.logcatapp.util.PreferenceKeys
 import com.dp.logcatapp.util.getDefaultSharedPreferences
-import com.dp.logcatapp.util.showToast
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.channels.BufferOverflow.DROP_OLDEST
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.consumeEach
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.getAndUpdate
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.Locale
 
 class LogcatService : BaseService() {
 
   companion object {
-    val TAG = LogcatService::class.qualifiedName
     private const val NOTIFICATION_CHANNEL = "logcat_channel_01"
     private const val NOTIFICATION_ID = 1
   }
 
-  lateinit var logcat: Logcat
-    private set
-  var restartedLogcat = false
+  sealed interface LogcatSessionStatus {
+    data class Started(val session: LogcatSession) : LogcatSessionStatus
+    data object FailedToStart : LogcatSessionStatus
 
-  var paused = false
-  var recording = false
+    val sessionOrNull: LogcatSession?
+      get() = (this as? Started)?.session
+  }
+
+  private val _logcatSession = MutableStateFlow<LogcatSessionStatus?>(null)
+  val logcatSessionStatus = _logcatSession.asStateFlow()
+
+  private val coroutineScope = MainScope()
+  private val restartTrigger = Channel<Unit>(capacity = 1, onBufferOverflow = DROP_OLDEST)
 
   override fun onCreate() {
     super.onCreate()
@@ -46,7 +63,29 @@ class LogcatService : BaseService() {
       createNotificationChannel()
     }
 
-    initLogcat()
+    coroutineScope.launch {
+      startNewLogcatSession()
+      restartTrigger.consumeEach {
+        val current = _logcatSession.getAndUpdate { null }
+        current?.sessionOrNull?.let { session ->
+          withContext(Dispatchers.Default) { session.stop() }
+        }
+        startNewLogcatSession()
+      }
+    }
+  }
+
+  fun restartLogcatSession() {
+    restartTrigger.trySend(Unit)
+  }
+
+  private suspend fun startNewLogcatSession() {
+    val logcatSession = newLogcatSession()
+    if (logcatSession.start().first().success) {
+      _logcatSession.value = LogcatSessionStatus.Started(logcatSession)
+    } else {
+      _logcatSession.value = LogcatSessionStatus.FailedToStart
+    }
   }
 
   override fun onPreRegisterSharedPreferenceChangeListener() {
@@ -68,17 +107,20 @@ class LogcatService : BaseService() {
     startId: Int
   ): Int {
     super.onStartCommand(intent, flags, startId)
-    startForeground(NOTIFICATION_ID, createNotification(recording))
+    startForeground(
+      NOTIFICATION_ID,
+      createNotification(_logcatSession.value?.sessionOrNull?.isRecording == true)
+    )
     return START_STICKY
   }
 
   fun updateNotification(showStopRecording: Boolean) {
-    val nm = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+    val nm = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
     nm.notify(NOTIFICATION_ID, createNotification(showStopRecording))
   }
 
   private fun createNotification(addStopRecordingAction: Boolean): Notification {
-    val startIntent = Intent(this, MainActivity::class.java)
+    val startIntent = Intent(this, ComposeMainActivity::class.java)
     startIntent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
     val contentIntent = if (VERSION.SDK_INT >= VERSION_CODES.M) {
       PendingIntent.getActivity(
@@ -92,8 +134,8 @@ class LogcatService : BaseService() {
       )
     }
 
-    val exitIntent = Intent(this, MainActivity::class.java)
-    exitIntent.putExtra(MainActivity.EXIT_EXTRA, true)
+    val exitIntent = Intent(this, ComposeMainActivity::class.java)
+    exitIntent.putExtra(ComposeMainActivity.EXIT_EXTRA, true)
     exitIntent.action = "exit"
     val exitPendingIntent = if (VERSION.SDK_INT >= VERSION_CODES.M) {
       PendingIntent.getActivity(
@@ -127,8 +169,8 @@ class LogcatService : BaseService() {
       .addAction(exitAction)
 
     if (addStopRecordingAction) {
-      val stopRecordingIntent = Intent(this, MainActivity::class.java)
-      stopRecordingIntent.putExtra(MainActivity.STOP_RECORDING_EXTRA, true)
+      val stopRecordingIntent = Intent(this, ComposeMainActivity::class.java)
+      stopRecordingIntent.putExtra(ComposeMainActivity.STOP_RECORDING_EXTRA, true)
       stopRecordingIntent.action = "stop recording"
       val stopRecordingPendingIntent = if (VERSION.SDK_INT >= VERSION_CODES.M) {
         PendingIntent.getActivity(
@@ -152,16 +194,14 @@ class LogcatService : BaseService() {
       builder.addAction(stopRecordingAction)
     }
 
-    if (VERSION.SDK_INT < 21) {
-      builder.setLargeIcon(BitmapFactory.decodeResource(resources, R.mipmap.ic_launcher))
-    }
+    builder.setLargeIcon(BitmapFactory.decodeResource(resources, R.mipmap.ic_launcher))
 
     return builder.build()
   }
 
-  @TargetApi(26)
+  @RequiresApi(26)
   private fun createNotificationChannel() {
-    val nm = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+    val nm = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
     val nc = NotificationChannel(
       NOTIFICATION_CHANNEL,
       getString(R.string.logcat_service_channel_name), NotificationManager.IMPORTANCE_LOW
@@ -171,15 +211,19 @@ class LogcatService : BaseService() {
     nm.createNotificationChannel(nc)
   }
 
-  @TargetApi(26)
+  @RequiresApi(26)
   private fun deleteNotificationChannel() {
-    val nm = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+    val nm = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
     nm.deleteNotificationChannel(NOTIFICATION_CHANNEL)
   }
 
   override fun onDestroy() {
     super.onDestroy()
-    logcat.close()
+    coroutineScope.cancel()
+    _logcatSession.update { status ->
+      status?.sessionOrNull?.stop()
+      null
+    }
 
     if (VERSION.SDK_INT >= 26) {
       deleteNotificationChannel()
@@ -197,41 +241,16 @@ class LogcatService : BaseService() {
           key,
           PreferenceKeys.Logcat.Default.POLL_INTERVAL
         )!!.trim().toLong()
-        logcat.setPollInterval(pollInterval)
+        _logcatSession.value?.sessionOrNull?.apply { pollIntervalMs = pollInterval }
       }
-      PreferenceKeys.Logcat.KEY_BUFFERS -> handleBufferUpdate(sharedPreferences, key)
+      PreferenceKeys.Logcat.KEY_BUFFERS,
       PreferenceKeys.Logcat.KEY_MAX_LOGS -> {
-        val newCapacity = sharedPreferences.getString(
-          PreferenceKeys.Logcat.KEY_MAX_LOGS,
-          PreferenceKeys.Logcat.Default.MAX_LOGS
-        )!!.trim().toInt()
-
-        showToast(getString(R.string.restarting_logcat))
-
-        logcat.stop()
-        restartedLogcat = true
-        logcat.setMaxLogsCount(newCapacity)
-        logcat.start()
+        restartTrigger.trySend(Unit)
       }
     }
   }
 
-  private fun handleBufferUpdate(
-    sharedPreferences: SharedPreferences,
-    key: String
-  ) {
-    val bufferValues = sharedPreferences.getStringSet(key, PreferenceKeys.Logcat.Default.BUFFERS)!!
-    val buffers = LogcatUtil.AVAILABLE_BUFFERS
-
-    showToast(getString(R.string.restarting_logcat))
-
-    restartedLogcat = true
-    logcat.logcatBuffers =
-      bufferValues.map { e -> buffers[e.toInt()].lowercase(Locale.getDefault()) }.toSet()
-    logcat.restart()
-  }
-
-  private fun initLogcat() {
+  private fun newLogcatSession(): LogcatSession {
     val sharedPreferences = getDefaultSharedPreferences()
     val bufferValues = sharedPreferences.getStringSet(
       PreferenceKeys.Logcat.KEY_BUFFERS,
@@ -246,11 +265,8 @@ class LogcatService : BaseService() {
       PreferenceKeys.Logcat.Default.MAX_LOGS
     )!!.trim().toInt()
 
-    logcat = Logcat(maxLogs)
-    logcat.setPollInterval(pollInterval)
-
     val buffers = LogcatUtil.AVAILABLE_BUFFERS
-    logcat.logcatBuffers = bufferValues.mapNotNull { e ->
+    val logcatBuffers = bufferValues.mapNotNull { e ->
       buffers.getOrNull(e.toInt())
         ?.lowercase(Locale.getDefault())
     }.toSet().ifEmpty {
@@ -262,6 +278,11 @@ class LogcatService : BaseService() {
       }
       LogcatUtil.DEFAULT_BUFFERS
     }
-    logcat.start()
+
+    return LogcatSession(
+      initialCapacity = maxLogs,
+      buffers = logcatBuffers,
+      pollIntervalMs = pollInterval
+    )
   }
 }

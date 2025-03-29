@@ -28,7 +28,7 @@ object CommandUtils {
               stdoutList?.add(line)
             }
           }
-        } catch (e: Exception) {
+        } catch (_: Exception) {
         }
       }
       val stderrThread = thread {
@@ -39,7 +39,7 @@ object CommandUtils {
               stderrList?.add(line)
             }
           }
-        } catch (e: Exception) {
+        } catch (_: Exception) {
         }
       }
 
@@ -47,16 +47,16 @@ object CommandUtils {
 
       try {
         stderrThread.join(1000)
-      } catch (e: InterruptedException) {
+      } catch (_: InterruptedException) {
       }
 
       try {
         stdoutThread.join(1000)
-      } catch (e: InterruptedException) {
+      } catch (_: InterruptedException) {
       }
 
       return exitCode
-    } catch (e: Exception) {
+    } catch (_: Exception) {
       return -1
     } finally {
       process?.destroy()

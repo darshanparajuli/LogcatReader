@@ -12,6 +12,7 @@
   <string name="press_back_again_to_exit">Press back again to exit</string>
   <string name="pref_cat_general">General</string>
   <string name="pref_general_keep_screen_on">Keep screen on</string>
+  <string name="pref_dynamic_color">Dynamic color</string>
   <string name="pref_cat_appearance">Appearance</string>
   <string name="pref_theme_title">Theme</string>
   <string name="pref_theme_black_theme">Super Dark Theme</string>
@@ -63,6 +64,7 @@
   <string name="save">Save</string>
   <string name="error">Error</string>
   <string name="saved">Saved</string>
+  <string name="no_new_logs">No new logs</string>
   <string name="error_saving">Error saving</string>
   <string name="external_storage_not_mounted_error">External storage is not mounted</string>
   <string name="pref_logcat_max_recent_logs_to_keep_in_memory">
@@ -89,6 +91,7 @@
   <string name="exclude">Exclude</string>
   <string name="exclusions">Exclusions</string>
   <string name="restart_logcat">Restart logcat</string>
+  <string name="restart">Restart</string>
   <string name="exclusion">Exclusion</string>
   <string name="clear">Clear</string>
   <string name="process_id" translatable="false">PID</string>
@@ -118,4 +121,6 @@
   <string name="export_format_single_line">Single line</string>
   <string name="error_opening_source">Error opening source</string>
   <string name="unsupported_source">Unsupported source</string>
+  <string name="version_fmt">Version %s</string>
+  <string name="unable_to_start_logcat_error_msg">Unable to start logcat process and read logs</string>
 </resources>

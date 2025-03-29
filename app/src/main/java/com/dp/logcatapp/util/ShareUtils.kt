@@ -32,7 +32,7 @@ object ShareUtils {
 
       context.startActivity(Intent.createChooser(intent, context.getString(R.string.share)))
       return true
-    } catch (e: Exception) {
+    } catch (_: Exception) {
       context.showToast(context.getString(R.string.unable_to_share))
       return false
     }

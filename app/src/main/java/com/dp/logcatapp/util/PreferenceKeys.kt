@@ -1,11 +1,8 @@
 package com.dp.logcatapp.util
 
-import com.dp.logcat.Logcat.Companion.INITIAL_LOG_CAPACITY
 import com.dp.logcat.LogcatUtil
 
 object PreferenceKeys {
-
-  const val MAIN_PREF_SCREEN = "pref_key_main_screen"
 
   object General {
     const val KEY_KEEP_SCREEN_ON = "pref_key_general_keep_screen_on"
@@ -17,8 +14,8 @@ object PreferenceKeys {
 
   object Appearance {
 
-    const val KEY_THEME = "pref_key_appearance_theme"
-    const val KEY_USE_BLACK_THEME = "pref_key_appearance_use_black_theme"
+    const val KEY_THEME = "pref_key_appearance_color"
+    const val KEY_DYNAMIC_COLOR = "pref_key_appearance_dynamic_color"
 
     object Theme {
 
@@ -30,7 +27,7 @@ object PreferenceKeys {
     object Default {
 
       const val THEME = Theme.AUTO
-      const val USE_BLACK_THEME = false
+      const val DYNAMIC_COLOR = true
     }
   }
 
@@ -43,7 +40,7 @@ object PreferenceKeys {
     object Default {
       const val POLL_INTERVAL = "250"
       val BUFFERS: Set<String> = getDefaultBufferValues()
-      const val MAX_LOGS = INITIAL_LOG_CAPACITY.toString()
+      const val MAX_LOGS = 250_000.toString()
       const val SAVE_LOCATION = ""
 
       private fun getDefaultBufferValues(): Set<String> {
@@ -54,10 +51,5 @@ object PreferenceKeys {
         return bufferValues
       }
     }
-  }
-
-  object About {
-    const val KEY_VERSION_NAME = "pref_key_about_version_name"
-    const val KEY_GITHUB_PAGE = "pref_key_about_github_repo"
   }
 }

@@ -16,7 +16,7 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
-import com.dp.logcatapp.fragments.filters.FilterType
+import com.dp.logcatapp.model.FilterType
 import kotlinx.coroutines.flow.Flow
 
 @Entity(
@@ -49,8 +49,12 @@ interface FilterDao {
 
   @Query("DELETE FROM filters WHERE `exclude` = :exclusions")
   fun deleteAll(exclusions: Boolean)
+
+  @Query("DELETE FROM filters")
+  fun deleteAll()
 }
 
+// TODO: store timestamp
 @Entity(tableName = "saved_logs_info")
 data class SavedLogInfo(
   @ColumnInfo(name = "name") val fileName: String,
@@ -63,6 +67,9 @@ interface SavedLogsDao {
 
   @Query("SELECT * FROM saved_logs_info")
   fun getAllSync(): List<SavedLogInfo>
+
+  @Query("SELECT * FROM saved_logs_info")
+  fun savedLogs(): Flow<List<SavedLogInfo>>
 
   @Insert(onConflict = OnConflictStrategy.REPLACE)
   fun insert(vararg savedLogInfo: SavedLogInfo)

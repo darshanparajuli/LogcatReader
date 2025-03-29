@@ -1,5 +1,6 @@
 package com.dp.logcatapp.ui.theme
 
+import android.content.SharedPreferences
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
@@ -8,7 +9,17 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import com.dp.logcatapp.util.PreferenceKeys
+import com.dp.logcatapp.util.PreferenceKeys.Appearance.Theme
+import com.dp.logcatapp.util.getDefaultSharedPreferences
 
 private val lightScheme = lightColorScheme(
   primary = primaryLight,
@@ -92,21 +103,91 @@ private val darkScheme = darkColorScheme(
 @Composable
 fun LogcatReaderTheme(
   darkTheme: Boolean = isSystemInDarkTheme(),
-  dynamicColor: Boolean = true,
   content: @Composable() () -> Unit
 ) {
-  val colorScheme = when {
-    dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-      val context = LocalContext.current
-      if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+
+  val context = LocalContext.current
+  var appThemeSetting by remember(context) {
+    mutableStateOf(
+      context.getDefaultSharedPreferences()
+        .getString(PreferenceKeys.Appearance.KEY_THEME, PreferenceKeys.Appearance.Default.THEME)
+    )
+  }
+
+  var dynamicColor by remember(context) {
+    mutableStateOf(
+      context.getDefaultSharedPreferences()
+        .getBoolean(
+          PreferenceKeys.Appearance.KEY_DYNAMIC_COLOR,
+          PreferenceKeys.Appearance.Default.DYNAMIC_COLOR
+        )
+    )
+  }
+
+  DisposableEffect(context) {
+    val preferences = context.getDefaultSharedPreferences()
+    val listener = SharedPreferences.OnSharedPreferenceChangeListener { prefs, key ->
+      when (key) {
+        PreferenceKeys.Appearance.KEY_THEME -> {
+          appThemeSetting = prefs.getString(
+            PreferenceKeys.Appearance.KEY_THEME,
+            PreferenceKeys.Appearance.Default.THEME
+          )
+        }
+        PreferenceKeys.Appearance.KEY_DYNAMIC_COLOR -> {
+          dynamicColor = preferences.getBoolean(
+            PreferenceKeys.Appearance.KEY_DYNAMIC_COLOR,
+            PreferenceKeys.Appearance.Default.DYNAMIC_COLOR
+          )
+        }
+      }
     }
-    darkTheme -> darkScheme
-    else -> lightScheme
+
+    preferences.registerOnSharedPreferenceChangeListener(listener)
+    onDispose {
+      preferences.unregisterOnSharedPreferenceChangeListener(listener)
+    }
+  }
+
+  val colorScheme = when (appThemeSetting) {
+    Theme.AUTO -> {
+      when {
+        dynamicColor && isDynamicThemeAvailable() -> {
+          val context = LocalContext.current
+          if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+        }
+        darkTheme -> darkScheme
+        else -> lightScheme
+      }
+    }
+    Theme.DARK -> if (dynamicColor && isDynamicThemeAvailable()) {
+      dynamicDarkColorScheme(context)
+    } else {
+      darkScheme
+    }
+    else -> if (dynamicColor && isDynamicThemeAvailable()) {
+      dynamicLightColorScheme(context)
+    } else {
+      lightScheme
+    }
   }
 
   MaterialTheme(
     colorScheme = colorScheme,
+    shapes = Shapes,
     typography = AppTypography,
     content = content,
   )
 }
+
+fun isDynamicThemeAvailable() = Build.VERSION.SDK_INT >= 31
+
+@ReadOnlyComposable
+@Composable
+fun currentSearchHitColor(): Color =
+  if (isSystemInDarkTheme()) currentSearchHitColorDark else currentSearchHitColorLight
+
+@ReadOnlyComposable
+@Composable
+fun logListItemSecondaryColor(): Color =
+  if (isSystemInDarkTheme()) logListItemSecondaryColorDark else logListItemSecondaryColorLight

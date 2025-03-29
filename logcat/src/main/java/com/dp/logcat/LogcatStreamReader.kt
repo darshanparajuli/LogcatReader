@@ -10,6 +10,7 @@ class LogcatStreamReader(inputStream: InputStream) : Iterator<Log>, Closeable {
   private val reader: BufferedReader = BufferedReader(InputStreamReader(inputStream))
   private val msgBuffer = StringBuilder()
   private lateinit var log: Log
+  private var id = 0
 
   override fun hasNext(): Boolean {
     while (true) {
@@ -27,10 +28,11 @@ class LogcatStreamReader(inputStream: InputStream) : Iterator<Log>, Closeable {
         }
 
         return try {
-          log = Log.parse(metadata, msgBuffer.toString())
+          log = Log.parse(id = id, metadata = metadata, msg = msgBuffer.toString())
+          id += 1
           true
-        } catch (e: Exception) {
-//                    Logger.debug(Logcat::class, "${e.message}: $metadata")
+        } catch (_: Exception) {
+          // Logger.debug(Logcat::class, "${e.message}: $metadata")
           false
         } finally {
           msgBuffer.setLength(0)

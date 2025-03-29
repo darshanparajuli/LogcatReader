@@ -3,8 +3,6 @@ package com.dp.logcat
 import android.os.Parcelable
 import kotlinx.parcelize.Parcelize
 
-private var logCounter = 0
-
 @Parcelize
 data class Log(
   val id: Int,
@@ -23,6 +21,7 @@ data class Log(
 
   companion object {
     fun parse(
+      id: Int,
       metadata: String,
       msg: String,
     ): Log {
@@ -68,7 +67,7 @@ data class Log(
 
       tag = trimmed.substring(startIndex, trimmed.length).trim()
 
-      return Log(logCounter++, date, time, pid, tid, priority, tag, msg)
+      return Log(id, date, time, pid, tid, priority, tag, msg)
     }
   }
 }
