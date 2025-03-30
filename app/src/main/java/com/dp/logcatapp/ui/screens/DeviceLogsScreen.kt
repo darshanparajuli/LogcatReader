@@ -1233,8 +1233,6 @@ private fun rememberLogcatServiceConnection(): LogcatService? {
 
 data class SnapScrollInfo(
   val isScrollSnapperVisible: Boolean = false,
-  val shouldSnapScrollDown: Boolean = false,
-  val shouldSnapScrollUp: Boolean = false,
 )
 
 @Composable
@@ -1316,8 +1314,6 @@ private fun rememberSnapScrollInfo(
           }
           var isScrollSnapperVisible = shouldSnapScrollUp || shouldSnapScrollDown
           snapScrollInfo = snapScrollInfo.copy(
-            shouldSnapScrollUp = shouldSnapScrollUp,
-            shouldSnapScrollDown = shouldSnapScrollDown,
             isScrollSnapperVisible = isScrollSnapperVisible,
           )
 
