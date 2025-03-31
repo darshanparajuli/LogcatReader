@@ -114,7 +114,7 @@ import com.dp.logcatapp.activities.ComposeSavedLogsActivity
 import com.dp.logcatapp.activities.ComposeSavedLogsViewerActivity
 import com.dp.logcatapp.activities.ComposeSettingsActivity
 import com.dp.logcatapp.db.FilterInfo
-import com.dp.logcatapp.db.MyDB
+import com.dp.logcatapp.db.LogcatReaderDatabase
 import com.dp.logcatapp.db.SavedLogInfo
 import com.dp.logcatapp.model.FilterType
 import com.dp.logcatapp.services.LogcatService
@@ -215,7 +215,7 @@ fun DeviceLogsScreen(
   }
 
   if (logcatService != null) {
-    val db = remember(context) { MyDB.getInstance(context) }
+    val db = remember(context) { LogcatReaderDatabase.getInstance(context) }
     LaunchedEffect(logcatService) {
       logcatService.logcatSessionStatus
         .filterNotNull()
@@ -1379,7 +1379,7 @@ private fun saveLogsToFile(context: Context, logs: List<Log>): Flow<SaveResult> 
       return@flow
     }
 
-    val db = MyDB.getInstance(context)
+    val db = LogcatReaderDatabase.getInstance(context)
     withContext(Dispatchers.IO) {
       db.savedLogsDao().insert(
         SavedLogInfo(

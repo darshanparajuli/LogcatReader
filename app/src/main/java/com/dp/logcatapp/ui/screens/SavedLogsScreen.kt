@@ -79,7 +79,7 @@ import com.dp.logcat.LogcatStreamReader
 import com.dp.logcat.LogcatUtil
 import com.dp.logcatapp.R
 import com.dp.logcatapp.activities.ComposeSavedLogsViewerActivity
-import com.dp.logcatapp.db.MyDB
+import com.dp.logcatapp.db.LogcatReaderDatabase
 import com.dp.logcatapp.db.SavedLogInfo
 import com.dp.logcatapp.ui.common.Dialog
 import com.dp.logcatapp.ui.common.LOGCAT_DIR
@@ -114,7 +114,7 @@ fun SavedLogsScreen(
   val coroutineScope = rememberCoroutineScope()
 
   var savedLogs by remember { mutableStateOf<SavedLogsResult?>(null) }
-  val db = remember(context) { MyDB.getInstance(context) }
+  val db = remember(context) { LogcatReaderDatabase.getInstance(context) }
   LaunchedEffect(db) {
     updateDbWithExistingInternalLogFiles(context, db)
     savedLogs(context, db).collect { result ->
@@ -623,7 +623,7 @@ private fun ExportBottomSheet(
 
 private suspend fun deleteLogs(
   logs: List<LogFileInfo>,
-  db: MyDB,
+  db: LogcatReaderDatabase,
   context: Context,
 ) {
   val dao = db.savedLogsDao()
@@ -650,7 +650,7 @@ private suspend fun deleteLogs(
   }
 }
 
-private suspend fun savedLogs(context: Context, db: MyDB): Flow<SavedLogsResult> {
+private suspend fun savedLogs(context: Context, db: LogcatReaderDatabase): Flow<SavedLogsResult> {
   return db.savedLogsDao().savedLogs()
     .map { savedLogs ->
       var totalSize = 0L
@@ -710,7 +710,10 @@ private suspend fun savedLogs(context: Context, db: MyDB): Flow<SavedLogsResult>
     }
 }
 
-private suspend fun updateDbWithExistingInternalLogFiles(context: Context, db: MyDB) {
+private suspend fun updateDbWithExistingInternalLogFiles(
+  context: Context,
+  db: LogcatReaderDatabase
+) {
   withContext(Dispatchers.IO) {
     val files = File(context.cacheDir, LOGCAT_DIR).listFiles()
     if (!files.isNullOrEmpty()) {
@@ -770,7 +773,7 @@ private suspend fun countLogs(
 private suspend fun rename(
   fileInfo: SavedLogInfo,
   newName: String,
-  db: MyDB,
+  db: LogcatReaderDatabase,
 ): Boolean {
   val file = fileInfo.path.toUri().toFile()
   val newFile = File(file.parent, newName)

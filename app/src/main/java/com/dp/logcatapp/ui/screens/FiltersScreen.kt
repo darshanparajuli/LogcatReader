@@ -61,7 +61,7 @@ import com.dp.logcat.Log
 import com.dp.logcat.LogPriority
 import com.dp.logcatapp.R
 import com.dp.logcatapp.db.FilterInfo
-import com.dp.logcatapp.db.MyDB
+import com.dp.logcatapp.db.LogcatReaderDatabase
 import com.dp.logcatapp.model.FilterType
 import com.dp.logcatapp.ui.theme.AppTypography
 import com.dp.logcatapp.util.findActivity
@@ -77,7 +77,7 @@ fun FiltersScreen(
   prepopulateFilterInfo: PrepopulateFilterInfo?,
 ) {
   val context = LocalContext.current
-  val db = remember(context) { MyDB.getInstance(context) }
+  val db = remember(context) { LogcatReaderDatabase.getInstance(context) }
 
   val filters by db.filterDao()
     .filters()

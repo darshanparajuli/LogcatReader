@@ -66,7 +66,7 @@ interface SavedLogsDao {
 }
 
 @Database(entities = [FilterInfo::class, SavedLogInfo::class], exportSchema = false, version = 2)
-abstract class MyDB : RoomDatabase() {
+abstract class LogcatReaderDatabase : RoomDatabase() {
   abstract fun filterDao(): FilterDao
 
   abstract fun savedLogsDao(): SavedLogsDao
@@ -78,9 +78,9 @@ abstract class MyDB : RoomDatabase() {
 
     @GuardedBy("instanceLock")
     @Volatile
-    private var instance: MyDB? = null
+    private var instance: LogcatReaderDatabase? = null
 
-    fun getInstance(context: Context): MyDB {
+    fun getInstance(context: Context): LogcatReaderDatabase {
       val tmp = instance
       if (tmp != null) {
         return tmp
@@ -90,7 +90,7 @@ abstract class MyDB : RoomDatabase() {
         if (instance == null) {
           instance = Room.databaseBuilder(
             context.applicationContext,
-            MyDB::class.java, DB_NAME
+            LogcatReaderDatabase::class.java, DB_NAME
           )
             .addMigrations(MIGRATION_1_2)
             .fallbackToDestructiveMigration()
