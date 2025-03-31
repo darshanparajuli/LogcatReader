@@ -1440,22 +1440,21 @@ sealed interface SavedLogsBottomSheetState {
 }
 
 private class LogFilter(
-  filterInfo: FilterInfo,
+  private val filterInfo: FilterInfo,
 ) : Filter {
-  private val type = filterInfo.type
-  private val content = filterInfo.content
-  private val priorities: Set<String> = if (type == FilterType.LOG_LEVELS) {
+  private val priorities: Set<String> = if (filterInfo.type == FilterType.LOG_LEVELS) {
     filterInfo.content.split(",").toSet()
   } else {
     emptySet()
   }
 
   override fun apply(log: Log): Boolean {
+    val content = filterInfo.content
     if (content.isEmpty()) {
       return true
     }
 
-    return when (type) {
+    return when (filterInfo.type) {
       FilterType.LOG_LEVELS -> {
         log.priority in priorities
       }

@@ -165,156 +165,65 @@ fun FiltersScreen(
     val filters = filters
 
     if (showAddFilterDialog) {
-      val selectedLogLevels = remember {
-        mutableStateMapOf<LogLevel, Boolean>().apply {
-          prepopulateFilterInfo?.log?.priority?.let { p ->
-            LogLevel.entries.find { it.label.startsWith(p) }?.let { level ->
-              put(level, true)
-            }
-          }
-        }
-      }
-      var keyword by remember { mutableStateOf("") }
-      var tag by remember { mutableStateOf(prepopulateFilterInfo?.log?.tag.orEmpty()) }
-      var pid by remember { mutableStateOf(prepopulateFilterInfo?.log?.pid.orEmpty()) }
-      var tid by remember { mutableStateOf(prepopulateFilterInfo?.log?.tid.orEmpty()) }
-      var exclude by remember { mutableStateOf(prepopulateFilterInfo?.exclude ?: false) }
-      ModalBottomSheet(
-        onDismissRequest = {
+      AddFilterSheet(
+        prepopulateFilterInfo = prepopulateFilterInfo,
+        onDismiss = { showAddFilterDialog = false },
+        onSave = { data ->
           showAddFilterDialog = false
-        },
-        containerColor = MaterialTheme.colorScheme.surfaceContainer,
-      ) {
-        Column(
-          modifier = Modifier.padding(16.dp),
-          verticalArrangement = Arrangement.spacedBy(16.dp),
-        ) {
-          Row(
-            verticalAlignment = Alignment.CenterVertically,
-          ) {
-            Text(
-              modifier = Modifier.weight(1f),
-              text = stringResource(R.string.filter),
-              style = AppTypography.headlineMedium,
-            )
-            FilledTonalButton(
-              onClick = {
-                showAddFilterDialog = false
-                val filters = mutableListOf<FilterInfo>()
-                if (keyword.isNotEmpty()) {
-                  filters += FilterInfo(
-                    type = FilterType.KEYWORD,
-                    content = keyword,
-                    exclude = exclude,
-                  )
-                }
-                if (tag.isNotEmpty()) {
-                  filters += FilterInfo(
-                    type = FilterType.TAG,
-                    content = tag,
-                    exclude = exclude,
-                  )
-                }
-                if (pid.isNotEmpty()) {
-                  filters += FilterInfo(
-                    type = FilterType.PID,
-                    content = pid,
-                    exclude = exclude,
-                  )
-                }
-                if (tid.isNotEmpty()) {
-                  filters += FilterInfo(
-                    type = FilterType.TID,
-                    content = tid,
-                    exclude = exclude,
-                  )
-                }
-                val selectedLogLevels = selectedLogLevels.filterValues { it }.keys
-                selectedLogLevels.forEach {
-                  filters += FilterInfo(
-                    type = FilterType.LOG_LEVELS,
-                    content = selectedLogLevels.map { it.label.first().toString() }
-                      .sorted()
-                      .joinToString(separator = ","),
-                    exclude = exclude,
-                  )
-                }
 
-                coroutineScope.launch {
-                  withContext(Dispatchers.IO) {
-                    db.filterDao().insert(*filters.toTypedArray())
-                  }
-                }
-              },
-              enabled = keyword.isNotEmpty() ||
-                tag.isNotEmpty() ||
-                pid.isNotEmpty() ||
-                tid.isNotEmpty() ||
-                selectedLogLevels.any { (_, selected) -> selected },
-            ) {
-              Text(
-                stringResource(R.string.save),
-                style = AppTypography.titleMedium,
-              )
-            }
-          }
-          InputField(
-            modifier = Modifier.fillMaxWidth(),
-            label = stringResource(R.string.keyword),
-            value = keyword,
-            onValueChange = { keyword = it },
-          )
-          InputField(
-            modifier = Modifier.fillMaxWidth(),
-            label = stringResource(R.string.tag),
-            value = tag,
-            onValueChange = { tag = it },
-          )
-          InputField(
-            modifier = Modifier.fillMaxWidth(),
-            label = stringResource(R.string.process_id),
-            value = pid,
-            onValueChange = { pid = it },
-          )
-          InputField(
-            modifier = Modifier.fillMaxWidth(),
-            label = stringResource(R.string.thread_id),
-            value = tid,
-            onValueChange = { tid = it },
-          )
-          FlowRow(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalArrangement = Arrangement.spacedBy(0.dp),
-          ) {
+          val keyword = data.keyword
+          val tag = data.tag
+          val pid = data.pid
+          val tid = data.tid
+          val exclude = data.exclude
+          val selectedLogLevels = data.selectedLogLevels
 
-            LogLevel.entries.forEach { logLevel ->
-              FilterChip(
-                selected = selectedLogLevels.getOrElse(logLevel) { false },
-                onClick = {
-                  selectedLogLevels[logLevel] = !selectedLogLevels.getOrElse(logLevel) { false }
-                },
-                label = {
-                  Text(logLevel.label)
-                }
-              )
-            }
+          val filters = mutableListOf<FilterInfo>()
+          if (keyword.isNotEmpty()) {
+            filters += FilterInfo(
+              type = FilterType.KEYWORD,
+              content = keyword,
+              exclude = exclude,
+            )
           }
-          Row(
-            verticalAlignment = Alignment.CenterVertically,
-          ) {
-            Text(
-              modifier = Modifier.weight(1f),
-              text = stringResource(R.string.exclude),
-              style = AppTypography.bodyLarge,
+          if (tag.isNotEmpty()) {
+            filters += FilterInfo(
+              type = FilterType.TAG,
+              content = tag,
+              exclude = exclude,
             )
-            Checkbox(
-              checked = exclude,
-              onCheckedChange = { exclude = it },
+          }
+          if (pid.isNotEmpty()) {
+            filters += FilterInfo(
+              type = FilterType.PID,
+              content = pid,
+              exclude = exclude,
             )
+          }
+          if (tid.isNotEmpty()) {
+            filters += FilterInfo(
+              type = FilterType.TID,
+              content = tid,
+              exclude = exclude,
+            )
+          }
+          selectedLogLevels.forEach {
+            filters += FilterInfo(
+              type = FilterType.LOG_LEVELS,
+              content = selectedLogLevels.map { it.label.first().toString() }
+                .sorted()
+                .joinToString(separator = ","),
+              exclude = exclude,
+            )
+          }
+
+          coroutineScope.launch {
+            withContext(Dispatchers.IO) {
+              db.filterDao().insert(*filters.toTypedArray())
+            }
           }
         }
-      }
+      )
     }
 
     LazyColumn(
@@ -360,6 +269,138 @@ fun FiltersScreen(
             modifier = Modifier.fillMaxWidth(),
           )
         }
+      }
+    }
+  }
+}
+
+private data class FilterData(
+  val keyword: String,
+  val tag: String,
+  val pid: String,
+  val tid: String,
+  val selectedLogLevels: Set<LogLevel>,
+  val exclude: Boolean,
+)
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@Composable
+private fun AddFilterSheet(
+  prepopulateFilterInfo: PrepopulateFilterInfo?,
+  onDismiss: () -> Unit,
+  onSave: (FilterData) -> Unit,
+  modifier: Modifier = Modifier,
+) {
+  val selectedLogLevels = remember {
+    mutableStateMapOf<LogLevel, Boolean>().apply {
+      prepopulateFilterInfo?.log?.priority?.let { p ->
+        LogLevel.entries.find { it.label.startsWith(p) }?.let { level ->
+          put(level, true)
+        }
+      }
+    }
+  }
+  var keyword by remember { mutableStateOf("") }
+  var tag by remember { mutableStateOf(prepopulateFilterInfo?.log?.tag.orEmpty()) }
+  var pid by remember { mutableStateOf(prepopulateFilterInfo?.log?.pid.orEmpty()) }
+  var tid by remember { mutableStateOf(prepopulateFilterInfo?.log?.tid.orEmpty()) }
+  var exclude by remember { mutableStateOf(prepopulateFilterInfo?.exclude ?: false) }
+  ModalBottomSheet(
+    modifier = modifier,
+    onDismissRequest = onDismiss,
+    containerColor = MaterialTheme.colorScheme.surfaceContainer,
+  ) {
+    Column(
+      modifier = Modifier.padding(16.dp),
+      verticalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+      Row(
+        verticalAlignment = Alignment.CenterVertically,
+      ) {
+        Text(
+          modifier = Modifier.weight(1f),
+          text = stringResource(R.string.filter),
+          style = AppTypography.headlineMedium,
+        )
+        FilledTonalButton(
+          onClick = {
+            onSave(
+              FilterData(
+                keyword = keyword,
+                tag = tag,
+                pid = pid,
+                tid = tid,
+                selectedLogLevels = selectedLogLevels.filterValues { it }.keys.toSet(),
+                exclude = exclude,
+              )
+            )
+          },
+          enabled = keyword.isNotEmpty() ||
+            tag.isNotEmpty() ||
+            pid.isNotEmpty() ||
+            tid.isNotEmpty() ||
+            selectedLogLevels.any { (_, selected) -> selected },
+        ) {
+          Text(
+            stringResource(R.string.save),
+            style = AppTypography.titleMedium,
+          )
+        }
+      }
+      InputField(
+        modifier = Modifier.fillMaxWidth(),
+        label = stringResource(R.string.keyword),
+        value = keyword,
+        onValueChange = { keyword = it },
+      )
+      InputField(
+        modifier = Modifier.fillMaxWidth(),
+        label = stringResource(R.string.tag),
+        value = tag,
+        onValueChange = { tag = it },
+      )
+      InputField(
+        modifier = Modifier.fillMaxWidth(),
+        label = stringResource(R.string.process_id),
+        value = pid,
+        onValueChange = { pid = it },
+      )
+      InputField(
+        modifier = Modifier.fillMaxWidth(),
+        label = stringResource(R.string.thread_id),
+        value = tid,
+        onValueChange = { tid = it },
+      )
+      FlowRow(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(0.dp),
+      ) {
+
+        LogLevel.entries.forEach { logLevel ->
+          FilterChip(
+            selected = selectedLogLevels.getOrElse(logLevel) { false },
+            onClick = {
+              selectedLogLevels[logLevel] = !selectedLogLevels.getOrElse(logLevel) { false }
+            },
+            label = {
+              Text(logLevel.label)
+            }
+          )
+        }
+      }
+      Row(
+        verticalAlignment = Alignment.CenterVertically,
+      ) {
+        Text(
+          modifier = Modifier.weight(1f),
+          text = stringResource(R.string.exclude),
+          style = AppTypography.bodyLarge,
+        )
+        Checkbox(
+          checked = exclude,
+          onCheckedChange = { exclude = it },
+        )
       }
     }
   }

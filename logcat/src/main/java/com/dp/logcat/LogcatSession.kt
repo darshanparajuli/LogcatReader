@@ -103,7 +103,7 @@ class LogcatSession(
       ).start().also { process ->
         logcatProcess = process
       }
-    } catch (e: IOException) {
+    } catch (_: IOException) {
       Logger.debug(LogcatSession::class, "error starting logcat process")
       null
     }
