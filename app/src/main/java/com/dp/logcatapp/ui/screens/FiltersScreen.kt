@@ -245,7 +245,12 @@ fun FiltersScreen(
                     db.filterDao().insert(*filters.toTypedArray())
                   }
                 }
-              }
+              },
+              enabled = keyword.isNotEmpty() ||
+                tag.isNotEmpty() ||
+                pid.isNotEmpty() ||
+                tid.isNotEmpty() ||
+                selectedLogLevels.any { (_, selected) -> selected },
             ) {
               Text(
                 stringResource(R.string.save),
