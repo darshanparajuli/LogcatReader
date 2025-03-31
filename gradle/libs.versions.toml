@@ -1,7 +1,7 @@
 [versions]
 activityComposeVersion = "1.10.1"
 appcompatVersion = "1.7.0"
-composeBomVersion = "2025.02.00"
+composeBomVersion = "2025.03.01"
 constraintLayoutVersion = "2.2.1"
 coreKtxVersion = "1.15.0"
 documentFileVersion = "1.0.1"
