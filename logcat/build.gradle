@@ -1,7 +1,6 @@
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-parcelize'
-apply plugin: 'kotlin-kapt'
 
 android {
   defaultConfig {
@@ -27,11 +26,7 @@ dependencies {
   implementation fileTree(dir: 'libs', include: ['*.jar'])
   implementation project(':logger')
   implementation project(':collections')
-  implementation libs.kotlin.stdlib.jdk7
-  implementation libs.kotlin.reflect
   implementation libs.appcompat
-  implementation libs.lifecycle.common.java8
-  implementation libs.lifecycle.extensions
   implementation libs.documentfile
 
   testImplementation libs.junit

@@ -6,15 +6,12 @@ constraintLayoutVersion = "2.2.1"
 coreKtxVersion = "1.15.0"
 documentFileVersion = "1.0.1"
 espressoCoreVersion = "3.6.1"
-fragmentKtxVersion = "1.8.6"
 gradleVersion = "8.8.2"
 junitVersion = "4.13.2"
 kotlinVersion = "2.0.21"
 coroutinesAndroidVersion = "1.7.3"
 coroutinesCoreVersion = "1.7.1"
-legacyPreferenceV14Version = "1.0.0"
 lifecycleCommonJava8Version = "2.8.7"
-lifecycleExtensionsVersion = "2.2.0"
 lifecycleViewmodelComposeVersion = "2.8.7"
 materialVersion = "1.12.0"
 multidexVersion = "2.0.1"
@@ -32,21 +29,14 @@ constraintlayout = { module = "androidx.constraintlayout:constraintlayout", vers
 core-ktx = { module = "androidx.core:core-ktx", version.ref = "coreKtxVersion" }
 documentfile = { module = "androidx.documentfile:documentfile", version.ref = "documentFileVersion" }
 espresso-core = { module = "androidx.test.espresso:espresso-core", version.ref = "espressoCoreVersion" }
-fragment-ktx = { module = "androidx.fragment:fragment-ktx", version.ref = "fragmentKtxVersion" }
 gradle = { module = "com.android.tools.build:gradle", version.ref = "gradleVersion" }
 junit = { module = "junit:junit", version.ref = "junitVersion" }
 kotlin-gradle-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlinVersion" }
 kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect", version.ref = "kotlinVersion" }
-kotlin-stdlib-jdk7 = { module = "org.jetbrains.kotlin:kotlin-stdlib-jdk7", version.ref = "kotlinVersion" }
 kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "coroutinesAndroidVersion" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutinesCoreVersion" }
-legacy-preference-v14 = { module = "androidx.legacy:legacy-preference-v14", version.ref = "legacyPreferenceV14Version" }
-lifecycle-common-java8 = { module = "androidx.lifecycle:lifecycle-common-java8", version.ref = "lifecycleCommonJava8Version" }
-lifecycle-extensions = { module = "androidx.lifecycle:lifecycle-extensions", version.ref = "lifecycleExtensionsVersion" }
-lifecycle-runtime-ktx = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version.ref = "lifecycleCommonJava8Version" }
 lifecycle-service = { module = "androidx.lifecycle:lifecycle-service", version.ref = "lifecycleCommonJava8Version" }
 lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycleViewmodelComposeVersion" }
-lifecycle-viewmodel-ktx = { module = "androidx.lifecycle:lifecycle-viewmodel-ktx", version.ref = "lifecycleCommonJava8Version" }
 material-icons-extended = { module = "androidx.compose.material:material-icons-extended" }
 material-icons-core = { module = "androidx.compose.material:material-icons-core" }
 material3 = { module = "androidx.compose.material3:material3" }

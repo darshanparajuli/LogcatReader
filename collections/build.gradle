@@ -24,9 +24,6 @@ android {
 dependencies {
   implementation fileTree(dir: 'libs', include: ['*.jar'])
   implementation project(':logger')
-  implementation libs.kotlin.stdlib.jdk7
-  implementation libs.kotlin.reflect
-  implementation libs.appcompat
 
   testImplementation libs.junit
   androidTestImplementation libs.runner

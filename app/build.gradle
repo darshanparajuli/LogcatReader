@@ -76,19 +76,11 @@ dependencies {
   implementation project(':collections')
   implementation project(':logcat')
   implementation project(':logger')
-  implementation libs.kotlin.stdlib.jdk7
-  implementation libs.kotlin.reflect
   implementation libs.core.ktx
-  implementation libs.fragment.ktx
   implementation libs.appcompat
   implementation libs.material
   implementation libs.preference.ktx
-  implementation libs.legacy.preference.v14
-  implementation libs.lifecycle.common.java8
-  implementation libs.lifecycle.extensions
-  implementation libs.lifecycle.viewmodel.ktx
   implementation libs.lifecycle.service
-  implementation libs.lifecycle.runtime.ktx
   implementation libs.kotlinx.coroutines.core
   implementation libs.constraintlayout
   implementation libs.room.runtime
