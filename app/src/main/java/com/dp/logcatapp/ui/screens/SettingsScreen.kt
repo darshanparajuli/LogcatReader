@@ -13,6 +13,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -48,6 +50,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEachIndexed
@@ -289,6 +293,7 @@ private fun PollInterval(
       label = stringResource(R.string.pref_poll_interval_title),
       initialValue = preference.value,
       onDismiss = { showInputDialog = false },
+      keyboardType = KeyboardType.Number,
       onOk = { newValue ->
         try {
           val num = newValue.toLong()
@@ -392,6 +397,7 @@ private fun MaxLogs(
       label = stringResource(R.string.pref_logcat_max_recent_logs_to_keep_in_memory),
       initialValue = preference.value,
       onDismiss = { showInputDialog = false },
+      keyboardType = KeyboardType.Number,
       onOk = { newValue ->
         try {
           val num = newValue.toLong()
@@ -519,6 +525,7 @@ private fun InputDialog(
   onDismiss: () -> Unit,
   onOk: (String) -> Unit,
   modifier: Modifier = Modifier,
+  keyboardType: KeyboardType = KeyboardOptions.Default.keyboardType,
 ) {
   var value by remember {
     mutableStateOf(
@@ -559,6 +566,18 @@ private fun InputDialog(
         singleLine = true,
         maxLines = 1,
         shape = Shapes.medium,
+        keyboardOptions = KeyboardOptions.Default.copy(
+          keyboardType = keyboardType,
+          imeAction = ImeAction.Done,
+        ),
+        keyboardActions = KeyboardActions(
+          onDone = {
+            val trimmed = value.text.trim()
+            if (trimmed.isNotEmpty()) {
+              onOk(trimmed)
+            }
+          }
+        ),
         colors = TextFieldDefaults.colors(
           focusedIndicatorColor = Color.Transparent,
           unfocusedIndicatorColor = Color.Transparent,
