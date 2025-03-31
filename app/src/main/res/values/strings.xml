@@ -45,7 +45,7 @@
     </string>
   <string name="grant_read_logs_permission_action_using_root">Grant</string>
   <string name="failed">Failed</string>
-  <string name="pref_logcat_buffer_dialog_title">Buffers</string>
+  <string name="pref_logcat_buffer_title">Buffers</string>
   <string name="restarting_logcat">Restarting logcat</string>
   <string name="saved_as_filename">Saved as %s</string>
   <string name="kill">Kill</string>

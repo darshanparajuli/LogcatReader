@@ -43,7 +43,7 @@
     </string>
   <string name="grant_read_logs_permission_action_using_root">Grant</string>
   <string name="failed">失败</string>
-  <string name="pref_logcat_buffer_dialog_title">Buffer</string>
+  <string name="pref_logcat_buffer_title">Buffer</string>
   <string name="restarting_logcat">重新启动logcat</string>
   <string name="saved_as_filename">另存为  %s</string>
   <string name="kill">结束</string>

@@ -44,7 +44,7 @@
     </string>
   <string name="grant_read_logs_permission_action_using_root">Предоставить</string>
   <string name="failed">Не удалось</string>
-  <string name="pref_logcat_buffer_dialog_title">Буферы</string>
+  <string name="pref_logcat_buffer_title">Буферы</string>
   <string name="restarting_logcat">Перезапуск Logcat</string>
   <string name="saved_as_filename">Сохранено как %s</string>
   <string name="kill">Завершить процесс</string>
