@@ -248,13 +248,13 @@ fun SavedLogsScreen(
       )
     }
 
-    LazyColumn(
-      modifier = Modifier
-        .fillMaxSize()
-        .consumeWindowInsets(innerPadding),
-      contentPadding = innerPadding,
-    ) {
-      if (savedLogs != null) {
+    if (savedLogs != null) {
+      LazyColumn(
+        modifier = Modifier
+          .fillMaxSize()
+          .consumeWindowInsets(innerPadding),
+        contentPadding = innerPadding,
+      ) {
         itemsIndexed(
           items = savedLogs.logFiles,
           key = { index, _ -> index },
@@ -321,6 +321,17 @@ fun SavedLogsScreen(
           )
           HorizontalDivider(modifier = Modifier.fillMaxWidth())
         }
+      }
+    } else {
+      Box(
+        modifier = Modifier
+          .fillMaxSize()
+          .consumeWindowInsets(innerPadding),
+        contentAlignment = Alignment.Center,
+      ) {
+        CircularProgressIndicator(
+          modifier = Modifier.size(48.dp),
+        )
       }
     }
   }
