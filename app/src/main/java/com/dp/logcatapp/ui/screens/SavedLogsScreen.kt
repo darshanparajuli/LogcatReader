@@ -99,7 +99,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.BufferedWriter
 import java.io.File
-import java.io.FileInputStream
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
@@ -213,14 +212,11 @@ fun SavedLogsScreen(
       ) { result ->
         if (result != null) {
           val fileInfo = exportLog ?: return@rememberLauncherForActivityResult
-          val folder = File(context.filesDir, LOGCAT_DIR)
-          val file = File(folder, fileInfo.info.fileName)
-
           coroutineScope.launch {
             try {
-              val src = FileInputStream(file)
+              val src = context.contentResolver.openInputStream(fileInfo.info.path.toUri())
               val dest = context.contentResolver.openOutputStream(result)
-              if (saveLogs(src, dest!!, useSingleLineExportFormat)) {
+              if (saveLogs(src!!, dest!!, useSingleLineExportFormat)) {
                 context.showToast(context.getString(R.string.saved))
               } else {
                 context.showToast(context.getString(R.string.error_saving))
