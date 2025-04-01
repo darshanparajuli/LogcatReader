@@ -67,7 +67,16 @@ data class Log(
 
       tag = trimmed.substring(startIndex, trimmed.length).trim()
 
-      return Log(id, date, time, pid, tid, priority, tag, msg)
+      return Log(
+        id = id,
+        date = date,
+        time = time,
+        pid = pid,
+        tid = tid,
+        priority = priority,
+        tag = tag,
+        msg = msg
+      )
     }
   }
 }
