@@ -12,6 +12,7 @@
   <string name="press_back_again_to_exit">Нажмите ещё раз для выхода</string>
   <string name="pref_cat_general">Общие</string>
   <string name="pref_general_keep_screen_on">Держать экран включённым</string>
+  <string name="pref_dynamic_color">Динамический цвет</string>
   <string name="pref_cat_appearance">Внешний вид</string>
   <string name="pref_theme_title">Тема</string>
   <string name="pref_theme_black_theme">Чёрная тема</string>
@@ -21,9 +22,9 @@
   <string name="resume">Продолжить</string>
   <string name="about">О приложении</string>
   <string name="copy_adb_command">Копировать</string>
-  <string name="copy_to_clipboard">Скопировать в буфер обмена</string>
+  <string name="copy_to_clipboard">Копировать в буфер обмена</string>
   <string name="copied_to_clipboard">Скопировано</string>
-
+  <string name="filtered">Отфильтровано</string>
   <string name="save_to_file">Сохранить</string>
   <string name="export">Экспорт</string>
   <string name="logcat">Logcat</string>
@@ -63,7 +64,8 @@
   <string name="share">Поделиться</string>
   <string name="save">Сохранить</string>
   <string name="error">Ошибка</string>
-  <string name="saved">Сохранённый</string>
+  <string name="saved">Сохранено</string>
+  <string name="no_new_logs">Нет новых журналов</string>
   <string name="error_saving">Ошибка при сохранении</string>
   <string name="external_storage_not_mounted_error">Внешнее хранилище не установлено</string>
   <string name="pref_logcat_max_recent_logs_to_keep_in_memory">
@@ -87,9 +89,10 @@
   <string name="add">Добавить</string>
   <string name="keyword">Ключевое слово</string>
   <string name="tag">Метка</string>
-  <string name="exclude">Исключать</string>
+  <string name="exclude">Исключить</string>
   <string name="exclusions">Исключения</string>
   <string name="restart_logcat">Перезапустить Logcat</string>
+  <string name="restart">Перезапустить</string>
   <string name="exclusion">Исключения</string>
   <string name="clear">Очистить</string>
   <string name="process_id" translatable="false">PID</string>
@@ -119,4 +122,6 @@
   <string name="export_format_single_line">Одна строка</string>
   <string name="error_opening_source">Ошибка открытия источника</string>
   <string name="unsupported_source">Неподдерживаемый источник</string>
+  <string name="version_fmt">Версия %s</string>
+  <string name="unable_to_start_logcat_error_msg">Невозможно запустить процесс logcat и прочитать журналы</string>
 </resources>
