@@ -17,6 +17,8 @@ import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.thread
 import kotlin.concurrent.withLock
 
+private const val THREAD_JOIN_TIMEOUT = 5_000L // 5 seconds
+
 class LogcatSession(
   initialCapacity: Int,
   private val buffers: Set<String>,
@@ -136,7 +138,7 @@ class LogcatSession(
       // We don't care about the exit value as the process doesn't exit normally.
       process.waitFor()
       inputStream.close()
-      readerThread.join(5_000L)
+      readerThread.join(THREAD_JOIN_TIMEOUT)
     } catch (_: Exception) {
       Logger.debug(LogcatSession::class, "error reading logs")
     }
@@ -171,9 +173,9 @@ class LogcatSession(
       logcatProcess?.destroy()
     }
     logcatProcess = null
-    logcatThread?.join(5_000L)
+    logcatThread?.join(THREAD_JOIN_TIMEOUT)
     logcatThread = null
-    pollerThread?.join(5_000L)
+    pollerThread?.join(THREAD_JOIN_TIMEOUT)
     pollerThread = null
     lock.withLock {
       allLogs.clear()
@@ -225,7 +227,7 @@ class LogcatSession(
     return lock.withLock {
       record = false
       recordThread?.interrupt()
-      recordThread?.join(5_000)
+      recordThread?.join(THREAD_JOIN_TIMEOUT)
       recordThread = null
       val result = recordingFileInfo
       recordBuffer.clear()
