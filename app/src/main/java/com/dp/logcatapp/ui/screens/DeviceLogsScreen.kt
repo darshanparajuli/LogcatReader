@@ -106,6 +106,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.dp.logcat.Filter
 import com.dp.logcat.Log
+import com.dp.logcat.LogcatSession.RecordingFileInfo
 import com.dp.logcat.LogcatUtil
 import com.dp.logcatapp.BuildConfig
 import com.dp.logcatapp.R
@@ -153,7 +154,9 @@ import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.io.BufferedWriter
 import java.io.File
+import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -294,15 +297,36 @@ fun DeviceLogsScreen(
                   .filterIsInstance<LogcatSessionStatus.Started>()
                   .map { it.session }
                   .first()
-                logcatSession.startRecording()
-                updatedOnStartRecording()
-                lastShownSnackBar?.cancel()
-                lastShownSnackBar = launch {
-                  snackbarHostState.showSnackbar(
-                    message = startedRecordingMessage,
-                    withDismissAction = true,
-                    duration = SnackbarDuration.Short,
+
+                if (!logcatSession.isRecording) {
+                  val recordingFileInfo = createFileToStartRecording(context)
+                  if (recordingFileInfo == null) {
+                    context.showToast(context.getString(R.string.error))
+                    recordStatus = RecordStatus.Idle
+                    return@collect
+                  }
+
+                  val writer = recordingFileInfo.createBufferedWriter(context)
+                  if (writer == null) {
+                    context.showToast(context.getString(R.string.error))
+                    recordStatus = RecordStatus.Idle
+                    return@collect
+                  }
+
+                  logcatSession.startRecording(
+                    recordingFileInfo = recordingFileInfo,
+                    writer = writer,
                   )
+
+                  updatedOnStartRecording()
+                  lastShownSnackBar?.cancel()
+                  lastShownSnackBar = launch {
+                    snackbarHostState.showSnackbar(
+                      message = startedRecordingMessage,
+                      withDismissAction = true,
+                      duration = SnackbarDuration.Short,
+                    )
+                  }
                 }
               }
               RecordStatus.SaveRecordedLogs -> {
@@ -311,41 +335,26 @@ fun DeviceLogsScreen(
                   .filterIsInstance<LogcatSessionStatus.Started>()
                   .map { it.session }
                   .first()
-                val logs = logcatSession.stopRecording()
-                saveLogsToFile(context, logs).collect { result ->
-                  when (result) {
-                    SaveResult.InProgress -> Unit
-                    is SaveResult.Success -> {
-                      lastShownSnackBar?.cancel()
-                      lastShownSnackBar = null
-                      recordStatus = RecordStatus.Idle
-                      savedLogsSheetState = SavedLogsBottomSheetState.Show(
-                        fileName = result.fileName,
-                        uri = result.uri,
-                        isCustomLocation = result.isCustomLocation,
-                      )
-                    }
-                    is SaveResult.Failure -> {
-                      recordStatus = RecordStatus.Idle
-                      lastShownSnackBar?.cancel()
-                      if (result.emptyLogs) {
-                        lastShownSnackBar = launch {
-                          snackbarHostState.showSnackbar(
-                            message = noNewLogsMessage,
-                            withDismissAction = true,
-                            duration = SnackbarDuration.Short,
-                          )
-                        }
-                      } else {
-                        lastShownSnackBar = launch {
-                          snackbarHostState.showSnackbar(
-                            message = saveFailedMessage,
-                            withDismissAction = true,
-                            duration = SnackbarDuration.Short,
-                          )
-                        }
-                      }
-                    }
+                val info = withContext(Dispatchers.IO) { logcatSession.stopRecording() }
+
+                if (info != null) {
+                  lastShownSnackBar?.cancel()
+                  lastShownSnackBar = null
+                  recordStatus = RecordStatus.Idle
+                  savedLogsSheetState = SavedLogsBottomSheetState.Show(
+                    fileName = info.fileName,
+                    uri = info.uri,
+                    isCustomLocation = info.isCustomLocation,
+                  )
+                } else {
+                  recordStatus = RecordStatus.Idle
+                  lastShownSnackBar?.cancel()
+                  lastShownSnackBar = launch {
+                    snackbarHostState.showSnackbar(
+                      message = saveFailedMessage,
+                      withDismissAction = true,
+                      duration = SnackbarDuration.Short,
+                    )
                   }
                 }
                 updatedOnStopRecording()
@@ -1340,22 +1349,63 @@ sealed interface SaveResult {
     val isCustomLocation: Boolean,
   ) : SaveResult
 
-  data class Failure(
-    val emptyLogs: Boolean = false,
-  ) : SaveResult
+  data object Failure : SaveResult
+}
+
+private suspend fun createFileToStartRecording(context: Context): RecordingFileInfo? {
+  val (uri, isCustomLocation) = withContext(Dispatchers.IO) {
+    createFile(context)
+  }
+
+  if (uri == null) return null
+
+  val fileName = if (isCustomLocation) {
+    DocumentFile.fromSingleUri(context, uri)?.name
+  } else {
+    uri.toFile().name
+  }
+
+  if (fileName == null) return null
+
+  val db = LogcatReaderDatabase.getInstance(context)
+  withContext(Dispatchers.IO) {
+    db.savedLogsDao().insert(
+      SavedLogInfo(
+        fileName = fileName,
+        path = uri.toString(),
+        isCustom = isCustomLocation,
+      )
+    )
+  }
+
+  return RecordingFileInfo(
+    fileName = fileName,
+    uri = uri,
+    isCustomLocation = isCustomLocation
+  )
+}
+
+private suspend fun RecordingFileInfo.createBufferedWriter(
+  context: Context
+): BufferedWriter? = withContext(Dispatchers.IO) {
+  try {
+    if (isCustomLocation) {
+      context.contentResolver.openOutputStream(uri)?.bufferedWriter()
+    } else {
+      uri.toFile().bufferedWriter()
+    }
+  } catch (_: IOException) {
+    null
+  }
 }
 
 private fun saveLogsToFile(context: Context, logs: List<Log>): Flow<SaveResult> = flow {
   emit(SaveResult.InProgress)
-
-  if (logs.isEmpty()) {
-    emit(SaveResult.Failure(emptyLogs = true))
-    return@flow
-  }
+  check(logs.isNotEmpty()) { "logs list is empty" }
 
   val (uri, isUsingCustomLocation) = withContext(Dispatchers.IO) { createFile(context) }
   if (uri == null) {
-    emit(SaveResult.Failure())
+    emit(SaveResult.Failure)
     return@flow
   }
 
@@ -1375,7 +1425,7 @@ private fun saveLogsToFile(context: Context, logs: List<Log>): Flow<SaveResult> 
     }
 
     if (fileName == null) {
-      emit(SaveResult.Failure())
+      emit(SaveResult.Failure)
       return@flow
     }
 
@@ -1383,9 +1433,9 @@ private fun saveLogsToFile(context: Context, logs: List<Log>): Flow<SaveResult> 
     withContext(Dispatchers.IO) {
       db.savedLogsDao().insert(
         SavedLogInfo(
-          fileName,
-          uri.toString(),
-          isUsingCustomLocation,
+          fileName = fileName,
+          path = uri.toString(),
+          isCustom = isUsingCustomLocation,
         )
       )
     }
@@ -1398,7 +1448,7 @@ private fun saveLogsToFile(context: Context, logs: List<Log>): Flow<SaveResult> 
       )
     )
   } else {
-    emit(SaveResult.Failure())
+    emit(SaveResult.Failure)
   }
 }
 

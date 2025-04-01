@@ -1,5 +1,6 @@
 package com.dp.logcat
 
+import android.net.Uri
 import android.os.Build
 import com.dp.logger.Logger
 import com.logcat.collections.FixedCircularArray
@@ -8,8 +9,10 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.channelFlow
+import java.io.BufferedWriter
 import java.io.IOException
 import java.io.InterruptedIOException
+import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.thread
 import kotlin.concurrent.withLock
@@ -22,10 +25,11 @@ class LogcatSession(
 ) {
 
   @Volatile private var record = false
-  val isRecording: Boolean get() = record
+  private var recordThread: Thread? = null
 
   private val lock = ReentrantLock() // locks {
-  private val recordBuffer = mutableListOf<Log>()
+  private val recordBuffer = LinkedBlockingQueue<List<Log>>()
+  private var recordingFileInfo: RecordingFileInfo? = null
   private val allLogs = FixedCircularArray<Log>(
     capacity = initialCapacity,
     initialSize = 1000,
@@ -44,6 +48,8 @@ class LogcatSession(
   private var logcatProcess: Process? = null
   private var logcatThread: Thread? = null
   private var pollerThread: Thread? = null
+
+  val isRecording: Boolean get() = lock.withLock { record }
 
   val logs: Flow<List<Log>> = channelFlow {
     lock.withLock {
@@ -177,8 +183,55 @@ class LogcatSession(
     Logger.debug(LogcatSession::class, "stopped")
   }
 
-  fun startRecording() {
-    record = true
+  fun startRecording(
+    recordingFileInfo: RecordingFileInfo,
+    writer: BufferedWriter,
+  ) {
+    if (record) {
+      return
+    }
+
+    lock.withLock {
+      this.recordingFileInfo = recordingFileInfo
+      record = true
+      recordThread = thread {
+        while (record) {
+          val logs = try {
+            recordBuffer.take()
+          } catch (_: InterruptedException) {
+            break
+          }
+
+          try {
+            logs.forEach { log ->
+              writer.write(log.toString())
+            }
+            writer.flush()
+          } catch (_: Exception) {
+            break
+          }
+        }
+
+        try {
+          writer.flush()
+          writer.close()
+        } catch (_: Exception) {
+        }
+      }
+    }
+  }
+
+  fun stopRecording(): RecordingFileInfo? {
+    return lock.withLock {
+      record = false
+      recordThread?.interrupt()
+      recordThread?.join(5_000)
+      recordThread = null
+      val result = recordingFileInfo
+      recordBuffer.clear()
+      recordingFileInfo = null
+      result
+    }
   }
 
   fun getAllLogs(): List<Log> = lock.withLock {
@@ -197,12 +250,9 @@ class LogcatSession(
     }
   }
 
-  fun stopRecording(): List<Log> {
-    record = false
-    return lock.withLock {
-      val result = recordBuffer.toList()
-      recordBuffer.clear()
-      result
-    }
-  }
+  data class RecordingFileInfo(
+    val fileName: String,
+    val uri: Uri,
+    val isCustomLocation: Boolean,
+  )
 }

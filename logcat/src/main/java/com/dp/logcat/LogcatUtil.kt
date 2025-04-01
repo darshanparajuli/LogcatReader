@@ -4,14 +4,13 @@ import android.content.Context
 import android.net.Uri
 import androidx.documentfile.provider.DocumentFile
 import com.dp.logger.Logger
-import java.io.BufferedReader
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.io.BufferedWriter
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileWriter
 import java.io.IOException
-import java.io.InputStream
-import java.io.InputStreamReader
 import java.io.OutputStreamWriter
 
 object LogcatUtil {
@@ -28,54 +27,6 @@ object LogcatUtil {
     getAvailableBuffers().also { buffers ->
       Logger.debug(LogcatUtil::class, "Available buffers: ${buffers.contentToString()}")
     }
-  }
-
-  private const val LOG_FILE_HEADER_FMT = "<<< log_count = %d >>>"
-
-  fun getLogCountFromHeader(file: File): Long {
-    try {
-      return getLogCountFromHeader(FileInputStream(file))
-    } catch (e: Exception) {
-      e.printStackTrace()
-    }
-    return -1L
-  }
-
-  fun getLogCountFromHeader(
-    context: Context,
-    file: DocumentFile
-  ): Long {
-    try {
-      val fis = context.contentResolver.openInputStream(file.uri)
-      return getLogCountFromHeader(fis!!)
-    } catch (e: Exception) {
-      e.printStackTrace()
-    }
-    return -1L
-  }
-
-  private fun getLogCountFromHeader(inputStream: InputStream): Long {
-    var reader: BufferedReader? = null
-    try {
-      reader = BufferedReader(InputStreamReader(inputStream))
-      val header = reader.readLine()
-      if (header.startsWith("<<<")) {
-        var startIndex = header.indexOf('=')
-        if (startIndex != -1) {
-          startIndex += 2
-          val endIndex = header.indexOf(' ', startIndex)
-          if (endIndex != -1) {
-            val value = header.substring(startIndex, endIndex)
-            return value.toLong()
-          }
-        }
-      }
-    } catch (e: Exception) {
-      e.printStackTrace()
-    } finally {
-      reader?.close()
-    }
-    return -1L
   }
 
   fun writeToFile(
@@ -114,12 +65,32 @@ object LogcatUtil {
     }
   }
 
+  suspend fun countLogs(file: File): Long = withContext(Dispatchers.IO) {
+    try {
+      LogcatStreamReader(FileInputStream(file))
+        .asSequence().count().toLong()
+    } catch (_: IOException) {
+      0L
+    }
+  }
+
+  suspend fun countLogs(
+    context: Context,
+    file: DocumentFile
+  ): Long = withContext(Dispatchers.IO) {
+    try {
+      val inputStream = context.contentResolver.openInputStream(file.uri)
+      val reader = LogcatStreamReader(inputStream!!)
+      reader.asSequence().count().toLong()
+    } catch (_: IOException) {
+      0L
+    }
+  }
+
   private fun writeToFileHelper(
     logs: List<Log>,
     writer: BufferedWriter
   ) {
-    writer.write(LOG_FILE_HEADER_FMT.format(logs.size))
-    writer.newLine()
     for (log in logs) {
       writer.write(log.toString())
     }

@@ -76,7 +76,7 @@ import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
 import androidx.room.withTransaction
 import com.dp.logcat.LogcatStreamReader
-import com.dp.logcat.LogcatUtil
+import com.dp.logcat.LogcatUtil.countLogs
 import com.dp.logcatapp.R
 import com.dp.logcatapp.activities.ComposeSavedLogsViewerActivity
 import com.dp.logcatapp.db.LogcatReaderDatabase
@@ -89,8 +89,10 @@ import com.dp.logcatapp.util.Utils
 import com.dp.logcatapp.util.closeQuietly
 import com.dp.logcatapp.util.findActivity
 import com.dp.logcatapp.util.showToast
-import com.dp.logger.Logger
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -653,49 +655,49 @@ private suspend fun deleteLogs(
 private suspend fun savedLogs(context: Context, db: LogcatReaderDatabase): Flow<SavedLogsResult> {
   return db.savedLogsDao().savedLogs()
     .map { savedLogs ->
-      var totalSize = 0L
-      val logFiles = mutableListOf<LogFileInfo>()
+      val logFiles = coroutineScope {
+        savedLogs.map { info ->
+          async(Dispatchers.IO) {
+            if (info.isCustom) {
+              val file = DocumentFile.fromSingleUri(context, info.path.toUri())
+              if (file == null || file.name == null) {
+                return@async null
+              }
 
-      for (info in savedLogs) {
-        if (info.isCustom) {
-          val file = DocumentFile.fromSingleUri(context, info.path.toUri())
-          if (file == null || file.name == null) {
-            continue
+              val size = file.length()
+              val lastModified = file.lastModified()
+              val count = countLogs(context, file)
+
+              LogFileInfo(
+                info = info,
+                size = size,
+                sizeStr = Utils.bytesToString(size),
+                count = count,
+                lastModified = lastModified,
+              )
+            } else {
+              val file = info.path.toUri().toFile()
+              val size = file.length()
+              val lastModified = file.lastModified()
+              val count = countLogs(file)
+
+              LogFileInfo(
+                info = info,
+                size = size,
+                sizeStr = Utils.bytesToString(size),
+                count = count,
+                lastModified = lastModified,
+              )
+            }
           }
-
-          val size = file.length()
-          val lastModified = file.lastModified()
-          val count = countLogs(context, file)
-          val fileInfo = LogFileInfo(
-            info = info,
-            size = size,
-            sizeStr = Utils.bytesToString(size),
-            count = count,
-            lastModified = lastModified,
-          )
-          logFiles += fileInfo
-          totalSize += fileInfo.size
-        } else {
-          val file = info.path.toUri().toFile()
-          val size = file.length()
-          val lastModified = file.lastModified()
-          val count = countLogs(file)
-          val fileInfo = LogFileInfo(
-            info = info,
-            size = size,
-            sizeStr = Utils.bytesToString(size),
-            count = count,
-            lastModified = lastModified,
-          )
-          logFiles += fileInfo
-          totalSize += fileInfo.size
-        }
+        }.awaitAll().filterNotNull()
       }
 
       val totalLogCount = logFiles.foldRight(0L) { logFileInfo, acc ->
         acc + logFileInfo.count
       }
 
+      val totalSize = logFiles.sumOf { it.size }
       if (totalSize > 0) {
         Utils.bytesToString(totalSize)
       }
@@ -723,50 +725,6 @@ private suspend fun updateDbWithExistingInternalLogFiles(
         }.toTypedArray()
       )
     }
-  }
-}
-
-private suspend fun countLogs(file: File): Long = withContext(Dispatchers.IO) {
-  val logCount = LogcatUtil.getLogCountFromHeader(file)
-  if (logCount != -1L) {
-    return@withContext logCount
-  }
-
-  try {
-    val reader = LogcatStreamReader(FileInputStream(file))
-    val logs = reader.asSequence().toList()
-
-    if (!LogcatUtil.writeToFile(logs, file)) {
-      Logger.debug(LOG_TAG, "Failed to write log header")
-    }
-
-    logs.size.toLong()
-  } catch (_: IOException) {
-    0L
-  }
-}
-
-private suspend fun countLogs(
-  context: Context,
-  file: DocumentFile
-): Long = withContext(Dispatchers.IO) {
-  val logCount = LogcatUtil.getLogCountFromHeader(context, file)
-  if (logCount != -1L) {
-    return@withContext logCount
-  }
-
-  try {
-    val inputStream = context.contentResolver.openInputStream(file.uri)
-    val reader = LogcatStreamReader(inputStream!!)
-    val logs = reader.asSequence().toList()
-
-    if (!LogcatUtil.writeToFile(context, logs, file.uri)) {
-      Logger.debug(LOG_TAG, "Failed to write log header")
-    }
-
-    logs.size.toLong()
-  } catch (_: IOException) {
-    0L
   }
 }
 
