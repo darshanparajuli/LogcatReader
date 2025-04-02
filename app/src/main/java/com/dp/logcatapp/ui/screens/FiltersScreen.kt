@@ -136,6 +136,7 @@ fun FiltersScreen(
               },
               enabled = !filters.isNullOrEmpty(),
               onClick = {
+                showDropDownMenu = false
                 coroutineScope.launch {
                   val filterDao = db.filterDao()
                   withContext(Dispatchers.IO) {
