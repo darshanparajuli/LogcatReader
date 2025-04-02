@@ -50,4 +50,8 @@
 
 **A**. Click the back button on your device twice.
 
+**Q**. How to filter logs by application package name?
+
+**A**. ???
+
 Thank you for using Logcat Reader.
