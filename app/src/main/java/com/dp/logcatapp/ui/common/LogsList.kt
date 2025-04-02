@@ -74,7 +74,7 @@ fun LogsList(
         return if (hit != null) {
           buildAnnotatedString {
             append(target)
-            val color = if (index == currentSearchHitLogId) {
+            val color = if (item.id == currentSearchHitLogId) {
               currentSearchHitColor
             } else {
               textSelectionColors.backgroundColor

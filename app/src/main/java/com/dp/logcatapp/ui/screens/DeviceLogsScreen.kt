@@ -199,8 +199,10 @@ fun DeviceLogsScreen(
   var showSearchBar by remember { mutableStateOf(false) }
   var logcatPaused by remember { mutableStateOf(false) }
   var searchQuery by remember { mutableStateOf("") }
+  // Value: tagIndex start and end.
   val searchHitsMap = remember { mutableStateMapOf<SearchHitKey, Pair<Int, Int>>() }
-  var sortedHitsByLogIdsState by remember { mutableStateOf<List<Int>>(emptyList()) }
+  // List of pair of logId and it's index on the list.
+  var sortedHitsByLogIdsState by remember { mutableStateOf<List<Pair<Int, Int>>>(emptyList()) }
   var currentSearchHitIndex by remember { mutableIntStateOf(-1) }
   var currentSearchHitLogId by remember { mutableIntStateOf(-1) }
   var showHitCount by remember { mutableStateOf(false) }
@@ -545,19 +547,28 @@ fun DeviceLogsScreen(
                 .collect { logs ->
                   val (map, sortedHitsByLogId) = withContext(Dispatchers.Default) {
                     val map = mutableMapOf<SearchHitKey, Pair<Int, Int>>()
-                    logs.forEach { log ->
+                    val hits = mutableListOf<Pair<Int, Int>>()
+                    logs.forEachIndexed { index, log ->
                       val msgIndex = log.msg.indexOf(string = searchQuery, ignoreCase = true)
                       val tagIndex = log.tag.indexOf(string = searchQuery, ignoreCase = true)
                       if (msgIndex != -1) {
                         map[SearchHitKey(logId = log.id, component = LogComponent.MSG)] =
                           Pair(msgIndex, msgIndex + searchQuery.length)
+                        hits += Pair(log.id, index)
                       }
                       if (tagIndex != -1) {
                         map[SearchHitKey(logId = log.id, component = LogComponent.TAG)] =
                           Pair(tagIndex, tagIndex + searchQuery.length)
+                        hits += Pair(log.id, index)
                       }
                     }
-                    Pair(map, map.keys.map { it.logId }.sorted())
+                    Pair(
+                      first = map,
+                      second = hits.sortedBy {
+                        // sort by log id
+                        it.first
+                      },
+                    )
                   }
                   searchHitsMap.clear()
                   searchHitsMap.putAll(map)
@@ -567,7 +578,7 @@ fun DeviceLogsScreen(
                     searchInProgress = false
                     if (sortedHitsByLogIdsState.isNotEmpty()) {
                       currentSearchHitIndex = 0
-                      currentSearchHitLogId = sortedHitsByLogIdsState.first()
+                      currentSearchHitLogId = sortedHitsByLogIdsState.first().first
                       snapToBottom = false
                       scrolled = true
                     } else {
@@ -592,8 +603,11 @@ fun DeviceLogsScreen(
             .distinctUntilChangedBy { (_, index) -> index }
             .collectLatest { (hits, index) ->
               if (index < hits.size) {
-                currentSearchHitLogId = hits[index]
-                lazyListState.scrollToItem(currentSearchHitLogId)
+                currentSearchHitLogId = hits[index].first
+                val scrollIndex = hits[index].second
+                if (scrollIndex != -1 && scrollIndex < lazyListState.layoutInfo.totalItemsCount) {
+                  lazyListState.scrollToItem(scrollIndex)
+                }
               }
             }
         }
