@@ -128,7 +128,7 @@ fun SettingsScreen(
                 .fillMaxWidth()
                 .padding(start = 16.dp, end = 16.dp, top = 16.dp),
               text = stringResource(item.nameRes),
-              color = MaterialTheme.colorScheme.primary,
+              color = MaterialTheme.colorScheme.tertiary,
               style = AppTypography.titleMedium,
             )
           }
