@@ -127,7 +127,6 @@ fun FiltersScreen(
               text = {
                 Text(
                   text = stringResource(R.string.clear),
-                  style = AppTypography.bodyLarge,
                 )
               },
               enabled = !filters.isNullOrEmpty(),

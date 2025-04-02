@@ -1012,7 +1012,6 @@ private fun AppBar(
             text = {
               Text(
                 text = stringResource(R.string.clear),
-                style = AppTypography.bodyLarge,
               )
             },
             onClick = onClickClear,
@@ -1024,7 +1023,6 @@ private fun AppBar(
             text = {
               Text(
                 text = stringResource(R.string.filters),
-                style = AppTypography.bodyLarge,
               )
             },
             onClick = onClickFilter,
@@ -1043,7 +1041,6 @@ private fun AppBar(
             text = {
               Text(
                 text = stringResource(R.string.save),
-                style = AppTypography.bodyLarge,
               )
             },
             onClick = onClickSave,
@@ -1056,7 +1053,6 @@ private fun AppBar(
             text = {
               Text(
                 text = stringResource(R.string.saved_logs),
-                style = AppTypography.bodyLarge,
               )
             },
             onClick = onClickSavedLogs,
@@ -1068,7 +1064,6 @@ private fun AppBar(
             text = {
               Text(
                 text = stringResource(R.string.restart_logcat),
-                style = AppTypography.bodyLarge,
               )
             },
             onClick = onClickRestartLogcat,
@@ -1081,7 +1076,6 @@ private fun AppBar(
             text = {
               Text(
                 text = stringResource(R.string.settings),
-                style = AppTypography.bodyLarge,
               )
             },
             onClick = onClickSettings,

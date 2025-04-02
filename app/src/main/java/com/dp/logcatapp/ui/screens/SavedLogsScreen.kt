@@ -496,7 +496,6 @@ private fun SelectLogsAppBar(
             text = {
               Text(
                 text = stringResource(R.string.delete),
-                style = AppTypography.bodyLarge,
               )
             },
             onClick = onClickDelete,
