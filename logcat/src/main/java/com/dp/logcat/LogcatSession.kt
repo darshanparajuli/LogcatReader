@@ -94,7 +94,7 @@ class LogcatSession(
     return filter { e ->
       !exclusions.any { it.apply(e) }
     }.filter { e ->
-      filters.all { it.apply(e) }
+      filters.isEmpty() || filters.any { it.apply(e) }
     }
   }
 

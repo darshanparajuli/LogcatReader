@@ -242,12 +242,16 @@ fun DeviceLogsScreen(
             db.filterDao().filters()
               .collectLatest { filters ->
                 appliedFilters = filters.isNotEmpty()
+
+                val includeFilters = filters.filterNot { it.exclude }
+                val excludeFilters = filters.filter { it.exclude }
+
                 logcatSession.setFilters(
-                  filters = filters.filterNot { it.exclude }.map(::LogFilter),
+                  filters = includeFilters.map(::LogFilterNonPriority),
                   exclusion = false
                 )
                 logcatSession.setFilters(
-                  filters = filters.filter { it.exclude }.map(::LogFilter),
+                  filters = excludeFilters.map(::LogFilterNonPriority),
                   exclusion = true
                 )
 
@@ -1489,7 +1493,7 @@ sealed interface SavedLogsBottomSheetState {
   ) : SavedLogsBottomSheetState
 }
 
-private class LogFilter(
+private class LogFilterNonPriority(
   private val filterInfo: FilterInfo,
 ) : Filter {
   private val priorities: Set<String> = if (filterInfo.type == FilterType.LOG_LEVELS) {
@@ -1505,9 +1509,7 @@ private class LogFilter(
     }
 
     return when (filterInfo.type) {
-      FilterType.LOG_LEVELS -> {
-        log.priority in priorities
-      }
+      FilterType.LOG_LEVELS -> log.priority in priorities
       FilterType.KEYWORD -> log.msg.containsIgnoreCase(content)
       FilterType.TAG -> log.tag.containsIgnoreCase(content)
       FilterType.PID -> log.pid.containsIgnoreCase(content)
