@@ -70,6 +70,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toFile
 import androidx.core.net.toUri
@@ -361,7 +362,11 @@ private fun AppBar(
     },
     title = {
       Column {
-        Text(stringResource(R.string.saved_logs))
+        Text(
+          text = stringResource(R.string.saved_logs),
+          overflow = TextOverflow.Ellipsis,
+          maxLines = 1,
+        )
         if (savedLogs != null) {
           if (savedLogs.logFiles.isNotEmpty()) {
             val text = if (savedLogs.totalSize.isEmpty()) {
@@ -378,6 +383,8 @@ private fun AppBar(
             Text(
               text = text,
               style = AppTypography.titleSmall,
+              overflow = TextOverflow.Ellipsis,
+              maxLines = 1,
             )
           }
         }
@@ -416,7 +423,13 @@ private fun SelectLogsAppBar(
         )
       }
     },
-    title = { Text(title) },
+    title = {
+      Text(
+        text = title,
+        overflow = TextOverflow.Ellipsis,
+        maxLines = 1,
+      )
+    },
     actions = {
       AnimatedVisibility(
         visible = singleLogSelected,

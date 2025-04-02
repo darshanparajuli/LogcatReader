@@ -54,6 +54,8 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Stop
+import androidx.compose.material.icons.filled.ViewCompact
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -97,6 +99,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.core.net.toFile
@@ -125,6 +128,7 @@ import com.dp.logcatapp.ui.common.CopyLogClipboardBottomSheet
 import com.dp.logcatapp.ui.common.Dialog
 import com.dp.logcatapp.ui.common.LOGCAT_DIR
 import com.dp.logcatapp.ui.common.LogsList
+import com.dp.logcatapp.ui.common.LogsListStyle
 import com.dp.logcatapp.ui.common.SearchHitKey
 import com.dp.logcatapp.ui.common.SearchHitKey.LogComponent
 import com.dp.logcatapp.ui.common.SearchLogsTopBar
@@ -198,6 +202,7 @@ fun DeviceLogsScreen(
   var showDropDownMenu by remember { mutableStateOf(false) }
   var showSearchBar by remember { mutableStateOf(false) }
   var logcatPaused by remember { mutableStateOf(false) }
+  var compactMode by remember { mutableStateOf(false) }
   var searchQuery by remember { mutableStateOf("") }
   // Value: tagIndex start and end.
   val searchHitsMap = remember { mutableStateMapOf<SearchHitKey, Pair<Int, Int>>() }
@@ -385,6 +390,7 @@ fun DeviceLogsScreen(
           recordStatus != RecordStatus.SaveRecordedLogs &&
           !isLogcatSessionLoading && !errorStartingLogcat,
         recordStatus = recordStatus,
+        compactModeEnabled = compactMode,
         showDropDownMenu = showDropDownMenu,
         saveEnabled = logcatService != null && !isLogcatSessionLoading && !errorStartingLogcat,
         saveLogsInProgress = saveLogsInProgress,
@@ -415,6 +421,9 @@ fun DeviceLogsScreen(
         onClickClear = {
           logsState.clear()
           showDropDownMenu = false
+        },
+        onClickCompactMode = {
+          compactMode = !compactMode
         },
         onClickFilter = {
           showDropDownMenu = false
@@ -666,7 +675,7 @@ fun DeviceLogsScreen(
       }
     } else {
       var showCopyToClipboardSheet by remember { mutableStateOf<Log?>(null) }
-      var showFilterOrExcludeDialog by remember { mutableStateOf<Log?>(null) }
+      var showLongClickOptionsSheet by remember { mutableStateOf<Log?>(null) }
 
       if (logsState.isEmpty()) {
         Box(
@@ -695,6 +704,15 @@ fun DeviceLogsScreen(
         }
       } else {
         val lifecycle = LocalLifecycleOwner.current.lifecycle
+
+        if (snapToBottom) {
+          LaunchedEffect(lazyListState, compactMode) {
+            if (lazyListState.layoutInfo.totalItemsCount > 0) {
+              lazyListState.scrollToItem(lazyListState.layoutInfo.totalItemsCount)
+            }
+          }
+        }
+
         LogsList(
           modifier = Modifier
             .fillMaxSize()
@@ -717,13 +735,16 @@ fun DeviceLogsScreen(
               }
             },
           contentPadding = innerPadding,
+          listStyle = if (compactMode) LogsListStyle.Compact else LogsListStyle.Default,
           logs = logsState,
           searchHits = searchHitsMap,
-          onClick = { index ->
-            showCopyToClipboardSheet = logsState[index]
-          },
+          onClick = if (!compactMode) {
+            { index ->
+              showCopyToClipboardSheet = logsState[index]
+            }
+          } else null,
           onLongClick = { index ->
-            showFilterOrExcludeDialog = logsState[index]
+            showLongClickOptionsSheet = logsState[index]
           },
           state = lazyListState,
           currentSearchHitLogId = currentSearchHitLogId,
@@ -737,22 +758,27 @@ fun DeviceLogsScreen(
         }
       }
 
-      showFilterOrExcludeDialog?.let { log ->
-        FilterOrExcludeSheet(
-          onDismiss = { showFilterOrExcludeDialog = null },
+      showLongClickOptionsSheet?.let { log ->
+        LongClickOptionsSheet(
+          showCopyToClipboard = compactMode,
+          onDismiss = { showLongClickOptionsSheet = null },
           onClickFilter = {
             val intent = Intent(context, ComposeFiltersActivity::class.java)
             intent.putExtra(ComposeFiltersActivity.EXTRA_LOG, log)
             intent.putExtra(ComposeFiltersActivity.EXTRA_EXCLUDE, false)
             context.startActivity(intent)
-            showFilterOrExcludeDialog = null
+            showLongClickOptionsSheet = null
           },
           onClickExclude = {
             val intent = Intent(context, ComposeFiltersActivity::class.java)
             intent.putExtra(ComposeFiltersActivity.EXTRA_LOG, log)
             intent.putExtra(ComposeFiltersActivity.EXTRA_EXCLUDE, true)
             context.startActivity(intent)
-            showFilterOrExcludeDialog = null
+            showLongClickOptionsSheet = null
+          },
+          onClickCopyToClipboard = {
+            showCopyToClipboardSheet = log
+            showLongClickOptionsSheet = null
           }
         )
       }
@@ -762,15 +788,32 @@ fun DeviceLogsScreen(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun FilterOrExcludeSheet(
+private fun LongClickOptionsSheet(
+  showCopyToClipboard: Boolean,
   onDismiss: () -> Unit,
   onClickFilter: () -> Unit,
   onClickExclude: () -> Unit,
+  onClickCopyToClipboard: () -> Unit,
 ) {
   ModalBottomSheet(
     onDismissRequest = onDismiss,
     containerColor = MaterialTheme.colorScheme.surfaceContainer,
   ) {
+    if (showCopyToClipboard) {
+      ListItem(
+        modifier = Modifier
+          .fillMaxWidth()
+          .clickable {
+            onClickCopyToClipboard()
+          },
+        headlineContent = {
+          Text(stringResource(R.string.copy_to_clipboard))
+        },
+        colors = ListItemDefaults.colors(
+          containerColor = MaterialTheme.colorScheme.surfaceContainer,
+        ),
+      )
+    }
     ListItem(
       modifier = Modifier
         .fillMaxWidth()
@@ -919,6 +962,7 @@ private fun AppBar(
   recordStatus: RecordStatus,
   showDropDownMenu: Boolean,
   saveEnabled: Boolean,
+  compactModeEnabled: Boolean,
   saveLogsInProgress: Boolean,
   restartLogcatEnabled: Boolean,
   onClickSearch: () -> Unit,
@@ -926,6 +970,7 @@ private fun AppBar(
   onClickRecord: () -> Unit,
   onShowDropdownMenu: () -> Unit,
   onDismissDropdownMenu: () -> Unit,
+  onClickCompactMode: () -> Unit,
   onClickClear: () -> Unit,
   onClickFilter: () -> Unit,
   onClickSave: () -> Unit,
@@ -936,10 +981,16 @@ private fun AppBar(
   TopAppBar(
     title = {
       Column {
-        Text(text = title)
+        Text(
+          text = title,
+          overflow = TextOverflow.Ellipsis,
+          maxLines = 1,
+        )
         Text(
           text = subtitle,
           style = AppTypography.titleSmall,
+          overflow = TextOverflow.Ellipsis,
+          maxLines = 1,
         )
       }
     },
@@ -1005,6 +1056,20 @@ private fun AppBar(
           expanded = showDropDownMenu,
           onDismissRequest = onDismissDropdownMenu,
         ) {
+          DropdownMenuItem(
+            leadingIcon = {
+              Icon(Icons.Default.ViewCompact, contentDescription = null)
+            },
+            text = {
+              Text(
+                text = stringResource(R.string.compact_mode),
+              )
+            },
+            trailingIcon = {
+              Checkbox(checked = compactModeEnabled, onCheckedChange = null)
+            },
+            onClick = onClickCompactMode,
+          )
           DropdownMenuItem(
             leadingIcon = {
               Icon(Icons.Default.Clear, contentDescription = null)

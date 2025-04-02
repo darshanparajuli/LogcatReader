@@ -56,6 +56,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.dp.logcat.Log
 import com.dp.logcat.LogPriority
@@ -105,7 +106,11 @@ fun FiltersScreen(
           }
         },
         title = {
-          Text(text = stringResource(R.string.filters))
+          Text(
+            text = stringResource(R.string.filters),
+            overflow = TextOverflow.Ellipsis,
+            maxLines = 1,
+          )
         },
         actions = {
           IconButton(

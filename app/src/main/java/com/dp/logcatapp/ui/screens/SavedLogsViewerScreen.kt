@@ -22,8 +22,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowUpward
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.ViewCompact
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -48,12 +53,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.dp.logcat.Log
 import com.dp.logcat.LogcatStreamReader
 import com.dp.logcatapp.R
 import com.dp.logcatapp.ui.common.CopyLogClipboardBottomSheet
 import com.dp.logcatapp.ui.common.LogsList
+import com.dp.logcatapp.ui.common.LogsListStyle
 import com.dp.logcatapp.ui.common.SearchHitKey
 import com.dp.logcatapp.ui.common.SearchHitKey.LogComponent
 import com.dp.logcatapp.ui.common.SearchLogsTopBar
@@ -108,6 +116,7 @@ fun SavedLogsViewerScreen(
   var searchInProgress by remember { mutableStateOf(false) }
   var sortedHitsByLogIdsState by remember { mutableStateOf<List<Int>>(emptyList()) }
   var scrollSnapperVisible by remember { mutableStateOf(false) }
+  var compactMode by remember { mutableStateOf(false) }
 
   val scrollToTopInteractionSource = remember { MutableInteractionSource() }
   val scrollToBottomInteractionSource = remember { MutableInteractionSource() }
@@ -145,11 +154,23 @@ fun SavedLogsViewerScreen(
     modifier = modifier,
     topBar = {
       val fileName = remember(uri) { context.getFileNameFromUri(uri) }
+      var showDropDownMenu by remember { mutableStateOf(false) }
       AppBar(
         title = fileName,
         subtitle = (logs as? LoadLogsState.Loaded)?.logs?.size?.toString(),
+        compactModeEnabled = compactMode,
+        showDropDownMenu = showDropDownMenu,
         onClickSearch = {
           showSearchBar = true
+        },
+        onShowDropdownMenu = {
+          showDropDownMenu = true
+        },
+        onDismissDropdownMenu = {
+          showDropDownMenu = false
+        },
+        onClickCompactMode = {
+          compactMode = !compactMode
         }
       )
       AnimatedVisibility(
@@ -276,11 +297,19 @@ fun SavedLogsViewerScreen(
         contentPadding = innerPadding,
         state = listState,
         searchHits = searchHitsMap,
+        listStyle = if (compactMode) LogsListStyle.Compact else LogsListStyle.Default,
         logs = logsState.logs,
         currentSearchHitLogId = currentSearchHitLogId,
-        onClick = { index ->
-          showCopyToClipboardSheet = logsState.logs[index]
-        }
+        onClick = if (!compactMode) {
+          { index ->
+            showCopyToClipboardSheet = logsState.logs[index]
+          }
+        } else null,
+        onLongClick = if (compactMode) {
+          { index ->
+            showCopyToClipboardSheet = logsState.logs[index]
+          }
+        } else null
       )
 
       showCopyToClipboardSheet?.let { log ->
@@ -309,7 +338,12 @@ fun SavedLogsViewerScreen(
 private fun AppBar(
   title: String,
   subtitle: String?,
+  compactModeEnabled: Boolean,
+  showDropDownMenu: Boolean,
   onClickSearch: () -> Unit,
+  onShowDropdownMenu: () -> Unit,
+  onDismissDropdownMenu: () -> Unit,
+  onClickCompactMode: () -> Unit,
 ) {
   val context = LocalContext.current
   TopAppBar(
@@ -330,10 +364,16 @@ private fun AppBar(
     },
     title = {
       Column {
-        Text(title)
+        Text(
+          text = title,
+          overflow = TextOverflow.Ellipsis,
+          maxLines = 1,
+        )
         if (subtitle != null) {
           Text(
             text = subtitle,
+            overflow = TextOverflow.Ellipsis,
+            maxLines = 1,
             style = AppTypography.titleSmall,
           )
         }
@@ -347,6 +387,33 @@ private fun AppBar(
         ),
       ) {
         Icon(Icons.Default.Search, contentDescription = null)
+      }
+      IconButton(
+        onClick = onShowDropdownMenu,
+        colors = IconButtonDefaults.iconButtonColors(
+          contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+        ),
+      ) {
+        Icon(Icons.Default.MoreVert, contentDescription = null)
+      }
+      DropdownMenu(
+        expanded = showDropDownMenu,
+        onDismissRequest = onDismissDropdownMenu,
+      ) {
+        DropdownMenuItem(
+          leadingIcon = {
+            Icon(Icons.Default.ViewCompact, contentDescription = null)
+          },
+          text = {
+            Text(
+              text = stringResource(R.string.compact_mode),
+            )
+          },
+          trailingIcon = {
+            Checkbox(checked = compactModeEnabled, onCheckedChange = null)
+          },
+          onClick = onClickCompactMode,
+        )
       }
     },
     colors = TopAppBarDefaults.topAppBarColors(

@@ -53,6 +53,7 @@ import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEachIndexed
 import androidx.core.content.edit
@@ -101,7 +102,11 @@ fun SettingsScreen(
           }
         },
         title = {
-          Text(stringResource(R.string.settings))
+          Text(
+            text = stringResource(R.string.settings),
+            overflow = TextOverflow.Ellipsis,
+            maxLines = 1,
+          )
         },
         colors = TopAppBarDefaults.topAppBarColors(
           containerColor = MaterialTheme.colorScheme.primaryContainer,
