@@ -279,7 +279,6 @@ fun DeviceLogsScreen(
     topBar = {
       val startedRecordingMessage = stringResource(R.string.started_recording)
       val saveFailedMessage = stringResource(R.string.failed_to_save_logs)
-      val noNewLogsMessage = stringResource(R.string.no_new_logs)
 
       if (logcatService != null) {
         LaunchedEffect(logcatService) {
@@ -669,46 +668,73 @@ fun DeviceLogsScreen(
       var showCopyToClipboardSheet by remember { mutableStateOf<Log?>(null) }
       var showFilterOrExcludeDialog by remember { mutableStateOf<Log?>(null) }
 
-      val lifecycle = LocalLifecycleOwner.current.lifecycle
-      LogsList(
-        modifier = Modifier
-          .fillMaxSize()
-          .consumeWindowInsets(innerPadding)
-          .pointerInput(Unit) {
-            lifecycle.currentStateFlow.collectLatest { state ->
-              if (state == Lifecycle.State.RESUMED) {
-                awaitPointerEventScope {
-                  while (true) {
-                    val event = awaitPointerEvent()
-                    when (event.type) {
-                      PointerEventType.Press -> {
-                        snapToBottom = false
-                        focusManager.clearFocus()
+      if (logsState.isEmpty()) {
+        Box(
+          modifier = Modifier
+            .fillMaxSize()
+            .consumeWindowInsets(innerPadding),
+          contentAlignment = Alignment.Center,
+        ) {
+          Column(
+            modifier = Modifier
+              .fillMaxWidth()
+              .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+          ) {
+            Icon(
+              modifier = Modifier.size(32.dp),
+              imageVector = Icons.Default.Info,
+              contentDescription = null,
+            )
+            Spacer(Modifier.height(8.dp))
+            Text(
+              text = stringResource(R.string.no_new_logs),
+              style = AppTypography.bodyMedium,
+            )
+          }
+        }
+      } else {
+        val lifecycle = LocalLifecycleOwner.current.lifecycle
+        LogsList(
+          modifier = Modifier
+            .fillMaxSize()
+            .consumeWindowInsets(innerPadding)
+            .pointerInput(Unit) {
+              lifecycle.currentStateFlow.collectLatest { state ->
+                if (state == Lifecycle.State.RESUMED) {
+                  awaitPointerEventScope {
+                    while (true) {
+                      val event = awaitPointerEvent()
+                      when (event.type) {
+                        PointerEventType.Press -> {
+                          snapToBottom = false
+                          focusManager.clearFocus()
+                        }
                       }
                     }
                   }
                 }
               }
-            }
+            },
+          contentPadding = innerPadding,
+          logs = logsState,
+          searchHits = searchHitsMap,
+          onClick = { index ->
+            showCopyToClipboardSheet = logsState[index]
           },
-        contentPadding = innerPadding,
-        logs = logsState,
-        searchHits = searchHitsMap,
-        onClick = { index ->
-          showCopyToClipboardSheet = logsState[index]
-        },
-        onLongClick = { index ->
-          showFilterOrExcludeDialog = logsState[index]
-        },
-        state = lazyListState,
-        currentSearchHitLogId = currentSearchHitLogId,
-      )
-
-      showCopyToClipboardSheet?.let { log ->
-        CopyLogClipboardBottomSheet(
-          log = log,
-          onDismiss = { showCopyToClipboardSheet = null },
+          onLongClick = { index ->
+            showFilterOrExcludeDialog = logsState[index]
+          },
+          state = lazyListState,
+          currentSearchHitLogId = currentSearchHitLogId,
         )
+
+        showCopyToClipboardSheet?.let { log ->
+          CopyLogClipboardBottomSheet(
+            log = log,
+            onDismiss = { showCopyToClipboardSheet = null },
+          )
+        }
       }
 
       showFilterOrExcludeDialog?.let { log ->
