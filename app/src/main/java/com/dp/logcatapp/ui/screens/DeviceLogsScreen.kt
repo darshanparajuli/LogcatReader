@@ -1459,7 +1459,7 @@ private fun saveLogsToFile(context: Context, logs: List<Log>): Flow<SaveResult> 
 // Returns a pair of Uri and custom save location flag (true if custom save location is used).
 @WorkerThread
 private fun createFile(context: Context): Pair<Uri?, Boolean> {
-  val timeStamp = SimpleDateFormat("MM-dd-yyyy_HH-mm-ss", Locale.getDefault())
+  val timeStamp = SimpleDateFormat("yyyy-MM-dd_HH-mm-ss", Locale.getDefault())
     .format(Date())
   val fileName = "logcat_$timeStamp"
 
