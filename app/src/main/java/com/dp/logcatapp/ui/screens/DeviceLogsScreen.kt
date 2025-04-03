@@ -201,7 +201,7 @@ fun DeviceLogsScreen(
   var showDropDownMenu by remember { mutableStateOf(false) }
   var showSearchBar by remember { mutableStateOf(false) }
   var logcatPaused by remember { mutableStateOf(false) }
-  var compactMode by remember { mutableStateOf(false) }
+  var compactView by remember { mutableStateOf(false) }
   var searchQuery by remember { mutableStateOf("") }
   // Value: tagIndex start and end.
   val searchHitsMap = remember { mutableStateMapOf<SearchHitKey, Pair<Int, Int>>() }
@@ -389,7 +389,7 @@ fun DeviceLogsScreen(
           recordStatus != RecordStatus.SaveRecordedLogs &&
           !isLogcatSessionLoading && !errorStartingLogcat,
         recordStatus = recordStatus,
-        compactModeEnabled = compactMode,
+        compactViewEnabled = compactView,
         showDropDownMenu = showDropDownMenu,
         saveEnabled = logcatService != null && !isLogcatSessionLoading && !errorStartingLogcat,
         saveLogsInProgress = saveLogsInProgress,
@@ -421,8 +421,8 @@ fun DeviceLogsScreen(
           logsState.clear()
           showDropDownMenu = false
         },
-        onClickCompactMode = {
-          compactMode = !compactMode
+        onClickCompactView = {
+          compactView = !compactView
         },
         onClickFilter = {
           showDropDownMenu = false
@@ -705,7 +705,7 @@ fun DeviceLogsScreen(
         val lifecycle = LocalLifecycleOwner.current.lifecycle
 
         if (snapToBottom) {
-          LaunchedEffect(lazyListState, compactMode) {
+          LaunchedEffect(lazyListState, compactView) {
             if (lazyListState.layoutInfo.totalItemsCount > 0) {
               lazyListState.scrollToItem(lazyListState.layoutInfo.totalItemsCount)
             }
@@ -734,10 +734,10 @@ fun DeviceLogsScreen(
               }
             },
           contentPadding = innerPadding,
-          listStyle = if (compactMode) LogsListStyle.Compact else LogsListStyle.Default,
+          listStyle = if (compactView) LogsListStyle.Compact else LogsListStyle.Default,
           logs = logsState,
           searchHits = searchHitsMap,
-          onClick = if (!compactMode) {
+          onClick = if (!compactView) {
             { index ->
               showCopyToClipboardSheet = logsState[index]
             }
@@ -759,7 +759,7 @@ fun DeviceLogsScreen(
 
       showLongClickOptionsSheet?.let { log ->
         LongClickOptionsSheet(
-          showCopyToClipboard = compactMode,
+          showCopyToClipboard = compactView,
           onDismiss = { showLongClickOptionsSheet = null },
           onClickFilter = {
             val intent = Intent(context, ComposeFiltersActivity::class.java)
@@ -961,7 +961,7 @@ private fun AppBar(
   recordStatus: RecordStatus,
   showDropDownMenu: Boolean,
   saveEnabled: Boolean,
-  compactModeEnabled: Boolean,
+  compactViewEnabled: Boolean,
   saveLogsInProgress: Boolean,
   restartLogcatEnabled: Boolean,
   onClickSearch: () -> Unit,
@@ -969,7 +969,7 @@ private fun AppBar(
   onClickRecord: () -> Unit,
   onShowDropdownMenu: () -> Unit,
   onDismissDropdownMenu: () -> Unit,
-  onClickCompactMode: () -> Unit,
+  onClickCompactView: () -> Unit,
   onClickClear: () -> Unit,
   onClickFilter: () -> Unit,
   onClickSave: () -> Unit,
@@ -1061,13 +1061,13 @@ private fun AppBar(
             },
             text = {
               Text(
-                text = stringResource(R.string.compact_mode),
+                text = stringResource(R.string.compact_view),
               )
             },
             trailingIcon = {
-              Checkbox(checked = compactModeEnabled, onCheckedChange = null)
+              Checkbox(checked = compactViewEnabled, onCheckedChange = null)
             },
-            onClick = onClickCompactMode,
+            onClick = onClickCompactView,
           )
           DropdownMenuItem(
             leadingIcon = {

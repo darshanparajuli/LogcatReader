@@ -116,7 +116,7 @@ fun SavedLogsViewerScreen(
   var searchInProgress by remember { mutableStateOf(false) }
   var sortedHitsByLogIdsState by remember { mutableStateOf<List<Int>>(emptyList()) }
   var scrollSnapperVisible by remember { mutableStateOf(false) }
-  var compactMode by remember { mutableStateOf(false) }
+  var compactView by remember { mutableStateOf(false) }
 
   val scrollToTopInteractionSource = remember { MutableInteractionSource() }
   val scrollToBottomInteractionSource = remember { MutableInteractionSource() }
@@ -158,7 +158,7 @@ fun SavedLogsViewerScreen(
       AppBar(
         title = fileName,
         subtitle = (logs as? LoadLogsState.Loaded)?.logs?.size?.toString(),
-        compactModeEnabled = compactMode,
+        compactViewEnabled = compactView,
         showDropDownMenu = showDropDownMenu,
         onClickSearch = {
           showSearchBar = true
@@ -169,8 +169,8 @@ fun SavedLogsViewerScreen(
         onDismissDropdownMenu = {
           showDropDownMenu = false
         },
-        onClickCompactMode = {
-          compactMode = !compactMode
+        onClickCompactView = {
+          compactView = !compactView
         }
       )
       AnimatedVisibility(
@@ -297,15 +297,15 @@ fun SavedLogsViewerScreen(
         contentPadding = innerPadding,
         state = listState,
         searchHits = searchHitsMap,
-        listStyle = if (compactMode) LogsListStyle.Compact else LogsListStyle.Default,
+        listStyle = if (compactView) LogsListStyle.Compact else LogsListStyle.Default,
         logs = logsState.logs,
         currentSearchHitLogId = currentSearchHitLogId,
-        onClick = if (!compactMode) {
+        onClick = if (!compactView) {
           { index ->
             showCopyToClipboardSheet = logsState.logs[index]
           }
         } else null,
-        onLongClick = if (compactMode) {
+        onLongClick = if (compactView) {
           { index ->
             showCopyToClipboardSheet = logsState.logs[index]
           }
@@ -338,12 +338,12 @@ fun SavedLogsViewerScreen(
 private fun AppBar(
   title: String,
   subtitle: String?,
-  compactModeEnabled: Boolean,
+  compactViewEnabled: Boolean,
   showDropDownMenu: Boolean,
   onClickSearch: () -> Unit,
   onShowDropdownMenu: () -> Unit,
   onDismissDropdownMenu: () -> Unit,
-  onClickCompactMode: () -> Unit,
+  onClickCompactView: () -> Unit,
 ) {
   val context = LocalContext.current
   TopAppBar(
@@ -406,13 +406,13 @@ private fun AppBar(
           },
           text = {
             Text(
-              text = stringResource(R.string.compact_mode),
+              text = stringResource(R.string.compact_view),
             )
           },
           trailingIcon = {
-            Checkbox(checked = compactModeEnabled, onCheckedChange = null)
+            Checkbox(checked = compactViewEnabled, onCheckedChange = null)
           },
-          onClick = onClickCompactMode,
+          onClick = onClickCompactView,
         )
       }
     },
