@@ -12,11 +12,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.edit
 
 @Composable
-fun rememberStringSharedPreferencesValue(
+fun rememberStringSharedPreference(
   key: String,
   default: String? = null,
 ): Preference<String?> {
-  return rememberSharedPreferencesValue(
+  return rememberSharedPreference(
     key = key,
     getFactory = { sharedPrefs ->
       sharedPrefs.getString(key, default)
@@ -28,11 +28,11 @@ fun rememberStringSharedPreferencesValue(
 }
 
 @Composable
-fun rememberIntSharedPreferencesValue(
+fun rememberIntSharedPreference(
   key: String,
   default: Int = -1,
 ): Preference<Int> {
-  return rememberSharedPreferencesValue(
+  return rememberSharedPreference(
     key = key,
     getFactory = { sharedPrefs ->
       sharedPrefs.getInt(key, default)
@@ -44,11 +44,11 @@ fun rememberIntSharedPreferencesValue(
 }
 
 @Composable
-fun rememberBooleanSharedPreferencesValue(
+fun rememberBooleanSharedPreference(
   key: String,
   default: Boolean = false,
 ): Preference<Boolean> {
-  return rememberSharedPreferencesValue(
+  return rememberSharedPreference(
     key = key,
     getFactory = { sharedPrefs ->
       sharedPrefs.getBoolean(key, default)
@@ -60,11 +60,11 @@ fun rememberBooleanSharedPreferencesValue(
 }
 
 @Composable
-fun rememberStringSetSharedPreferencesValue(
+fun rememberStringSetSharedPreference(
   key: String,
   default: Set<String>? = null,
 ): Preference<Set<String>?> {
-  return rememberSharedPreferencesValue(
+  return rememberSharedPreference(
     key = key,
     getFactory = { sharedPrefs ->
       sharedPrefs.getStringSet(key, default)
@@ -76,7 +76,7 @@ fun rememberStringSetSharedPreferencesValue(
 }
 
 @Composable
-private fun <T> rememberSharedPreferencesValue(
+private fun <T> rememberSharedPreference(
   key: String,
   getFactory: (SharedPreferences) -> T,
   setFactory: (SharedPreferences, newValue: T) -> Unit,
@@ -90,7 +90,7 @@ private fun <T> rememberSharedPreferencesValue(
         setter = { newValue ->
           setFactory(sharedPreferences, newValue)
         },
-        remover = {
+        deleter = {
           sharedPreferences.edit { clear() }
         }
       )
@@ -115,7 +115,7 @@ private fun <T> rememberSharedPreferencesValue(
 data class Preference<T>(
   private val currentValue: T,
   private val setter: (T) -> Unit,
-  private val remover: () -> Unit,
+  private val deleter: () -> Unit,
 ) {
   var value: T
     get() = currentValue
@@ -124,6 +124,6 @@ data class Preference<T>(
     }
 
   fun delete() {
-    remover()
+    deleter()
   }
 }

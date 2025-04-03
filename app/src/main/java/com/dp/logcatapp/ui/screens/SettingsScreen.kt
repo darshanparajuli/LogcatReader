@@ -68,10 +68,10 @@ import com.dp.logcatapp.ui.theme.Shapes
 import com.dp.logcatapp.ui.theme.isDynamicThemeAvailable
 import com.dp.logcatapp.util.PreferenceKeys
 import com.dp.logcatapp.util.findActivity
-import com.dp.logcatapp.util.rememberBooleanSharedPreferencesValue
-import com.dp.logcatapp.util.rememberIntSharedPreferencesValue
-import com.dp.logcatapp.util.rememberStringSetSharedPreferencesValue
-import com.dp.logcatapp.util.rememberStringSharedPreferencesValue
+import com.dp.logcatapp.util.rememberBooleanSharedPreference
+import com.dp.logcatapp.util.rememberIntSharedPreference
+import com.dp.logcatapp.util.rememberStringSetSharedPreference
+import com.dp.logcatapp.util.rememberStringSharedPreference
 import com.dp.logcatapp.util.showToast
 import java.text.NumberFormat
 
@@ -166,7 +166,7 @@ fun SettingsScreen(
 private fun KeepScreenOn(
   modifier: Modifier = Modifier,
 ) {
-  val preference = rememberBooleanSharedPreferencesValue(
+  val preference = rememberBooleanSharedPreference(
     key = PreferenceKeys.General.KEY_KEEP_SCREEN_ON,
     default = PreferenceKeys.General.Default.KEY_KEEP_SCREEN_ON,
   )
@@ -192,7 +192,7 @@ private fun KeepScreenOn(
 private fun Theme(
   modifier: Modifier = Modifier,
 ) {
-  val preference = rememberStringSharedPreferencesValue(
+  val preference = rememberStringSharedPreference(
     key = PreferenceKeys.Appearance.KEY_THEME,
     default = PreferenceKeys.Appearance.Default.THEME,
   )
@@ -232,7 +232,7 @@ private fun Theme(
 private fun DynamicColor(
   modifier: Modifier = Modifier,
 ) {
-  val preference = rememberBooleanSharedPreferencesValue(
+  val preference = rememberBooleanSharedPreference(
     key = PreferenceKeys.Appearance.KEY_DYNAMIC_COLOR,
     default = PreferenceKeys.Appearance.Default.DYNAMIC_COLOR,
   )
@@ -258,7 +258,7 @@ private fun DynamicColor(
 private fun PollInterval(
   modifier: Modifier = Modifier,
 ) {
-  val preference = rememberIntSharedPreferencesValue(
+  val preference = rememberIntSharedPreference(
     key = PreferenceKeys.Logcat.KEY_POLL_INTERVAL,
     default = PreferenceKeys.Logcat.Default.POLL_INTERVAL,
   )
@@ -304,7 +304,7 @@ private fun PollInterval(
 private fun Buffers(
   modifier: Modifier = Modifier,
 ) {
-  val preference = rememberStringSetSharedPreferencesValue(
+  val preference = rememberStringSetSharedPreference(
     key = PreferenceKeys.Logcat.KEY_BUFFERS,
     default = PreferenceKeys.Logcat.Default.BUFFERS,
   )
@@ -352,7 +352,7 @@ private fun Buffers(
 private fun MaxLogs(
   modifier: Modifier = Modifier,
 ) {
-  val preference = rememberIntSharedPreferencesValue(
+  val preference = rememberIntSharedPreference(
     key = PreferenceKeys.Logcat.KEY_MAX_LOGS,
     default = PreferenceKeys.Logcat.Default.MAX_LOGS,
   )
@@ -399,7 +399,7 @@ private fun MaxLogs(
 private fun SaveLocation(
   modifier: Modifier = Modifier,
 ) {
-  val preference = rememberStringSharedPreferencesValue(
+  val preference = rememberStringSharedPreference(
     key = PreferenceKeys.Logcat.KEY_SAVE_LOCATION,
     default = PreferenceKeys.Logcat.Default.SAVE_LOCATION,
   )
