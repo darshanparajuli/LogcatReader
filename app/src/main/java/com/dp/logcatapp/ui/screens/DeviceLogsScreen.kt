@@ -744,10 +744,12 @@ fun DeviceLogsScreen(
           onClick = if (!compactViewPreference.value) {
             { index ->
               showCopyToClipboardSheet = logsState[index]
+              snapToBottom = false
             }
           } else null,
           onLongClick = { index ->
             showLongClickOptionsSheet = logsState[index]
+            snapToBottom = false
           },
           state = lazyListState,
           currentSearchHitLogId = currentSearchHitLogId,
