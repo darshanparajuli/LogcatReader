@@ -137,6 +137,7 @@ import com.dp.logcatapp.util.ShareUtils
 import com.dp.logcatapp.util.SuCommander
 import com.dp.logcatapp.util.containsIgnoreCase
 import com.dp.logcatapp.util.getDefaultSharedPreferences
+import com.dp.logcatapp.util.rememberBooleanSharedPreference
 import com.dp.logcatapp.util.showToast
 import com.dp.logger.Logger
 import kotlinx.coroutines.Dispatchers
@@ -201,7 +202,10 @@ fun DeviceLogsScreen(
   var showDropDownMenu by remember { mutableStateOf(false) }
   var showSearchBar by remember { mutableStateOf(false) }
   var logcatPaused by remember { mutableStateOf(false) }
-  var compactView by remember { mutableStateOf(false) }
+  var compactViewPreference = rememberBooleanSharedPreference(
+    key = PreferenceKeys.Logcat.KEY_COMPACT_VIEW,
+    default = PreferenceKeys.Logcat.Default.COMPACT_VIEW,
+  )
   var searchQuery by remember { mutableStateOf("") }
   // Value: tagIndex start and end.
   val searchHitsMap = remember { mutableStateMapOf<SearchHitKey, Pair<Int, Int>>() }
@@ -389,7 +393,7 @@ fun DeviceLogsScreen(
           recordStatus != RecordStatus.SaveRecordedLogs &&
           !isLogcatSessionLoading && !errorStartingLogcat,
         recordStatus = recordStatus,
-        compactViewEnabled = compactView,
+        compactViewEnabled = compactViewPreference.value,
         showDropDownMenu = showDropDownMenu,
         saveEnabled = logcatService != null && !isLogcatSessionLoading && !errorStartingLogcat,
         saveLogsInProgress = saveLogsInProgress,
@@ -422,7 +426,7 @@ fun DeviceLogsScreen(
           showDropDownMenu = false
         },
         onClickCompactView = {
-          compactView = !compactView
+          compactViewPreference.value = !compactViewPreference.value
         },
         onClickFilter = {
           showDropDownMenu = false
@@ -705,7 +709,7 @@ fun DeviceLogsScreen(
         val lifecycle = LocalLifecycleOwner.current.lifecycle
 
         if (snapToBottom) {
-          LaunchedEffect(lazyListState, compactView) {
+          LaunchedEffect(lazyListState, compactViewPreference) {
             if (lazyListState.layoutInfo.totalItemsCount > 0) {
               lazyListState.scrollToItem(lazyListState.layoutInfo.totalItemsCount)
             }
@@ -734,10 +738,10 @@ fun DeviceLogsScreen(
               }
             },
           contentPadding = innerPadding,
-          listStyle = if (compactView) LogsListStyle.Compact else LogsListStyle.Default,
+          listStyle = if (compactViewPreference.value) LogsListStyle.Compact else LogsListStyle.Default,
           logs = logsState,
           searchHits = searchHitsMap,
-          onClick = if (!compactView) {
+          onClick = if (!compactViewPreference.value) {
             { index ->
               showCopyToClipboardSheet = logsState[index]
             }
@@ -759,7 +763,7 @@ fun DeviceLogsScreen(
 
       showLongClickOptionsSheet?.let { log ->
         LongClickOptionsSheet(
-          showCopyToClipboard = compactView,
+          showCopyToClipboard = compactViewPreference.value,
           onDismiss = { showLongClickOptionsSheet = null },
           onClickFilter = {
             val intent = Intent(context, ComposeFiltersActivity::class.java)

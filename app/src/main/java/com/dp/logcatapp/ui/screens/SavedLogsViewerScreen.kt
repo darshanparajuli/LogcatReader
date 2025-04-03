@@ -66,9 +66,11 @@ import com.dp.logcatapp.ui.common.SearchHitKey
 import com.dp.logcatapp.ui.common.SearchHitKey.LogComponent
 import com.dp.logcatapp.ui.common.SearchLogsTopBar
 import com.dp.logcatapp.ui.theme.AppTypography
+import com.dp.logcatapp.util.PreferenceKeys
 import com.dp.logcatapp.util.closeQuietly
 import com.dp.logcatapp.util.findActivity
 import com.dp.logcatapp.util.getFileNameFromUri
+import com.dp.logcatapp.util.rememberBooleanSharedPreference
 import com.dp.logcatapp.util.showToast
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -116,7 +118,10 @@ fun SavedLogsViewerScreen(
   var searchInProgress by remember { mutableStateOf(false) }
   var sortedHitsByLogIdsState by remember { mutableStateOf<List<Int>>(emptyList()) }
   var scrollSnapperVisible by remember { mutableStateOf(false) }
-  var compactView by remember { mutableStateOf(false) }
+  var compactViewPreference = rememberBooleanSharedPreference(
+    key = PreferenceKeys.Logcat.KEY_COMPACT_VIEW,
+    default = PreferenceKeys.Logcat.Default.COMPACT_VIEW,
+  )
 
   val scrollToTopInteractionSource = remember { MutableInteractionSource() }
   val scrollToBottomInteractionSource = remember { MutableInteractionSource() }
@@ -158,7 +163,7 @@ fun SavedLogsViewerScreen(
       AppBar(
         title = fileName,
         subtitle = (logs as? LoadLogsState.Loaded)?.logs?.size?.toString(),
-        compactViewEnabled = compactView,
+        compactViewEnabled = compactViewPreference.value,
         showDropDownMenu = showDropDownMenu,
         onClickSearch = {
           showSearchBar = true
@@ -170,7 +175,7 @@ fun SavedLogsViewerScreen(
           showDropDownMenu = false
         },
         onClickCompactView = {
-          compactView = !compactView
+          compactViewPreference.value = !compactViewPreference.value
         }
       )
       AnimatedVisibility(
@@ -297,15 +302,15 @@ fun SavedLogsViewerScreen(
         contentPadding = innerPadding,
         state = listState,
         searchHits = searchHitsMap,
-        listStyle = if (compactView) LogsListStyle.Compact else LogsListStyle.Default,
+        listStyle = if (compactViewPreference.value) LogsListStyle.Compact else LogsListStyle.Default,
         logs = logsState.logs,
         currentSearchHitLogId = currentSearchHitLogId,
-        onClick = if (!compactView) {
+        onClick = if (!compactViewPreference.value) {
           { index ->
             showCopyToClipboardSheet = logsState.logs[index]
           }
         } else null,
-        onLongClick = if (compactView) {
+        onLongClick = if (compactViewPreference.value) {
           { index ->
             showCopyToClipboardSheet = logsState.logs[index]
           }
