@@ -1,21 +1,25 @@
 package com.dp.logcatapp.ui.screens
 
-import android.content.Context
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
@@ -35,6 +39,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
@@ -56,18 +61,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.util.fastJoinToString
+import androidx.core.text.isDigitsOnly
 import com.dp.logcat.Log
-import com.dp.logcat.LogPriority
 import com.dp.logcatapp.R
 import com.dp.logcatapp.db.FilterInfo
 import com.dp.logcatapp.db.LogcatReaderDatabase
-import com.dp.logcatapp.model.FilterType
 import com.dp.logcatapp.ui.theme.AppTypography
 import com.dp.logcatapp.util.findActivity
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -82,7 +88,6 @@ fun FiltersScreen(
 
   val filters by db.filterDao()
     .filters()
-    .map { filters -> filters.map { filter -> filter.toFilterListItem(context) } }
     .collectAsState(null)
 
   var showAddFilterDialog by remember { mutableStateOf(prepopulateFilterInfo != null) }
@@ -183,48 +188,24 @@ fun FiltersScreen(
           val exclude = data.exclude
           val selectedLogLevels = data.selectedLogLevels
 
-          val filters = mutableListOf<FilterInfo>()
-          if (keyword.isNotEmpty()) {
-            filters += FilterInfo(
-              type = FilterType.KEYWORD,
-              content = keyword,
-              exclude = exclude,
-            )
-          }
-          if (tag.isNotEmpty()) {
-            filters += FilterInfo(
-              type = FilterType.TAG,
-              content = tag,
-              exclude = exclude,
-            )
-          }
-          if (pid.isNotEmpty()) {
-            filters += FilterInfo(
-              type = FilterType.PID,
-              content = pid,
-              exclude = exclude,
-            )
-          }
-          if (tid.isNotEmpty()) {
-            filters += FilterInfo(
-              type = FilterType.TID,
-              content = tid,
-              exclude = exclude,
-            )
-          }
-          selectedLogLevels.forEach {
-            filters += FilterInfo(
-              type = FilterType.LOG_LEVELS,
-              content = selectedLogLevels.map { it.label.first().toString() }
+          val filterInfo = FilterInfo(
+            tag = tag.takeIf { it.isNotEmpty() },
+            message = keyword.takeIf { it.isNotEmpty() },
+            pid = pid.takeIf { it.isNotEmpty() }?.toIntOrNull(),
+            tid = tid.takeIf { it.isNotEmpty() }?.toIntOrNull(),
+            logLevels = if (selectedLogLevels.isEmpty()) {
+              null
+            } else {
+              selectedLogLevels.map { it.label.first().toString() }
                 .sorted()
-                .joinToString(separator = ","),
-              exclude = exclude,
-            )
-          }
+                .joinToString(separator = ",")
+            },
+            exclude = exclude,
+          )
 
           coroutineScope.launch {
             withContext(Dispatchers.IO) {
-              db.filterDao().insert(*filters.toTypedArray())
+              db.filterDao().insert(filterInfo)
             }
           }
         }
@@ -257,15 +238,17 @@ fun FiltersScreen(
         ) { index, item ->
           FilterItem(
             modifier = Modifier.fillMaxWidth(),
-            type = item.type,
-            text = item.text,
+            tag = item.tag,
+            message = item.message,
+            pid = item.pid?.toString(),
+            tid = item.tid?.toString(),
+            priorities = item.logLevels,
             exclude = item.exclude,
             onClickRemove = {
-              val filterInfo = item.filterInfo
               coroutineScope.launch {
                 val filterDao = db.filterDao()
                 withContext(Dispatchers.IO) {
-                  filterDao.delete(filterInfo)
+                  filterDao.delete(item)
                 }
               }
             }
@@ -316,10 +299,10 @@ private fun AddFilterSheet(
     containerColor = MaterialTheme.colorScheme.surfaceContainer,
   ) {
     Column(
-      modifier = Modifier.padding(16.dp),
-      verticalArrangement = Arrangement.spacedBy(16.dp),
+      modifier = Modifier.padding(vertical = 16.dp),
     ) {
       Row(
+        modifier = Modifier.padding(horizontal = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
       ) {
         Text(
@@ -352,36 +335,60 @@ private fun AddFilterSheet(
           )
         }
       }
+      Spacer(modifier = Modifier.height(16.dp))
       InputField(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+          .fillMaxWidth()
+          .padding(horizontal = 16.dp),
         label = stringResource(R.string.keyword),
         value = keyword,
         onValueChange = { keyword = it },
       )
+      Spacer(modifier = Modifier.height(16.dp))
       InputField(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+          .fillMaxWidth()
+          .padding(horizontal = 16.dp),
         label = stringResource(R.string.tag),
         value = tag,
         onValueChange = { tag = it },
       )
+      Spacer(modifier = Modifier.height(16.dp))
       InputField(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+          .fillMaxWidth()
+          .padding(horizontal = 16.dp),
         label = stringResource(R.string.process_id),
         value = pid,
-        onValueChange = { pid = it },
+        onValueChange = {
+          if (it.isDigitsOnly()) {
+            pid = it
+          }
+        },
+        keyboardType = KeyboardType.Number,
       )
+      Spacer(modifier = Modifier.height(16.dp))
       InputField(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+          .fillMaxWidth()
+          .padding(horizontal = 16.dp),
         label = stringResource(R.string.thread_id),
         value = tid,
-        onValueChange = { tid = it },
+        onValueChange = {
+          if (it.isDigitsOnly()) {
+            tid = it
+          }
+        },
+        keyboardType = KeyboardType.Number,
       )
+      Spacer(modifier = Modifier.height(16.dp))
       FlowRow(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+          .fillMaxWidth()
+          .padding(horizontal = 16.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalArrangement = Arrangement.spacedBy(0.dp),
       ) {
-
         LogLevel.entries.forEach { logLevel ->
           FilterChip(
             selected = selectedLogLevels.getOrElse(logLevel) { false },
@@ -394,19 +401,25 @@ private fun AddFilterSheet(
           )
         }
       }
-      Row(
-        verticalAlignment = Alignment.CenterVertically,
-      ) {
-        Text(
-          modifier = Modifier.weight(1f),
-          text = stringResource(R.string.exclude),
-          style = AppTypography.bodyLarge,
+      ListItem(
+        modifier = Modifier
+          .fillMaxWidth()
+          .clickable {
+            exclude = !exclude
+          },
+        headlineContent = {
+          Text(stringResource(R.string.exclude))
+        },
+        trailingContent = {
+          Checkbox(
+            checked = exclude,
+            onCheckedChange = null,
+          )
+        },
+        colors = ListItemDefaults.colors(
+          containerColor = MaterialTheme.colorScheme.surfaceContainer,
         )
-        Checkbox(
-          checked = exclude,
-          onCheckedChange = { exclude = it },
-        )
-      }
+      )
     }
   }
 }
@@ -414,24 +427,87 @@ private fun AddFilterSheet(
 @Composable
 private fun FilterItem(
   modifier: Modifier,
-  type: String,
-  text: String,
+  tag: String?,
+  message: String?,
+  pid: String?,
+  tid: String?,
+  priorities: String?,
   exclude: Boolean,
   onClickRemove: () -> Unit,
 ) {
   ListItem(
     modifier = modifier,
     headlineContent = {
-      Text(text)
-    },
-    overlineContent = {
-      Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(type)
-        if (exclude) {
-          Text("(${stringResource(R.string.exclude).lowercase()})")
+      Column {
+        @Composable
+        fun FilterRow(
+          label: String,
+          value: String,
+          quote: Boolean = false,
+        ) {
+          Row {
+            Text(
+              text = "$label:",
+              fontWeight = FontWeight.Bold,
+              style = AppTypography.bodySmall,
+              modifier = Modifier.alignByBaseline(),
+            )
+            Spacer(modifier = Modifier.width(4.dp))
+            Text(
+              text = if (quote) {
+                "'$value'"
+              } else value,
+              style = AppTypography.bodyMedium,
+              modifier = Modifier.alignByBaseline(),
+            )
+          }
+        }
+        if (!tag.isNullOrEmpty()) {
+          FilterRow(
+            label = stringResource(R.string.tag),
+            value = tag,
+            quote = true,
+          )
+        }
+        if (!message.isNullOrEmpty()) {
+          FilterRow(
+            label = stringResource(R.string.message),
+            value = message,
+            quote = true,
+          )
+        }
+        val priorityMap = remember {
+          LogLevel.entries.associate {
+            it.label.first().lowercase().toString() to it.label
+          }
+        }
+        if (!priorities.isNullOrEmpty()) {
+          FilterRow(
+            label = stringResource(R.string.log_priority),
+            value = priorities.split(",").map {
+              priorityMap.getValue(it.lowercase())
+            }.fastJoinToString(separator = ", "),
+          )
+        }
+        if (!pid.isNullOrEmpty()) {
+          FilterRow(
+            label = stringResource(R.string.process_id),
+            value = pid,
+          )
+        }
+        if (!tid.isNullOrEmpty()) {
+          FilterRow(
+            label = stringResource(R.string.thread_id),
+            value = tid,
+          )
         }
       }
     },
+    overlineContent = if (exclude) {
+      {
+        Text(stringResource(R.string.exclude))
+      }
+    } else null,
     trailingContent = {
       IconButton(
         onClick = onClickRemove,
@@ -452,6 +528,7 @@ private fun InputField(
   label: String,
   value: String,
   onValueChange: (String) -> Unit,
+  keyboardType: KeyboardType = KeyboardOptions.Default.keyboardType,
 ) {
   TextField(
     modifier = modifier,
@@ -463,47 +540,9 @@ private fun InputField(
       unfocusedIndicatorColor = Color.Transparent,
     ),
     shape = RoundedCornerShape(corner = CornerSize(8.dp)),
-  )
-}
-
-private fun FilterInfo.toFilterListItem(
-  context: Context,
-): FilterListItem {
-  val text: String
-  val type: String
-  when (this.type) {
-    FilterType.LOG_LEVELS -> {
-      type = context.getString(R.string.log_level)
-      text = content.split(",")
-        .joinToString(", ") { s ->
-          when (s) {
-            LogPriority.ASSERT -> "Assert"
-            LogPriority.ERROR -> "Error"
-            LogPriority.DEBUG -> "Debug"
-            LogPriority.FATAL -> "Fatal"
-            LogPriority.INFO -> "Info"
-            LogPriority.VERBOSE -> "Verbose"
-            LogPriority.WARNING -> "Warning"
-            else -> ""
-          }
-        }
-    }
-    else -> {
-      text = content
-      type = when (this.type) {
-        FilterType.KEYWORD -> context.getString(R.string.keyword)
-        FilterType.TAG -> context.getString(R.string.tag)
-        FilterType.PID -> context.getString(R.string.process_id)
-        FilterType.TID -> context.getString(R.string.thread_id)
-        else -> throw IllegalStateException("invalid type: ${this.type}")
-      }
-    }
-  }
-  return FilterListItem(
-    type = type,
-    text = text,
-    exclude = exclude,
-    filterInfo = this
+    keyboardOptions = KeyboardOptions.Default.copy(
+      keyboardType = keyboardType,
+    ),
   )
 }
 
@@ -512,14 +551,9 @@ data class PrepopulateFilterInfo(
   val exclude: Boolean,
 )
 
-private data class FilterListItem(
-  val type: String,
-  val text: String,
-  val exclude: Boolean,
-  val filterInfo: FilterInfo,
-)
-
-private enum class LogLevel(val label: String) {
+private enum class LogLevel(
+  val label: String
+) {
   Assert("Assert"),
   Debug("Debug"),
   Error("Error"),

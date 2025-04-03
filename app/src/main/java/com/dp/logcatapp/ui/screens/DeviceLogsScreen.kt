@@ -120,7 +120,6 @@ import com.dp.logcatapp.activities.ComposeSettingsActivity
 import com.dp.logcatapp.db.FilterInfo
 import com.dp.logcatapp.db.LogcatReaderDatabase
 import com.dp.logcatapp.db.SavedLogInfo
-import com.dp.logcatapp.model.FilterType
 import com.dp.logcatapp.services.LogcatService
 import com.dp.logcatapp.services.LogcatService.LogcatSessionStatus
 import com.dp.logcatapp.services.getService
@@ -254,11 +253,11 @@ fun DeviceLogsScreen(
                 val excludeFilters = filters.filter { it.exclude }
 
                 logcatSession.setFilters(
-                  filters = includeFilters.map(::LogFilterNonPriority),
+                  filters = includeFilters.map(::LogFilter),
                   exclusion = false
                 )
                 logcatSession.setFilters(
-                  filters = excludeFilters.map(::LogFilterNonPriority),
+                  filters = excludeFilters.map(::LogFilter),
                   exclusion = true
                 )
 
@@ -1592,29 +1591,53 @@ sealed interface SavedLogsBottomSheetState {
   ) : SavedLogsBottomSheetState
 }
 
-private class LogFilterNonPriority(
+private class LogFilter(
   private val filterInfo: FilterInfo,
 ) : Filter {
-  private val priorities: Set<String> = if (filterInfo.type == FilterType.LOG_LEVELS) {
-    filterInfo.content.split(",").toSet()
+  private val priorities: Set<String> = if (!filterInfo.logLevels.isNullOrEmpty()) {
+    filterInfo.logLevels.split(",").toSet()
   } else {
     emptySet()
   }
 
+  private fun matches(keyword: String?, target: String): Boolean {
+    return if (keyword.isNullOrEmpty()) {
+      true
+    } else {
+      target.containsIgnoreCase(keyword)
+    }
+  }
+
+  private fun matchesPriority(log: Log): Boolean {
+    return if (priorities.isEmpty()) {
+      true
+    } else {
+      log.priority in priorities
+    }
+  }
+
   override fun apply(log: Log): Boolean {
-    val content = filterInfo.content
-    if (content.isEmpty()) {
-      return true
+    if (!matches(keyword = filterInfo.tag, target = log.tag)) {
+      return false
     }
 
-    return when (filterInfo.type) {
-      FilterType.LOG_LEVELS -> log.priority in priorities
-      FilterType.KEYWORD -> log.msg.containsIgnoreCase(content)
-      FilterType.TAG -> log.tag.containsIgnoreCase(content)
-      FilterType.PID -> log.pid.containsIgnoreCase(content)
-      FilterType.TID -> log.tid.containsIgnoreCase(content)
-      else -> false
+    if (!matches(keyword = filterInfo.message, target = log.msg)) {
+      return false
     }
+
+    if (!matches(keyword = filterInfo.pid?.toString(), target = log.pid)) {
+      return false
+    }
+
+    if (!matches(keyword = filterInfo.tid?.toString(), target = log.tid)) {
+      return false
+    }
+
+    if (!matchesPriority(log)) {
+      return false
+    }
+
+    return true
   }
 }
 

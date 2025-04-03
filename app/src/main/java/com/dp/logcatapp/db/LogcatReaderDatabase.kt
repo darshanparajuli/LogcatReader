@@ -7,7 +7,6 @@ import androidx.room.Dao
 import androidx.room.Database
 import androidx.room.Delete
 import androidx.room.Entity
-import androidx.room.Index
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.PrimaryKey
@@ -19,14 +18,15 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 import com.dp.logcatapp.model.FilterType
 import kotlinx.coroutines.flow.Flow
 
-@Entity(
-  primaryKeys = ["type", "value", "exclude"], tableName = "filters",
-  indices = [Index(name = "index_filters", value = ["exclude"])]
-)
+@Entity(tableName = "filters")
 data class FilterInfo(
-  @ColumnInfo(name = "type") val type: Int,
-  @ColumnInfo(name = "value") val content: String,
-  @ColumnInfo(name = "exclude") val exclude: Boolean
+  @PrimaryKey @ColumnInfo(name = "id") val id: Long? = null,
+  @ColumnInfo(name = "tag") val tag: String? = null,
+  @ColumnInfo(name = "message") val message: String? = null,
+  @ColumnInfo(name = "pid") val pid: Int? = null,
+  @ColumnInfo(name = "tid") val tid: Int? = null,
+  @ColumnInfo(name = "log_levels") val logLevels: String? = null,
+  @ColumnInfo(name = "exclude") val exclude: Boolean = false,
 )
 
 @Dao
@@ -65,7 +65,11 @@ interface SavedLogsDao {
   fun delete(vararg savedLogInfo: SavedLogInfo)
 }
 
-@Database(entities = [FilterInfo::class, SavedLogInfo::class], exportSchema = false, version = 2)
+@Database(
+  entities = [FilterInfo::class, SavedLogInfo::class],
+  exportSchema = false,
+  version = LogcatReaderDatabase.LATEST_VERSION,
+)
 abstract class LogcatReaderDatabase : RoomDatabase() {
   abstract fun filterDao(): FilterDao
 
@@ -73,6 +77,7 @@ abstract class LogcatReaderDatabase : RoomDatabase() {
 
   companion object {
     private const val DB_NAME = "logcat_reader_db"
+    const val LATEST_VERSION = 3
 
     private val instanceLock = Any()
 
@@ -92,7 +97,7 @@ abstract class LogcatReaderDatabase : RoomDatabase() {
             context.applicationContext,
             LogcatReaderDatabase::class.java, DB_NAME
           )
-            .addMigrations(MIGRATION_1_2)
+            .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
             .fallbackToDestructiveMigration()
             .build()
         }
@@ -120,6 +125,26 @@ abstract class LogcatReaderDatabase : RoomDatabase() {
         db.execSQL("CREATE INDEX `index_filters` ON `filters` (`exclude`)")
         db.execSQL(
           "CREATE TABLE IF NOT EXISTS `saved_logs_info` (`name` TEXT NOT NULL, `path` TEXT NOT NULL, `is_custom` INTEGER NOT NULL, PRIMARY KEY (`path`))"
+        )
+      }
+    }
+
+    private val MIGRATION_2_3 = object : Migration(2, 3) {
+      override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("DROP TABLE `filters`")
+        db.execSQL(
+          """
+            CREATE TABLE `filters` (
+              `id` INTEGER, 
+              `tag` TEXT,
+              `message` TEXT,
+              `pid` INTEGER,
+              `tid` INTEGER,
+              `log_levels` TEXT,
+              `exclude` INTEGER NOT NULL,
+              PRIMARY KEY (`id`)
+            )
+          """.trimIndent()
         )
       }
     }
