@@ -23,7 +23,7 @@ class LogcatSession(
   initialCapacity: Int,
   private val buffers: Set<String>,
   @Volatile
-  var pollIntervalMs: Long = 250L,
+  var pollIntervalMs: Long = 250,
 ) {
 
   @Volatile private var record = false

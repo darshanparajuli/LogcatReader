@@ -1,7 +1,6 @@
 package com.dp.logcatapp.ui.screens
 
 import android.content.Intent
-import android.content.SharedPreferences
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts.OpenDocumentTree
 import androidx.compose.foundation.clickable
@@ -56,7 +55,6 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEachIndexed
-import androidx.core.content.edit
 import androidx.core.net.toUri
 import com.dp.logcat.LogcatUtil
 import com.dp.logcatapp.BuildConfig
@@ -70,7 +68,10 @@ import com.dp.logcatapp.ui.theme.Shapes
 import com.dp.logcatapp.ui.theme.isDynamicThemeAvailable
 import com.dp.logcatapp.util.PreferenceKeys
 import com.dp.logcatapp.util.findActivity
-import com.dp.logcatapp.util.getDefaultSharedPreferences
+import com.dp.logcatapp.util.rememberBooleanSharedPreferencesValue
+import com.dp.logcatapp.util.rememberIntSharedPreferencesValue
+import com.dp.logcatapp.util.rememberStringSetSharedPreferencesValue
+import com.dp.logcatapp.util.rememberStringSharedPreferencesValue
 import com.dp.logcatapp.util.showToast
 import java.text.NumberFormat
 
@@ -115,7 +116,6 @@ fun SettingsScreen(
       )
     }
   ) { innerPadding ->
-    val sharedPrefs = remember(context) { context.getDefaultSharedPreferences() }
     LazyColumn(
       modifier = Modifier
         .fillMaxSize()
@@ -138,13 +138,13 @@ fun SettingsScreen(
             )
           }
           is PreferenceRow -> when (item.type) {
-            PreferenceType.KeepScreenOn -> KeepScreenOn(sharedPrefs)
-            PreferenceType.Theme -> Theme(sharedPrefs)
-            PreferenceType.DynamicColor -> DynamicColor(sharedPrefs)
-            PreferenceType.PollInterval -> PollInterval(sharedPrefs)
-            PreferenceType.Buffers -> Buffers(sharedPrefs)
-            PreferenceType.MaxLogs -> MaxLogs(sharedPrefs)
-            PreferenceType.SaveLocation -> SaveLocation(sharedPrefs)
+            PreferenceType.KeepScreenOn -> KeepScreenOn()
+            PreferenceType.Theme -> Theme()
+            PreferenceType.DynamicColor -> DynamicColor()
+            PreferenceType.PollInterval -> PollInterval()
+            PreferenceType.Buffers -> Buffers()
+            PreferenceType.MaxLogs -> MaxLogs()
+            PreferenceType.SaveLocation -> SaveLocation()
             PreferenceType.GithubRepoInfo -> GithubRepoInfo()
             PreferenceType.AppInfo -> AppInfo()
           }
@@ -164,16 +164,12 @@ fun SettingsScreen(
 
 @Composable
 private fun KeepScreenOn(
-  sharedPrefs: SharedPreferences,
   modifier: Modifier = Modifier,
 ) {
-  val preference = remember {
-    BooleanPreferenceState(
-      key = PreferenceKeys.General.KEY_KEEP_SCREEN_ON,
-      default = PreferenceKeys.General.Default.KEY_KEEP_SCREEN_ON,
-      preferences = sharedPrefs,
-    )
-  }
+  val preference = rememberBooleanSharedPreferencesValue(
+    key = PreferenceKeys.General.KEY_KEEP_SCREEN_ON,
+    default = PreferenceKeys.General.Default.KEY_KEEP_SCREEN_ON,
+  )
   ListItem(
     modifier = modifier
       .fillMaxWidth()
@@ -194,16 +190,12 @@ private fun KeepScreenOn(
 
 @Composable
 private fun Theme(
-  sharedPrefs: SharedPreferences,
   modifier: Modifier = Modifier,
 ) {
-  val preference = remember {
-    StringPreferenceState(
-      key = PreferenceKeys.Appearance.KEY_THEME,
-      default = PreferenceKeys.Appearance.Default.THEME,
-      preferences = sharedPrefs,
-    )
-  }
+  val preference = rememberStringSharedPreferencesValue(
+    key = PreferenceKeys.Appearance.KEY_THEME,
+    default = PreferenceKeys.Appearance.Default.THEME,
+  )
   var showSelectionDialog by remember { mutableStateOf(false) }
   val themeValues = stringArrayResource(R.array.pref_appearance_theme_values)
   val themeOptions = stringArrayResource(R.array.pref_appearance_theme_entries)
@@ -217,13 +209,13 @@ private fun Theme(
       Text(stringResource(R.string.pref_theme_title))
     },
     supportingContent = {
-      Text(themeOptions[preference.value.toInt()])
+      Text(themeOptions[preference.value!!.toInt()])
     },
   )
   if (showSelectionDialog) {
     SelectionDialog(
       title = stringResource(R.string.pref_theme_title),
-      initialSelected = themeValues.indexOf(preference.value),
+      initialSelected = themeValues.indexOf(preference.value!!),
       options = themeOptions.toList(),
       onDismiss = {
         showSelectionDialog = false
@@ -238,16 +230,12 @@ private fun Theme(
 
 @Composable
 private fun DynamicColor(
-  sharedPrefs: SharedPreferences,
   modifier: Modifier = Modifier,
 ) {
-  val preference = remember {
-    BooleanPreferenceState(
-      key = PreferenceKeys.Appearance.KEY_DYNAMIC_COLOR,
-      default = PreferenceKeys.Appearance.Default.DYNAMIC_COLOR,
-      preferences = sharedPrefs,
-    )
-  }
+  val preference = rememberBooleanSharedPreferencesValue(
+    key = PreferenceKeys.Appearance.KEY_DYNAMIC_COLOR,
+    default = PreferenceKeys.Appearance.Default.DYNAMIC_COLOR,
+  )
   ListItem(
     modifier = modifier
       .fillMaxWidth()
@@ -268,16 +256,12 @@ private fun DynamicColor(
 
 @Composable
 private fun PollInterval(
-  sharedPrefs: SharedPreferences,
   modifier: Modifier = Modifier,
 ) {
-  val preference = remember {
-    StringPreferenceState(
-      key = PreferenceKeys.Logcat.KEY_POLL_INTERVAL,
-      default = PreferenceKeys.Logcat.Default.POLL_INTERVAL,
-      preferences = sharedPrefs,
-    )
-  }
+  val preference = rememberIntSharedPreferencesValue(
+    key = PreferenceKeys.Logcat.KEY_POLL_INTERVAL,
+    default = PreferenceKeys.Logcat.Default.POLL_INTERVAL,
+  )
   var showInputDialog by remember { mutableStateOf(false) }
   ListItem(
     modifier = modifier
@@ -296,17 +280,17 @@ private fun PollInterval(
     val context = LocalContext.current
     InputDialog(
       label = stringResource(R.string.pref_poll_interval_title),
-      initialValue = preference.value,
+      initialValue = preference.value.toString(),
       onDismiss = { showInputDialog = false },
       keyboardType = KeyboardType.Number,
       onOk = { newValue ->
         try {
-          val num = newValue.toLong()
+          val num = newValue.toInt()
           if (num <= 0) {
             context.showToast(context.getString(R.string.value_must_be_greater_than_0))
           } else {
             showInputDialog = false
-            preference.value = newValue
+            preference.value = num
           }
         } catch (_: NumberFormatException) {
           context.showToast(context.getString(R.string.value_must_be_a_positive_integer))
@@ -318,17 +302,12 @@ private fun PollInterval(
 
 @Composable
 private fun Buffers(
-  sharedPrefs: SharedPreferences,
   modifier: Modifier = Modifier,
 ) {
-  val preference = remember {
-    StringSetPreferenceState(
-      key = PreferenceKeys.Logcat.KEY_BUFFERS,
-      default = PreferenceKeys.Logcat.Default.BUFFERS,
-      preferences = sharedPrefs,
-    )
-  }
-
+  val preference = rememberStringSetSharedPreferencesValue(
+    key = PreferenceKeys.Logcat.KEY_BUFFERS,
+    default = PreferenceKeys.Logcat.Default.BUFFERS,
+  )
   val availableBuffers = LogcatUtil.AVAILABLE_BUFFERS
   var showBuffersSheet by remember { mutableStateOf(false) }
 
@@ -342,7 +321,7 @@ private fun Buffers(
       Text(stringResource(R.string.pref_logcat_buffer_title))
     },
     supportingContent = {
-      val summary = preference.value.map { e -> availableBuffers[e.toInt()] }
+      val summary = preference.value!!.map { e -> availableBuffers[e.toInt()] }
         .sorted()
         .joinToString(", ")
       Text(summary)
@@ -353,7 +332,7 @@ private fun Buffers(
     MultiSelectDialog(
       title = stringResource(R.string.pref_logcat_buffer_title),
       initialSelected = availableBuffers.mapIndexedNotNull { index, b ->
-        if (index.toString() in preference.value) index else null
+        if (index.toString() in preference.value!!) index else null
       }.toSet(),
       options = availableBuffers.toList(),
       onDismiss = {
@@ -371,16 +350,12 @@ private fun Buffers(
 
 @Composable
 private fun MaxLogs(
-  sharedPrefs: SharedPreferences,
   modifier: Modifier = Modifier,
 ) {
-  val preference = remember {
-    StringPreferenceState(
-      key = PreferenceKeys.Logcat.KEY_MAX_LOGS,
-      default = PreferenceKeys.Logcat.Default.MAX_LOGS,
-      preferences = sharedPrefs,
-    )
-  }
+  val preference = rememberIntSharedPreferencesValue(
+    key = PreferenceKeys.Logcat.KEY_MAX_LOGS,
+    default = PreferenceKeys.Logcat.Default.MAX_LOGS,
+  )
   var showInputDialog by remember { mutableStateOf(false) }
   ListItem(
     modifier = modifier
@@ -393,24 +368,24 @@ private fun MaxLogs(
     },
     supportingContent = {
       val numberFormat = remember { NumberFormat.getInstance() }
-      Text(numberFormat.format(preference.value.toInt()))
+      Text(numberFormat.format(preference.value))
     },
   )
   if (showInputDialog) {
     val context = LocalContext.current
     InputDialog(
       label = stringResource(R.string.pref_logcat_max_recent_logs_to_keep_in_memory),
-      initialValue = preference.value,
+      initialValue = preference.value.toString(),
       onDismiss = { showInputDialog = false },
       keyboardType = KeyboardType.Number,
       onOk = { newValue ->
         try {
-          val num = newValue.toLong()
+          val num = newValue.toInt()
           if (num < 1000) {
             context.showToast(context.getString(R.string.cannot_be_less_than_1000))
           } else {
             showInputDialog = false
-            preference.value = newValue
+            preference.value = num
           }
         } catch (_: NumberFormatException) {
           context.showToast(context.getString(R.string.not_a_valid_number))
@@ -422,18 +397,14 @@ private fun MaxLogs(
 
 @Composable
 private fun SaveLocation(
-  sharedPrefs: SharedPreferences,
   modifier: Modifier = Modifier,
 ) {
-  val preference = remember {
-    StringPreferenceState(
-      key = PreferenceKeys.Logcat.KEY_SAVE_LOCATION,
-      default = PreferenceKeys.Logcat.Default.SAVE_LOCATION,
-      preferences = sharedPrefs,
-    )
-  }
+  val preference = rememberStringSharedPreferencesValue(
+    key = PreferenceKeys.Logcat.KEY_SAVE_LOCATION,
+    default = PreferenceKeys.Logcat.Default.SAVE_LOCATION,
+  )
   var showSelectionDialog by remember { mutableStateOf(false) }
-  val isUsingInternal = preference.value.isEmpty()
+  val isUsingInternal = preference.value!!.isEmpty()
   ListItem(
     modifier = modifier
       .fillMaxWidth()
@@ -730,46 +701,4 @@ private sealed interface Preference {
   data class SectionName(val nameRes: Int) : Preference
   data class PreferenceRow(val type: PreferenceType) : Preference
   data object SectionDivider : Preference
-}
-
-private class BooleanPreferenceState(
-  val key: String,
-  val default: Boolean,
-  private val preferences: SharedPreferences,
-) {
-  private val _value = mutableStateOf(preferences.getBoolean(key, default))
-  var value: Boolean
-    get() = _value.value
-    set(value) {
-      preferences.edit { putBoolean(key, value) }
-      _value.value = value
-    }
-}
-
-private class StringPreferenceState(
-  val key: String,
-  val default: String,
-  private val preferences: SharedPreferences,
-) {
-  private val _value = mutableStateOf(preferences.getString(key, default).orEmpty())
-  var value: String
-    get() = _value.value
-    set(value) {
-      preferences.edit { putString(key, value) }
-      _value.value = value
-    }
-}
-
-private class StringSetPreferenceState(
-  val key: String,
-  val default: Set<String>,
-  private val preferences: SharedPreferences,
-) {
-  private val _value = mutableStateOf(preferences.getStringSet(key, default).orEmpty())
-  var value: Set<String>
-    get() = _value.value
-    set(value) {
-      preferences.edit { putStringSet(key, value) }
-      _value.value = value
-    }
 }

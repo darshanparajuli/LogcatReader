@@ -38,9 +38,9 @@ object PreferenceKeys {
     const val KEY_SAVE_LOCATION = "pref_key_logcat_save_location"
 
     object Default {
-      const val POLL_INTERVAL = "250"
+      const val POLL_INTERVAL = 250
       val BUFFERS: Set<String> = getDefaultBufferValues()
-      const val MAX_LOGS = 250_000.toString()
+      const val MAX_LOGS = 250_000
       const val SAVE_LOCATION = ""
 
       private fun getDefaultBufferValues(): Set<String> {

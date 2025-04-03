@@ -237,11 +237,11 @@ class LogcatService : BaseService() {
     super.onSharedPreferenceChanged(sharedPreferences, key)
     when (key) {
       PreferenceKeys.Logcat.KEY_POLL_INTERVAL -> {
-        val pollInterval = sharedPreferences.getString(
+        val pollInterval = sharedPreferences.getInt(
           key,
           PreferenceKeys.Logcat.Default.POLL_INTERVAL
-        )!!.trim().toLong()
-        _logcatSession.value?.sessionOrNull?.apply { pollIntervalMs = pollInterval }
+        )
+        _logcatSession.value?.sessionOrNull?.apply { pollIntervalMs = pollInterval.toLong() }
       }
       PreferenceKeys.Logcat.KEY_BUFFERS,
       PreferenceKeys.Logcat.KEY_MAX_LOGS -> {
@@ -256,14 +256,14 @@ class LogcatService : BaseService() {
       PreferenceKeys.Logcat.KEY_BUFFERS,
       PreferenceKeys.Logcat.Default.BUFFERS
     )!!
-    val pollInterval = sharedPreferences.getString(
+    val pollInterval = sharedPreferences.getInt(
       PreferenceKeys.Logcat.KEY_POLL_INTERVAL,
       PreferenceKeys.Logcat.Default.POLL_INTERVAL
-    )!!.trim().toLong()
-    val maxLogs = sharedPreferences.getString(
+    )
+    val maxLogs = sharedPreferences.getInt(
       PreferenceKeys.Logcat.KEY_MAX_LOGS,
       PreferenceKeys.Logcat.Default.MAX_LOGS
-    )!!.trim().toInt()
+    )
 
     val buffers = LogcatUtil.AVAILABLE_BUFFERS
     val logcatBuffers = bufferValues.mapNotNull { e ->
@@ -282,7 +282,7 @@ class LogcatService : BaseService() {
     return LogcatSession(
       initialCapacity = maxLogs,
       buffers = logcatBuffers,
-      pollIntervalMs = pollInterval
+      pollIntervalMs = pollInterval.toLong()
     )
   }
 }
