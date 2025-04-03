@@ -65,7 +65,6 @@
   <string name="save">Сохранить</string>
   <string name="error">Ошибка</string>
   <string name="saved">Сохранено</string>
-  <string name="no_new_logs">Нет новых журналов</string>
   <string name="error_saving">Ошибка при сохранении</string>
   <string name="external_storage_not_mounted_error">Внешнее хранилище не установлено</string>
   <string name="pref_logcat_max_recent_logs_to_keep_in_memory">

@@ -700,7 +700,7 @@ fun DeviceLogsScreen(
             )
             Spacer(Modifier.height(8.dp))
             Text(
-              text = stringResource(R.string.no_new_logs),
+              text = stringResource(R.string.waiting_for_logs),
               style = AppTypography.bodyMedium,
             )
           }
