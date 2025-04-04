@@ -20,7 +20,7 @@ import kotlin.concurrent.withLock
 private const val THREAD_JOIN_TIMEOUT = 5_000L // 5 seconds
 
 class LogcatSession(
-  initialCapacity: Int,
+  capacity: Int,
   private val buffers: Set<String>,
   @Volatile
   var pollIntervalMs: Long = 250,
@@ -33,11 +33,11 @@ class LogcatSession(
   private val recordBuffer = LinkedBlockingQueue<List<Log>>()
   private var recordingFileInfo: RecordingFileInfo? = null
   private val allLogs = FixedCircularArray<Log>(
-    capacity = initialCapacity,
-    initialSize = 1000,
+    capacity = capacity,
+    initialSize = 10_000,
   )
   private val pendingLogs = FixedCircularArray<Log>(
-    capacity = initialCapacity,
+    capacity = capacity,
     initialSize = 1000,
   )
   private var onNewLog: ((List<Log>) -> Unit)? = null
@@ -65,7 +65,7 @@ class LogcatSession(
         onNewLog = null
       }
     }
-  }.buffer(capacity = Int.MAX_VALUE)
+  }.buffer(capacity)
 
   @JvmInline
   value class Status(val success: Boolean)

@@ -280,7 +280,7 @@ class LogcatService : BaseService() {
     }
 
     return LogcatSession(
-      initialCapacity = maxLogs,
+      capacity = maxLogs,
       buffers = logcatBuffers,
       pollIntervalMs = pollInterval.toLong()
     )
