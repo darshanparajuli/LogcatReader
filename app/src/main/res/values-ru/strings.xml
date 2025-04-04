@@ -115,6 +115,7 @@
   <string name="asking_permission_for_root_access">Запрос root-доступа…</string>
   <string name="app_restart_dialog_title">Требуется перезапуск приложения</string>
   <string name="app_restart_dialog_msg_body">Нажатие «ОК» закроет приложение. Теперь вы должны увидеть полный список журналов.</string>
+  <string name="permission_granted_info_body">Обратите внимание, если вы не видите все журналы сразу, вам нужно будет подождать, пока система снова запросит разрешение на просмотр журналов, и предоставить доступ. Это связано с более жесткими ограничениями в последних версиях Android.</string>
   <string name="select_export_format">Выберите формат экспорта</string>
   <string name="export_format_default">По умолчанию</string>
   <string name="export_format_single_line">Одна строка</string>
@@ -123,4 +124,5 @@
   <string name="version_fmt">Версия %s</string>
   <string name="unable_to_start_logcat_error_msg">Невозможно запустить процесс logcat и прочитать журналы</string>
   <string name="compact_view">Компактный вид</string>
+  <string name="permission_granted_info_title">Разрешение READ_LOGS предоставлено</string>
 </resources>

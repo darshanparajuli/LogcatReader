@@ -112,6 +112,8 @@
   <string name="asking_permission_for_root_access">要求获得ROOT访问权限…</string>
   <string name="app_restart_dialog_title">需要重启应用</string>
   <string name="app_restart_dialog_msg_body">点击确定将终止该应用程序。 从现在开始，您应该会看到完整的日志列表。</string>
+  <string name="permission_granted_info_title">已授予 READ_LOGS 权限</string>
+  <string name="permission_granted_info_body">请注意，如果您没有立即看到所有日志，则需要等待系统再次请求允许查看日志并授予访问权限。这是由于最近的 Android 版本限制更严格。</string>
   <string name="select_export_format">选择导出格式</string>
   <string name="export_format_default">默认</string>
   <string name="export_format_single_line">单行</string>

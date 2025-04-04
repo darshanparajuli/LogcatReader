@@ -117,6 +117,8 @@
   <string name="asking_permission_for_root_access">Asking permission for ROOT access…</string>
   <string name="app_restart_dialog_title">App restart required</string>
   <string name="app_restart_dialog_msg_body">Tapping OK will kill the app. You should see a complete list of logs from now on.</string>
+  <string name="permission_granted_info_title">READ_LOGS permission granted</string>
+  <string name="permission_granted_info_body">Please note if you do not see all the logs right away, you will need to wait for the system to ask again to allow access to view the logs, and grant access. This is due to tighter restriction in recent Android versions.</string>
   <string name="select_export_format">Select export format</string>
   <string name="export_format_default">Default</string>
   <string name="export_format_single_line">Single line</string>

@@ -168,6 +168,7 @@ import java.util.Locale
 
 private const val TAG = "HomeScreen"
 private const val SNAP_SCROLL_HIDE_DELAY_MS = 2000L
+private const val SHOW_PERMISSION_GRANTED_INFO_PREF_KEY = "show_permission_info_dialog"
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -1215,6 +1216,31 @@ private fun MaybeShowPermissionRequiredDialog() {
         Icon(Icons.Default.Info, contentDescription = null)
       }
     )
+  } else {
+    val showPermissionInfoDialog = rememberBooleanSharedPreference(
+      key = SHOW_PERMISSION_GRANTED_INFO_PREF_KEY,
+      default = true,
+    )
+    if (showPermissionInfoDialog.value) {
+      Dialog(
+        onDismissRequest = {
+          showPermissionInfoDialog.value = false
+        },
+        title = {
+          Text(stringResource(R.string.permission_granted_info_title))
+        },
+        content = {
+          Text(stringResource(R.string.permission_granted_info_body))
+        },
+        confirmButton = {
+          TextButton(
+            onClick = { showPermissionInfoDialog.value = false },
+          ) {
+            Text(stringResource(android.R.string.ok))
+          }
+        }
+      )
+    }
   }
 
   if (showAskingForRootPermissionDialog) {
