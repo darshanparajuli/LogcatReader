@@ -65,6 +65,7 @@
   <string name="save">Сохранить</string>
   <string name="error">Ошибка</string>
   <string name="saved">Сохранено</string>
+  <string name="waiting_for_logs">Ожидание журналов…</string>
   <string name="error_saving">Ошибка при сохранении</string>
   <string name="external_storage_not_mounted_error">Внешнее хранилище не установлено</string>
   <string name="pref_logcat_max_recent_logs_to_keep_in_memory">
@@ -94,8 +95,7 @@
   <string name="restart">Перезапустить</string>
   <string name="exclusion">Исключения</string>
   <string name="clear">Очистить</string>
-  <string name="process_id" translatable="false">PID</string>
-  <string name="thread_id" translatable="false">TID</string>
+  <string name="log">журнал</string>
   <string name="log_level">Уровень журнала</string>
   <string name="message">Сообщение</string>
   <string name="date">Дата</string>
@@ -104,7 +104,6 @@
   <string name="permission_instruction0">Следуйте инструкциям ниже, чтобы предоставить разрешение READ_LOGS (нужно сделать только один раз):</string>
   <string name="permission_instruction1">1. Подключите устройство к компьютеру с установленными ADB tools.</string>
   <string name="permission_instruction2">2. Выполните следующую команду (одной строкой):</string>
-  <string name="permission_instruction3">adb shell pm grant com.dp.logcatapp android.permission.READ_LOGS</string>
   <string name="permission_instruction4">3. Закройте приложение двойным нажатием кнопки «Назад» и смахните его из «Недавних».</string>
   <string name="permission_instruction5">4. Снова запустите приложение, теперь вы должны увидеть все журналы.</string>
   <string name="permission_instruction6">Пожалуйста, сообщите, если возникнут какие-либо проблемы. Спасибо!</string>
@@ -123,4 +122,5 @@
   <string name="unsupported_source">Неподдерживаемый источник</string>
   <string name="version_fmt">Версия %s</string>
   <string name="unable_to_start_logcat_error_msg">Невозможно запустить процесс logcat и прочитать журналы</string>
+  <string name="compact_view">Компактный вид</string>
 </resources>

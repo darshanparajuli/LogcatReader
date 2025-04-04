@@ -12,6 +12,7 @@
   <string name="press_back_again_to_exit">再次点击退出</string>
   <string name="pref_cat_general">通用</string>
   <string name="pref_general_keep_screen_on">保持屏幕开启</string>
+  <string name="pref_dynamic_color">动态色彩</string>
   <string name="pref_cat_appearance">出现</string>
   <string name="pref_theme_title">主题</string>
   <string name="pref_theme_black_theme">暗色主题</string>
@@ -24,6 +25,7 @@
   <string name="copy_to_clipboard">复制到剪切板</string>
   <string name="copied_to_clipboard">已复制</string>
 
+  <string name="filtered">" 过滤的"</string>
   <string name="save_to_file">保存到文件</string>
   <string name="export">导出</string>
   <string name="logcat">Logcat</string>
@@ -60,6 +62,7 @@
   <string name="save">保存</string>
   <string name="error">错误</string>
   <string name="saved">保存</string>
+  <string name="waiting_for_logs">等待 logs…</string>
   <string name="error_saving">保存错误</string>
   <string name="external_storage_not_mounted_error">没有检测到外置内存卡</string>
   <string name="pref_logcat_max_recent_logs_to_keep_in_memory">
@@ -86,10 +89,10 @@
   <string name="exclude">排除</string>
   <string name="exclusions">排除</string>
   <string name="restart_logcat">重启 logcat</string>
+  <string name="restart">重新启动</string>
   <string name="exclusion">排除</string>
   <string name="clear">清除</string>
-  <string name="process_id" translatable="false">PID</string>
-  <string name="thread_id" translatable="false">TID</string>
+  <string name="log">Log</string>
   <string name="log_level">Log 等级</string>
   <string name="message">信息</string>
   <string name="date">日期</string>
@@ -98,7 +101,6 @@
   <string name="permission_instruction0">请按照以下步骤授予READ_LOGS权限（只需执行一次）:</string>
   <string name="permission_instruction1">1.将手机连接到装有ADB工具的计算机.</string>
   <string name="permission_instruction2">2. 运行以下命令 (单行):</string>
-  <string name="permission_instruction3">adb shell pm grant com.dp.logcatapp android.permission.READ_LOGS</string>
   <string name="permission_instruction4">3. 关闭应用并清理后台.</string>
   <string name="permission_instruction5">4. 重新启动.</string>
   <string name="permission_instruction6">如果你有任何问题请提交 issues, 谢谢!</string>
@@ -115,4 +117,7 @@
   <string name="export_format_single_line">单行</string>
   <string name="error_opening_source">来源打开错误</string>
   <string name="unsupported_source">不支持的来源</string>
+  <string name="version_fmt">" 版本 %s"</string>
+  <string name="unable_to_start_logcat_error_msg">无法启动 logcat 进程并读取日志</string>
+  <string name="compact_view">紧凑视图</string>
 </resources>
