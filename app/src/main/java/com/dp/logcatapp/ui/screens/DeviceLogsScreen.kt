@@ -137,7 +137,6 @@ import com.dp.logcatapp.ui.theme.AppTypography
 import com.dp.logcatapp.util.PreferenceKeys
 import com.dp.logcatapp.util.ShareUtils
 import com.dp.logcatapp.util.SuCommander
-import com.dp.logcatapp.util.containsIgnoreCase
 import com.dp.logcatapp.util.getDefaultSharedPreferences
 import com.dp.logcatapp.util.rememberBooleanSharedPreference
 import com.dp.logcatapp.util.showToast
@@ -1614,7 +1613,7 @@ private class LogFilter(
     return if (keyword.isNullOrEmpty()) {
       true
     } else {
-      target.containsIgnoreCase(keyword)
+      target.contains(keyword, ignoreCase = true)
     }
   }
 
