@@ -1162,8 +1162,11 @@ private fun AppBar(
 @Composable
 private fun MaybeShowPermissionRequiredDialog() {
   val context = LocalContext.current
-  var showPermissionRequiredDialog by remember(context) {
-    mutableStateOf(!isReadLogsPermissionGranted(context))
+  val permissionGranted = remember(context) {
+    isReadLogsPermissionGranted(context)
+  }
+  var showPermissionRequiredDialog by remember(permissionGranted) {
+    mutableStateOf(!permissionGranted)
   }
   var showAskingForRootPermissionDialog by remember { mutableStateOf(false) }
   var showRestartAppDialog by remember { mutableStateOf(false) }
@@ -1216,7 +1219,7 @@ private fun MaybeShowPermissionRequiredDialog() {
         Icon(Icons.Default.Info, contentDescription = null)
       }
     )
-  } else {
+  } else if (permissionGranted) {
     val showPermissionInfoDialog = rememberBooleanSharedPreference(
       key = SHOW_PERMISSION_GRANTED_INFO_PREF_KEY,
       default = true,
