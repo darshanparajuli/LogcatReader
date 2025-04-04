@@ -1,6 +1,5 @@
 package com.dp.logcatapp.util
 
-import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
@@ -20,19 +19,18 @@ class SuCommander(private val cmd: String) {
     flush()
   }
 
-  suspend fun run() = coroutineScope {
+  suspend fun run(): Boolean = coroutineScope {
+    var dispatcher = Executors.newFixedThreadPool(2).asCoroutineDispatcher()
     try {
       val processBuilder = ProcessBuilder("su")
-      val process = withContext(IO) { processBuilder.start() }
+      val process = withContext(dispatcher) { processBuilder.start() }
 
       val stdoutWriter = BufferedWriter(OutputStreamWriter(process.outputStream))
       val stdinReader = BufferedReader(InputStreamReader(process.inputStream))
-      val stderrReader = BufferedReader(InputStreamReader(process.errorStream))
 
       val marker = "RESULT>>>${UUID.randomUUID()}>>>"
 
-      val stdoutStderrDispatcherContext = Executors.newFixedThreadPool(2).asCoroutineDispatcher()
-      val stdoutResult = async(stdoutStderrDispatcherContext) {
+      val stdoutResult = async(dispatcher) {
         var result = false
 
         try {
@@ -45,19 +43,10 @@ class SuCommander(private val cmd: String) {
               break
             }
           }
-        } catch (e: Exception) {
+        } catch (_: Exception) {
         }
 
         result
-      }
-
-      val stderrReaderResult = async(stdoutStderrDispatcherContext) {
-        try {
-          while (true) {
-            stderrReader.readLine()?.trim() ?: break
-          }
-        } catch (e: Exception) {
-        }
       }
 
       stdoutWriter.writeCmd(cmd)
@@ -67,14 +56,19 @@ class SuCommander(private val cmd: String) {
 
       stdoutWriter.writeCmd("exit")
 
-      withContext(IO) { process.waitFor() }
-      process.destroy()
-
-      stderrReaderResult.await()
+      withContext(dispatcher) {
+        process.waitFor()
+        process.destroy()
+      }
 
       finalResult
-    } catch (e: Exception) {
+    } catch (_: Exception) {
       false
+    } finally {
+      try {
+        dispatcher.close()
+      } catch (_: Exception) {
+      }
     }
   }
 }
