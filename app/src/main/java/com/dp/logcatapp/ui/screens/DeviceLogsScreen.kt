@@ -99,8 +99,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.core.net.toFile
 import androidx.core.net.toUri
@@ -1249,7 +1251,7 @@ private fun MaybeShowPermissionRequiredDialog() {
             Process.killProcess(Process.myPid())
           }
         ) {
-          Text(stringResource(R.string.restart))
+          Text(stringResource(android.R.string.ok))
         }
       }
     )
@@ -1268,7 +1270,7 @@ private fun MaybeShowPermissionRequiredDialog() {
           modifier = Modifier.verticalScroll(rememberScrollState()),
         ) {
           Text(
-            buildAnnotatedString {
+            text = buildAnnotatedString {
               append(stringResource(R.string.permission_instruction0))
               appendLine(); appendLine()
               append(stringResource(R.string.permission_instruction1))
@@ -1280,6 +1282,8 @@ private fun MaybeShowPermissionRequiredDialog() {
                   text = stringResource(R.string.permission_instruction3),
                   spanStyle = SpanStyle(
                     color = MaterialTheme.colorScheme.tertiary,
+                    fontFamily = FontFamily.Monospace,
+                    fontSize = 11.sp,
                   )
                 )
               )
@@ -1289,7 +1293,7 @@ private fun MaybeShowPermissionRequiredDialog() {
               append(stringResource(R.string.permission_instruction5))
               appendLine(); appendLine()
               append(stringResource(R.string.permission_instruction6))
-            }
+            },
           )
         }
       },
