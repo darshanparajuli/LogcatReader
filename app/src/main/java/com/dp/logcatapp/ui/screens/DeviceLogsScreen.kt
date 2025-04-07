@@ -718,7 +718,11 @@ fun DeviceLogsScreen(
               }
             },
           contentPadding = innerPadding,
-          listStyle = if (compactViewPreference.value) LogsListStyle.Compact else LogsListStyle.Default,
+          listStyle = if (!showSearchBar && compactViewPreference.value) {
+            LogsListStyle.Compact
+          } else {
+            LogsListStyle.Default
+          },
           logs = logsState,
           searchHits = searchHitsMap,
           onClick = if (!compactViewPreference.value) {

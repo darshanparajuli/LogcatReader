@@ -295,7 +295,11 @@ fun SavedLogsViewerScreen(
         contentPadding = innerPadding,
         state = listState,
         searchHits = searchHitsMap,
-        listStyle = if (compactViewPreference.value) LogsListStyle.Compact else LogsListStyle.Default,
+        listStyle = if (!showSearchBar && compactViewPreference.value) {
+          LogsListStyle.Compact
+        } else {
+          LogsListStyle.Default
+        },
         logs = logsState.logs,
         currentSearchHitLogId = currentSearchHitLogId,
         onClick = if (!compactViewPreference.value) {
