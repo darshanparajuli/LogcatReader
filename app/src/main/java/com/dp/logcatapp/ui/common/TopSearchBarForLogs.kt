@@ -66,7 +66,9 @@ fun SearchLogsTopBar(
     },
     title = {
       TextField(
-        modifier = Modifier.focusRequester(focusRequester),
+        modifier = Modifier
+          .fillMaxWidth()
+          .focusRequester(focusRequester),
         value = searchQuery,
         onValueChange = onQueryChange,
         maxLines = 1,
