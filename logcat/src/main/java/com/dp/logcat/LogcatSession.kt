@@ -177,10 +177,16 @@ class LogcatSession(
     logcatThread = null
     pollerThread?.join(THREAD_JOIN_TIMEOUT)
     pollerThread = null
+    recordThread?.let { thread ->
+      thread.interrupt()
+      thread.join(THREAD_JOIN_TIMEOUT)
+    }
+    recordThread = null
     lock.withLock {
       allLogs.clear()
       pendingLogs.clear()
       recordBuffer.clear()
+      recordingFileInfo = null
     }
     Logger.debug(LogcatSession::class, "stopped")
   }
@@ -226,11 +232,13 @@ class LogcatSession(
   fun stopRecording(): RecordingFileInfo? {
     return lock.withLock {
       record = false
-      recordThread?.interrupt()
-      recordThread?.join(THREAD_JOIN_TIMEOUT)
+      recordThread?.let { thread ->
+        thread.interrupt()
+        thread.join(THREAD_JOIN_TIMEOUT)
+      }
       recordThread = null
-      val result = recordingFileInfo
       recordBuffer.clear()
+      val result = recordingFileInfo
       recordingFileInfo = null
       result
     }
