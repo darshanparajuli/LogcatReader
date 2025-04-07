@@ -2,67 +2,11 @@ package com.dp.logcatapp.db
 
 import android.content.Context
 import androidx.annotation.GuardedBy
-import androidx.room.ColumnInfo
-import androidx.room.Dao
 import androidx.room.Database
-import androidx.room.Delete
-import androidx.room.Entity
-import androidx.room.Insert
-import androidx.room.OnConflictStrategy
-import androidx.room.PrimaryKey
-import androidx.room.Query
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
-import kotlinx.coroutines.flow.Flow
-
-@Entity(tableName = "filters")
-data class FilterInfo(
-  @PrimaryKey @ColumnInfo(name = "id") val id: Long? = null,
-  @ColumnInfo(name = "tag") val tag: String? = null,
-  @ColumnInfo(name = "message") val message: String? = null,
-  @ColumnInfo(name = "pid") val pid: Int? = null,
-  @ColumnInfo(name = "tid") val tid: Int? = null,
-  @ColumnInfo(name = "log_levels") val logLevels: String? = null,
-  @ColumnInfo(name = "exclude") val exclude: Boolean = false,
-)
-
-@Dao
-interface FilterDao {
-
-  @Query("SELECT * FROM filters")
-  fun filters(): Flow<List<FilterInfo>>
-
-  @Insert(onConflict = OnConflictStrategy.REPLACE)
-  fun insert(vararg info: FilterInfo)
-
-  @Delete
-  fun delete(vararg info: FilterInfo)
-
-  @Query("DELETE FROM filters")
-  fun deleteAll()
-}
-
-@Entity(tableName = "saved_logs_info")
-data class SavedLogInfo(
-  @ColumnInfo(name = "name") val fileName: String,
-  @PrimaryKey @ColumnInfo(name = "path") val path: String,
-  @ColumnInfo(name = "is_custom") val isCustom: Boolean
-)
-
-@Dao
-interface SavedLogsDao {
-
-  @Query("SELECT * FROM saved_logs_info")
-  fun savedLogs(): Flow<List<SavedLogInfo>>
-
-  @Insert(onConflict = OnConflictStrategy.REPLACE)
-  fun insert(vararg savedLogInfo: SavedLogInfo)
-
-  @Delete
-  fun delete(vararg savedLogInfo: SavedLogInfo)
-}
 
 @Database(
   entities = [FilterInfo::class, SavedLogInfo::class],
@@ -92,10 +36,11 @@ abstract class LogcatReaderDatabase : RoomDatabase() {
 
       synchronized(instanceLock) {
         if (instance == null) {
-          instance = Room.databaseBuilder(
-            context.applicationContext,
-            LogcatReaderDatabase::class.java, DB_NAME
-          )
+          instance = Room
+            .databaseBuilder(
+              context.applicationContext,
+              LogcatReaderDatabase::class.java, DB_NAME
+            )
             .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
             .fallbackToDestructiveMigration()
             .build()
