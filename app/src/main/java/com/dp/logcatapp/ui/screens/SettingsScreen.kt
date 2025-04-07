@@ -675,7 +675,9 @@ private val settingRows = listOfNotNull<Preference>(
   SectionDivider,
   SectionName(R.string.logcat),
   PreferenceRow(PreferenceType.PollInterval),
-  PreferenceRow(PreferenceType.Buffers),
+  if (LogcatUtil.AVAILABLE_BUFFERS.isNotEmpty()) {
+    PreferenceRow(PreferenceType.Buffers)
+  } else null,
   PreferenceRow(PreferenceType.MaxLogs),
   PreferenceRow(PreferenceType.SaveLocation),
   SectionDivider,
