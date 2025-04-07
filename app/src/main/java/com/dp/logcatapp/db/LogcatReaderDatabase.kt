@@ -15,7 +15,6 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
-import com.dp.logcatapp.model.FilterType
 import kotlinx.coroutines.flow.Flow
 
 @Entity(tableName = "filters")
@@ -110,14 +109,17 @@ abstract class LogcatReaderDatabase : RoomDatabase() {
         db.execSQL(
           "CREATE TABLE `filters_new` (`type` INTEGER NOT NULL, `value` TEXT NOT NULL, `exclude` INTEGER NOT NULL, PRIMARY KEY (`type`, `value`, `exclude`))"
         )
+        // FilterType 0: keyword
         db.execSQL(
-          "INSERT OR IGNORE INTO `filters_new` (`type`, `value`, `exclude`) SELECT ${FilterType.KEYWORD}, `keyword`, `exclude` FROM `filters` WHERE `keyword` != ''"
+          "INSERT OR IGNORE INTO `filters_new` (`type`, `value`, `exclude`) SELECT 0, `keyword`, `exclude` FROM `filters` WHERE `keyword` != ''"
         )
+        // FilterType 1: tag
         db.execSQL(
-          "INSERT OR IGNORE INTO `filters_new` (`type`, `value`, `exclude`) SELECT ${FilterType.TAG}, `tag`, `exclude` FROM `filters` WHERE `tag` != ''"
+          "INSERT OR IGNORE INTO `filters_new` (`type`, `value`, `exclude`) SELECT 1, `tag`, `exclude` FROM `filters` WHERE `tag` != ''"
         )
+        // FilterType 4: LogLevels
         db.execSQL(
-          "INSERT OR IGNORE INTO `filters_new` (`type`, `value`, `exclude`) SELECT ${FilterType.LOG_LEVELS}, `log_priorities`, `exclude` FROM `filters` WHERE `log_priorities` != ''"
+          "INSERT OR IGNORE INTO `filters_new` (`type`, `value`, `exclude`) SELECT 4, `log_priorities`, `exclude` FROM `filters` WHERE `log_priorities` != ''"
         )
 
         db.execSQL("DROP TABLE `filters`")
