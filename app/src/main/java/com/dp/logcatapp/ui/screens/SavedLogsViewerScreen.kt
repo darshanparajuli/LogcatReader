@@ -63,8 +63,10 @@ import com.dp.logcatapp.ui.common.CopyLogClipboardBottomSheet
 import com.dp.logcatapp.ui.common.LogsList
 import com.dp.logcatapp.ui.common.LogsListStyle
 import com.dp.logcatapp.ui.common.SearchHitKey
-import com.dp.logcatapp.ui.common.SearchHitKey.LogComponent
 import com.dp.logcatapp.ui.common.SearchLogsTopBar
+import com.dp.logcatapp.ui.common.SearchResult.SearchHitInfo
+import com.dp.logcatapp.ui.common.SearchResult.SearchHitSpan
+import com.dp.logcatapp.ui.common.searchLogs
 import com.dp.logcatapp.ui.theme.AppTypography
 import com.dp.logcatapp.util.PreferenceKeys
 import com.dp.logcatapp.util.closeQuietly
@@ -114,9 +116,9 @@ fun SavedLogsViewerScreen(
   var currentSearchHitIndex by remember { mutableIntStateOf(-1) }
   var currentSearchHitLogId by remember { mutableIntStateOf(-1) }
   var showHitCount by remember { mutableStateOf(false) }
-  val searchHitsMap = remember { mutableStateMapOf<SearchHitKey, Pair<Int, Int>>() }
+  val searchHitsMap = remember { mutableStateMapOf<SearchHitKey, SearchHitSpan>() }
   var searchInProgress by remember { mutableStateOf(false) }
-  var sortedHitsByLogIdsState by remember { mutableStateOf<List<Int>>(emptyList()) }
+  var sortedHitsByLogIdsState by remember { mutableStateOf<List<SearchHitInfo>>(emptyList()) }
   var scrollSnapperVisible by remember { mutableStateOf(false) }
   var compactViewPreference = rememberBooleanSharedPreference(
     key = PreferenceKeys.Logcat.KEY_COMPACT_VIEW,
@@ -246,28 +248,16 @@ fun SavedLogsViewerScreen(
               showHitCount = searchQuery.isNotEmpty()
               if (searchQuery.isNotEmpty()) {
                 searchInProgress = true
-                val (map, sortedHitsByLogId) = withContext(Dispatchers.Default) {
-                  val map = mutableMapOf<SearchHitKey, Pair<Int, Int>>()
-                  logs.forEach { log ->
-                    val msgIndex = log.msg.indexOf(string = searchQuery, ignoreCase = true)
-                    val tagIndex = log.tag.indexOf(string = searchQuery, ignoreCase = true)
-                    if (msgIndex != -1) {
-                      map[SearchHitKey(logId = log.id, component = LogComponent.MSG)] =
-                        Pair(msgIndex, msgIndex + searchQuery.length)
-                    }
-                    if (tagIndex != -1) {
-                      map[SearchHitKey(logId = log.id, component = LogComponent.TAG)] =
-                        Pair(tagIndex, tagIndex + searchQuery.length)
-                    }
-                  }
-                  Pair(map, map.keys.map { it.logId }.sorted())
-                }
+                val (map, sortedHitsByLogId) = searchLogs(logs = logs, searchQuery = searchQuery)
                 searchHitsMap.clear()
                 searchHitsMap.putAll(map)
                 sortedHitsByLogIdsState = sortedHitsByLogId
                 if (sortedHitsByLogIdsState.isNotEmpty()) {
                   currentSearchHitIndex = 0
-                  currentSearchHitLogId = sortedHitsByLogIdsState.first()
+                  currentSearchHitLogId = sortedHitsByLogIdsState.first().logId
+                } else {
+                  currentSearchHitIndex = -1
+                  currentSearchHitLogId = -1
                 }
               } else {
                 searchHitsMap.clear()
@@ -285,8 +275,11 @@ fun SavedLogsViewerScreen(
               .distinctUntilChangedBy { (_, index) -> index }
               .collectLatest { (hits, index) ->
                 if (index < hits.size) {
-                  currentSearchHitLogId = hits[index]
-                  listState.scrollToItem(currentSearchHitLogId)
+                  currentSearchHitLogId = hits[index].logId
+                  val scrollIndex = hits[index].index
+                  if (scrollIndex != -1 && scrollIndex < listState.layoutInfo.totalItemsCount) {
+                    listState.scrollToItem(scrollIndex)
+                  }
                 }
               }
           }

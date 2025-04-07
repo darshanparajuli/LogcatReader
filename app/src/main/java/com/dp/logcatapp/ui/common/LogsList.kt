@@ -43,11 +43,15 @@ import androidx.compose.ui.unit.sp
 import com.dp.logcat.Log
 import com.dp.logcat.LogPriority
 import com.dp.logcatapp.ui.common.SearchHitKey.LogComponent
+import com.dp.logcatapp.ui.common.SearchResult.SearchHitInfo
+import com.dp.logcatapp.ui.common.SearchResult.SearchHitSpan
 import com.dp.logcatapp.ui.theme.LogPriorityColors
 import com.dp.logcatapp.ui.theme.LogcatReaderTheme
 import com.dp.logcatapp.ui.theme.RobotoMonoFontFamily
 import com.dp.logcatapp.ui.theme.currentSearchHitColor
 import com.dp.logcatapp.ui.theme.logListItemSecondaryColor
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 enum class LogsListStyle {
   Default,
@@ -61,7 +65,7 @@ fun LogsList(
   state: LazyListState,
   contentPadding: PaddingValues,
   logs: List<Log>,
-  searchHits: Map<SearchHitKey, Pair<Int, Int>>,
+  searchHits: Map<SearchHitKey, SearchHitSpan>,
   currentSearchHitLogId: Int,
   listStyle: LogsListStyle = LogsListStyle.Default,
   // onClick is only available for LogsListStyle.Default.
@@ -97,8 +101,8 @@ fun LogsList(
               SpanStyle(
                 background = color
               ),
-              start = hit.first,
-              end = hit.second
+              start = hit.start,
+              end = hit.end,
             )
           }
         } else {
@@ -411,6 +415,50 @@ private fun LogItemCompact(
       )
     }
   }
+}
+
+suspend fun searchLogs(
+  logs: List<Log>,
+  searchQuery: String,
+) = withContext(Dispatchers.Default) {
+  val map = mutableMapOf<SearchHitKey, SearchHitSpan>()
+  val hits = mutableListOf<SearchHitInfo>()
+  logs.forEachIndexed { index, log ->
+    val msgIndex = log.msg.indexOf(string = searchQuery, ignoreCase = true)
+    val tagIndex = log.tag.indexOf(string = searchQuery, ignoreCase = true)
+    if (msgIndex != -1) {
+      map[SearchHitKey(logId = log.id, component = LogComponent.MSG)] =
+        SearchHitSpan(start = msgIndex, end = msgIndex + searchQuery.length)
+      hits += SearchHitInfo(logId = log.id, index = index)
+    }
+    if (tagIndex != -1) {
+      map[SearchHitKey(logId = log.id, component = LogComponent.TAG)] =
+        SearchHitSpan(start = tagIndex, end = tagIndex + searchQuery.length)
+      hits += SearchHitInfo(logId = log.id, index = index)
+    }
+  }
+  Pair(
+    first = map,
+    second = hits.sortedBy {
+      // sort by log id
+      it.logId
+    },
+  )
+}
+
+data class SearchResult(
+  val map: Map<SearchHitKey, SearchHitSpan>,
+  val hitsSortedById: List<SearchHitInfo>
+) {
+  data class SearchHitSpan(
+    val start: Int,
+    val end: Int,
+  )
+
+  data class SearchHitInfo(
+    val logId: Int,
+    val index: Int,
+  )
 }
 
 data class SearchHitKey(
