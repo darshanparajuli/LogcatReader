@@ -10,7 +10,7 @@ A simple app for viewing logs on an android device.
 
 ## Screenshots
 <img src="/app/playstore_images/screenshots/dark_mode.png" width="300px" /> <img src="/app/playstore_images/screenshots/light_mode.png" width="300px" />
-<img src="/app/playstore_images/screenshots/search.png.png" width="300px" /> <img src="/app/playstore_images/screenshots/compact_view.png.png" width="300px" />
+<img src="/app/playstore_images/screenshots/search.png" width="300px" /> <img src="/app/playstore_images/screenshots/compact_view.png" width="300px" />
 
 ## Pre-requisite
 
