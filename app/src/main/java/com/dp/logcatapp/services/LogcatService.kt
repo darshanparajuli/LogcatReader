@@ -15,6 +15,7 @@ import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.edit
+import androidx.lifecycle.lifecycleScope
 import com.dp.logcat.LogcatSession
 import com.dp.logcat.LogcatUtil
 import com.dp.logcatapp.R
@@ -22,8 +23,6 @@ import com.dp.logcatapp.activities.ComposeMainActivity
 import com.dp.logcatapp.util.PreferenceKeys
 import com.dp.logcatapp.util.getDefaultSharedPreferences
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.BufferOverflow.DROP_OLDEST
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.consumeEach
@@ -54,7 +53,6 @@ class LogcatService : BaseService() {
   private val _logcatSession = MutableStateFlow<LogcatSessionStatus?>(null)
   val logcatSessionStatus = _logcatSession.asStateFlow()
 
-  private val coroutineScope = MainScope()
   private val restartTrigger = Channel<Unit>(capacity = 1, onBufferOverflow = DROP_OLDEST)
 
   override fun onCreate() {
@@ -63,7 +61,7 @@ class LogcatService : BaseService() {
       createNotificationChannel()
     }
 
-    coroutineScope.launch {
+    lifecycleScope.launch {
       startNewLogcatSession()
       restartTrigger.consumeEach {
         val current = _logcatSession.getAndUpdate { null }
@@ -219,7 +217,6 @@ class LogcatService : BaseService() {
 
   override fun onDestroy() {
     super.onDestroy()
-    coroutineScope.cancel()
     _logcatSession.update { status ->
       status?.sessionOrNull?.stop()
       null
