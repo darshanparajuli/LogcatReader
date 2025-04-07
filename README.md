@@ -9,7 +9,8 @@ A simple app for viewing logs on an android device.
 <a href='https://play.google.com/store/apps/details?id=com.dp.logcatapp'><img alt='Get it on Google Play' src='https://play.google.com/intl/en_us/badges/images/generic/en_badge_web_generic.png' height="80"/></a>
 
 ## Screenshots
-<img src="/app/playstore_images/screenshots/screenshot-1.png" width="300px" /> <img src="/app/playstore_images/screenshots/screenshot-2.png" width="300px" />
+<img src="/app/playstore_images/screenshots/dark_mode.png" width="300px" /> <img src="/app/playstore_images/screenshots/light_mode.png" width="300px" />
+<img src="/app/playstore_images/screenshots/search.png.png" width="300px" /> <img src="/app/playstore_images/screenshots/compact_view.png.png" width="300px" />
 
 ## Pre-requisite
 
