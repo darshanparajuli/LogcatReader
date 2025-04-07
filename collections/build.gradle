@@ -3,7 +3,7 @@ apply plugin: 'kotlin-android'
 
 android {
   defaultConfig {
-    compileSdk 34
+    compileSdk 35
     minSdkVersion 21
   }
 
@@ -12,11 +12,8 @@ android {
     targetCompatibility JavaVersion.VERSION_17
   }
 
-  buildTypes {
-    release {
-      minifyEnabled false
-      proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-    }
+  kotlinOptions {
+    jvmTarget = JavaVersion.VERSION_17
   }
   namespace 'com.logcat.collections'
 }
