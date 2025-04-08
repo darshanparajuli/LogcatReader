@@ -83,25 +83,13 @@ private fun <T> rememberSharedPreference(
 ): SharedPreference<T> {
   val context = LocalContext.current
   val sharedPreferences = remember(context) { context.getDefaultSharedPreferences() }
-  var value by remember(sharedPreferences) {
-    mutableStateOf(
-      SharedPreference(
-        currentValue = getter(sharedPreferences),
-        setter = { newValue ->
-          setter(sharedPreferences, newValue)
-        },
-        deleter = {
-          sharedPreferences.edit { clear() }
-        }
-      )
-    )
+  var currentValue by remember(sharedPreferences) {
+    mutableStateOf(getter(sharedPreferences))
   }
   DisposableEffect(sharedPreferences, key) {
     val listener = OnSharedPreferenceChangeListener { prefs, k ->
       if (k == key) {
-        value = value.copy(
-          currentValue = getter(prefs)
-        )
+        currentValue = getter(prefs)
       }
     }
     sharedPreferences.registerOnSharedPreferenceChangeListener(listener)
@@ -109,16 +97,24 @@ private fun <T> rememberSharedPreference(
       sharedPreferences.unregisterOnSharedPreferenceChangeListener(listener)
     }
   }
-  return value
+  return SharedPreference(
+    getter = { currentValue },
+    setter = { newValue ->
+      setter(sharedPreferences, newValue)
+    },
+    deleter = {
+      sharedPreferences.edit { clear() }
+    }
+  )
 }
 
 data class SharedPreference<T>(
-  private val currentValue: T,
+  private val getter: () -> T,
   private val setter: (T) -> Unit,
   private val deleter: () -> Unit,
 ) {
   var value: T
-    get() = currentValue
+    get() = getter()
     set(newValue) {
       setter(newValue)
     }

@@ -26,10 +26,13 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
@@ -42,6 +45,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -50,7 +54,10 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
@@ -64,6 +71,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -73,6 +81,7 @@ import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.util.fastForEach
 import androidx.core.net.toFile
 import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
@@ -86,10 +95,12 @@ import com.dp.logcatapp.db.SavedLogInfo
 import com.dp.logcatapp.ui.common.Dialog
 import com.dp.logcatapp.ui.common.LOGCAT_DIR
 import com.dp.logcatapp.ui.theme.AppTypography
+import com.dp.logcatapp.ui.theme.Shapes
 import com.dp.logcatapp.util.ShareUtils
 import com.dp.logcatapp.util.Utils
 import com.dp.logcatapp.util.closeQuietly
 import com.dp.logcatapp.util.findActivity
+import com.dp.logcatapp.util.rememberIntSharedPreference
 import com.dp.logcatapp.util.showToast
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -106,6 +117,11 @@ import java.io.InputStream
 import java.io.OutputStream
 import java.io.OutputStreamWriter
 
+private const val SORT_BY_KEY = "sort_by_pref"
+private val SORT_BY_DEFAULT = SortBy.Timestamp.ordinal
+private const val SORT_ORDER_KEY = "sort_order_pref"
+private val SORT_ORDER_DEFAULT = SortOrder.Dsc.ordinal
+
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun SavedLogsScreen(
@@ -114,21 +130,34 @@ fun SavedLogsScreen(
   val context = LocalContext.current
   val coroutineScope = rememberCoroutineScope()
 
+  val sortByPref = rememberIntSharedPreference(
+    key = SORT_BY_KEY,
+    default = SORT_BY_DEFAULT,
+  )
+  val sortOrderPref = rememberIntSharedPreference(
+    key = SORT_ORDER_KEY,
+    default = SORT_ORDER_DEFAULT,
+  )
+
   var savedLogs by remember { mutableStateOf<SavedLogsResult?>(null) }
   val db = remember(context) { LogcatReaderDatabase.getInstance(context) }
-  LaunchedEffect(db) {
+  LaunchedEffect(context, db) {
     updateDbWithExistingInternalLogFiles(context, db)
     savedLogs(context, db).collect { result ->
-      savedLogs = result.copy(
-        // TODO: add sort options.
-        logFiles = result.logFiles.sortedBy { it.info.fileName }
-      )
+      snapshotFlow {
+        Pair(SortBy.entries[sortByPref.value], SortOrder.entries[sortOrderPref.value])
+      }.collect { (sortBy, sortOrder) ->
+        savedLogs = result.copy(
+          logFiles = result.logFiles.sortedWith(SortByComparator(sortBy, sortOrder))
+        )
+      }
     }
   }
 
   var selected by remember { mutableStateOf<Set<LogFileInfo>>(emptySet()) }
   var renameLog by remember { mutableStateOf<LogFileInfo?>(null) }
   var exportLog by remember { mutableStateOf<LogFileInfo?>(null) }
+  var showSortSheet by remember { mutableStateOf(false) }
 
   if (selected.isNotEmpty()) {
     BackHandler {
@@ -139,7 +168,28 @@ fun SavedLogsScreen(
   Scaffold(
     modifier = modifier,
     topBar = {
-      AppBar(savedLogs)
+      // For smart-casting.
+      val savedLogs = savedLogs
+      AppBar(
+        title = stringResource(R.string.saved_logs),
+        subtitle = if (savedLogs != null) {
+          if (savedLogs.logFiles.isNotEmpty()) {
+            if (savedLogs.totalSize.isEmpty()) {
+              savedLogs.logFiles.size.toString()
+            } else {
+              val totalLogCountFmt = if (savedLogs.totalLogCount == 1L) {
+                stringResource(R.string.log_count_fmt)
+              } else {
+                stringResource(R.string.log_count_fmt_plural)
+              }
+              val totalLogCountStr = totalLogCountFmt.format(savedLogs.totalLogCount)
+              "${savedLogs.logFiles.size} ($totalLogCountStr, ${savedLogs.totalSize})"
+            }
+          } else null
+        } else null,
+        sortEnabled = savedLogs?.logFiles?.isNotEmpty() == true,
+        onClickSort = { showSortSheet = true },
+      )
       AnimatedVisibility(
         visible = selected.isNotEmpty(),
         enter = fadeIn(),
@@ -248,6 +298,21 @@ fun SavedLogsScreen(
       )
     }
 
+    if (showSortSheet) {
+      SortOptionsSheet(
+        initialSortBy = SortBy.entries[sortByPref.value],
+        initialSortOrder = SortOrder.entries[sortOrderPref.value],
+        onClickDone = { sortBy, sortOrder ->
+          sortByPref.value = sortBy.ordinal
+          sortOrderPref.value = sortOrder.ordinal
+          showSortSheet = false
+        },
+        onDismiss = {
+          showSortSheet = false
+        }
+      )
+    }
+
     if (savedLogs != null) {
       LazyColumn(
         modifier = Modifier
@@ -346,7 +411,10 @@ fun SavedLogsScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun AppBar(
-  savedLogs: SavedLogsResult?,
+  title: String,
+  subtitle: String?,
+  sortEnabled: Boolean,
+  onClickSort: () -> Unit,
 ) {
   val context = LocalContext.current
   TopAppBar(
@@ -368,31 +436,29 @@ private fun AppBar(
     title = {
       Column {
         Text(
-          text = stringResource(R.string.saved_logs),
+          text = title,
           overflow = TextOverflow.Ellipsis,
           maxLines = 1,
         )
-        if (savedLogs != null) {
-          if (savedLogs.logFiles.isNotEmpty()) {
-            val text = if (savedLogs.totalSize.isEmpty()) {
-              savedLogs.logFiles.size.toString()
-            } else {
-              val totalLogCountFmt = if (savedLogs.totalLogCount == 1L) {
-                stringResource(R.string.log_count_fmt)
-              } else {
-                stringResource(R.string.log_count_fmt_plural)
-              }
-              val totalLogCountStr = totalLogCountFmt.format(savedLogs.totalLogCount)
-              "${savedLogs.logFiles.size} ($totalLogCountStr, ${savedLogs.totalSize})"
-            }
-            Text(
-              text = text,
-              style = AppTypography.titleSmall,
-              overflow = TextOverflow.Ellipsis,
-              maxLines = 1,
-            )
-          }
+        if (subtitle != null) {
+          Text(
+            text = subtitle,
+            style = AppTypography.titleSmall,
+            overflow = TextOverflow.Ellipsis,
+            maxLines = 1,
+          )
         }
+      }
+    },
+    actions = {
+      IconButton(
+        onClick = onClickSort,
+        enabled = sortEnabled,
+        colors = IconButtonDefaults.iconButtonColors(
+          contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+        ),
+      ) {
+        Icon(Icons.AutoMirrored.Default.Sort, contentDescription = null)
       }
     },
     colors = TopAppBarDefaults.topAppBarColors(
@@ -647,6 +713,106 @@ private fun ExportBottomSheet(
   }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SortOptionsSheet(
+  initialSortBy: SortBy,
+  initialSortOrder: SortOrder,
+  onClickDone: (SortBy, SortOrder) -> Unit,
+  onDismiss: () -> Unit,
+) {
+  ModalBottomSheet(
+    onDismissRequest = onDismiss,
+    containerColor = MaterialTheme.colorScheme.surfaceContainer,
+  ) {
+    Column(
+      modifier = Modifier
+        .verticalScroll(rememberScrollState())
+        .padding(bottom = 16.dp)
+    ) {
+
+      var sortBy by remember { mutableStateOf(initialSortBy) }
+      var sortOrder by remember { mutableStateOf(initialSortOrder) }
+
+      Row(
+        modifier = Modifier.padding(horizontal = 16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+      ) {
+        Text(
+          modifier = Modifier.weight(1f),
+          text = stringResource(R.string.sort_by),
+          style = AppTypography.headlineMedium,
+        )
+        FilledTonalButton(
+          onClick = {
+            onClickDone(sortBy, sortOrder)
+          },
+        ) {
+          Text(
+            stringResource(R.string.done),
+            style = AppTypography.titleMedium,
+          )
+        }
+      }
+
+      SortBy.entries.fastForEach { entry ->
+        ListItem(
+          modifier = Modifier
+            .fillMaxWidth()
+            .clickable {
+              sortBy = entry
+            },
+          leadingContent = {
+            RadioButton(
+              selected = sortBy == entry,
+              onClick = null,
+            )
+          },
+          headlineContent = {
+            // TODO: localize
+            Text(
+              when (entry) {
+                SortBy.Name -> "Name"
+                SortBy.Timestamp -> "Timestamp"
+                SortBy.LogCount -> "Log count"
+                SortBy.Size -> "Size"
+              }
+            )
+          },
+          colors = ListItemDefaults.colors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainer,
+          ),
+        )
+      }
+
+      SingleChoiceSegmentedButtonRow(
+        modifier = Modifier
+          .fillMaxWidth()
+          .padding(horizontal = 16.dp),
+      ) {
+        SegmentedButton(
+          selected = sortOrder == SortOrder.Asc,
+          onClick = {
+            sortOrder = SortOrder.Asc
+          },
+          shape = Shapes.medium.copy(topEnd = CornerSize(0), bottomEnd = CornerSize(0)),
+        ) {
+          Text("Ascending")
+        }
+        SegmentedButton(
+          selected = sortOrder == SortOrder.Dsc,
+          onClick = {
+            sortOrder = SortOrder.Dsc
+          },
+          shape = Shapes.medium.copy(topStart = CornerSize(0), bottomStart = CornerSize(0)),
+        ) {
+          Text("Descending")
+        }
+      }
+    }
+  }
+}
+
 private suspend fun deleteLogs(
   logs: List<LogFileInfo>,
   db: LogcatReaderDatabase,
@@ -816,6 +982,40 @@ private suspend fun saveLogs(
       dest.closeQuietly()
     }
   }
+}
+
+private class SortByComparator(
+  private val sortBy: SortBy,
+  private val sortOrder: SortOrder,
+) : Comparator<LogFileInfo> {
+  override fun compare(
+    o1: LogFileInfo,
+    o2: LogFileInfo
+  ): Int {
+    val result = when (sortBy) {
+      SortBy.Name -> o1.info.fileName.compareTo(o2.info.fileName)
+      SortBy.Timestamp -> o1.timestamp.compareTo(o2.timestamp)
+      SortBy.LogCount -> o1.count.compareTo(o2.count)
+      SortBy.Size -> o1.size.compareTo(o2.size)
+    }
+
+    return when (sortOrder) {
+      SortOrder.Asc -> result
+      SortOrder.Dsc -> -result
+    }
+  }
+}
+
+private enum class SortOrder {
+  Asc,
+  Dsc,
+}
+
+private enum class SortBy {
+  Name,
+  Timestamp,
+  LogCount,
+  Size,
 }
 
 data class LogFileInfo(
