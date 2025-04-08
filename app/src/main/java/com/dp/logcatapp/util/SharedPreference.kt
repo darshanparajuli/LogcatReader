@@ -15,7 +15,7 @@ import androidx.core.content.edit
 fun rememberStringSharedPreference(
   key: String,
   default: String? = null,
-): Preference<String?> {
+): SharedPreference<String?> {
   return rememberSharedPreference(
     key = key,
     getFactory = { sharedPrefs ->
@@ -31,7 +31,7 @@ fun rememberStringSharedPreference(
 fun rememberIntSharedPreference(
   key: String,
   default: Int = -1,
-): Preference<Int> {
+): SharedPreference<Int> {
   return rememberSharedPreference(
     key = key,
     getFactory = { sharedPrefs ->
@@ -47,7 +47,7 @@ fun rememberIntSharedPreference(
 fun rememberBooleanSharedPreference(
   key: String,
   default: Boolean = false,
-): Preference<Boolean> {
+): SharedPreference<Boolean> {
   return rememberSharedPreference(
     key = key,
     getFactory = { sharedPrefs ->
@@ -63,7 +63,7 @@ fun rememberBooleanSharedPreference(
 fun rememberStringSetSharedPreference(
   key: String,
   default: Set<String>? = null,
-): Preference<Set<String>?> {
+): SharedPreference<Set<String>?> {
   return rememberSharedPreference(
     key = key,
     getFactory = { sharedPrefs ->
@@ -80,12 +80,12 @@ private fun <T> rememberSharedPreference(
   key: String,
   getFactory: (SharedPreferences) -> T,
   setFactory: (SharedPreferences, newValue: T) -> Unit,
-): Preference<T> {
+): SharedPreference<T> {
   val context = LocalContext.current
   val sharedPreferences = remember(context) { context.getDefaultSharedPreferences() }
   var value by remember(sharedPreferences) {
     mutableStateOf(
-      Preference(
+      SharedPreference(
         currentValue = getFactory(sharedPreferences),
         setter = { newValue ->
           setFactory(sharedPreferences, newValue)
@@ -112,7 +112,7 @@ private fun <T> rememberSharedPreference(
   return value
 }
 
-data class Preference<T>(
+data class SharedPreference<T>(
   private val currentValue: T,
   private val setter: (T) -> Unit,
   private val deleter: () -> Unit,
