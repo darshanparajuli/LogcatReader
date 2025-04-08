@@ -769,13 +769,12 @@ private fun SortOptionsSheet(
             )
           },
           headlineContent = {
-            // TODO: localize
             Text(
-              when (entry) {
-                SortBy.Name -> "Name"
-                SortBy.Timestamp -> "Timestamp"
-                SortBy.LogCount -> "Log count"
-                SortBy.Size -> "Size"
+              text = when (entry) {
+                SortBy.Name -> stringResource(R.string.name)
+                SortBy.Timestamp -> stringResource(R.string.timestamp)
+                SortBy.LogCount -> stringResource(R.string.log_count)
+                SortBy.Size -> stringResource(R.string.size)
               }
             )
           },
@@ -797,7 +796,7 @@ private fun SortOptionsSheet(
           },
           shape = Shapes.medium.copy(topEnd = CornerSize(0), bottomEnd = CornerSize(0)),
         ) {
-          Text("Ascending")
+          Text(stringResource(R.string.ascending))
         }
         SegmentedButton(
           selected = sortOrder == SortOrder.Dsc,
@@ -806,7 +805,7 @@ private fun SortOptionsSheet(
           },
           shape = Shapes.medium.copy(topStart = CornerSize(0), bottomStart = CornerSize(0)),
         ) {
-          Text("Descending")
+          Text(stringResource(R.string.descending))
         }
       }
     }
