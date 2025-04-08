@@ -4,11 +4,12 @@ import android.net.Uri
 import android.os.Build
 import com.dp.logger.Logger
 import com.logcat.collections.FixedCircularArray
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.channelFlow
+import kotlinx.coroutines.flow.consumeAsFlow
 import java.io.BufferedWriter
 import java.io.IOException
 import java.io.InterruptedIOException
@@ -74,10 +75,10 @@ class LogcatSession(
     Logger.debug(LogcatSession::class, "starting")
     check(!active) { "Logcat is already active!" }
     active = true
-    val status = MutableSharedFlow<Status>(extraBufferCapacity = 1)
+    val status = Channel<Status>(capacity = 1)
     logcatThread = thread {
       val process = startLogcatProcess()
-      status.tryEmit(Status(process != null))
+      status.trySend(Status(process != null))
       if (process != null) {
         readLogs(process)
       }
@@ -87,7 +88,7 @@ class LogcatSession(
       poll()
       Logger.debug(LogcatSession::class, "stopped polling thread")
     }
-    return status
+    return status.consumeAsFlow()
   }
 
   private fun Iterable<Log>.filtered(): List<Log> {
