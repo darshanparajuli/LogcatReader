@@ -441,7 +441,7 @@ fun DeviceLogsScreen(
           coroutineScope.launch {
             val logs =
               logcatService?.logcatSessionStatus?.value?.sessionOrNull?.let { logcatSession ->
-                withContext(Dispatchers.Default) { logcatSession.getAllLogs() }
+                withContext(Dispatchers.Default) { logcatSession.getAllLogsFiltered() }
               }
             if (logs != null) {
               saveLogsToFile(context, logs).collect { result ->

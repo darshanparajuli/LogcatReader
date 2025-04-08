@@ -245,8 +245,8 @@ class LogcatSession(
     }
   }
 
-  fun getAllLogs(): List<Log> = lock.withLock {
-    allLogs.toList()
+  fun getAllLogsFiltered(): List<Log> = lock.withLock {
+    allLogs.filtered().toList()
   }
 
   fun setFilters(filters: List<Filter>, exclusion: Boolean = false) {
