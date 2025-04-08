@@ -18,10 +18,10 @@ fun rememberStringSharedPreference(
 ): SharedPreference<String?> {
   return rememberSharedPreference(
     key = key,
-    getFactory = { sharedPrefs ->
+    getter = { sharedPrefs ->
       sharedPrefs.getString(key, default)
     },
-    setFactory = { sharedPrefs, newValue ->
+    setter = { sharedPrefs, newValue ->
       sharedPrefs.edit { putString(key, newValue) }
     }
   )
@@ -34,10 +34,10 @@ fun rememberIntSharedPreference(
 ): SharedPreference<Int> {
   return rememberSharedPreference(
     key = key,
-    getFactory = { sharedPrefs ->
+    getter = { sharedPrefs ->
       sharedPrefs.getInt(key, default)
     },
-    setFactory = { sharedPrefs, newValue ->
+    setter = { sharedPrefs, newValue ->
       sharedPrefs.edit { putInt(key, newValue) }
     }
   )
@@ -50,10 +50,10 @@ fun rememberBooleanSharedPreference(
 ): SharedPreference<Boolean> {
   return rememberSharedPreference(
     key = key,
-    getFactory = { sharedPrefs ->
+    getter = { sharedPrefs ->
       sharedPrefs.getBoolean(key, default)
     },
-    setFactory = { sharedPrefs, newValue ->
+    setter = { sharedPrefs, newValue ->
       sharedPrefs.edit { putBoolean(key, newValue) }
     }
   )
@@ -66,10 +66,10 @@ fun rememberStringSetSharedPreference(
 ): SharedPreference<Set<String>?> {
   return rememberSharedPreference(
     key = key,
-    getFactory = { sharedPrefs ->
+    getter = { sharedPrefs ->
       sharedPrefs.getStringSet(key, default)
     },
-    setFactory = { sharedPrefs, newValue ->
+    setter = { sharedPrefs, newValue ->
       sharedPrefs.edit { putStringSet(key, newValue) }
     }
   )
@@ -78,17 +78,17 @@ fun rememberStringSetSharedPreference(
 @Composable
 private fun <T> rememberSharedPreference(
   key: String,
-  getFactory: (SharedPreferences) -> T,
-  setFactory: (SharedPreferences, newValue: T) -> Unit,
+  getter: (SharedPreferences) -> T,
+  setter: (SharedPreferences, newValue: T) -> Unit,
 ): SharedPreference<T> {
   val context = LocalContext.current
   val sharedPreferences = remember(context) { context.getDefaultSharedPreferences() }
   var value by remember(sharedPreferences) {
     mutableStateOf(
       SharedPreference(
-        currentValue = getFactory(sharedPreferences),
+        currentValue = getter(sharedPreferences),
         setter = { newValue ->
-          setFactory(sharedPreferences, newValue)
+          setter(sharedPreferences, newValue)
         },
         deleter = {
           sharedPreferences.edit { clear() }
@@ -96,11 +96,11 @@ private fun <T> rememberSharedPreference(
       )
     )
   }
-  DisposableEffect(sharedPreferences) {
+  DisposableEffect(sharedPreferences, key) {
     val listener = OnSharedPreferenceChangeListener { prefs, k ->
       if (k == key) {
         value = value.copy(
-          currentValue = getFactory(prefs)
+          currentValue = getter(prefs)
         )
       }
     }
