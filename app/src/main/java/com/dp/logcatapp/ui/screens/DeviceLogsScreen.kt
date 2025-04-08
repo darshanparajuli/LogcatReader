@@ -24,6 +24,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction.Press
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -31,6 +32,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
@@ -384,12 +386,8 @@ fun DeviceLogsScreen(
 
       AppBar(
         title = stringResource(R.string.device_logs),
-        subtitle = buildString {
-          append(logsState.size)
-          if (appliedFilters) {
-            append(" [${stringResource(R.string.filtered).lowercase()}]")
-          }
-        },
+        subtitle = logsState.size.toString(),
+        filtered = appliedFilters,
         isPaused = logcatPaused,
         pauseEnabled = recordStatus == RecordStatus.Idle &&
           !isLogcatSessionLoading && !errorStartingLogcat,
@@ -945,6 +943,7 @@ private fun FloatingActionButtons(
 private fun AppBar(
   title: String,
   subtitle: String,
+  filtered: Boolean,
   isPaused: Boolean,
   pauseEnabled: Boolean,
   recordEnabled: Boolean,
@@ -975,12 +974,22 @@ private fun AppBar(
           overflow = TextOverflow.Ellipsis,
           maxLines = 1,
         )
-        Text(
-          text = subtitle,
-          style = AppTypography.titleSmall,
-          overflow = TextOverflow.Ellipsis,
-          maxLines = 1,
-        )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+          if (filtered) {
+            Icon(
+              modifier = Modifier.size(16.dp),
+              imageVector = Icons.Default.FilterList,
+              contentDescription = null,
+            )
+            Spacer(modifier = Modifier.width(4.dp))
+          }
+          Text(
+            text = subtitle,
+            style = AppTypography.titleSmall,
+            overflow = TextOverflow.Ellipsis,
+            maxLines = 1,
+          )
+        }
       }
     },
     colors = TopAppBarDefaults.topAppBarColors(

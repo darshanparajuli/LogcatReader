@@ -24,7 +24,6 @@
   <string name="copy_adb_command">Copy ADB Command</string>
   <string name="copy_to_clipboard">Copy To Clipboard</string>
   <string name="copied_to_clipboard">Copied</string>
-  <string name="filtered">Filtered</string>
   <string name="save_to_file">Save</string>
   <string name="export">Export</string>
   <string name="logcat">Logcat</string>

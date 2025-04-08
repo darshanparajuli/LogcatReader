@@ -25,7 +25,6 @@
   <string name="copy_to_clipboard">复制到剪切板</string>
   <string name="copied_to_clipboard">已复制</string>
 
-  <string name="filtered">" 过滤的"</string>
   <string name="save_to_file">保存到文件</string>
   <string name="export">导出</string>
   <string name="logcat">Logcat</string>
