@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.icu.text.SimpleDateFormat
 import android.os.Build
+import android.text.format.DateFormat
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts.CreateDocument
@@ -104,8 +105,6 @@ import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
 import java.io.OutputStreamWriter
-
-private const val LOG_TAG = "SavedLogsScreen"
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -300,14 +299,20 @@ fun SavedLogsScreen(
                 Text(item.sizeStr)
                 Spacer(modifier = Modifier.width(8.dp))
                 if (Build.VERSION.SDK_INT >= 24) {
-                  val dateTimeFormat = remember {
+                  val formatted = remember(item.timestamp) {
                     SimpleDateFormat.getDateTimeInstance(
                       SimpleDateFormat.SHORT, SimpleDateFormat.SHORT
-                    )
+                    ).format(item.timestamp)
                   }
-                  Text(dateTimeFormat.format(item.lastModified))
+                  Text(formatted)
                 } else {
-                  // TODO: support pre API 24
+                  val date = remember(context, item.timestamp) {
+                    DateFormat.getDateFormat(context).format(item.timestamp)
+                  }
+                  val time = remember(context, item.timestamp) {
+                    DateFormat.getTimeFormat(context).format(item.timestamp)
+                  }
+                  Text("$date $time")
                 }
               }
             },
@@ -684,7 +689,6 @@ private suspend fun savedLogs(context: Context, db: LogcatReaderDatabase): Flow<
               }
 
               val size = file.length()
-              val lastModified = file.lastModified()
               val count = countLogs(context, file)
 
               LogFileInfo(
@@ -692,12 +696,11 @@ private suspend fun savedLogs(context: Context, db: LogcatReaderDatabase): Flow<
                 size = size,
                 sizeStr = Utils.bytesToString(size),
                 count = count,
-                lastModified = lastModified,
+                timestamp = info.timestamp ?: file.lastModified(),
               )
             } else {
               val file = info.path.toUri().toFile()
               val size = file.length()
-              val lastModified = file.lastModified()
               val count = countLogs(file)
 
               LogFileInfo(
@@ -705,7 +708,7 @@ private suspend fun savedLogs(context: Context, db: LogcatReaderDatabase): Flow<
                 size = size,
                 sizeStr = Utils.bytesToString(size),
                 count = count,
-                lastModified = lastModified,
+                timestamp = info.timestamp ?: file.lastModified(),
               )
             }
           }
@@ -740,7 +743,12 @@ private suspend fun updateDbWithExistingInternalLogFiles(
     if (!files.isNullOrEmpty()) {
       db.savedLogsDao().insert(
         *files.map { file ->
-          SavedLogInfo(fileName = file.name, path = file.absolutePath, isCustom = false)
+          SavedLogInfo(
+            fileName = file.name,
+            path = file.absolutePath,
+            isCustom = false,
+            timestamp = file.lastModified(),
+          )
         }.toTypedArray()
       )
     }
@@ -763,10 +771,9 @@ private suspend fun rename(
         val dao = db.savedLogsDao()
         dao.delete(fileInfo)
         dao.insert(
-          SavedLogInfo(
+          fileInfo.copy(
             fileName = newName,
             path = newFile.toUri().toString(),
-            isCustom = fileInfo.isCustom
           )
         )
       }
@@ -816,7 +823,7 @@ data class LogFileInfo(
   val size: Long,
   val sizeStr: String,
   val count: Long,
-  val lastModified: Long,
+  val timestamp: Long,
 )
 
 data class SavedLogsResult(

@@ -1484,12 +1484,13 @@ sealed interface SaveResult {
 }
 
 private suspend fun createFileToStartRecording(context: Context): RecordingFileInfo? {
-  val (uri, isCustomLocation) = withContext(Dispatchers.IO) {
+  val createFileResult = withContext(Dispatchers.IO) {
     createFile(context = context, recording = true)
   }
 
-  if (uri == null) return null
+  if (createFileResult == null) return null
 
+  val (uri, isCustomLocation, timestamp) = createFileResult
   val fileName = if (isCustomLocation) {
     DocumentFile.fromSingleUri(context, uri)?.name
   } else {
@@ -1505,6 +1506,7 @@ private suspend fun createFileToStartRecording(context: Context): RecordingFileI
         fileName = fileName,
         path = uri.toString(),
         isCustom = isCustomLocation,
+        timestamp = timestamp,
       )
     )
   }
@@ -1534,14 +1536,15 @@ private fun saveLogsToFile(context: Context, logs: List<Log>): Flow<SaveResult> 
   emit(SaveResult.InProgress)
   check(logs.isNotEmpty()) { "logs list is empty" }
 
-  val (uri, isUsingCustomLocation) = withContext(Dispatchers.IO) { createFile(context) }
-  if (uri == null) {
+  val createFileResult = withContext(Dispatchers.IO) { createFile(context) }
+  if (createFileResult == null) {
     emit(SaveResult.Failure)
     return@flow
   }
 
+  val (uri, isCustomLocation, timestamp) = createFileResult
   val success = withContext(Dispatchers.IO) {
-    if (isUsingCustomLocation) {
+    if (isCustomLocation) {
       LogcatUtil.writeToFile(context, logs, uri)
     } else {
       LogcatUtil.writeToFile(logs, uri.toFile())
@@ -1549,7 +1552,7 @@ private fun saveLogsToFile(context: Context, logs: List<Log>): Flow<SaveResult> 
   }
 
   if (success) {
-    val fileName = if (isUsingCustomLocation) {
+    val fileName = if (isCustomLocation) {
       DocumentFile.fromSingleUri(context, uri)?.name
     } else {
       uri.toFile().name
@@ -1566,7 +1569,8 @@ private fun saveLogsToFile(context: Context, logs: List<Log>): Flow<SaveResult> 
         SavedLogInfo(
           fileName = fileName,
           path = uri.toString(),
-          isCustom = isUsingCustomLocation,
+          isCustom = isCustomLocation,
+          timestamp = timestamp
         )
       )
     }
@@ -1575,7 +1579,7 @@ private fun saveLogsToFile(context: Context, logs: List<Log>): Flow<SaveResult> 
       SaveResult.Success(
         fileName = fileName,
         uri = uri,
-        isCustomLocation = isUsingCustomLocation,
+        isCustomLocation = isCustomLocation,
       )
     )
   } else {
@@ -1584,14 +1588,16 @@ private fun saveLogsToFile(context: Context, logs: List<Log>): Flow<SaveResult> 
 }
 
 private data class CreateFileResult(
-  val uri: Uri?,
+  val uri: Uri,
   val isCustom: Boolean,
+  val timestamp: Long,
 )
 
 @WorkerThread
-private fun createFile(context: Context, recording: Boolean = false): CreateFileResult {
+private fun createFile(context: Context, recording: Boolean = false): CreateFileResult? {
+  val date = Date()
   val timeStamp = SimpleDateFormat("yyyy-MM-dd_HH-mm-ss", Locale.getDefault())
-    .format(Date())
+    .format(date)
   val fileName = buildString {
     append("logcat_")
     if (recording) {
@@ -1608,10 +1614,22 @@ private fun createFile(context: Context, recording: Boolean = false): CreateFile
   return if (customSaveLocation.isEmpty()) {
     val file = File(context.filesDir, LOGCAT_DIR)
     file.mkdirs()
-    CreateFileResult(uri = File(file, "$fileName.txt").toUri(), isCustom = false)
+    CreateFileResult(
+      uri = File(file, "$fileName.txt").toUri(),
+      isCustom = false,
+      timestamp = date.time,
+    )
   } else {
     val documentFile = DocumentFile.fromTreeUri(context, customSaveLocation.toUri())
-    CreateFileResult(uri = documentFile?.createFile("text/plain", fileName)?.uri, isCustom = true)
+    val uri = documentFile?.createFile("text/plain", fileName)?.uri
+    if (uri == null) {
+      return null
+    }
+    CreateFileResult(
+      uri = uri,
+      isCustom = true,
+      timestamp = date.time,
+    )
   }
 }
 

@@ -20,7 +20,7 @@ abstract class LogcatReaderDatabase : RoomDatabase() {
 
   companion object {
     private const val DB_NAME = "logcat_reader_db"
-    const val LATEST_VERSION = 3
+    const val LATEST_VERSION = 4
 
     private val instanceLock = Any()
 
@@ -41,7 +41,7 @@ abstract class LogcatReaderDatabase : RoomDatabase() {
               context.applicationContext,
               LogcatReaderDatabase::class.java, DB_NAME
             )
-            .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
+            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
             .fallbackToDestructiveMigration()
             .build()
         }
@@ -93,6 +93,30 @@ abstract class LogcatReaderDatabase : RoomDatabase() {
             )
           """.trimIndent()
         )
+      }
+    }
+
+    private val MIGRATION_3_4 = object : Migration(3, 4) {
+      override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+          """
+            CREATE TABLE IF NOT EXISTS `saved_logs_info_new` (
+              `name` TEXT NOT NULL, 
+              `path` TEXT NOT NULL, 
+              `is_custom` INTEGER NOT NULL, 
+              `timestamp` INTEGER,
+              PRIMARY KEY (`path`)
+            )
+          """.trimIndent()
+        )
+        db.execSQL(
+          """
+            INSERT OR REPLACE INTO `saved_logs_info_new` (`name`, `path`, `is_custom`, `timestamp`) 
+            SELECT `name`, `path`, `is_custom`, null FROM `saved_logs_info`
+          """.trimIndent()
+        )
+        db.execSQL("DROP TABLE `saved_logs_info`")
+        db.execSQL("ALTER TABLE `saved_logs_info_new` RENAME TO `saved_logs_info`")
       }
     }
   }

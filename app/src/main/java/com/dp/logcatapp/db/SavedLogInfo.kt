@@ -14,7 +14,8 @@ import kotlinx.coroutines.flow.Flow
 data class SavedLogInfo(
   @ColumnInfo(name = "name") val fileName: String,
   @PrimaryKey @ColumnInfo(name = "path") val path: String,
-  @ColumnInfo(name = "is_custom") val isCustom: Boolean
+  @ColumnInfo(name = "is_custom") val isCustom: Boolean,
+  @ColumnInfo(name = "timestamp") val timestamp: Long?,
 )
 
 @Dao
