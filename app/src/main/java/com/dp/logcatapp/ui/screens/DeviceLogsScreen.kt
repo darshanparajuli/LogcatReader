@@ -1485,7 +1485,7 @@ sealed interface SaveResult {
 
 private suspend fun createFileToStartRecording(context: Context): RecordingFileInfo? {
   val (uri, isCustomLocation) = withContext(Dispatchers.IO) {
-    createFile(context)
+    createFile(context = context, recording = true)
   }
 
   if (uri == null) return null
@@ -1585,10 +1585,16 @@ private fun saveLogsToFile(context: Context, logs: List<Log>): Flow<SaveResult> 
 
 // Returns a pair of Uri and custom save location flag (true if custom save location is used).
 @WorkerThread
-private fun createFile(context: Context): Pair<Uri?, Boolean> {
+private fun createFile(context: Context, recording: Boolean = false): Pair<Uri?, Boolean> {
   val timeStamp = SimpleDateFormat("yyyy-MM-dd_HH-mm-ss", Locale.getDefault())
     .format(Date())
-  val fileName = "logcat_$timeStamp"
+  val fileName = buildString {
+    append("logcat_")
+    if (recording) {
+      append("recording_")
+    }
+    append(timeStamp)
+  }
 
   val customSaveLocation = context.getDefaultSharedPreferences().getString(
     PreferenceKeys.Logcat.KEY_SAVE_LOCATION,
