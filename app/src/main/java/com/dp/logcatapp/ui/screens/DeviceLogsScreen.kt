@@ -1583,9 +1583,13 @@ private fun saveLogsToFile(context: Context, logs: List<Log>): Flow<SaveResult> 
   }
 }
 
-// Returns a pair of Uri and custom save location flag (true if custom save location is used).
+private data class CreateFileResult(
+  val uri: Uri?,
+  val isCustom: Boolean,
+)
+
 @WorkerThread
-private fun createFile(context: Context, recording: Boolean = false): Pair<Uri?, Boolean> {
+private fun createFile(context: Context, recording: Boolean = false): CreateFileResult {
   val timeStamp = SimpleDateFormat("yyyy-MM-dd_HH-mm-ss", Locale.getDefault())
     .format(Date())
   val fileName = buildString {
@@ -1604,10 +1608,10 @@ private fun createFile(context: Context, recording: Boolean = false): Pair<Uri?,
   return if (customSaveLocation.isEmpty()) {
     val file = File(context.filesDir, LOGCAT_DIR)
     file.mkdirs()
-    Pair(File(file, "$fileName.txt").toUri(), false)
+    CreateFileResult(uri = File(file, "$fileName.txt").toUri(), isCustom = false)
   } else {
     val documentFile = DocumentFile.fromTreeUri(context, customSaveLocation.toUri())
-    Pair(documentFile?.createFile("text/plain", fileName)?.uri, true)
+    CreateFileResult(uri = documentFile?.createFile("text/plain", fileName)?.uri, isCustom = true)
   }
 }
 
