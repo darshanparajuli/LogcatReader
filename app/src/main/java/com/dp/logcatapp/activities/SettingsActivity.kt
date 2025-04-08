@@ -9,7 +9,7 @@ import androidx.compose.ui.Modifier
 import com.dp.logcatapp.ui.screens.SettingsScreen
 import com.dp.logcatapp.ui.theme.LogcatReaderTheme
 
-class ComposeSettingsActivity : ComponentActivity() {
+class SettingsActivity : ComponentActivity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)

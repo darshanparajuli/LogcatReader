@@ -6,18 +6,26 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
-import com.dp.logcatapp.ui.screens.SavedLogsScreen
+import com.dp.logcatapp.ui.screens.SavedLogsViewerScreen
 import com.dp.logcatapp.ui.theme.LogcatReaderTheme
 
-class ComposeSavedLogsActivity : ComponentActivity() {
+class SavedLogsViewerActivity : ComponentActivity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     enableEdgeToEdge()
 
+    if (intent.data == null) {
+      finish()
+      return
+    }
+
     setContent {
       LogcatReaderTheme {
-        SavedLogsScreen(modifier = Modifier.fillMaxSize())
+        SavedLogsViewerScreen(
+          modifier = Modifier.fillMaxSize(),
+          uri = requireNotNull(intent.data),
+        )
       }
     }
   }

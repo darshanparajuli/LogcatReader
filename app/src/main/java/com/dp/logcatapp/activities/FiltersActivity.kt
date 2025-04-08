@@ -12,7 +12,7 @@ import com.dp.logcatapp.ui.screens.PrepopulateFilterInfo
 import com.dp.logcatapp.ui.theme.LogcatReaderTheme
 import com.dp.logcatapp.util.getParcelableExtraSafe
 
-class ComposeFiltersActivity : ComponentActivity() {
+class FiltersActivity : ComponentActivity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)

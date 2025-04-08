@@ -19,7 +19,7 @@ import androidx.lifecycle.lifecycleScope
 import com.dp.logcat.LogcatSession
 import com.dp.logcat.LogcatUtil
 import com.dp.logcatapp.R
-import com.dp.logcatapp.activities.ComposeMainActivity
+import com.dp.logcatapp.activities.MainActivity
 import com.dp.logcatapp.util.PreferenceKeys
 import com.dp.logcatapp.util.getDefaultSharedPreferences
 import kotlinx.coroutines.Dispatchers
@@ -118,7 +118,7 @@ class LogcatService : BaseService() {
   }
 
   private fun createNotification(addStopRecordingAction: Boolean): Notification {
-    val startIntent = Intent(this, ComposeMainActivity::class.java)
+    val startIntent = Intent(this, MainActivity::class.java)
     startIntent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
     val contentIntent = if (VERSION.SDK_INT >= VERSION_CODES.M) {
       PendingIntent.getActivity(
@@ -132,8 +132,8 @@ class LogcatService : BaseService() {
       )
     }
 
-    val exitIntent = Intent(this, ComposeMainActivity::class.java)
-    exitIntent.putExtra(ComposeMainActivity.EXIT_EXTRA, true)
+    val exitIntent = Intent(this, MainActivity::class.java)
+    exitIntent.putExtra(MainActivity.EXIT_EXTRA, true)
     exitIntent.action = "exit"
     val exitPendingIntent = if (VERSION.SDK_INT >= VERSION_CODES.M) {
       PendingIntent.getActivity(
@@ -167,8 +167,8 @@ class LogcatService : BaseService() {
       .addAction(exitAction)
 
     if (addStopRecordingAction) {
-      val stopRecordingIntent = Intent(this, ComposeMainActivity::class.java)
-      stopRecordingIntent.putExtra(ComposeMainActivity.STOP_RECORDING_EXTRA, true)
+      val stopRecordingIntent = Intent(this, MainActivity::class.java)
+      stopRecordingIntent.putExtra(MainActivity.STOP_RECORDING_EXTRA, true)
       stopRecordingIntent.action = "stop recording"
       val stopRecordingPendingIntent = if (VERSION.SDK_INT >= VERSION_CODES.M) {
         PendingIntent.getActivity(

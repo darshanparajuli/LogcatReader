@@ -14,7 +14,7 @@ open class SplashActivity : AppCompatActivity() {
       }
     })
 
-    startActivity(Intent(this, ComposeMainActivity::class.java))
+    startActivity(Intent(this, MainActivity::class.java))
     finish()
   }
 }

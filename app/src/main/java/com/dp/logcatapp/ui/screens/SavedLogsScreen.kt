@@ -79,7 +79,7 @@ import androidx.room.withTransaction
 import com.dp.logcat.LogcatStreamReader
 import com.dp.logcat.LogcatUtil.countLogs
 import com.dp.logcatapp.R
-import com.dp.logcatapp.activities.ComposeSavedLogsViewerActivity
+import com.dp.logcatapp.activities.SavedLogsViewerActivity
 import com.dp.logcatapp.db.LogcatReaderDatabase
 import com.dp.logcatapp.db.SavedLogInfo
 import com.dp.logcatapp.ui.common.Dialog
@@ -270,7 +270,7 @@ fun SavedLogsScreen(
                       selected += item
                     },
                     onClick = {
-                      val intent = Intent(context, ComposeSavedLogsViewerActivity::class.java)
+                      val intent = Intent(context, SavedLogsViewerActivity::class.java)
                       intent.setDataAndType(item.info.path.toUri(), "text/plain")
                       context.startActivity(intent)
                     }

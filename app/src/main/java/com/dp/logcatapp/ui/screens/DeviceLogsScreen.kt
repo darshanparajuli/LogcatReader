@@ -115,10 +115,10 @@ import com.dp.logcat.LogcatSession.RecordingFileInfo
 import com.dp.logcat.LogcatUtil
 import com.dp.logcatapp.BuildConfig
 import com.dp.logcatapp.R
-import com.dp.logcatapp.activities.ComposeFiltersActivity
-import com.dp.logcatapp.activities.ComposeSavedLogsActivity
-import com.dp.logcatapp.activities.ComposeSavedLogsViewerActivity
-import com.dp.logcatapp.activities.ComposeSettingsActivity
+import com.dp.logcatapp.activities.FiltersActivity
+import com.dp.logcatapp.activities.SavedLogsActivity
+import com.dp.logcatapp.activities.SavedLogsViewerActivity
+import com.dp.logcatapp.activities.SettingsActivity
 import com.dp.logcatapp.db.FilterInfo
 import com.dp.logcatapp.db.LogcatReaderDatabase
 import com.dp.logcatapp.db.SavedLogInfo
@@ -434,7 +434,7 @@ fun DeviceLogsScreen(
         },
         onClickFilter = {
           showDropDownMenu = false
-          val intent = Intent(context, ComposeFiltersActivity::class.java)
+          val intent = Intent(context, FiltersActivity::class.java)
           context.startActivity(intent)
         },
         onClickSave = {
@@ -473,7 +473,7 @@ fun DeviceLogsScreen(
         },
         onClickSavedLogs = {
           showDropDownMenu = false
-          context.startActivity(Intent(context, ComposeSavedLogsActivity::class.java))
+          context.startActivity(Intent(context, SavedLogsActivity::class.java))
         },
         onClickRestartLogcat = {
           showDropDownMenu = false
@@ -484,7 +484,7 @@ fun DeviceLogsScreen(
         },
         onClickSettings = {
           showDropDownMenu = false
-          context.startActivity(Intent(context, ComposeSettingsActivity::class.java))
+          context.startActivity(Intent(context, SettingsActivity::class.java))
         },
       )
       AnimatedVisibility(
@@ -752,16 +752,16 @@ fun DeviceLogsScreen(
           showCopyToClipboard = compactViewPreference.value,
           onDismiss = { showLongClickOptionsSheet = null },
           onClickFilter = {
-            val intent = Intent(context, ComposeFiltersActivity::class.java)
-            intent.putExtra(ComposeFiltersActivity.EXTRA_LOG, log)
-            intent.putExtra(ComposeFiltersActivity.EXTRA_EXCLUDE, false)
+            val intent = Intent(context, FiltersActivity::class.java)
+            intent.putExtra(FiltersActivity.EXTRA_LOG, log)
+            intent.putExtra(FiltersActivity.EXTRA_EXCLUDE, false)
             context.startActivity(intent)
             showLongClickOptionsSheet = null
           },
           onClickExclude = {
-            val intent = Intent(context, ComposeFiltersActivity::class.java)
-            intent.putExtra(ComposeFiltersActivity.EXTRA_LOG, log)
-            intent.putExtra(ComposeFiltersActivity.EXTRA_EXCLUDE, true)
+            val intent = Intent(context, FiltersActivity::class.java)
+            intent.putExtra(FiltersActivity.EXTRA_LOG, log)
+            intent.putExtra(FiltersActivity.EXTRA_EXCLUDE, true)
             context.startActivity(intent)
             showLongClickOptionsSheet = null
           },
@@ -863,7 +863,7 @@ private fun SavedLogsBottomSheet(
         .fillMaxWidth()
         .clickable {
           onDismiss()
-          val intent = Intent(context, ComposeSavedLogsViewerActivity::class.java)
+          val intent = Intent(context, SavedLogsViewerActivity::class.java)
           intent.setDataAndType(uri, "text/plain")
           context.startActivity(intent)
         },

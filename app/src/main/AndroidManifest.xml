@@ -37,22 +37,22 @@
     </activity>
 
     <activity
-        android:name=".activities.ComposeMainActivity"
+        android:name=".activities.MainActivity"
         android:windowSoftInputMode="adjustResize"
         android:launchMode="singleTask" />
 
     <activity
-        android:name=".activities.ComposeFiltersActivity"
+        android:name=".activities.FiltersActivity"
         android:windowSoftInputMode="adjustResize"
         android:launchMode="singleTask" />
 
     <activity
-        android:name=".activities.ComposeSavedLogsActivity"
+        android:name=".activities.SavedLogsActivity"
         android:windowSoftInputMode="adjustResize"
         android:launchMode="singleTask" />
 
     <activity
-        android:name=".activities.ComposeSavedLogsViewerActivity"
+        android:name=".activities.SavedLogsViewerActivity"
         android:exported="true"
         android:windowSoftInputMode="adjustResize"
         android:launchMode="singleTask">
@@ -70,7 +70,7 @@
     </activity>
 
     <activity
-        android:name=".activities.ComposeSettingsActivity"
+        android:name=".activities.SettingsActivity"
         android:windowSoftInputMode="adjustResize"
         android:launchMode="singleTask" />
 

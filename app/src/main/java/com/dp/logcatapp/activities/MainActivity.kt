@@ -22,7 +22,7 @@ import com.dp.logcatapp.util.PreferenceKeys
 import com.dp.logcatapp.util.getDefaultSharedPreferences
 import com.dp.logcatapp.util.setKeepScreenOn
 
-class ComposeMainActivity : ComponentActivity() {
+class MainActivity : ComponentActivity() {
 
   private var recordingIsActive = false
   private var stopRecordingSignal by mutableStateOf(false)
