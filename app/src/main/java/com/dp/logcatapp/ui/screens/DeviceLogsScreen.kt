@@ -833,7 +833,6 @@ private fun DisplayOptionsSheet(
   onDismiss: () -> Unit,
 ) {
   ModalBottomSheet(
-    modifier = Modifier.padding(bottom = 16.dp),
     onDismissRequest = onDismiss,
     containerColor = MaterialTheme.colorScheme.surfaceContainer,
   ) {
@@ -911,6 +910,7 @@ private fun DisplayOptionsSheet(
         containerColor = MaterialTheme.colorScheme.surfaceContainer,
       ),
     )
+    Spacer(modifier = Modifier.height(16.dp))
   }
 }
 
