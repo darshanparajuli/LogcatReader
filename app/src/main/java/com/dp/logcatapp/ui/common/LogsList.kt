@@ -41,6 +41,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.text.isDigitsOnly
 import com.dp.logcat.Log
 import com.dp.logcat.LogPriority
 import com.dp.logcatapp.R
@@ -53,7 +54,6 @@ import com.dp.logcatapp.ui.theme.RobotoMonoFontFamily
 import com.dp.logcatapp.ui.theme.currentSearchHitColor
 import com.dp.logcatapp.ui.theme.logListItemSecondaryColor
 import com.dp.logcatapp.util.AppInfo
-import com.dp.logcatapp.util.ROOT
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -134,11 +134,11 @@ fun LogsList(
             target = item.msg,
             searchHitKey = SearchHitKey(logId = item.id, component = LogComponent.MSG),
           ),
-          packageName = if (item.uid != null) {
-            val packageName = if (item.uid == ROOT) {
-              ROOT
-            } else {
+          packageName = item.uid?.let { uid ->
+            val packageName = if (uid.isDigitsOnly()) {
               appInfoMap[item.uid]?.packageName
+            } else {
+              uid
             }
             packageName?.let {
               maybeHighlightSearchHit(
@@ -146,7 +146,7 @@ fun LogsList(
                 searchHitKey = SearchHitKey(logId = item.id, component = LogComponent.PKG),
               )
             }
-          } else null,
+          },
           date = item.date,
           time = item.time,
           pid = item.pid,
@@ -183,11 +183,11 @@ fun LogsList(
             target = item.msg,
             searchHitKey = SearchHitKey(logId = item.id, component = LogComponent.MSG),
           ),
-          packageName = if (item.uid != null) {
-            val packageName = if (item.uid == ROOT) {
-              ROOT
-            } else {
+          packageName = item.uid?.let { uid ->
+            val packageName = if (uid.isDigitsOnly()) {
               appInfoMap[item.uid]?.packageName
+            } else {
+              uid
             }
             packageName?.let {
               maybeHighlightSearchHit(
@@ -195,7 +195,7 @@ fun LogsList(
                 searchHitKey = SearchHitKey(logId = item.id, component = LogComponent.PKG),
               )
             }
-          } else null,
+          },
           date = item.date.takeIf { ToggleableLogItem.Date in enabledLogItems },
           time = item.time.takeIf { ToggleableLogItem.Time in enabledLogItems },
           pid = item.pid.takeIf { ToggleableLogItem.Pid in enabledLogItems },
@@ -499,11 +499,12 @@ suspend fun searchLogs(
   logs.forEachIndexed { index, log ->
     val msgIndex = log.msg.indexOf(string = searchQuery, ignoreCase = true)
     val tagIndex = log.tag.indexOf(string = searchQuery, ignoreCase = true)
-    val packageNameIndex = if (log.uid != null) {
-      val packageName = if (log.uid == ROOT) {
-        ROOT
-      } else {
+    val uid = log.uid
+    val packageNameIndex = if (uid != null) {
+      val packageName = if (uid.isDigitsOnly()) {
         appInfoMap[log.uid]?.packageName
+      } else {
+        uid
       }
       packageName?.indexOf(string = searchQuery, ignoreCase = true) ?: -1
     } else {

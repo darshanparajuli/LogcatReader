@@ -22,8 +22,6 @@ import androidx.preference.PreferenceManager
 import com.dp.logcatapp.R
 import com.dp.logger.Logger
 
-const val ROOT = "root"
-
 fun Context.findActivity(): Activity? {
   return when (this) {
     is Activity -> this
@@ -177,14 +175,10 @@ data class AppInfo(
 fun Context.getAppInfo(): Map<String, AppInfo> {
   val map = mutableMapOf<String, AppInfo>()
   packageManager.getInstalledApplications(GET_META_DATA).forEach { info ->
-    val appInfo = AppInfo(
+    map[info.uid.toString()] = AppInfo(
       uid = info.uid.toString(),
       packageName = info.packageName,
     )
-    map[appInfo.uid] = appInfo
-    if (info.uid == 0) {
-      map[ROOT] = appInfo
-    }
   }
   return map
 }

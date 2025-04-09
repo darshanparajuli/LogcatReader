@@ -101,6 +101,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
 import androidx.core.net.toFile
 import androidx.core.net.toUri
+import androidx.core.text.isDigitsOnly
 import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -134,7 +135,6 @@ import com.dp.logcatapp.ui.common.searchLogs
 import com.dp.logcatapp.ui.theme.AppTypography
 import com.dp.logcatapp.util.AppInfo
 import com.dp.logcatapp.util.PreferenceKeys
-import com.dp.logcatapp.util.ROOT
 import com.dp.logcatapp.util.ShareUtils
 import com.dp.logcatapp.util.getDefaultSharedPreferences
 import com.dp.logcatapp.util.rememberBooleanSharedPreference
@@ -1628,8 +1628,8 @@ private class LogFilter(
       return false
     }
 
-    if (uid == ROOT && ROOT.contains(packageName, ignoreCase = true)) {
-      return true
+    if (!uid.isDigitsOnly()) {
+      return uid.contains(packageName, ignoreCase = true)
     }
 
     val appInfo = appInfoMap()[log.uid]
