@@ -8,6 +8,7 @@ data class Log(
   val id: Int,
   val date: String,
   val time: String,
+  val uid: String?,
   val pid: String,
   val tid: String,
   val priority: String,
@@ -15,7 +16,7 @@ data class Log(
   val msg: String,
 ) : Parcelable {
 
-  fun metadataToString() = "[$date $time $pid:$tid $priority/$tag]"
+  fun metadataToString() = "[$date $time $uid:$pid:$tid $priority/$tag]"
 
   override fun toString(): String = "${metadataToString()}\n$msg\n\n"
 
@@ -27,50 +28,69 @@ data class Log(
     ): Log {
       val date: String
       val time: String
+      val uid: String?
       val pid: String
       val tid: String
       val priority: String
       val tag: String
 
-      val trimmed = metadata.substring(1, metadata.length - 1).trim()
+      val trimmedMetadata = metadata.substring(1, metadata.length - 1).trim()
       var startIndex = 0
 
-      var index = trimmed.indexOf(' ', startIndex)
-      date = trimmed.substring(startIndex, index)
+      var index = trimmedMetadata.indexOf(' ', startIndex)
+      date = trimmedMetadata.substring(startIndex, index)
       startIndex = index + 1
 
-      index = trimmed.indexOf(' ', startIndex)
-      time = trimmed.substring(startIndex, index)
-      startIndex = index + 1
-
-      // NOTE(dparajuli): skip spaces
-      while (trimmed[startIndex] == ' ') {
-        startIndex++
-      }
-
-      index = trimmed.indexOf(':', startIndex)
-      pid = trimmed.substring(startIndex, index)
+      index = trimmedMetadata.indexOf(' ', startIndex)
+      time = trimmedMetadata.substring(startIndex, index)
       startIndex = index + 1
 
       // NOTE(dparajuli): skip spaces
-      while (trimmed[startIndex] == ' ') {
+      while (trimmedMetadata[startIndex] == ' ') {
         startIndex++
       }
 
-      index = trimmed.indexOf(' ', startIndex)
-      tid = trimmed.substring(startIndex, index)
+      val hasUid = trimmedMetadata.substring(
+        startIndex = startIndex,
+        endIndex = trimmedMetadata.indexOf(char = '/', startIndex = startIndex)
+      ).count { it == ':' } == 2
+      if (hasUid) {
+        index = trimmedMetadata.indexOf(':', startIndex)
+        uid = trimmedMetadata.substring(startIndex, index)
+        startIndex = index + 1
+
+        // NOTE(dparajuli): skip spaces
+        while (trimmedMetadata[startIndex] == ' ') {
+          startIndex++
+        }
+      } else {
+        uid = null
+      }
+
+      index = trimmedMetadata.indexOf(':', startIndex)
+      pid = trimmedMetadata.substring(startIndex, index)
       startIndex = index + 1
 
-      index = trimmed.indexOf('/', startIndex)
-      priority = trimmed.substring(startIndex, index)
+      // NOTE(dparajuli): skip spaces
+      while (trimmedMetadata[startIndex] == ' ') {
+        startIndex++
+      }
+
+      index = trimmedMetadata.indexOf(' ', startIndex)
+      tid = trimmedMetadata.substring(startIndex, index)
       startIndex = index + 1
 
-      tag = trimmed.substring(startIndex, trimmed.length).trim()
+      index = trimmedMetadata.indexOf('/', startIndex)
+      priority = trimmedMetadata.substring(startIndex, index)
+      startIndex = index + 1
+
+      tag = trimmedMetadata.substring(startIndex, trimmedMetadata.length).trim()
 
       return Log(
         id = id,
         date = date,
         time = time,
+        uid = uid,
         pid = pid,
         tid = tid,
         priority = priority,

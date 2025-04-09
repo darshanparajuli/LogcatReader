@@ -52,6 +52,8 @@ import com.dp.logcatapp.ui.theme.LogcatReaderTheme
 import com.dp.logcatapp.ui.theme.RobotoMonoFontFamily
 import com.dp.logcatapp.ui.theme.currentSearchHitColor
 import com.dp.logcatapp.ui.theme.logListItemSecondaryColor
+import com.dp.logcatapp.util.AppInfo
+import com.dp.logcatapp.util.ROOT
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -65,6 +67,7 @@ fun LogsList(
   contentPadding: PaddingValues,
   logs: List<Log>,
   searchHits: Map<SearchHitKey, SearchHitSpan>,
+  appInfoMap: Map<String, AppInfo> = emptyMap(),
   currentSearchHitLogId: Int,
   listStyle: LogsListStyle = LogsListStyle.Default,
   enabledLogItems: Set<ToggleableLogItem> = DEFAULT_ENABLED_LIST_ITEMS,
@@ -131,6 +134,19 @@ fun LogsList(
             target = item.msg,
             searchHitKey = SearchHitKey(logId = item.id, component = LogComponent.MSG),
           ),
+          packageName = if (item.uid != null) {
+            val packageName = if (item.uid == ROOT) {
+              ROOT
+            } else {
+              appInfoMap[item.uid]?.packageName
+            }
+            packageName?.let {
+              maybeHighlightSearchHit(
+                target = it,
+                searchHitKey = SearchHitKey(logId = item.id, component = LogComponent.PKG),
+              )
+            }
+          } else null,
           date = item.date,
           time = item.time,
           pid = item.pid,
@@ -167,6 +183,19 @@ fun LogsList(
             target = item.msg,
             searchHitKey = SearchHitKey(logId = item.id, component = LogComponent.MSG),
           ),
+          packageName = if (item.uid != null) {
+            val packageName = if (item.uid == ROOT) {
+              ROOT
+            } else {
+              appInfoMap[item.uid]?.packageName
+            }
+            packageName?.let {
+              maybeHighlightSearchHit(
+                target = it,
+                searchHitKey = SearchHitKey(logId = item.id, component = LogComponent.PKG),
+              )
+            }
+          } else null,
           date = item.date.takeIf { ToggleableLogItem.Date in enabledLogItems },
           time = item.time.takeIf { ToggleableLogItem.Time in enabledLogItems },
           pid = item.pid.takeIf { ToggleableLogItem.Pid in enabledLogItems },
@@ -193,12 +222,14 @@ private fun LogItem(
   priority: String,
   tag: AnnotatedString?,
   message: AnnotatedString,
+  packageName: AnnotatedString?,
   date: String?,
   time: String?,
   pid: String?,
   tid: String?,
   priorityColor: Color,
 ) {
+  val textColor = logListItemSecondaryColor()
   Row(
     modifier = modifier
       .height(IntrinsicSize.Max),
@@ -247,11 +278,21 @@ private fun LogItem(
           fontFamily = RobotoMonoFontFamily,
         )
       )
+      if (packageName != null) {
+        Text(
+          text = packageName,
+          style = TextStyle.Default.copy(
+            fontSize = 12.sp,
+            fontFamily = RobotoMonoFontFamily,
+            fontWeight = FontWeight.Bold,
+            color = textColor,
+          )
+        )
+      }
       Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.Absolute.spacedBy(10.dp),
       ) {
-        val textColor = logListItemSecondaryColor()
         if (date != null) {
           Text(
             text = date,
@@ -307,6 +348,7 @@ private fun LogItemCompact(
   priority: String,
   tag: AnnotatedString?,
   message: AnnotatedString,
+  packageName: AnnotatedString?,
   date: String,
   time: String,
   pid: String,
@@ -338,6 +380,7 @@ private fun LogItemCompact(
       )
     }
     if (expanded) {
+      val textColor = logListItemSecondaryColor()
       Column(
         modifier = Modifier
           .fillMaxWidth()
@@ -363,11 +406,21 @@ private fun LogItemCompact(
             fontFamily = RobotoMonoFontFamily,
           )
         )
+        if (packageName != null) {
+          Text(
+            text = packageName,
+            style = TextStyle.Default.copy(
+              fontSize = 12.sp,
+              fontFamily = RobotoMonoFontFamily,
+              fontWeight = FontWeight.Bold,
+              color = textColor,
+            )
+          )
+        }
         Row(
           modifier = Modifier.fillMaxWidth(),
           horizontalArrangement = Arrangement.Absolute.spacedBy(10.dp),
         ) {
-          val textColor = logListItemSecondaryColor()
           Text(
             text = date,
             style = TextStyle.Default.copy(
@@ -438,6 +491,7 @@ private fun LogItemCompact(
 
 suspend fun searchLogs(
   logs: List<Log>,
+  appInfoMap: Map<String, AppInfo>,
   searchQuery: String,
 ) = withContext(Dispatchers.Default) {
   val map = mutableMapOf<SearchHitKey, SearchHitSpan>()
@@ -445,6 +499,16 @@ suspend fun searchLogs(
   logs.forEachIndexed { index, log ->
     val msgIndex = log.msg.indexOf(string = searchQuery, ignoreCase = true)
     val tagIndex = log.tag.indexOf(string = searchQuery, ignoreCase = true)
+    val packageNameIndex = if (log.uid != null) {
+      val packageName = if (log.uid == ROOT) {
+        ROOT
+      } else {
+        appInfoMap[log.uid]?.packageName
+      }
+      packageName?.indexOf(string = searchQuery, ignoreCase = true) ?: -1
+    } else {
+      -1
+    }
     if (msgIndex != -1) {
       map[SearchHitKey(logId = log.id, component = LogComponent.MSG)] =
         SearchHitSpan(start = msgIndex, end = msgIndex + searchQuery.length)
@@ -453,6 +517,11 @@ suspend fun searchLogs(
     if (tagIndex != -1) {
       map[SearchHitKey(logId = log.id, component = LogComponent.TAG)] =
         SearchHitSpan(start = tagIndex, end = tagIndex + searchQuery.length)
+      hits += SearchHitInfo(logId = log.id, index = index)
+    }
+    if (packageNameIndex != -1) {
+      map[SearchHitKey(logId = log.id, component = LogComponent.PKG)] =
+        SearchHitSpan(start = packageNameIndex, end = packageNameIndex + searchQuery.length)
       hits += SearchHitInfo(logId = log.id, index = index)
     }
   }
@@ -487,6 +556,7 @@ data class SearchHitKey(
   enum class LogComponent {
     MSG,
     TAG,
+    PKG,
   }
 }
 
@@ -501,6 +571,7 @@ enum class ToggleableLogItem(@StringRes val labelRes: Int) {
   Time(R.string.time),
   Pid(R.string.process_id),
   Tid(R.string.thread_id),
+  PackageName(R.string.package_name),
 }
 
 @Preview(showBackground = true)
@@ -518,6 +589,7 @@ private fun LogItemPreview() {
       time = "21:10:46.123",
       pid = "1600",
       tid = "123123",
+      packageName = AnnotatedString("com.dp.logcatapp"),
       priorityColor = LogPriorityColors.priorityDebug,
     )
   }
@@ -539,6 +611,7 @@ private fun LogItemCompactPreview() {
       pid = "1600",
       tid = "123123",
       priorityColor = LogPriorityColors.priorityDebug,
+      packageName = AnnotatedString("com.dp.logcatapp"),
       expanded = false,
     )
   }

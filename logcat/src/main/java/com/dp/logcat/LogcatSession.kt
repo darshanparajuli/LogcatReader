@@ -107,7 +107,7 @@ class LogcatSession(
     }
     return try {
       ProcessBuilder(
-        "logcat", "-v", "long",
+        "logcat", "-v", "long", "-v", "uid",
         *buffersArg.toTypedArray()
       ).start().also { process ->
         logcatProcess = process

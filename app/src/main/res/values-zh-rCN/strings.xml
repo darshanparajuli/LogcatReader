@@ -93,6 +93,7 @@
   <string name="restart">重新启动</string>
   <string name="exclusion">排除</string>
   <string name="clear">清除</string>
+  <string name="package_name">包名</string>
   <string name="log">Log</string>
   <string name="log_level">Log 等级</string>
   <string name="message">信息</string>

@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.ContextWrapper
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
+import android.content.pm.PackageManager.GET_META_DATA
 import android.content.res.Configuration
 import android.net.Uri
 import android.os.Build.VERSION.SDK_INT
@@ -20,6 +21,8 @@ import androidx.core.content.ContextCompat
 import androidx.preference.PreferenceManager
 import com.dp.logcatapp.R
 import com.dp.logger.Logger
+
+const val ROOT = "root"
 
 fun Context.findActivity(): Activity? {
   return when (this) {
@@ -164,4 +167,24 @@ fun Context.isReadLogsPermissionGranted(): Boolean {
     this,
     Manifest.permission.READ_LOGS
   ) == PackageManager.PERMISSION_GRANTED
+}
+
+data class AppInfo(
+  val uid: String,
+  val packageName: String,
+)
+
+fun Context.getAppInfo(): Map<String, AppInfo> {
+  val map = mutableMapOf<String, AppInfo>()
+  packageManager.getInstalledApplications(GET_META_DATA).forEach { info ->
+    val appInfo = AppInfo(
+      uid = info.uid.toString(),
+      packageName = info.packageName,
+    )
+    map[appInfo.uid] = appInfo
+    if (info.uid == 0) {
+      map[ROOT] = appInfo
+    }
+  }
+  return map
 }

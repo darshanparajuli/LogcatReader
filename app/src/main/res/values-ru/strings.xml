@@ -96,6 +96,7 @@
   <string name="restart">Перезапустить</string>
   <string name="exclusion">Исключения</string>
   <string name="clear">Очистить</string>
+  <string name="package_name">Имя пакета</string>
   <string name="log">журнал</string>
   <string name="log_level">Уровень журнала</string>
   <string name="message">Сообщение</string>

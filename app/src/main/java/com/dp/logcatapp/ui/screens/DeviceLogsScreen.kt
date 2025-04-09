@@ -129,6 +129,7 @@ import com.dp.logcatapp.ui.common.SearchLogsTopBar
 import com.dp.logcatapp.ui.common.SearchResult.SearchHitInfo
 import com.dp.logcatapp.ui.common.SearchResult.SearchHitSpan
 import com.dp.logcatapp.ui.common.ToggleableLogItem
+import com.dp.logcatapp.ui.common.rememberAppInfoByUidMap
 import com.dp.logcatapp.ui.common.searchLogs
 import com.dp.logcatapp.ui.theme.AppTypography
 import com.dp.logcatapp.util.PreferenceKeys
@@ -287,6 +288,10 @@ fun DeviceLogsScreen(
         }
     }
   }
+
+  val appInfoMap = rememberAppInfoByUidMap(
+    pollIntervalMs = 1_000L,
+  )
 
   Scaffold(
     modifier = modifier,
@@ -559,7 +564,11 @@ fun DeviceLogsScreen(
               var scrolled = false
               snapshotFlow { logsState.toList() }
                 .collect { logs ->
-                  val (map, sortedHitsByLogId) = searchLogs(logs, searchQuery)
+                  val (map, sortedHitsByLogId) = searchLogs(
+                    logs = logs,
+                    appInfoMap = appInfoMap,
+                    searchQuery = searchQuery,
+                  )
                   searchHitsMap.clear()
                   searchHitsMap.putAll(map)
                   sortedHitsByLogIdsState = sortedHitsByLogId
@@ -730,6 +739,7 @@ fun DeviceLogsScreen(
           },
           enabledLogItems = enabledLogItems,
           logs = logsState,
+          appInfoMap = appInfoMap,
           searchHits = searchHitsMap,
           onClick = if (!compactViewPreference.value) {
             { index ->

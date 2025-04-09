@@ -66,6 +66,7 @@ import com.dp.logcatapp.ui.common.SearchHitKey
 import com.dp.logcatapp.ui.common.SearchLogsTopBar
 import com.dp.logcatapp.ui.common.SearchResult.SearchHitInfo
 import com.dp.logcatapp.ui.common.SearchResult.SearchHitSpan
+import com.dp.logcatapp.ui.common.rememberAppInfoByUidMap
 import com.dp.logcatapp.ui.common.searchLogs
 import com.dp.logcatapp.ui.theme.AppTypography
 import com.dp.logcatapp.util.closeQuietly
@@ -239,6 +240,7 @@ fun SavedLogsViewerScreen(
     }
   ) { innerPadding ->
     val logsState = logs
+    val appInfoMap = rememberAppInfoByUidMap()
     if (logsState is LoadLogsState.Loaded) {
       if (showSearchBar) {
         val logs = logsState.logs
@@ -249,7 +251,11 @@ fun SavedLogsViewerScreen(
               showHitCount = searchQuery.isNotEmpty()
               if (searchQuery.isNotEmpty()) {
                 searchInProgress = true
-                val (map, sortedHitsByLogId) = searchLogs(logs = logs, searchQuery = searchQuery)
+                val (map, sortedHitsByLogId) = searchLogs(
+                  logs = logs,
+                  appInfoMap = appInfoMap,
+                  searchQuery = searchQuery,
+                )
                 searchHitsMap.clear()
                 searchHitsMap.putAll(map)
                 sortedHitsByLogIdsState = sortedHitsByLogId
@@ -302,6 +308,7 @@ fun SavedLogsViewerScreen(
           LogsListStyle.Default
         },
         logs = logsState.logs,
+        appInfoMap = appInfoMap,
         currentSearchHitLogId = currentSearchHitLogId,
         onClick = if (!compactViewPreference.value) {
           { index ->
