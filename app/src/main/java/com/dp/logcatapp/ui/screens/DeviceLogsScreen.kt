@@ -413,7 +413,8 @@ fun DeviceLogsScreen(
           !isLogcatSessionLoading && !errorStartingLogcat,
         recordStatus = recordStatus,
         showDropDownMenu = showDropDownMenu,
-        saveEnabled = logcatService != null && !isLogcatSessionLoading && !errorStartingLogcat,
+        saveEnabled = logcatService != null && !isLogcatSessionLoading && !errorStartingLogcat
+          && logsState.isNotEmpty(),
         saveLogsInProgress = saveLogsInProgress,
         restartLogcatEnabled = logcatService != null && recordStatus == RecordStatus.Idle,
         onClickSearch = {
@@ -454,11 +455,8 @@ fun DeviceLogsScreen(
         },
         onClickSave = {
           coroutineScope.launch {
-            val logs =
-              logcatService?.logcatSessionStatus?.value?.sessionOrNull?.let { logcatSession ->
-                withContext(Dispatchers.Default) { logcatSession.getAllLogsFiltered() }
-              }
-            if (logs != null) {
+            val logs = logsState.toList() // Create a copy
+            if (logs.isNotEmpty()) {
               saveLogsToFile(context, logs).collect { result ->
                 when (result) {
                   SaveResult.InProgress -> {
@@ -480,9 +478,6 @@ fun DeviceLogsScreen(
                   }
                 }
               }
-            } else {
-              context.showToast(saveFailedMessage)
-              showDropDownMenu = false
             }
           }
         },
