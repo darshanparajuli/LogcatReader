@@ -271,10 +271,6 @@ class LogcatSession(
     }
   }
 
-  fun getAllLogsFiltered(): List<Log> = lock.withLock {
-    allLogs.filtered().toList()
-  }
-
   fun setFilters(filters: List<Filter>, exclusion: Boolean = false) {
     lock.withLock {
       if (exclusion) {
