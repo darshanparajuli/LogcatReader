@@ -23,6 +23,7 @@
   <string name="about">关于</string>
   <string name="copy_adb_command">复制ADB命令</string>
   <string name="copy_to_clipboard">复制到剪切板</string>
+  <string name="sort_order">排序顺序</string>
   <string name="copied_to_clipboard">已复制</string>
 
   <string name="save_to_file">保存到文件</string>
@@ -59,6 +60,7 @@
   <string name="delete">删除</string>
   <string name="share">分享</string>
   <string name="save">保存</string>
+  <string name="done">完毕</string>
   <string name="error">错误</string>
   <string name="saved">保存</string>
   <string name="waiting_for_logs">等待 logs…</string>
@@ -121,4 +123,11 @@
   <string name="version_fmt">" 版本 %s"</string>
   <string name="unable_to_start_logcat_error_msg">无法启动 logcat 进程并读取日志</string>
   <string name="compact_view">紧凑视图</string>
+  <string name="sort_by">排序方式</string>
+  <string name="name">姓名</string>
+  <string name="timestamp">时间戳</string>
+  <string name="log_count">日志计数</string>
+  <string name="size">尺寸</string>
+  <string name="ascending">升序</string>
+  <string name="descending">降序</string>
 </resources>

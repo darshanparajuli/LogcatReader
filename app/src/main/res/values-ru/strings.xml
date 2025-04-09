@@ -23,6 +23,7 @@
   <string name="about">О приложении</string>
   <string name="copy_adb_command">Копировать</string>
   <string name="copy_to_clipboard">Копировать в буфер обмена</string>
+  <string name="sort_order">Порядок сортировки</string>
   <string name="copied_to_clipboard">Скопировано</string>
   <string name="save_to_file">Сохранить</string>
   <string name="export">Экспорт</string>
@@ -62,6 +63,7 @@
   <string name="delete">Удалить</string>
   <string name="share">Поделиться</string>
   <string name="save">Сохранить</string>
+  <string name="done">Сделанный</string>
   <string name="error">Ошибка</string>
   <string name="saved">Сохранено</string>
   <string name="waiting_for_logs">Ожидание журналов…</string>
@@ -124,4 +126,11 @@
   <string name="unable_to_start_logcat_error_msg">Невозможно запустить процесс logcat и прочитать журналы</string>
   <string name="compact_view">Компактный вид</string>
   <string name="permission_granted_info_title">Разрешение READ_LOGS предоставлено</string>
+  <string name="sort_by">Сортировать по</string>
+  <string name="name">Имя</string>
+  <string name="timestamp">Временная метка</string>
+  <string name="log_count">Количество журналов</string>
+  <string name="size">Размер</string>
+  <string name="ascending">восходящий</string>
+  <string name="descending">По убыванию</string>
 </resources>
