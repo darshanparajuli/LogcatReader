@@ -412,7 +412,6 @@ fun DeviceLogsScreen(
           recordStatus != RecordStatus.SaveRecordedLogs &&
           !isLogcatSessionLoading && !errorStartingLogcat,
         recordStatus = recordStatus,
-        compactViewEnabled = compactViewPreference.value,
         showDropDownMenu = showDropDownMenu,
         saveEnabled = logcatService != null && !isLogcatSessionLoading && !errorStartingLogcat,
         saveLogsInProgress = saveLogsInProgress,
@@ -1089,7 +1088,6 @@ private fun AppBar(
   recordStatus: RecordStatus,
   showDropDownMenu: Boolean,
   saveEnabled: Boolean,
-  compactViewEnabled: Boolean,
   saveLogsInProgress: Boolean,
   restartLogcatEnabled: Boolean,
   onClickSearch: () -> Unit,
