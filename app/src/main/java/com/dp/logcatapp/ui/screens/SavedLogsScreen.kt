@@ -14,6 +14,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -80,6 +81,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
 import androidx.core.net.toFile
@@ -363,22 +365,10 @@ fun SavedLogsScreen(
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(item.sizeStr)
                 Spacer(modifier = Modifier.width(8.dp))
-                if (Build.VERSION.SDK_INT >= 24) {
-                  val formatted = remember(item.timestamp) {
-                    SimpleDateFormat.getDateTimeInstance(
-                      SimpleDateFormat.SHORT, SimpleDateFormat.SHORT
-                    ).format(item.timestamp)
-                  }
-                  Text(formatted)
-                } else {
-                  val date = remember(context, item.timestamp) {
-                    DateFormat.getDateFormat(context).format(item.timestamp)
-                  }
-                  val time = remember(context, item.timestamp) {
-                    DateFormat.getTimeFormat(context).format(item.timestamp)
-                  }
-                  Text("$date $time")
-                }
+                DateTime(
+                  timestamp = item.timestamp,
+                  spaceInBetween = 4.dp,
+                )
               }
             },
             trailingContent = if (selected.isNotEmpty()) {
@@ -809,6 +799,43 @@ private fun SortOptionsSheet(
         }
       }
     }
+  }
+}
+
+@Composable
+private fun DateTime(
+  timestamp: Long,
+  spaceInBetween: Dp,
+  modifier: Modifier = Modifier,
+) {
+  val context = LocalContext.current
+  Row(
+    modifier = modifier,
+    verticalAlignment = Alignment.CenterVertically,
+    horizontalArrangement = Arrangement.spacedBy(spaceInBetween),
+  ) {
+    val date = if (Build.VERSION.SDK_INT >= 24) {
+      remember(context, timestamp) {
+        SimpleDateFormat.getDateInstance(SimpleDateFormat.SHORT)
+          .format(timestamp)
+      }
+    } else {
+      remember(context, timestamp) {
+        DateFormat.getDateFormat(context).format(timestamp)
+      }
+    }
+    val time = if (Build.VERSION.SDK_INT >= 24) {
+      remember(context, timestamp) {
+        SimpleDateFormat.getTimeInstance(SimpleDateFormat.SHORT)
+          .format(timestamp)
+      }
+    } else {
+      remember(context, timestamp) {
+        DateFormat.getTimeFormat(context).format(timestamp)
+      }
+    }
+    Text(date)
+    Text(time)
   }
 }
 
