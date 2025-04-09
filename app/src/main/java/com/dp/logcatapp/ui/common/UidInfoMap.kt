@@ -11,19 +11,20 @@ import com.dp.logcatapp.util.AppInfo
 import com.dp.logcatapp.util.getAppInfo
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
+import kotlin.time.Duration
 
 @Composable
 fun rememberAppInfoByUidMap(
-  pollIntervalMs: Long? = null,
+  refreshInterval: Duration? = null,
 ): Map<String, AppInfo> {
   val context = LocalContext.current
   var uidMap by remember(context) {
     mutableStateOf<Map<String, AppInfo>>(context.getAppInfo())
   }
-  if (pollIntervalMs != null) {
-    LaunchedEffect(context, pollIntervalMs) {
+  if (refreshInterval != null) {
+    LaunchedEffect(context, refreshInterval) {
       while (isActive) {
-        delay(pollIntervalMs)
+        delay(refreshInterval)
         uidMap = context.getAppInfo()
       }
     }

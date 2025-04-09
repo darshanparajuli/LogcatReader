@@ -165,6 +165,7 @@ import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import kotlin.time.Duration.Companion.seconds
 
 private const val TAG = "HomeScreen"
 private const val SNAP_SCROLL_HIDE_DELAY_MS = 2000L
@@ -183,7 +184,7 @@ fun DeviceLogsScreen(
   val coroutineScope = rememberCoroutineScope()
   val focusManager = LocalFocusManager.current
 
-  val appInfoMap = rememberAppInfoByUidMap(pollIntervalMs = 1_000L)
+  val appInfoMap = rememberAppInfoByUidMap(refreshInterval = 1.seconds)
   val logcatService = rememberLogcatServiceConnection()
   val lazyListState = rememberLazyListState()
 
