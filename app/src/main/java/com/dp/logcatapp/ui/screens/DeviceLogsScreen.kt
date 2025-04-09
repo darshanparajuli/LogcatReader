@@ -769,12 +769,20 @@ fun DeviceLogsScreen(
       }
 
       showLongClickOptionsSheet?.let { log ->
+        val packageName = log.uid?.let { uid ->
+          if (uid.isDigitsOnly()) {
+            appInfoMap[uid]?.packageName
+          } else {
+            uid
+          }
+        }
         LongClickOptionsSheet(
           showCopyToClipboard = compactViewPreference.value,
           onDismiss = { showLongClickOptionsSheet = null },
           onClickFilter = {
             val intent = Intent(context, FiltersActivity::class.java)
             intent.putExtra(FiltersActivity.EXTRA_LOG, log)
+            intent.putExtra(FiltersActivity.EXTRA_PACKAGE_NAME, packageName)
             intent.putExtra(FiltersActivity.EXTRA_EXCLUDE, false)
             context.startActivity(intent)
             showLongClickOptionsSheet = null
@@ -782,6 +790,7 @@ fun DeviceLogsScreen(
           onClickExclude = {
             val intent = Intent(context, FiltersActivity::class.java)
             intent.putExtra(FiltersActivity.EXTRA_LOG, log)
+            intent.putExtra(FiltersActivity.EXTRA_PACKAGE_NAME, packageName)
             intent.putExtra(FiltersActivity.EXTRA_EXCLUDE, true)
             context.startActivity(intent)
             showLongClickOptionsSheet = null

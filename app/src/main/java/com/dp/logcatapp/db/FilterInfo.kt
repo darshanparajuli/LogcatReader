@@ -8,6 +8,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.PrimaryKey
 import androidx.room.Query
+import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
 
 @Entity(tableName = "filters")
@@ -33,6 +34,9 @@ interface FilterDao {
 
   @Delete
   fun delete(vararg info: FilterInfo)
+
+  @Update(onConflict = OnConflictStrategy.REPLACE)
+  fun update(info: FilterInfo)
 
   @Query("DELETE FROM filters")
   fun deleteAll()

@@ -91,6 +91,7 @@ fun FiltersScreen(
     .collectAsState(null)
 
   var showAddFilterDialog by remember { mutableStateOf(prepopulateFilterInfo != null) }
+  var showEditFilterDialog by remember { mutableStateOf<FilterInfo?>(null) }
   val coroutineScope = rememberCoroutineScope()
 
   Scaffold(
@@ -174,9 +175,65 @@ fun FiltersScreen(
   ) { innerPadding ->
     val filters = filters
 
+    showEditFilterDialog?.let { filterInfo ->
+      AddFilterSheet(
+        initialTag = filterInfo.tag,
+        initialKeyword = filterInfo.message,
+        initialPackageName = filterInfo.packageName,
+        initialPid = filterInfo.pid?.toString(),
+        initialTid = filterInfo.tid?.toString(),
+        initialExclude = filterInfo.exclude,
+        initialLogLevels = filterInfo.logLevels?.split(",")?.mapNotNull { level ->
+          LogLevel.entries.find { it.name.first().toString() == level }
+        }?.toSet().orEmpty(),
+        onDismiss = { showEditFilterDialog = null },
+        onSave = { data ->
+          showEditFilterDialog = null
+
+          val keyword = data.keyword
+          val tag = data.tag
+          val pid = data.pid
+          val tid = data.tid
+          val exclude = data.exclude
+          val packageName = data.packageName
+          val selectedLogLevels = data.selectedLogLevels
+
+          val filterInfo = filterInfo.copy(
+            tag = tag.takeIf { it.isNotEmpty() },
+            message = keyword.takeIf { it.isNotEmpty() },
+            pid = pid.takeIf { it.isNotEmpty() }?.toIntOrNull(),
+            tid = tid.takeIf { it.isNotEmpty() }?.toIntOrNull(),
+            packageName = packageName.takeIf { it.isNotEmpty() },
+            logLevels = if (selectedLogLevels.isEmpty()) {
+              null
+            } else {
+              selectedLogLevels.map { it.label.first().toString() }
+                .sorted()
+                .joinToString(separator = ",")
+            },
+            exclude = exclude,
+          )
+
+          coroutineScope.launch {
+            withContext(Dispatchers.IO) {
+              db.filterDao().update(filterInfo)
+            }
+          }
+        }
+      )
+    }
     if (showAddFilterDialog) {
       AddFilterSheet(
-        prepopulateFilterInfo = prepopulateFilterInfo,
+        initialTag = prepopulateFilterInfo?.log?.tag,
+        initialPackageName = prepopulateFilterInfo?.packageName,
+        initialPid = prepopulateFilterInfo?.log?.pid,
+        initialTid = prepopulateFilterInfo?.log?.tid,
+        initialExclude = prepopulateFilterInfo?.exclude,
+        initialLogLevels = prepopulateFilterInfo?.log?.priority?.let { p ->
+          LogLevel.entries.find { it.label.startsWith(p) }?.let { level ->
+            setOf(level)
+          }
+        }.orEmpty(),
         onDismiss = { showAddFilterDialog = false },
         onSave = { data ->
           showAddFilterDialog = false
@@ -239,7 +296,11 @@ fun FiltersScreen(
           key = { index, _ -> index },
         ) { index, item ->
           FilterItem(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+              .fillMaxWidth()
+              .clickable {
+                showEditFilterDialog = item
+              },
             tag = item.tag,
             message = item.message,
             pid = item.pid?.toString(),
@@ -278,26 +339,30 @@ private data class FilterData(
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 private fun AddFilterSheet(
-  prepopulateFilterInfo: PrepopulateFilterInfo?,
   onDismiss: () -> Unit,
   onSave: (FilterData) -> Unit,
   modifier: Modifier = Modifier,
+  initialKeyword: String? = null,
+  initialTag: String? = null,
+  initialPackageName: String? = null,
+  initialPid: String? = null,
+  initialTid: String? = null,
+  initialExclude: Boolean? = null,
+  initialLogLevels: Set<LogLevel> = emptySet(),
 ) {
   val selectedLogLevels = remember {
     mutableStateMapOf<LogLevel, Boolean>().apply {
-      prepopulateFilterInfo?.log?.priority?.let { p ->
-        LogLevel.entries.find { it.label.startsWith(p) }?.let { level ->
-          put(level, true)
-        }
+      LogLevel.entries.filter { it in initialLogLevels }.forEach { level ->
+        put(level, true)
       }
     }
   }
-  var keyword by remember { mutableStateOf("") }
-  var tag by remember { mutableStateOf(prepopulateFilterInfo?.log?.tag.orEmpty()) }
-  var packageName by remember { mutableStateOf(prepopulateFilterInfo?.packageName.orEmpty()) }
-  var pid by remember { mutableStateOf(prepopulateFilterInfo?.log?.pid.orEmpty()) }
-  var tid by remember { mutableStateOf(prepopulateFilterInfo?.log?.tid.orEmpty()) }
-  var exclude by remember { mutableStateOf(prepopulateFilterInfo?.exclude ?: false) }
+  var keyword by remember { mutableStateOf(initialKeyword.orEmpty()) }
+  var tag by remember { mutableStateOf(initialTag.orEmpty()) }
+  var packageName by remember { mutableStateOf(initialPackageName.orEmpty()) }
+  var pid by remember { mutableStateOf(initialPid.orEmpty()) }
+  var tid by remember { mutableStateOf(initialTid.orEmpty()) }
+  var exclude by remember { mutableStateOf(initialExclude ?: false) }
   ModalBottomSheet(
     modifier = modifier,
     onDismissRequest = onDismiss,
