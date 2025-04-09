@@ -66,9 +66,14 @@ fun CopyLogClipboardBottomSheet(
             Text(stringResource(labelRes))
           },
           supportingContent = {
+            val maxLines = when (labelRes) {
+              R.string.log -> 3
+              R.string.message -> 4
+              else -> 1
+            }
             Text(
               text = data,
-              maxLines = if (labelRes == R.string.log) 2 else 1,
+              maxLines = maxLines,
               overflow = TextOverflow.Ellipsis,
             )
           },
