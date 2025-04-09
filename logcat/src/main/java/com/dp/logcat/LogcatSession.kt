@@ -99,20 +99,48 @@ class LogcatSession(
     }
   }
 
+  private fun isUidOptionSupported(): Boolean {
+    return try {
+      // Dump the log with `-v uid` cmdline option to see if it works.
+      val process = ProcessBuilder(
+        "logcat", "-v", "long", "-v", "uid", "-d",
+      ).start()
+      val stdoutReaderThread = thread {
+        try {
+          // Consume stdout. Without this, the process waits forever on some
+          // devices/os versions.
+          process.inputStream.bufferedReader().use {
+            it.lineSequence().forEach { }
+          }
+        } catch (_: Exception) {
+        }
+      }
+      val result = process.waitFor() == 0
+      stdoutReaderThread.join(THREAD_JOIN_TIMEOUT)
+      result
+    } catch (_: Exception) {
+      false
+    }
+  }
+
   private fun startLogcatProcess(): Process? {
     val buffersArg = mutableListOf<String>()
     for (buffer in buffers) {
       buffersArg += "-b"
       buffersArg += buffer
     }
+    val cmd = mutableListOf<String>()
+    cmd += listOf("logcat", "-v", "long")
+    if (isUidOptionSupported()) {
+      cmd += listOf("-v", "uid")
+    }
+    cmd += buffersArg
     return try {
-      ProcessBuilder(
-        "logcat", "-v", "long", "-v", "uid",
-        *buffersArg.toTypedArray()
-      ).start().also { process ->
+      ProcessBuilder(cmd).start().also { process ->
         logcatProcess = process
       }
-    } catch (_: IOException) {
+    } catch (e: IOException) {
+      e.printStackTrace()
       Logger.debug(LogcatSession::class, "error starting logcat process")
       null
     }
