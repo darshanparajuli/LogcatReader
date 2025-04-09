@@ -183,6 +183,7 @@ fun DeviceLogsScreen(
   val coroutineScope = rememberCoroutineScope()
   val focusManager = LocalFocusManager.current
 
+  val appInfoMap = rememberAppInfoByUidMap(pollIntervalMs = 1_000L)
   val logcatService = rememberLogcatServiceConnection()
   val lazyListState = rememberLazyListState()
 
@@ -236,9 +237,7 @@ fun DeviceLogsScreen(
     BackHandler { showSearchBar = false }
   }
 
-  val appInfoMap = rememberAppInfoByUidMap(
-    pollIntervalMs = 1_000L,
-  )
+
 
   if (logcatService != null) {
     val db = remember(context) { LogcatReaderDatabase.getInstance(context) }
