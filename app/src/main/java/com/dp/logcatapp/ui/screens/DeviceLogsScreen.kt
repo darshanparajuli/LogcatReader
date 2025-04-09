@@ -273,7 +273,7 @@ fun DeviceLogsScreen(
                   filters = includeFilters.map { filterInfo ->
                     LogFilter(
                       filterInfo = filterInfo,
-                      appInfoMap = { appInfoMap },
+                      appInfoMap = { appInfoMap.toMap() },
                     )
                   },
                   exclusion = false
@@ -282,7 +282,7 @@ fun DeviceLogsScreen(
                   filters = excludeFilters.map { filterInfo ->
                     LogFilter(
                       filterInfo = filterInfo,
-                      appInfoMap = { appInfoMap },
+                      appInfoMap = { appInfoMap.toMap() },
                     )
                   },
                   exclusion = true
