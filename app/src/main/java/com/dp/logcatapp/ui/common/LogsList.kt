@@ -1,5 +1,6 @@
 package com.dp.logcatapp.ui.common
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
@@ -42,6 +43,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.dp.logcat.Log
 import com.dp.logcat.LogPriority
+import com.dp.logcatapp.R
 import com.dp.logcatapp.ui.common.SearchHitKey.LogComponent
 import com.dp.logcatapp.ui.common.SearchResult.SearchHitInfo
 import com.dp.logcatapp.ui.common.SearchResult.SearchHitSpan
@@ -53,10 +55,7 @@ import com.dp.logcatapp.ui.theme.logListItemSecondaryColor
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-enum class LogsListStyle {
-  Default,
-  Compact,
-}
+private val DEFAULT_ENABLED_LIST_ITEMS = ToggleableLogItem.entries.toSet()
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -68,6 +67,7 @@ fun LogsList(
   searchHits: Map<SearchHitKey, SearchHitSpan>,
   currentSearchHitLogId: Int,
   listStyle: LogsListStyle = LogsListStyle.Default,
+  enabledLogItems: Set<ToggleableLogItem> = DEFAULT_ENABLED_LIST_ITEMS,
   // onClick is only available for LogsListStyle.Default.
   onClick: ((Int) -> Unit)? = null,
   onLongClick: ((Int) -> Unit)? = null,
@@ -121,10 +121,12 @@ fun LogsList(
             )
             .wrapContentHeight(),
           priority = item.priority,
-          tag = maybeHighlightSearchHit(
-            target = item.tag,
-            searchHitKey = SearchHitKey(logId = item.id, component = LogComponent.TAG),
-          ),
+          tag = if (expanded || ToggleableLogItem.Tag in enabledLogItems) {
+            maybeHighlightSearchHit(
+              target = item.tag,
+              searchHitKey = SearchHitKey(logId = item.id, component = LogComponent.TAG),
+            )
+          } else null,
           message = maybeHighlightSearchHit(
             target = item.msg,
             searchHitKey = SearchHitKey(logId = item.id, component = LogComponent.MSG),
@@ -155,18 +157,20 @@ fun LogsList(
             )
             .wrapContentHeight(),
           priority = item.priority,
-          tag = maybeHighlightSearchHit(
-            target = item.tag,
-            searchHitKey = SearchHitKey(logId = item.id, component = LogComponent.TAG),
-          ),
+          tag = if (ToggleableLogItem.Tag in enabledLogItems) {
+            maybeHighlightSearchHit(
+              target = item.tag,
+              searchHitKey = SearchHitKey(logId = item.id, component = LogComponent.TAG),
+            )
+          } else null,
           message = maybeHighlightSearchHit(
             target = item.msg,
             searchHitKey = SearchHitKey(logId = item.id, component = LogComponent.MSG),
           ),
-          date = item.date,
-          time = item.time,
-          pid = item.pid,
-          tid = item.tid,
+          date = item.date.takeIf { ToggleableLogItem.Date in enabledLogItems },
+          time = item.time.takeIf { ToggleableLogItem.Time in enabledLogItems },
+          pid = item.pid.takeIf { ToggleableLogItem.Pid in enabledLogItems },
+          tid = item.tid.takeIf { ToggleableLogItem.Tid in enabledLogItems },
           priorityColor = when (item.priority) {
             LogPriority.ASSERT -> LogPriorityColors.priorityAssert
             LogPriority.DEBUG -> LogPriorityColors.priorityDebug
@@ -187,17 +191,18 @@ fun LogsList(
 private fun LogItem(
   modifier: Modifier,
   priority: String,
-  tag: AnnotatedString,
+  tag: AnnotatedString?,
   message: AnnotatedString,
-  date: String,
-  time: String,
-  pid: String,
-  tid: String,
+  date: String?,
+  time: String?,
+  pid: String?,
+  tid: String?,
   priorityColor: Color,
 ) {
   Row(
     modifier = modifier
       .height(IntrinsicSize.Max),
+    verticalAlignment = Alignment.CenterVertically,
   ) {
     Box(
       modifier = Modifier
@@ -223,15 +228,17 @@ private fun LogItem(
         .padding(all = 5.dp),
       verticalArrangement = Arrangement.spacedBy(2.dp),
     ) {
-      Text(
-        modifier = Modifier.fillMaxWidth(),
-        text = tag,
-        style = TextStyle.Default.copy(
-          fontSize = 13.sp,
-          fontFamily = RobotoMonoFontFamily,
-          fontWeight = FontWeight.Medium,
+      if (tag != null) {
+        Text(
+          modifier = Modifier.fillMaxWidth(),
+          text = tag,
+          style = TextStyle.Default.copy(
+            fontSize = 13.sp,
+            fontFamily = RobotoMonoFontFamily,
+            fontWeight = FontWeight.Medium,
+          )
         )
-      )
+      }
       Text(
         modifier = Modifier.fillMaxWidth(),
         text = message,
@@ -245,42 +252,50 @@ private fun LogItem(
         horizontalArrangement = Arrangement.Absolute.spacedBy(10.dp),
       ) {
         val textColor = logListItemSecondaryColor()
-        Text(
-          text = date,
-          style = TextStyle.Default.copy(
-            fontSize = 12.sp,
-            fontFamily = RobotoMonoFontFamily,
-            fontWeight = FontWeight.Bold,
-            color = textColor,
+        if (date != null) {
+          Text(
+            text = date,
+            style = TextStyle.Default.copy(
+              fontSize = 12.sp,
+              fontFamily = RobotoMonoFontFamily,
+              fontWeight = FontWeight.Bold,
+              color = textColor,
+            )
           )
-        )
-        Text(
-          text = time,
-          style = TextStyle.Default.copy(
-            fontSize = 12.sp,
-            fontFamily = RobotoMonoFontFamily,
-            fontWeight = FontWeight.Bold,
-            color = textColor,
+        }
+        if (time != null) {
+          Text(
+            text = time,
+            style = TextStyle.Default.copy(
+              fontSize = 12.sp,
+              fontFamily = RobotoMonoFontFamily,
+              fontWeight = FontWeight.Bold,
+              color = textColor,
+            )
           )
-        )
-        Text(
-          text = pid,
-          style = TextStyle.Default.copy(
-            fontSize = 12.sp,
-            fontFamily = RobotoMonoFontFamily,
-            fontWeight = FontWeight.Bold,
-            color = textColor,
+        }
+        if (pid != null) {
+          Text(
+            text = pid,
+            style = TextStyle.Default.copy(
+              fontSize = 12.sp,
+              fontFamily = RobotoMonoFontFamily,
+              fontWeight = FontWeight.Bold,
+              color = textColor,
+            )
           )
-        )
-        Text(
-          text = tid,
-          style = TextStyle.Default.copy(
-            fontSize = 12.sp,
-            fontFamily = RobotoMonoFontFamily,
-            fontWeight = FontWeight.Bold,
-            color = textColor,
+        }
+        if (tid != null) {
+          Text(
+            text = tid,
+            style = TextStyle.Default.copy(
+              fontSize = 12.sp,
+              fontFamily = RobotoMonoFontFamily,
+              fontWeight = FontWeight.Bold,
+              color = textColor,
+            )
           )
-        )
+        }
       }
     }
   }
@@ -290,7 +305,7 @@ private fun LogItem(
 private fun LogItemCompact(
   modifier: Modifier,
   priority: String,
-  tag: AnnotatedString,
+  tag: AnnotatedString?,
   message: AnnotatedString,
   date: String,
   time: String,
@@ -329,15 +344,17 @@ private fun LogItemCompact(
           .padding(all = 5.dp),
         verticalArrangement = Arrangement.spacedBy(2.dp),
       ) {
-        Text(
-          modifier = Modifier.fillMaxWidth(),
-          text = tag,
-          style = TextStyle.Default.copy(
-            fontSize = 13.sp,
-            fontFamily = RobotoMonoFontFamily,
-            fontWeight = FontWeight.Medium,
+        if (tag != null) {
+          Text(
+            modifier = Modifier.fillMaxWidth(),
+            text = tag,
+            style = TextStyle.Default.copy(
+              fontSize = 13.sp,
+              fontFamily = RobotoMonoFontFamily,
+              fontWeight = FontWeight.Medium,
+            )
           )
-        )
+        }
         Text(
           modifier = Modifier.fillMaxWidth(),
           text = message,
@@ -391,18 +408,20 @@ private fun LogItemCompact(
       }
     } else {
       Spacer(modifier = Modifier.width(4.dp))
-      Text(
-        modifier = Modifier.weight(0.2f),
-        text = tag,
-        overflow = TextOverflow.Ellipsis,
-        maxLines = 1,
-        style = TextStyle.Default.copy(
-          fontSize = 12.sp,
-          fontFamily = RobotoMonoFontFamily,
-          fontWeight = FontWeight.Medium,
+      if (tag != null) {
+        Text(
+          modifier = Modifier.weight(0.2f),
+          text = tag,
+          overflow = TextOverflow.Ellipsis,
+          maxLines = 1,
+          style = TextStyle.Default.copy(
+            fontSize = 12.sp,
+            fontFamily = RobotoMonoFontFamily,
+            fontWeight = FontWeight.Medium,
+          )
         )
-      )
-      Spacer(modifier = Modifier.width(4.dp))
+        Spacer(modifier = Modifier.width(4.dp))
+      }
       Text(
         modifier = Modifier.weight(0.8f),
         text = message,
@@ -469,6 +488,19 @@ data class SearchHitKey(
     MSG,
     TAG,
   }
+}
+
+enum class LogsListStyle {
+  Default,
+  Compact,
+}
+
+enum class ToggleableLogItem(@StringRes val labelRes: Int) {
+  Tag(R.string.tag),
+  Date(R.string.date),
+  Time(R.string.time),
+  Pid(R.string.process_id),
+  Tid(R.string.thread_id),
 }
 
 @Preview(showBackground = true)

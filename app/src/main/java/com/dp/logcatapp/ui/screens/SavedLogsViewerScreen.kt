@@ -68,7 +68,6 @@ import com.dp.logcatapp.ui.common.SearchResult.SearchHitInfo
 import com.dp.logcatapp.ui.common.SearchResult.SearchHitSpan
 import com.dp.logcatapp.ui.common.searchLogs
 import com.dp.logcatapp.ui.theme.AppTypography
-import com.dp.logcatapp.util.PreferenceKeys
 import com.dp.logcatapp.util.closeQuietly
 import com.dp.logcatapp.util.findActivity
 import com.dp.logcatapp.util.getFileNameFromUri
@@ -88,6 +87,7 @@ import kotlinx.coroutines.withContext
 import java.io.IOException
 
 private const val SNAP_SCROLL_HIDE_DELAY_MS = 2000L
+private const val COMPACT_VIEW_KEY = "saved_logs_viewer_compact_view_key"
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -121,8 +121,8 @@ fun SavedLogsViewerScreen(
   var sortedHitsByLogIdsState by remember { mutableStateOf<List<SearchHitInfo>>(emptyList()) }
   var scrollSnapperVisible by remember { mutableStateOf(false) }
   var compactViewPreference = rememberBooleanSharedPreference(
-    key = PreferenceKeys.Logcat.KEY_COMPACT_VIEW,
-    default = PreferenceKeys.Logcat.Default.COMPACT_VIEW,
+    key = COMPACT_VIEW_KEY,
+    default = false,
   )
 
   val scrollToTopInteractionSource = remember { MutableInteractionSource() }
@@ -177,6 +177,7 @@ fun SavedLogsViewerScreen(
           showDropDownMenu = false
         },
         onClickCompactView = {
+          showDropDownMenu = false
           compactViewPreference.value = !compactViewPreference.value
         }
       )

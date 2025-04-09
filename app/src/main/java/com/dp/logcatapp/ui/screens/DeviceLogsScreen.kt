@@ -17,8 +17,11 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.InteractionSource
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction.Press
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.consumeWindowInsets
@@ -35,6 +38,7 @@ import androidx.compose.material.icons.automirrored.filled.ViewList
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.DisplaySettings
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.FiberManualRecord
 import androidx.compose.material.icons.filled.FilterList
@@ -50,11 +54,12 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material.icons.filled.ViewCompact
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -67,6 +72,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -92,6 +98,7 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.util.fastForEach
 import androidx.core.net.toFile
 import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
@@ -121,12 +128,14 @@ import com.dp.logcatapp.ui.common.SearchHitKey
 import com.dp.logcatapp.ui.common.SearchLogsTopBar
 import com.dp.logcatapp.ui.common.SearchResult.SearchHitInfo
 import com.dp.logcatapp.ui.common.SearchResult.SearchHitSpan
+import com.dp.logcatapp.ui.common.ToggleableLogItem
 import com.dp.logcatapp.ui.common.searchLogs
 import com.dp.logcatapp.ui.theme.AppTypography
 import com.dp.logcatapp.util.PreferenceKeys
 import com.dp.logcatapp.util.ShareUtils
 import com.dp.logcatapp.util.getDefaultSharedPreferences
 import com.dp.logcatapp.util.rememberBooleanSharedPreference
+import com.dp.logcatapp.util.rememberStringSetSharedPreference
 import com.dp.logcatapp.util.showToast
 import com.dp.logger.Logger
 import kotlinx.coroutines.Dispatchers
@@ -156,6 +165,8 @@ import java.util.Locale
 
 private const val TAG = "HomeScreen"
 private const val SNAP_SCROLL_HIDE_DELAY_MS = 2000L
+private const val COMPACT_VIEW_KEY = "device_logs_compact_view_key"
+private const val ENABLED_LOG_ITEMS_KEY = "toggleable_log_items_pref_key"
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -186,15 +197,20 @@ fun DeviceLogsScreen(
     snapDownInteractionSource = scrollToBottomInteractionSource,
   )
 
+  var compactViewPreference = rememberBooleanSharedPreference(
+    key = COMPACT_VIEW_KEY,
+    default = false,
+  )
+  var toggleableLogItemsPref = rememberStringSetSharedPreference(
+    key = ENABLED_LOG_ITEMS_KEY,
+    default = ToggleableLogItem.entries.map { it.ordinal.toString() }.toSet(),
+  )
+
   val logsState = remember { mutableStateListOf<Log>() }
   var searchInProgress by remember { mutableStateOf(false) }
   var showDropDownMenu by remember { mutableStateOf(false) }
   var showSearchBar by remember { mutableStateOf(false) }
   var logcatPaused by remember { mutableStateOf(false) }
-  var compactViewPreference = rememberBooleanSharedPreference(
-    key = PreferenceKeys.Logcat.KEY_COMPACT_VIEW,
-    default = PreferenceKeys.Logcat.Default.COMPACT_VIEW,
-  )
   var searchQuery by remember { mutableStateOf("") }
   // Value: tagIndex start and end.
   val searchHitsMap = remember { mutableStateMapOf<SearchHitKey, SearchHitSpan>() }
@@ -211,6 +227,7 @@ fun DeviceLogsScreen(
   var appliedFilters by remember { mutableStateOf(false) }
   var isLogcatSessionLoading by remember { mutableStateOf(true) }
   var errorStartingLogcat by remember { mutableStateOf(false) }
+  var showDisplayOptions by remember { mutableStateOf(false) }
 
   if (showSearchBar) {
     BackHandler { showSearchBar = false }
@@ -410,13 +427,14 @@ fun DeviceLogsScreen(
           logsState.clear()
           showDropDownMenu = false
         },
-        onClickCompactView = {
-          compactViewPreference.value = !compactViewPreference.value
-        },
         onClickFilter = {
           showDropDownMenu = false
           val intent = Intent(context, FiltersActivity::class.java)
           context.startActivity(intent)
+        },
+        onClickDisplayOptions = {
+          showDropDownMenu = false
+          showDisplayOptions = true
         },
         onClickSave = {
           coroutineScope.launch {
@@ -677,6 +695,12 @@ fun DeviceLogsScreen(
           }
         }
 
+        val enabledLogItems = remember(toggleableLogItemsPref.value) {
+          toggleableLogItemsPref.value.orEmpty().map {
+            ToggleableLogItem.entries[it.toInt()]
+          }.toSet()
+        }
+
         LogsList(
           modifier = Modifier
             .fillMaxSize()
@@ -704,6 +728,7 @@ fun DeviceLogsScreen(
           } else {
             LogsListStyle.Default
           },
+          enabledLogItems = enabledLogItems,
           logs = logsState,
           searchHits = searchHitsMap,
           onClick = if (!compactViewPreference.value) {
@@ -752,7 +777,116 @@ fun DeviceLogsScreen(
           }
         )
       }
+
+      if (showDisplayOptions) {
+        DisplayOptionsSheet(
+          initialEnabledLogcatItems = toggleableLogItemsPref.value.orEmpty().map {
+            ToggleableLogItem.entries[it.toInt()]
+          }.toSet(),
+          initialCompactView = compactViewPreference.value,
+          onSave = { enabledLogItems, compactView ->
+            showDisplayOptions = false
+            compactViewPreference.value = compactView
+            toggleableLogItemsPref.value = enabledLogItems.map {
+              it.ordinal.toString()
+            }.toSet()
+          },
+          onDismiss = {
+            showDisplayOptions = false
+          }
+        )
+      }
     }
+  }
+}
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@Composable
+private fun DisplayOptionsSheet(
+  initialEnabledLogcatItems: Set<ToggleableLogItem>,
+  initialCompactView: Boolean,
+  onSave: (enabledLogItems: Set<ToggleableLogItem>, compactView: Boolean) -> Unit,
+  onDismiss: () -> Unit,
+) {
+  ModalBottomSheet(
+    modifier = Modifier.padding(bottom = 16.dp),
+    onDismissRequest = onDismiss,
+    containerColor = MaterialTheme.colorScheme.surfaceContainer,
+  ) {
+    var compactView by remember { mutableStateOf(initialCompactView) }
+    val enabledLogcatItems = remember {
+      mutableStateMapOf(
+        *ToggleableLogItem.entries.map { entry ->
+          Pair(entry, entry in initialEnabledLogcatItems)
+        }.toTypedArray()
+      )
+    }
+    Row(
+      modifier = Modifier.padding(horizontal = 16.dp),
+      verticalAlignment = Alignment.CenterVertically,
+    ) {
+      Text(
+        modifier = Modifier.weight(1f),
+        text = "Display options",
+        style = AppTypography.headlineMedium,
+      )
+      FilledTonalButton(
+        onClick = {
+          onSave(
+            enabledLogcatItems.filterValues { it }.keys,
+            compactView,
+          )
+        },
+      ) {
+        Text(
+          stringResource(R.string.save),
+          style = AppTypography.titleMedium,
+        )
+      }
+    }
+    Spacer(modifier = Modifier.height(16.dp))
+    FlowRow(
+      modifier = Modifier
+        .fillMaxWidth()
+        .padding(horizontal = 16.dp),
+      horizontalArrangement = Arrangement.spacedBy(8.dp),
+      verticalArrangement = Arrangement.spacedBy(0.dp),
+    ) {
+      ToggleableLogItem.entries.fastForEach { entry ->
+        FilterChip(
+          selected = enabledLogcatItems.getValue(entry),
+          onClick = {
+            enabledLogcatItems[entry] = !enabledLogcatItems.getValue(entry)
+          },
+          enabled = !compactView || entry == ToggleableLogItem.Tag,
+          label = {
+            Text(stringResource(entry.labelRes))
+          }
+        )
+      }
+    }
+    ListItem(
+      modifier = Modifier
+        .fillMaxWidth()
+        .clickable {
+          compactView = !compactView
+        },
+      leadingContent = {
+        Icon(Icons.Default.ViewCompact, contentDescription = null)
+      },
+      headlineContent = {
+        Text(stringResource(R.string.compact_view))
+      },
+      trailingContent = {
+        Switch(
+          checked = compactView,
+          onCheckedChange = null,
+        )
+      },
+      colors = ListItemDefaults.colors(
+        containerColor = MaterialTheme.colorScheme.surfaceContainer,
+      ),
+    )
   }
 }
 
@@ -941,11 +1075,11 @@ private fun AppBar(
   onClickRecord: () -> Unit,
   onShowDropdownMenu: () -> Unit,
   onDismissDropdownMenu: () -> Unit,
-  onClickCompactView: () -> Unit,
-  onClickClear: () -> Unit,
+  onClickDisplayOptions: () -> Unit,
   onClickFilter: () -> Unit,
   onClickSave: () -> Unit,
   onClickSavedLogs: () -> Unit,
+  onClickClear: () -> Unit,
   onClickRestartLogcat: () -> Unit,
   onClickSettings: () -> Unit,
 ) {
@@ -1039,28 +1173,14 @@ private fun AppBar(
         ) {
           DropdownMenuItem(
             leadingIcon = {
-              Icon(Icons.Default.ViewCompact, contentDescription = null)
+              Icon(Icons.Default.DisplaySettings, contentDescription = null)
             },
             text = {
               Text(
-                text = stringResource(R.string.compact_view),
+                text = "Display Options",
               )
             },
-            trailingIcon = {
-              Checkbox(checked = compactViewEnabled, onCheckedChange = null)
-            },
-            onClick = onClickCompactView,
-          )
-          DropdownMenuItem(
-            leadingIcon = {
-              Icon(Icons.Default.Clear, contentDescription = null)
-            },
-            text = {
-              Text(
-                text = stringResource(R.string.clear),
-              )
-            },
-            onClick = onClickClear,
+            onClick = onClickDisplayOptions,
           )
           DropdownMenuItem(
             leadingIcon = {
@@ -1102,6 +1222,17 @@ private fun AppBar(
               )
             },
             onClick = onClickSavedLogs,
+          )
+          DropdownMenuItem(
+            leadingIcon = {
+              Icon(Icons.Default.Clear, contentDescription = null)
+            },
+            text = {
+              Text(
+                text = stringResource(R.string.clear),
+              )
+            },
+            onClick = onClickClear,
           )
           DropdownMenuItem(
             leadingIcon = {
