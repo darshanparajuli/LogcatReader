@@ -1,16 +1,11 @@
 package com.dp.logcatapp.ui.screens
 
-import android.Manifest
-import android.content.ClipData
-import android.content.ClipboardManager
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
-import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.IBinder
-import android.os.Process
 import androidx.activity.compose.BackHandler
 import androidx.annotation.WorkerThread
 import androidx.compose.animation.AnimatedVisibility
@@ -35,8 +30,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ViewList
 import androidx.compose.material.icons.filled.ArrowDownward
@@ -75,7 +68,6 @@ import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -98,14 +90,8 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.core.content.ContextCompat
 import androidx.core.net.toFile
 import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
@@ -115,7 +101,6 @@ import com.dp.logcat.Filter
 import com.dp.logcat.Log
 import com.dp.logcat.LogcatSession.RecordingFileInfo
 import com.dp.logcat.LogcatUtil
-import com.dp.logcatapp.BuildConfig
 import com.dp.logcatapp.R
 import com.dp.logcatapp.activities.FiltersActivity
 import com.dp.logcatapp.activities.SavedLogsActivity
@@ -128,10 +113,10 @@ import com.dp.logcatapp.services.LogcatService
 import com.dp.logcatapp.services.LogcatService.LogcatSessionStatus
 import com.dp.logcatapp.services.getService
 import com.dp.logcatapp.ui.common.CopyLogClipboardBottomSheet
-import com.dp.logcatapp.ui.common.Dialog
 import com.dp.logcatapp.ui.common.LOGCAT_DIR
 import com.dp.logcatapp.ui.common.LogsList
 import com.dp.logcatapp.ui.common.LogsListStyle
+import com.dp.logcatapp.ui.common.MaybeShowPermissionRequiredDialog
 import com.dp.logcatapp.ui.common.SearchHitKey
 import com.dp.logcatapp.ui.common.SearchLogsTopBar
 import com.dp.logcatapp.ui.common.SearchResult.SearchHitInfo
@@ -140,7 +125,6 @@ import com.dp.logcatapp.ui.common.searchLogs
 import com.dp.logcatapp.ui.theme.AppTypography
 import com.dp.logcatapp.util.PreferenceKeys
 import com.dp.logcatapp.util.ShareUtils
-import com.dp.logcatapp.util.SuCommander
 import com.dp.logcatapp.util.getDefaultSharedPreferences
 import com.dp.logcatapp.util.rememberBooleanSharedPreference
 import com.dp.logcatapp.util.showToast
@@ -172,7 +156,6 @@ import java.util.Locale
 
 private const val TAG = "HomeScreen"
 private const val SNAP_SCROLL_HIDE_DELAY_MS = 2000L
-private const val SHOW_PERMISSION_GRANTED_INFO_PREF_KEY = "show_permission_info_dialog"
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -1149,191 +1132,6 @@ private fun AppBar(
   )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun MaybeShowPermissionRequiredDialog() {
-  val context = LocalContext.current
-  val permissionGranted = remember(context) {
-    isReadLogsPermissionGranted(context)
-  }
-  var showPermissionRequiredDialog by remember(permissionGranted) {
-    mutableStateOf(!permissionGranted)
-  }
-  var showAskingForRootPermissionDialog by remember { mutableStateOf(false) }
-  var showRestartAppDialog by remember { mutableStateOf(false) }
-  var showManualMethodDialog by remember { mutableStateOf(false) }
-  val coroutineScope = rememberCoroutineScope()
-
-  if (showPermissionRequiredDialog) {
-    val failMessage = stringResource(R.string.fail)
-    Dialog(
-      modifier = Modifier.fillMaxWidth(),
-      confirmButton = {
-        TextButton(
-          onClick = {
-            showPermissionRequiredDialog = false
-            showManualMethodDialog = true
-          }
-        ) {
-          Text(stringResource(R.string.manual_method))
-        }
-      },
-      onDismissRequest = {
-        showPermissionRequiredDialog = false
-      },
-      title = { Text(stringResource(R.string.read_logs_permission_required)) },
-      content = { Text(stringResource(R.string.read_logs_permission_required_msg)) },
-      dismissButton = {
-        TextButton(
-          onClick = {
-            showPermissionRequiredDialog = false
-            showAskingForRootPermissionDialog = true
-            coroutineScope.launch {
-              val result = withContext(Dispatchers.IO) {
-                val cmd = "pm grant ${BuildConfig.APPLICATION_ID} ${Manifest.permission.READ_LOGS}"
-                SuCommander(cmd).run()
-              }
-              showAskingForRootPermissionDialog = false
-              if (result) {
-                showRestartAppDialog = true
-              } else {
-                showManualMethodDialog = true
-                context.showToast(failMessage)
-              }
-            }
-          }
-        ) {
-          Text(stringResource(R.string.root_method))
-        }
-      },
-      icon = {
-        Icon(Icons.Default.Info, contentDescription = null)
-      }
-    )
-  } else if (permissionGranted) {
-    val showPermissionInfoDialog = rememberBooleanSharedPreference(
-      key = SHOW_PERMISSION_GRANTED_INFO_PREF_KEY,
-      default = true,
-    )
-    if (showPermissionInfoDialog.value) {
-      Dialog(
-        onDismissRequest = {
-          showPermissionInfoDialog.value = false
-        },
-        title = {
-          Text(stringResource(R.string.permission_granted_info_title))
-        },
-        content = {
-          Text(stringResource(R.string.permission_granted_info_body))
-        },
-        confirmButton = {
-          TextButton(
-            onClick = { showPermissionInfoDialog.value = false },
-          ) {
-            Text(stringResource(android.R.string.ok))
-          }
-        }
-      )
-    }
-  }
-
-  if (showAskingForRootPermissionDialog) {
-    Dialog(
-      onDismissRequest = {},
-      icon = {
-        CircularProgressIndicator(
-          modifier = Modifier.size(24.dp),
-          strokeWidth = 2.dp,
-        )
-      },
-      content = {
-        Text(stringResource(R.string.asking_permission_for_root_access))
-      }
-    )
-  }
-
-  if (showRestartAppDialog) {
-    Dialog(
-      onDismissRequest = {
-        showRestartAppDialog = false
-      },
-      title = {
-        Text(stringResource(R.string.app_restart_dialog_title))
-      },
-      content = {
-        Text(stringResource(R.string.app_restart_dialog_msg_body))
-      },
-      confirmButton = {
-        TextButton(
-          onClick = {
-            context.stopService(Intent(context, LogcatService::class.java))
-            Process.killProcess(Process.myPid())
-          }
-        ) {
-          Text(stringResource(android.R.string.ok))
-        }
-      }
-    )
-  }
-
-  if (showManualMethodDialog) {
-    Dialog(
-      onDismissRequest = {
-        showManualMethodDialog = false
-      },
-      title = {
-        Text(stringResource(R.string.manual_method))
-      },
-      content = {
-        Column(
-          modifier = Modifier.verticalScroll(rememberScrollState()),
-        ) {
-          Text(
-            text = buildAnnotatedString {
-              append(stringResource(R.string.permission_instruction0))
-              appendLine(); appendLine()
-              append(stringResource(R.string.permission_instruction1))
-              appendLine()
-              append(stringResource(R.string.permission_instruction2))
-              appendLine()
-              append(
-                AnnotatedString(
-                  text = stringResource(R.string.permission_instruction3),
-                  spanStyle = SpanStyle(
-                    color = MaterialTheme.colorScheme.tertiary,
-                    fontFamily = FontFamily.Monospace,
-                    fontSize = 11.sp,
-                  )
-                )
-              )
-              appendLine()
-              append(stringResource(R.string.permission_instruction4))
-              appendLine()
-              append(stringResource(R.string.permission_instruction5))
-              appendLine(); appendLine()
-              append(stringResource(R.string.permission_instruction6))
-            },
-          )
-        }
-      },
-      confirmButton = {
-        TextButton(
-          onClick = {
-            showManualMethodDialog = false
-            val cmd = "adb shell pm grant ${BuildConfig.APPLICATION_ID} " +
-              Manifest.permission.READ_LOGS
-            val cm = context.getSystemService(Context.CLIPBOARD_SERVICE)
-              as ClipboardManager
-            cm.setPrimaryClip(ClipData.newPlainText("Adb command", cmd))
-          }
-        ) {
-          Text(stringResource(R.string.copy_adb_command))
-        }
-      }
-    )
-  }
-}
-
 @Composable
 private fun rememberLogcatServiceConnection(): LogcatService? {
   var logcatService by remember { mutableStateOf<LogcatService?>(null) }
@@ -1696,11 +1494,4 @@ private class LogFilter(
 
     return true
   }
-}
-
-private fun isReadLogsPermissionGranted(context: Context): Boolean {
-  return ContextCompat.checkSelfPermission(
-    context,
-    Manifest.permission.READ_LOGS
-  ) == PackageManager.PERMISSION_GRANTED
 }

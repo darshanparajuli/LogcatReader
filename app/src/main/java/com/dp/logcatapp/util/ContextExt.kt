@@ -1,10 +1,12 @@
 package com.dp.logcatapp.util
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
 import android.content.SharedPreferences
+import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.net.Uri
 import android.os.Build.VERSION.SDK_INT
@@ -14,6 +16,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
 import android.widget.Toast
+import androidx.core.content.ContextCompat
 import androidx.preference.PreferenceManager
 import com.dp.logcatapp.R
 import com.dp.logger.Logger
@@ -154,4 +157,11 @@ private class ToastWindowManager(
   override fun removeView(view: View?) = base.removeView(view)
 
   override fun removeViewImmediate(view: View?) = base.removeViewImmediate(view)
+}
+
+fun Context.isReadLogsPermissionGranted(): Boolean {
+  return ContextCompat.checkSelfPermission(
+    this,
+    Manifest.permission.READ_LOGS
+  ) == PackageManager.PERMISSION_GRANTED
 }

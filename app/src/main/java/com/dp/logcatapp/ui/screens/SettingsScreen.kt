@@ -4,7 +4,9 @@ import android.content.Intent
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts.OpenDocumentTree
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -17,7 +19,11 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -41,6 +47,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
@@ -60,6 +67,7 @@ import com.dp.logcat.LogcatUtil
 import com.dp.logcatapp.BuildConfig
 import com.dp.logcatapp.R
 import com.dp.logcatapp.ui.common.Dialog
+import com.dp.logcatapp.ui.common.MaybeShowPermissionRequiredDialog
 import com.dp.logcatapp.ui.screens.Preference.PreferenceRow
 import com.dp.logcatapp.ui.screens.Preference.SectionDivider
 import com.dp.logcatapp.ui.screens.Preference.SectionName
@@ -68,6 +76,7 @@ import com.dp.logcatapp.ui.theme.Shapes
 import com.dp.logcatapp.ui.theme.isDynamicThemeAvailable
 import com.dp.logcatapp.util.PreferenceKeys
 import com.dp.logcatapp.util.findActivity
+import com.dp.logcatapp.util.isReadLogsPermissionGranted
 import com.dp.logcatapp.util.rememberBooleanSharedPreference
 import com.dp.logcatapp.util.rememberIntSharedPreference
 import com.dp.logcatapp.util.rememberStringSetSharedPreference
@@ -122,6 +131,27 @@ fun SettingsScreen(
         .consumeWindowInsets(innerPadding),
       contentPadding = innerPadding,
     ) {
+      item(
+        key = "permission_status"
+      ) {
+        var showPermissionDialog by remember { mutableStateOf(false) }
+        ReadLogsPermissionStatus(
+          modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 4.dp),
+          onClickPermissionNotGranted = {
+            showPermissionDialog = true
+          }
+        )
+        if (showPermissionDialog) {
+          MaybeShowPermissionRequiredDialog(
+            forceShow = true,
+            onDismissed = {
+              showPermissionDialog = false
+            }
+          )
+        }
+      }
       itemsIndexed(
         items = settingRows,
         key = { index, _ -> index },
@@ -158,6 +188,55 @@ fun SettingsScreen(
           }
         }
       }
+    }
+  }
+}
+
+@Composable
+fun ReadLogsPermissionStatus(
+  onClickPermissionNotGranted: () -> Unit,
+  modifier: Modifier = Modifier,
+) {
+  val context = LocalContext.current
+  val hasReadLogsPermission = remember(context) {
+    context.isReadLogsPermissionGranted()
+  }
+  ElevatedCard(
+    modifier = modifier
+      .clickable(
+        enabled = !hasReadLogsPermission,
+        onClick = onClickPermissionNotGranted,
+      ),
+    colors = CardDefaults.cardColors(
+      containerColor = if (hasReadLogsPermission) {
+        MaterialTheme.colorScheme.secondaryContainer
+      } else {
+        MaterialTheme.colorScheme.errorContainer
+      },
+    ),
+  ) {
+    Row(
+      modifier = Modifier.padding(16.dp),
+      verticalAlignment = Alignment.CenterVertically,
+      horizontalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+      Icon(
+        imageVector = if (hasReadLogsPermission) {
+          Icons.Default.CheckCircle
+        } else {
+          Icons.Default.Warning
+        },
+        contentDescription = null,
+      )
+
+      Text(
+        text = if (hasReadLogsPermission) {
+          stringResource(R.string.read_logs_permission_granted)
+        } else {
+          stringResource(R.string.read_logs_permission_not_granted)
+        },
+        style = AppTypography.titleMedium,
+      )
     }
   }
 }

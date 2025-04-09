@@ -135,4 +135,6 @@
   <string name="size">Size</string>
   <string name="ascending">Ascending</string>
   <string name="descending">Descending</string>
+  <string name="read_logs_permission_not_granted">READ_LOGS permission not granted</string>
+  <string name="read_logs_permission_granted">READ_LOGS permission granted</string>
 </resources>

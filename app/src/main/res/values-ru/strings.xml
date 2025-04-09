@@ -133,4 +133,6 @@
   <string name="size">Размер</string>
   <string name="ascending">восходящий</string>
   <string name="descending">По убыванию</string>
+  <string name="read_logs_permission_not_granted">Разрешение READ_LOGS не предоставлено</string>
+  <string name="read_logs_permission_granted">Разрешение READ_LOGS предоставлено</string>
 </resources>

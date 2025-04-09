@@ -130,4 +130,6 @@
   <string name="size">尺寸</string>
   <string name="ascending">升序</string>
   <string name="descending">降序</string>
+  <string name="read_logs_permission_not_granted">未授予 READ_LOGS 权限</string>
+  <string name="read_logs_permission_granted">已授予 READ_LOGS 权限</string>
 </resources>
