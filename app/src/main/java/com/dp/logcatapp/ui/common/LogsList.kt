@@ -134,19 +134,21 @@ fun LogsList(
             target = item.msg,
             searchHitKey = SearchHitKey(logId = item.id, component = LogComponent.MSG),
           ),
-          packageName = item.uid?.let { uid ->
-            val packageName = if (uid.isDigitsOnly()) {
-              appInfoMap[item.uid]?.packageName
-            } else {
-              uid
+          packageName = if (ToggleableLogItem.PackageName in enabledLogItems) {
+            item.uid?.let { uid ->
+              val packageName = if (uid.isDigitsOnly()) {
+                appInfoMap[item.uid]?.packageName
+              } else {
+                uid
+              }
+              packageName?.let {
+                maybeHighlightSearchHit(
+                  target = it,
+                  searchHitKey = SearchHitKey(logId = item.id, component = LogComponent.PKG),
+                )
+              }
             }
-            packageName?.let {
-              maybeHighlightSearchHit(
-                target = it,
-                searchHitKey = SearchHitKey(logId = item.id, component = LogComponent.PKG),
-              )
-            }
-          },
+          } else null,
           date = item.date,
           time = item.time,
           pid = item.pid,
@@ -183,19 +185,21 @@ fun LogsList(
             target = item.msg,
             searchHitKey = SearchHitKey(logId = item.id, component = LogComponent.MSG),
           ),
-          packageName = item.uid?.let { uid ->
-            val packageName = if (uid.isDigitsOnly()) {
-              appInfoMap[item.uid]?.packageName
-            } else {
-              uid
+          packageName = if (ToggleableLogItem.PackageName in enabledLogItems) {
+            item.uid?.let { uid ->
+              val packageName = if (uid.isDigitsOnly()) {
+                appInfoMap[item.uid]?.packageName
+              } else {
+                uid
+              }
+              packageName?.let {
+                maybeHighlightSearchHit(
+                  target = it,
+                  searchHitKey = SearchHitKey(logId = item.id, component = LogComponent.PKG),
+                )
+              }
             }
-            packageName?.let {
-              maybeHighlightSearchHit(
-                target = it,
-                searchHitKey = SearchHitKey(logId = item.id, component = LogComponent.PKG),
-              )
-            }
-          },
+          } else null,
           date = item.date.takeIf { ToggleableLogItem.Date in enabledLogItems },
           time = item.time.takeIf { ToggleableLogItem.Time in enabledLogItems },
           pid = item.pid.takeIf { ToggleableLogItem.Pid in enabledLogItems },
