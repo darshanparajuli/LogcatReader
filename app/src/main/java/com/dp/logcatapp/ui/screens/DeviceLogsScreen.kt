@@ -850,7 +850,7 @@ private fun DisplayOptionsSheet(
     ) {
       Text(
         modifier = Modifier.weight(1f),
-        text = "Display options",
+        text = stringResource(R.string.display_options),
         style = AppTypography.headlineMedium,
       )
       FilledTonalButton(
@@ -1200,7 +1200,7 @@ private fun AppBar(
             },
             text = {
               Text(
-                text = "Display Options",
+                text = stringResource(R.string.display_options),
               )
             },
             onClick = onClickDisplayOptions,
