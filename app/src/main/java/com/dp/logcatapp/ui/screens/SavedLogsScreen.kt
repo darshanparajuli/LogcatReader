@@ -26,7 +26,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -322,13 +322,14 @@ fun SavedLogsScreen(
           .consumeWindowInsets(innerPadding),
         contentPadding = innerPadding,
       ) {
-        itemsIndexed(
+        items(
           items = savedLogs.logFiles,
-          key = { index, _ -> index },
-        ) { index, item ->
+          key = { item -> item.info.path },
+        ) { item ->
           ListItem(
             modifier = Modifier
               .fillMaxWidth()
+              .animateItem()
               .then(
                 if (selected.isEmpty()) {
                   Modifier.combinedClickable(
