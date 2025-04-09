@@ -132,7 +132,9 @@ import com.dp.logcatapp.ui.common.ToggleableLogItem
 import com.dp.logcatapp.ui.common.rememberAppInfoByUidMap
 import com.dp.logcatapp.ui.common.searchLogs
 import com.dp.logcatapp.ui.theme.AppTypography
+import com.dp.logcatapp.util.AppInfo
 import com.dp.logcatapp.util.PreferenceKeys
+import com.dp.logcatapp.util.ROOT
 import com.dp.logcatapp.util.ShareUtils
 import com.dp.logcatapp.util.getDefaultSharedPreferences
 import com.dp.logcatapp.util.rememberBooleanSharedPreference
@@ -234,6 +236,10 @@ fun DeviceLogsScreen(
     BackHandler { showSearchBar = false }
   }
 
+  val appInfoMap = rememberAppInfoByUidMap(
+    pollIntervalMs = 1_000L,
+  )
+
   if (logcatService != null) {
     val db = remember(context) { LogcatReaderDatabase.getInstance(context) }
     LaunchedEffect(logcatService) {
@@ -264,11 +270,21 @@ fun DeviceLogsScreen(
                 val excludeFilters = filters.filter { it.exclude }
 
                 logcatSession.setFilters(
-                  filters = includeFilters.map(::LogFilter),
+                  filters = includeFilters.map { filterInfo ->
+                    LogFilter(
+                      filterInfo = filterInfo,
+                      appInfoMap = { appInfoMap },
+                    )
+                  },
                   exclusion = false
                 )
                 logcatSession.setFilters(
-                  filters = excludeFilters.map(::LogFilter),
+                  filters = excludeFilters.map { filterInfo ->
+                    LogFilter(
+                      filterInfo = filterInfo,
+                      appInfoMap = { appInfoMap },
+                    )
+                  },
                   exclusion = true
                 )
 
@@ -288,10 +304,6 @@ fun DeviceLogsScreen(
         }
     }
   }
-
-  val appInfoMap = rememberAppInfoByUidMap(
-    pollIntervalMs = 1_000L,
-  )
 
   Scaffold(
     modifier = modifier,
@@ -1589,6 +1601,7 @@ sealed interface SavedLogsBottomSheetState {
 
 private class LogFilter(
   private val filterInfo: FilterInfo,
+  private val appInfoMap: () -> Map<String, AppInfo>,
 ) : Filter {
   private val priorities: Set<String> = if (!filterInfo.logLevels.isNullOrEmpty()) {
     filterInfo.logLevels.split(",").toSet()
@@ -1612,6 +1625,29 @@ private class LogFilter(
     }
   }
 
+  private fun matchesPackageName(log: Log): Boolean {
+    val packageName = filterInfo.packageName
+    if (packageName == null) {
+      return true
+    }
+
+    val uid = log.uid
+    if (uid == null) {
+      return false
+    }
+
+    if (uid == ROOT && ROOT.contains(packageName, ignoreCase = true)) {
+      return true
+    }
+
+    val appInfo = appInfoMap()[log.uid]
+    if (appInfo == null) {
+      return false
+    }
+
+    return appInfo.packageName.contains(packageName, ignoreCase = true)
+  }
+
   override fun apply(log: Log): Boolean {
     if (!matches(keyword = filterInfo.tag, target = log.tag)) {
       return false
@@ -1630,6 +1666,10 @@ private class LogFilter(
     }
 
     if (!matchesPriority(log)) {
+      return false
+    }
+
+    if (!matchesPackageName(log)) {
       return false
     }
 

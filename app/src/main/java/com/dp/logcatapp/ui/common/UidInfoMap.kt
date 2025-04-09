@@ -16,11 +16,12 @@ import kotlinx.coroutines.isActive
 fun rememberAppInfoByUidMap(
   pollIntervalMs: Long? = null,
 ): Map<String, AppInfo> {
-  var uidMap by remember { mutableStateOf<Map<String, AppInfo>>(emptyMap()) }
   val context = LocalContext.current
-  LaunchedEffect(context, pollIntervalMs) {
-    uidMap = context.getAppInfo()
-    if (pollIntervalMs != null) {
+  var uidMap by remember(context) {
+    mutableStateOf<Map<String, AppInfo>>(context.getAppInfo())
+  }
+  if (pollIntervalMs != null) {
+    LaunchedEffect(context, pollIntervalMs) {
       while (isActive) {
         delay(pollIntervalMs)
         uidMap = context.getAppInfo()

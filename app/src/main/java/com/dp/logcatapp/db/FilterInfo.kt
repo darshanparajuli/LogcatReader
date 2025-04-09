@@ -17,6 +17,7 @@ data class FilterInfo(
   @ColumnInfo(name = "message") val message: String? = null,
   @ColumnInfo(name = "pid") val pid: Int? = null,
   @ColumnInfo(name = "tid") val tid: Int? = null,
+  @ColumnInfo(name = "package_name") val packageName: String? = null,
   @ColumnInfo(name = "log_levels") val logLevels: String? = null,
   @ColumnInfo(name = "exclude") val exclude: Boolean = false,
 )

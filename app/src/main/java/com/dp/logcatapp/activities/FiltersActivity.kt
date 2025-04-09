@@ -25,6 +25,7 @@ class FiltersActivity : ComponentActivity() {
           prepopulateFilterInfo = intent.getParcelableExtraSafe<Log>(EXTRA_LOG)?.let { log ->
             PrepopulateFilterInfo(
               log = log,
+              packageName = intent.getStringExtra(EXTRA_PACKAGE_NAME),
               exclude = intent.getBooleanExtra(EXTRA_EXCLUDE, false),
             )
           },
@@ -35,6 +36,7 @@ class FiltersActivity : ComponentActivity() {
 
   companion object {
     const val EXTRA_LOG = "extra_log"
+    const val EXTRA_PACKAGE_NAME = "extra_package_name"
     const val EXTRA_EXCLUDE = "extra_exclude"
   }
 }

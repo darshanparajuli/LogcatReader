@@ -20,7 +20,7 @@ abstract class LogcatReaderDatabase : RoomDatabase() {
 
   companion object {
     private const val DB_NAME = "logcat_reader_db"
-    const val LATEST_VERSION = 4
+    const val LATEST_VERSION = 5
 
     private val instanceLock = Any()
 
@@ -41,7 +41,7 @@ abstract class LogcatReaderDatabase : RoomDatabase() {
               context.applicationContext,
               LogcatReaderDatabase::class.java, DB_NAME
             )
-            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
+            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
             .fallbackToDestructiveMigration()
             .build()
         }
@@ -111,12 +111,43 @@ abstract class LogcatReaderDatabase : RoomDatabase() {
         )
         db.execSQL(
           """
-            INSERT OR REPLACE INTO `saved_logs_info_new` (`name`, `path`, `is_custom`, `timestamp`) 
+            INSERT OR IGNORE INTO `saved_logs_info_new` (`name`, `path`, `is_custom`, `timestamp`) 
             SELECT `name`, `path`, `is_custom`, null FROM `saved_logs_info`
           """.trimIndent()
         )
         db.execSQL("DROP TABLE `saved_logs_info`")
         db.execSQL("ALTER TABLE `saved_logs_info_new` RENAME TO `saved_logs_info`")
+      }
+    }
+
+    private val MIGRATION_4_5 = object : Migration(4, 5) {
+      override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+          """
+            CREATE TABLE `filters_new` (
+              `id` INTEGER, 
+              `tag` TEXT,
+              `message` TEXT,
+              `package_name` TEXT,
+              `pid` INTEGER,
+              `tid` INTEGER,
+              `log_levels` TEXT,
+              `exclude` INTEGER NOT NULL,
+              PRIMARY KEY (`id`)
+            )
+          """.trimIndent()
+        )
+        db.execSQL(
+          """
+            INSERT OR IGNORE INTO `filters_new` (
+              `id`, `tag`, `message`, `package_name`, `pid`, `tid`, `log_levels`, `exclude`
+            ) 
+            SELECT `id`, `tag`, `message`, null, `pid`, `tid`, `log_levels`, `exclude` 
+            FROM `filters`
+          """.trimIndent()
+        )
+        db.execSQL("DROP TABLE `filters`")
+        db.execSQL("ALTER TABLE `filters_new` RENAME TO `filters`")
       }
     }
   }

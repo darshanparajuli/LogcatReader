@@ -186,6 +186,7 @@ fun FiltersScreen(
           val pid = data.pid
           val tid = data.tid
           val exclude = data.exclude
+          val packageName = data.packageName
           val selectedLogLevels = data.selectedLogLevels
 
           val filterInfo = FilterInfo(
@@ -193,6 +194,7 @@ fun FiltersScreen(
             message = keyword.takeIf { it.isNotEmpty() },
             pid = pid.takeIf { it.isNotEmpty() }?.toIntOrNull(),
             tid = tid.takeIf { it.isNotEmpty() }?.toIntOrNull(),
+            packageName = packageName.takeIf { it.isNotEmpty() },
             logLevels = if (selectedLogLevels.isEmpty()) {
               null
             } else {
@@ -244,6 +246,7 @@ fun FiltersScreen(
             tid = item.tid?.toString(),
             priorities = item.logLevels,
             exclude = item.exclude,
+            packageName = item.packageName,
             onClickRemove = {
               coroutineScope.launch {
                 val filterDao = db.filterDao()
@@ -267,6 +270,7 @@ private data class FilterData(
   val tag: String,
   val pid: String,
   val tid: String,
+  val packageName: String,
   val selectedLogLevels: Set<LogLevel>,
   val exclude: Boolean,
 )
@@ -290,6 +294,7 @@ private fun AddFilterSheet(
   }
   var keyword by remember { mutableStateOf("") }
   var tag by remember { mutableStateOf(prepopulateFilterInfo?.log?.tag.orEmpty()) }
+  var packageName by remember { mutableStateOf(prepopulateFilterInfo?.packageName.orEmpty()) }
   var pid by remember { mutableStateOf(prepopulateFilterInfo?.log?.pid.orEmpty()) }
   var tid by remember { mutableStateOf(prepopulateFilterInfo?.log?.tid.orEmpty()) }
   var exclude by remember { mutableStateOf(prepopulateFilterInfo?.exclude ?: false) }
@@ -318,6 +323,7 @@ private fun AddFilterSheet(
                 tag = tag,
                 pid = pid,
                 tid = tid,
+                packageName = packageName,
                 selectedLogLevels = selectedLogLevels.filterValues { it }.keys.toSet(),
                 exclude = exclude,
               )
@@ -327,6 +333,7 @@ private fun AddFilterSheet(
             tag.isNotEmpty() ||
             pid.isNotEmpty() ||
             tid.isNotEmpty() ||
+            packageName.isNotEmpty() ||
             selectedLogLevels.any { (_, selected) -> selected },
         ) {
           Text(
@@ -350,6 +357,7 @@ private fun AddFilterSheet(
           .fillMaxWidth()
           .padding(horizontal = 16.dp),
         label = stringResource(R.string.tag),
+        maxLines = 1,
         value = tag,
         onValueChange = { tag = it },
       )
@@ -358,7 +366,17 @@ private fun AddFilterSheet(
         modifier = Modifier
           .fillMaxWidth()
           .padding(horizontal = 16.dp),
+        label = stringResource(R.string.package_name),
+        value = packageName,
+        onValueChange = { packageName = it },
+      )
+      Spacer(modifier = Modifier.height(16.dp))
+      InputField(
+        modifier = Modifier
+          .fillMaxWidth()
+          .padding(horizontal = 16.dp),
         label = stringResource(R.string.process_id),
+        maxLines = 1,
         value = pid,
         onValueChange = {
           if (it.isDigitsOnly()) {
@@ -373,6 +391,7 @@ private fun AddFilterSheet(
           .fillMaxWidth()
           .padding(horizontal = 16.dp),
         label = stringResource(R.string.thread_id),
+        maxLines = 1,
         value = tid,
         onValueChange = {
           if (it.isDigitsOnly()) {
@@ -429,6 +448,7 @@ private fun FilterItem(
   modifier: Modifier,
   tag: String?,
   message: String?,
+  packageName: String?,
   pid: String?,
   tid: String?,
   priorities: String?,
@@ -473,6 +493,13 @@ private fun FilterItem(
           FilterRow(
             label = stringResource(R.string.message),
             value = message,
+            quote = true,
+          )
+        }
+        if (!packageName.isNullOrEmpty()) {
+          FilterRow(
+            label = stringResource(R.string.package_name),
+            value = packageName,
             quote = true,
           )
         }
@@ -527,6 +554,7 @@ private fun InputField(
   modifier: Modifier,
   label: String,
   value: String,
+  maxLines: Int = Int.MAX_VALUE,
   onValueChange: (String) -> Unit,
   keyboardType: KeyboardType = KeyboardOptions.Default.keyboardType,
 ) {
@@ -535,6 +563,8 @@ private fun InputField(
     label = { Text(label) },
     value = value,
     onValueChange = onValueChange,
+    maxLines = maxLines,
+    singleLine = maxLines == 1,
     colors = TextFieldDefaults.colors(
       focusedIndicatorColor = Color.Transparent,
       unfocusedIndicatorColor = Color.Transparent,
@@ -548,6 +578,7 @@ private fun InputField(
 
 data class PrepopulateFilterInfo(
   val log: Log,
+  val packageName: String?,
   val exclude: Boolean,
 )
 
