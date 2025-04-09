@@ -12,7 +12,6 @@ import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.consumeAsFlow
 import java.io.BufferedWriter
 import java.io.IOException
-import java.io.InterruptedIOException
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.thread
@@ -149,17 +148,16 @@ class LogcatSession(
   private fun readLogs(process: Process) {
     try {
       val inputStream = process.inputStream
-      val readerThread = thread {
-        LogcatStreamReader(inputStream).use { logs ->
-          try {
+      val stdoutReaderThread = thread {
+        try {
+          LogcatStreamReader(inputStream).use { logs ->
             logs.forEach { log ->
               lock.withLock {
                 pendingLogs += log
               }
             }
-          } catch (_: InterruptedIOException) {
-          } catch (_: IOException) {
           }
+        } catch (_: Exception) {
         }
         Logger.debug(LogcatSession::class, "stopped logcat reader thread")
       }
@@ -167,7 +165,7 @@ class LogcatSession(
       // We don't care about the exit value as the process doesn't exit normally.
       process.waitFor()
       inputStream.close()
-      readerThread.join(THREAD_JOIN_TIMEOUT)
+      stdoutReaderThread.join(THREAD_JOIN_TIMEOUT)
     } catch (_: Exception) {
       Logger.debug(LogcatSession::class, "error reading logs")
     }
