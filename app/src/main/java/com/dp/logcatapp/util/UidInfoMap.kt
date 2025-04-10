@@ -1,4 +1,4 @@
-package com.dp.logcatapp.ui.common
+package com.dp.logcatapp.util
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -7,8 +7,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
-import com.dp.logcatapp.util.AppInfo
-import com.dp.logcatapp.util.getAppInfo
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlin.time.Duration

@@ -141,7 +141,7 @@ import com.dp.logcatapp.ui.common.SearchLogsTopBar
 import com.dp.logcatapp.ui.common.SearchResult.SearchHitInfo
 import com.dp.logcatapp.ui.common.SearchResult.SearchHitSpan
 import com.dp.logcatapp.ui.common.ToggleableLogItem
-import com.dp.logcatapp.ui.common.rememberAppInfoByUidMap
+import com.dp.logcatapp.util.rememberAppInfoByUidMap
 import com.dp.logcatapp.ui.common.searchLogs
 import com.dp.logcatapp.ui.theme.AppTypography
 import com.dp.logcatapp.util.AppInfo
