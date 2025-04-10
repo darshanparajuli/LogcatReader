@@ -59,14 +59,18 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -85,9 +89,12 @@ import com.dp.logcatapp.R
 import com.dp.logcatapp.db.FilterInfo
 import com.dp.logcatapp.db.LogcatReaderDatabase
 import com.dp.logcatapp.ui.theme.AppTypography
+import com.dp.logcatapp.util.AppInfo
 import com.dp.logcatapp.util.findActivity
 import com.dp.logcatapp.util.rememberAppInfoByUidMap
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -309,17 +316,22 @@ fun FiltersScreen(
 
     if (showPackageSelector) {
       var savingInProgress by remember { mutableStateOf(false) }
+      val currentPackageNameFilters = remember(filters) {
+        filters.orEmpty().mapNotNull { it.packageName }.toSet()
+      }
       PackageSelectorSheet(
-        initialSelected = filters.orEmpty().mapNotNull { it.packageName }.toSet(),
+        initialSelected = currentPackageNameFilters,
         onDismiss = {
           showPackageSelector = false
         },
         savingInProgress = savingInProgress,
         onSelected = { selected ->
           savingInProgress = true
-          val filters = selected.map {
-            FilterInfo(packageName = it)
-          }
+          val filters = selected
+            .filter { it !in currentPackageNameFilters }
+            .map {
+              FilterInfo(packageName = it)
+            }
           coroutineScope.launch {
             withContext(Dispatchers.IO) {
               db.filterDao().insert(*filters.toTypedArray())
@@ -586,12 +598,37 @@ private fun PackageSelectorSheet(
   var selected by remember { mutableStateOf<Set<String>>(initialSelected) }
   ModalBottomSheet(
     modifier = modifier.displayCutoutPadding(),
+    sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
     onDismissRequest = onDismiss,
     containerColor = MaterialTheme.colorScheme.surfaceContainer,
   ) {
-    val apps = rememberAppInfoByUidMap().orEmpty().values
-      .sortedBy { it.packageName }
-      .sortedBy { it.name }
+    val appInfoMap by rememberUpdatedState(rememberAppInfoByUidMap())
+    var filtered by remember { mutableStateOf<List<AppInfo>>(emptyList()) }
+    var searchQuery by remember { mutableStateOf("") }
+
+    LaunchedEffect(Unit) {
+      snapshotFlow { appInfoMap }
+        .filterNotNull()
+        .map { info -> info.values }
+        .collect { apps ->
+          snapshotFlow { searchQuery }
+            .collect { query ->
+              if (query.isEmpty()) {
+                filtered = apps
+                  .sortedBy { it.packageName }
+                  .sortedBy { it.name }
+              } else {
+                filtered = apps
+                  .filter { info ->
+                    info.packageName.startsWith(query, ignoreCase = true) ||
+                      info.name?.startsWith(query, ignoreCase = true) == true
+                  }
+                  .sortedBy { it.packageName }
+                  .sortedBy { it.name }
+              }
+            }
+        }
+    }
 
     Row(
       modifier = Modifier.padding(horizontal = 16.dp),
@@ -606,7 +643,7 @@ private fun PackageSelectorSheet(
         onClick = {
           onSelected(selected)
         },
-        enabled = selected.isNotEmpty() && !savingInProgress,
+        enabled = selected.isNotEmpty() && selected != initialSelected && !savingInProgress,
       ) {
         if (savingInProgress) {
           CircularProgressIndicator(
@@ -622,9 +659,24 @@ private fun PackageSelectorSheet(
       }
     }
 
+    TextField(
+      modifier = Modifier
+        .fillMaxWidth()
+        .padding(16.dp),
+      placeholder = { Text(stringResource(R.string.search)) },
+      value = searchQuery,
+      onValueChange = { searchQuery = it },
+      singleLine = true,
+      colors = TextFieldDefaults.colors(
+        focusedIndicatorColor = Color.Transparent,
+        unfocusedIndicatorColor = Color.Transparent,
+      ),
+      shape = RoundedCornerShape(corner = CornerSize(8.dp)),
+    )
+
     LazyColumn {
       items(
-        items = apps,
+        items = filtered,
         key = { it.packageName },
       ) { app ->
         ListItem(
