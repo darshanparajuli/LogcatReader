@@ -49,6 +49,7 @@ import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.SaveAs
 import androidx.compose.material.icons.filled.SelectAll
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
@@ -68,7 +69,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
@@ -653,7 +653,7 @@ private fun RenameLogDialog(
       )
     },
     confirmButton = {
-      TextButton(
+      Button(
         onClick = {
           onConfirm(name.text)
         },
@@ -663,7 +663,7 @@ private fun RenameLogDialog(
       }
     },
     dismissButton = {
-      TextButton(
+      FilledTonalButton(
         onClick = onDismiss,
       ) {
         Text(stringResource(android.R.string.cancel))
@@ -768,7 +768,7 @@ private fun SortOptionsSheet(
           text = stringResource(R.string.sort_by),
           style = AppTypography.headlineMedium,
         )
-        FilledTonalButton(
+        Button(
           onClick = {
             onClickDone(sortBy, sortOrder)
           },

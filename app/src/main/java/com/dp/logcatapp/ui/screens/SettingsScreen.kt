@@ -28,18 +28,18 @@ import androidx.compose.material.icons.filled.Checklist
 import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.ColorLens
 import androidx.compose.material.icons.filled.Folder
-import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Memory
 import androidx.compose.material.icons.filled.Poll
-import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Style
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material3.Button
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -50,7 +50,6 @@ import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
@@ -684,7 +683,7 @@ private fun InputDialog(
     onDismissRequest = onDismiss,
     title = { Text(label) },
     confirmButton = {
-      TextButton(
+      Button(
         onClick = {
           onOk(value.text.trim())
         },
@@ -692,7 +691,7 @@ private fun InputDialog(
       ) { Text(stringResource(android.R.string.ok)) }
     },
     dismissButton = {
-      TextButton(
+      FilledTonalButton(
         onClick = onDismiss,
       ) { Text(stringResource(android.R.string.cancel)) }
     },
@@ -745,7 +744,7 @@ private fun SelectionDialog(
     modifier = modifier,
     onDismissRequest = onDismiss,
     confirmButton = {
-      TextButton(
+      Button(
         onClick = {
           onClickOk(selected)
         },
@@ -789,7 +788,7 @@ private fun MultiSelectDialog(
     modifier = modifier,
     onDismissRequest = onDismiss,
     confirmButton = {
-      TextButton(
+      Button(
         onClick = {
           onClickOk(selected)
         },

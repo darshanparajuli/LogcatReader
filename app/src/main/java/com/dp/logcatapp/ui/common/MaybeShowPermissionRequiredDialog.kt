@@ -10,8 +10,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -67,7 +69,7 @@ fun MaybeShowPermissionRequiredDialog(
     Dialog(
       modifier = Modifier.fillMaxWidth(),
       confirmButton = {
-        TextButton(
+        Button(
           onClick = {
             showPermissionRequiredDialog = false
             showManualMethodDialog = true
@@ -83,7 +85,7 @@ fun MaybeShowPermissionRequiredDialog(
       title = { Text(stringResource(R.string.read_logs_permission_required)) },
       content = { Text(stringResource(R.string.read_logs_permission_required_msg)) },
       dismissButton = {
-        TextButton(
+        FilledTonalButton(
           onClick = {
             showPermissionRequiredDialog = false
             showAskingForRootPermissionDialog = true
@@ -124,7 +126,7 @@ fun MaybeShowPermissionRequiredDialog(
           Text(stringResource(R.string.permission_granted_info_body))
         },
         confirmButton = {
-          TextButton(
+          Button(
             onClick = {
               showPermissionInfoDialog.value = false
               onDismissed?.invoke()
@@ -165,7 +167,7 @@ fun MaybeShowPermissionRequiredDialog(
         Text(stringResource(R.string.app_restart_dialog_msg_body))
       },
       confirmButton = {
-        TextButton(
+        Button(
           onClick = {
             context.stopService(Intent(context, LogcatService::class.java))
             Process.killProcess(Process.myPid())
@@ -216,7 +218,7 @@ fun MaybeShowPermissionRequiredDialog(
         )
       },
       confirmButton = {
-        TextButton(
+        Button(
           onClick = {
             showManualMethodDialog = false
             onDismissed?.invoke()
