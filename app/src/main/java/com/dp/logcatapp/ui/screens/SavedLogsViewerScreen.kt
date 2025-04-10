@@ -11,12 +11,22 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.displayCutout
+import androidx.compose.foundation.layout.displayCutoutPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -332,7 +342,8 @@ fun SavedLogsViewerScreen(
       Box(
         modifier = Modifier
           .fillMaxSize()
-          .padding(16.dp),
+          .padding(16.dp)
+          .safeDrawingPadding(),
         contentAlignment = Alignment.Center,
       ) {
         CircularProgressIndicator(
@@ -358,7 +369,11 @@ private fun AppBar(
   val context = LocalContext.current
   TopAppBar(
     navigationIcon = {
+      val insetPadding = WindowInsets.displayCutout
+        .only(WindowInsetsSides.Left)
+        .asPaddingValues()
       IconButton(
+        modifier = Modifier.padding(insetPadding),
         onClick = {
           context.findActivity()?.finish()
         },
@@ -390,40 +405,44 @@ private fun AppBar(
       }
     },
     actions = {
-      IconButton(
-        onClick = onClickSearch,
-        colors = IconButtonDefaults.iconButtonColors(
-          contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-        ),
+      Row(
+        modifier = Modifier.displayCutoutPadding()
       ) {
-        Icon(Icons.Default.Search, contentDescription = null)
-      }
-      IconButton(
-        onClick = onShowDropdownMenu,
-        colors = IconButtonDefaults.iconButtonColors(
-          contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-        ),
-      ) {
-        Icon(Icons.Default.MoreVert, contentDescription = null)
-      }
-      DropdownMenu(
-        expanded = showDropDownMenu,
-        onDismissRequest = onDismissDropdownMenu,
-      ) {
-        DropdownMenuItem(
-          leadingIcon = {
-            Icon(Icons.Default.ViewCompact, contentDescription = null)
-          },
-          text = {
-            Text(
-              text = stringResource(R.string.compact_view),
-            )
-          },
-          trailingIcon = {
-            Checkbox(checked = compactViewEnabled, onCheckedChange = null)
-          },
-          onClick = onClickCompactView,
-        )
+        IconButton(
+          onClick = onClickSearch,
+          colors = IconButtonDefaults.iconButtonColors(
+            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+          ),
+        ) {
+          Icon(Icons.Default.Search, contentDescription = null)
+        }
+        IconButton(
+          onClick = onShowDropdownMenu,
+          colors = IconButtonDefaults.iconButtonColors(
+            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+          ),
+        ) {
+          Icon(Icons.Default.MoreVert, contentDescription = null)
+        }
+        DropdownMenu(
+          expanded = showDropDownMenu,
+          onDismissRequest = onDismissDropdownMenu,
+        ) {
+          DropdownMenuItem(
+            leadingIcon = {
+              Icon(Icons.Default.ViewCompact, contentDescription = null)
+            },
+            text = {
+              Text(
+                text = stringResource(R.string.compact_view),
+              )
+            },
+            trailingIcon = {
+              Checkbox(checked = compactViewEnabled, onCheckedChange = null)
+            },
+            onClick = onClickCompactView,
+          )
+        }
       }
     },
     colors = TopAppBarDefaults.topAppBarColors(
@@ -446,7 +465,13 @@ private fun FloatingActionButtons(
     enter = fadeIn() + slideInHorizontally(initialOffsetX = { it }),
     exit = fadeOut() + slideOutHorizontally(targetOffsetX = { it }),
   ) {
-    Column {
+    val insetsPadding = WindowInsets.systemBars
+      .union(WindowInsets.displayCutout)
+      .only(WindowInsetsSides.Left + WindowInsetsSides.Right)
+      .asPaddingValues()
+    Column(
+      modifier = Modifier.padding(insetsPadding)
+    ) {
       FloatingActionButton(
         modifier = Modifier.size(48.dp),
         onClick = onClickScrollToTop,

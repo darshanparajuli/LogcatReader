@@ -24,12 +24,21 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.displayCutout
+import androidx.compose.foundation.layout.displayCutoutPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -637,7 +646,8 @@ fun DeviceLogsScreen(
       Box(
         modifier = Modifier
           .fillMaxSize()
-          .consumeWindowInsets(innerPadding),
+          .consumeWindowInsets(innerPadding)
+          .safeDrawingPadding(),
         contentAlignment = Alignment.Center,
       ) {
         CircularProgressIndicator(
@@ -648,7 +658,8 @@ fun DeviceLogsScreen(
       Box(
         modifier = Modifier
           .fillMaxSize()
-          .consumeWindowInsets(innerPadding),
+          .consumeWindowInsets(innerPadding)
+          .safeDrawingPadding(),
         contentAlignment = Alignment.Center,
       ) {
         Column(
@@ -678,7 +689,8 @@ fun DeviceLogsScreen(
         Box(
           modifier = Modifier
             .fillMaxSize()
-            .consumeWindowInsets(innerPadding),
+            .consumeWindowInsets(innerPadding)
+            .safeDrawingPadding(),
           contentAlignment = Alignment.Center,
         ) {
           Column(
@@ -1054,7 +1066,13 @@ private fun FloatingActionButtons(
     enter = fadeIn() + slideInHorizontally(initialOffsetX = { it }),
     exit = fadeOut() + slideOutHorizontally(targetOffsetX = { it }),
   ) {
-    Column {
+    val insetsPadding = WindowInsets.systemBars
+      .union(WindowInsets.displayCutout)
+      .only(WindowInsetsSides.Left + WindowInsetsSides.Right)
+      .asPaddingValues()
+    Column(
+      modifier = Modifier.padding(insetsPadding),
+    ) {
       FloatingActionButton(
         modifier = Modifier.size(48.dp),
         onClick = onClickScrollToTop,
@@ -1107,9 +1125,12 @@ private fun AppBar(
   onClickRestartLogcat: () -> Unit,
   onClickSettings: () -> Unit,
 ) {
+  val insetPadding = WindowInsets.displayCutout
+    .only(WindowInsetsSides.Left)
+    .asPaddingValues()
   TopAppBar(
     title = {
-      Column {
+      Column(modifier = Modifier.padding(insetPadding)) {
         Text(
           text = title,
           overflow = TextOverflow.Ellipsis,
@@ -1138,149 +1159,153 @@ private fun AppBar(
       titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
     ),
     actions = {
-      IconButton(
-        onClick = onClickSearch,
-        colors = IconButtonDefaults.iconButtonColors(
-          contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-        ),
+      Row(
+        modifier = Modifier.displayCutoutPadding()
       ) {
-        Icon(Icons.Default.Search, contentDescription = null)
-      }
-      IconButton(
-        onClick = onClickPause,
-        enabled = pauseEnabled,
-        colors = IconButtonDefaults.iconButtonColors(
-          contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-        ),
-      ) {
-        if (isPaused) {
-          Icon(Icons.Default.PlayArrow, contentDescription = null)
-        } else {
-          Icon(Icons.Default.Pause, contentDescription = null)
-        }
-      }
-
-      IconButton(
-        onClick = onClickRecord,
-        enabled = recordEnabled,
-        colors = IconButtonDefaults.iconButtonColors(
-          contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-        ),
-      ) {
-        when (recordStatus) {
-          RecordStatus.Idle -> {
-            Icon(Icons.Default.FiberManualRecord, contentDescription = null)
-          }
-          RecordStatus.RecordingInProgress -> {
-            Icon(Icons.Default.Stop, contentDescription = null)
-          }
-          RecordStatus.SaveRecordedLogs -> {
-            CircularProgressIndicator(
-              modifier = Modifier.size(20.dp),
-              strokeWidth = 2.dp,
-            )
-          }
-        }
-      }
-      Box {
         IconButton(
-          onClick = onShowDropdownMenu,
+          onClick = onClickSearch,
           colors = IconButtonDefaults.iconButtonColors(
             contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
           ),
         ) {
-          Icon(Icons.Default.MoreVert, contentDescription = null)
+          Icon(Icons.Default.Search, contentDescription = null)
         }
-        DropdownMenu(
-          expanded = showDropDownMenu,
-          onDismissRequest = onDismissDropdownMenu,
+        IconButton(
+          onClick = onClickPause,
+          enabled = pauseEnabled,
+          colors = IconButtonDefaults.iconButtonColors(
+            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+          ),
         ) {
-          DropdownMenuItem(
-            leadingIcon = {
-              Icon(Icons.Default.DisplaySettings, contentDescription = null)
-            },
-            text = {
-              Text(
-                text = stringResource(R.string.display_options),
+          if (isPaused) {
+            Icon(Icons.Default.PlayArrow, contentDescription = null)
+          } else {
+            Icon(Icons.Default.Pause, contentDescription = null)
+          }
+        }
+
+        IconButton(
+          onClick = onClickRecord,
+          enabled = recordEnabled,
+          colors = IconButtonDefaults.iconButtonColors(
+            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+          ),
+        ) {
+          when (recordStatus) {
+            RecordStatus.Idle -> {
+              Icon(Icons.Default.FiberManualRecord, contentDescription = null)
+            }
+            RecordStatus.RecordingInProgress -> {
+              Icon(Icons.Default.Stop, contentDescription = null)
+            }
+            RecordStatus.SaveRecordedLogs -> {
+              CircularProgressIndicator(
+                modifier = Modifier.size(20.dp),
+                strokeWidth = 2.dp,
               )
-            },
-            onClick = onClickDisplayOptions,
-          )
-          DropdownMenuItem(
-            leadingIcon = {
-              Icon(Icons.Default.FilterList, contentDescription = null)
-            },
-            text = {
-              Text(
-                text = stringResource(R.string.filters),
-              )
-            },
-            onClick = onClickFilter,
-          )
-          DropdownMenuItem(
-            leadingIcon = {
-              if (saveLogsInProgress) {
-                CircularProgressIndicator(
-                  modifier = Modifier.size(24.dp),
-                  strokeWidth = 2.dp,
+            }
+          }
+        }
+        Box {
+          IconButton(
+            onClick = onShowDropdownMenu,
+            colors = IconButtonDefaults.iconButtonColors(
+              contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+            ),
+          ) {
+            Icon(Icons.Default.MoreVert, contentDescription = null)
+          }
+          DropdownMenu(
+            expanded = showDropDownMenu,
+            onDismissRequest = onDismissDropdownMenu,
+          ) {
+            DropdownMenuItem(
+              leadingIcon = {
+                Icon(Icons.Default.DisplaySettings, contentDescription = null)
+              },
+              text = {
+                Text(
+                  text = stringResource(R.string.display_options),
                 )
-              } else {
-                Icon(Icons.Default.Save, contentDescription = null)
-              }
-            },
-            text = {
-              Text(
-                text = stringResource(R.string.save),
-              )
-            },
-            onClick = onClickSave,
-            enabled = saveEnabled,
-          )
-          DropdownMenuItem(
-            leadingIcon = {
-              Icon(Icons.Default.FolderOpen, contentDescription = null)
-            },
-            text = {
-              Text(
-                text = stringResource(R.string.saved_logs),
-              )
-            },
-            onClick = onClickSavedLogs,
-          )
-          DropdownMenuItem(
-            leadingIcon = {
-              Icon(Icons.Default.Clear, contentDescription = null)
-            },
-            text = {
-              Text(
-                text = stringResource(R.string.clear),
-              )
-            },
-            onClick = onClickClear,
-          )
-          DropdownMenuItem(
-            leadingIcon = {
-              Icon(Icons.Default.RestartAlt, contentDescription = null)
-            },
-            text = {
-              Text(
-                text = stringResource(R.string.restart_logcat),
-              )
-            },
-            onClick = onClickRestartLogcat,
-            enabled = restartLogcatEnabled,
-          )
-          DropdownMenuItem(
-            leadingIcon = {
-              Icon(Icons.Default.Settings, contentDescription = null)
-            },
-            text = {
-              Text(
-                text = stringResource(R.string.settings),
-              )
-            },
-            onClick = onClickSettings,
-          )
+              },
+              onClick = onClickDisplayOptions,
+            )
+            DropdownMenuItem(
+              leadingIcon = {
+                Icon(Icons.Default.FilterList, contentDescription = null)
+              },
+              text = {
+                Text(
+                  text = stringResource(R.string.filters),
+                )
+              },
+              onClick = onClickFilter,
+            )
+            DropdownMenuItem(
+              leadingIcon = {
+                if (saveLogsInProgress) {
+                  CircularProgressIndicator(
+                    modifier = Modifier.size(24.dp),
+                    strokeWidth = 2.dp,
+                  )
+                } else {
+                  Icon(Icons.Default.Save, contentDescription = null)
+                }
+              },
+              text = {
+                Text(
+                  text = stringResource(R.string.save),
+                )
+              },
+              onClick = onClickSave,
+              enabled = saveEnabled,
+            )
+            DropdownMenuItem(
+              leadingIcon = {
+                Icon(Icons.Default.FolderOpen, contentDescription = null)
+              },
+              text = {
+                Text(
+                  text = stringResource(R.string.saved_logs),
+                )
+              },
+              onClick = onClickSavedLogs,
+            )
+            DropdownMenuItem(
+              leadingIcon = {
+                Icon(Icons.Default.Clear, contentDescription = null)
+              },
+              text = {
+                Text(
+                  text = stringResource(R.string.clear),
+                )
+              },
+              onClick = onClickClear,
+            )
+            DropdownMenuItem(
+              leadingIcon = {
+                Icon(Icons.Default.RestartAlt, contentDescription = null)
+              },
+              text = {
+                Text(
+                  text = stringResource(R.string.restart_logcat),
+                )
+              },
+              onClick = onClickRestartLogcat,
+              enabled = restartLogcatEnabled,
+            )
+            DropdownMenuItem(
+              leadingIcon = {
+                Icon(Icons.Default.Settings, contentDescription = null)
+              },
+              text = {
+                Text(
+                  text = stringResource(R.string.settings),
+                )
+              },
+              onClick = onClickSettings,
+            )
+          }
         }
       }
     }

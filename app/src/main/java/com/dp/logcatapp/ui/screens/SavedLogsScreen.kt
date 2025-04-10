@@ -21,10 +21,16 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
@@ -353,7 +359,8 @@ fun SavedLogsScreen(
                     }
                   }
                 }
-              ),
+              )
+              .safeDrawingPadding(),
             headlineContent = {
               Text(item.info.fileName)
             },
@@ -390,7 +397,8 @@ fun SavedLogsScreen(
       Box(
         modifier = Modifier
           .fillMaxSize()
-          .consumeWindowInsets(innerPadding),
+          .consumeWindowInsets(innerPadding)
+          .safeDrawingPadding(),
         contentAlignment = Alignment.Center,
       ) {
         CircularProgressIndicator(
@@ -412,7 +420,11 @@ private fun AppBar(
   val context = LocalContext.current
   TopAppBar(
     navigationIcon = {
+      val insetPadding = WindowInsets.displayCutout
+        .only(WindowInsetsSides.Left)
+        .asPaddingValues()
       IconButton(
+        modifier = Modifier.padding(insetPadding),
         onClick = {
           context.findActivity()?.finish()
         },
@@ -444,14 +456,21 @@ private fun AppBar(
       }
     },
     actions = {
-      IconButton(
-        onClick = onClickSort,
-        enabled = sortEnabled,
-        colors = IconButtonDefaults.iconButtonColors(
-          contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-        ),
+      val insetPadding = WindowInsets.displayCutout
+        .only(WindowInsetsSides.Right)
+        .asPaddingValues()
+      Row(
+        modifier = Modifier.padding(insetPadding)
       ) {
-        Icon(Icons.AutoMirrored.Default.Sort, contentDescription = null)
+        IconButton(
+          onClick = onClickSort,
+          enabled = sortEnabled,
+          colors = IconButtonDefaults.iconButtonColors(
+            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+          ),
+        ) {
+          Icon(Icons.AutoMirrored.Default.Sort, contentDescription = null)
+        }
       }
     },
     colors = TopAppBarDefaults.topAppBarColors(
@@ -475,7 +494,11 @@ private fun SelectLogsAppBar(
 ) {
   TopAppBar(
     navigationIcon = {
+      val insetPadding = WindowInsets.displayCutout
+        .only(WindowInsetsSides.Left)
+        .asPaddingValues()
       IconButton(
+        modifier = Modifier.padding(insetPadding),
         onClick = onClickClose,
         colors = IconButtonDefaults.iconButtonColors(
           contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
@@ -495,88 +518,95 @@ private fun SelectLogsAppBar(
       )
     },
     actions = {
-      AnimatedVisibility(
-        visible = singleLogSelected,
-        enter = fadeIn() + scaleIn(initialScale = 0.9f),
-        exit = fadeOut() + scaleOut(targetScale = 0.9f),
+      val insetPadding = WindowInsets.displayCutout
+        .only(WindowInsetsSides.Right)
+        .asPaddingValues()
+      Row(
+        modifier = Modifier.padding(insetPadding)
       ) {
-        Row {
-          IconButton(
-            onClick = onClickRename,
-            colors = IconButtonDefaults.iconButtonColors(
-              contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-            ),
-          ) {
-            Icon(
-              imageVector = Icons.Default.Edit,
-              contentDescription = null,
-            )
-          }
-          IconButton(
-            onClick = onClickExport,
-            colors = IconButtonDefaults.iconButtonColors(
-              contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-            ),
-          ) {
-            Icon(
-              imageVector = Icons.Default.SaveAs,
-              contentDescription = null,
-            )
-          }
-          IconButton(
-            onClick = onClickShare,
-            colors = IconButtonDefaults.iconButtonColors(
-              contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-            ),
-          ) {
-            Icon(
-              imageVector = Icons.Default.Share,
-              contentDescription = null,
-            )
+        AnimatedVisibility(
+          visible = singleLogSelected,
+          enter = fadeIn() + scaleIn(initialScale = 0.9f),
+          exit = fadeOut() + scaleOut(targetScale = 0.9f),
+        ) {
+          Row {
+            IconButton(
+              onClick = onClickRename,
+              colors = IconButtonDefaults.iconButtonColors(
+                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+              ),
+            ) {
+              Icon(
+                imageVector = Icons.Default.Edit,
+                contentDescription = null,
+              )
+            }
+            IconButton(
+              onClick = onClickExport,
+              colors = IconButtonDefaults.iconButtonColors(
+                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+              ),
+            ) {
+              Icon(
+                imageVector = Icons.Default.SaveAs,
+                contentDescription = null,
+              )
+            }
+            IconButton(
+              onClick = onClickShare,
+              colors = IconButtonDefaults.iconButtonColors(
+                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+              ),
+            ) {
+              Icon(
+                imageVector = Icons.Default.Share,
+                contentDescription = null,
+              )
+            }
           }
         }
-      }
-      IconButton(
-        onClick = onClickSelectAll,
-        colors = IconButtonDefaults.iconButtonColors(
-          contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-        ),
-      ) {
-        Icon(
-          imageVector = Icons.Default.SelectAll,
-          contentDescription = null,
-        )
-      }
-      Box {
-        var showDropDownMenu by remember { mutableStateOf(false) }
         IconButton(
-          onClick = {
-            showDropDownMenu = true
-          },
+          onClick = onClickSelectAll,
           colors = IconButtonDefaults.iconButtonColors(
             contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
           ),
         ) {
           Icon(
-            imageVector = Icons.Default.MoreVert,
+            imageVector = Icons.Default.SelectAll,
             contentDescription = null,
           )
         }
-        DropdownMenu(
-          expanded = showDropDownMenu,
-          onDismissRequest = { showDropDownMenu = false },
-        ) {
-          DropdownMenuItem(
-            leadingIcon = {
-              Icon(Icons.Default.Delete, contentDescription = null)
+        Box {
+          var showDropDownMenu by remember { mutableStateOf(false) }
+          IconButton(
+            onClick = {
+              showDropDownMenu = true
             },
-            text = {
-              Text(
-                text = stringResource(R.string.delete),
-              )
-            },
-            onClick = onClickDelete,
-          )
+            colors = IconButtonDefaults.iconButtonColors(
+              contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+            ),
+          ) {
+            Icon(
+              imageVector = Icons.Default.MoreVert,
+              contentDescription = null,
+            )
+          }
+          DropdownMenu(
+            expanded = showDropDownMenu,
+            onDismissRequest = { showDropDownMenu = false },
+          ) {
+            DropdownMenuItem(
+              leadingIcon = {
+                Icon(Icons.Default.Delete, contentDescription = null)
+              },
+              text = {
+                Text(
+                  text = stringResource(R.string.delete),
+                )
+              },
+              onClick = onClickDelete,
+            )
+          }
         }
       }
     },

@@ -7,10 +7,16 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
@@ -99,7 +105,11 @@ fun SettingsScreen(
     topBar = {
       TopAppBar(
         navigationIcon = {
+          val insetPadding = WindowInsets.displayCutout
+            .only(WindowInsetsSides.Left)
+            .asPaddingValues()
           IconButton(
+            modifier = Modifier.padding(insetPadding),
             onClick = {
               context.findActivity()?.finish()
             },
@@ -140,6 +150,7 @@ fun SettingsScreen(
         ReadLogsPermissionStatus(
           modifier = Modifier
             .fillMaxWidth()
+            .safeDrawingPadding()
             .padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 4.dp),
           onClickPermissionNotGranted = {
             showPermissionDialog = true
@@ -162,6 +173,7 @@ fun SettingsScreen(
           is SectionName -> {
             Text(
               modifier = Modifier
+                .safeDrawingPadding()
                 .fillMaxWidth()
                 .padding(start = 16.dp, end = 16.dp, top = 16.dp),
               text = stringResource(item.nameRes),
@@ -170,15 +182,42 @@ fun SettingsScreen(
             )
           }
           is PreferenceRow -> when (item.type) {
-            PreferenceType.KeepScreenOn -> KeepScreenOn()
-            PreferenceType.Theme -> Theme()
-            PreferenceType.DynamicColor -> DynamicColor()
-            PreferenceType.PollInterval -> PollInterval()
-            PreferenceType.Buffers -> Buffers()
-            PreferenceType.MaxLogs -> MaxLogs()
-            PreferenceType.SaveLocation -> SaveLocation()
-            PreferenceType.GithubRepoInfo -> GithubRepoInfo()
-            PreferenceType.AppInfo -> AppInfo()
+            PreferenceType.KeepScreenOn -> KeepScreenOn(
+              modifier = Modifier
+                .safeDrawingPadding(),
+            )
+            PreferenceType.Theme -> Theme(
+              modifier = Modifier
+                .safeDrawingPadding(),
+            )
+            PreferenceType.DynamicColor -> DynamicColor(
+              modifier = Modifier
+                .safeDrawingPadding(),
+            )
+            PreferenceType.PollInterval -> PollInterval(
+              modifier = Modifier
+                .safeDrawingPadding(),
+            )
+            PreferenceType.Buffers -> Buffers(
+              modifier = Modifier
+                .safeDrawingPadding(),
+            )
+            PreferenceType.MaxLogs -> MaxLogs(
+              modifier = Modifier
+                .safeDrawingPadding(),
+            )
+            PreferenceType.SaveLocation -> SaveLocation(
+              modifier = Modifier
+                .safeDrawingPadding(),
+            )
+            PreferenceType.GithubRepoInfo -> GithubRepoInfo(
+              modifier = Modifier
+                .safeDrawingPadding(),
+            )
+            PreferenceType.AppInfo -> AppInfo(
+              modifier = Modifier
+                .safeDrawingPadding(),
+            )
           }
           SectionDivider -> {
             HorizontalDivider(

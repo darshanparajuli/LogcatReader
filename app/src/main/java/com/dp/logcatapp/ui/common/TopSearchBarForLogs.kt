@@ -1,8 +1,14 @@
 package com.dp.logcatapp.ui.common
 
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
@@ -55,7 +61,11 @@ fun SearchLogsTopBar(
   TopAppBar(
     modifier = Modifier.fillMaxWidth(),
     navigationIcon = {
+      val insetPadding = WindowInsets.displayCutout
+        .only(WindowInsetsSides.Left)
+        .asPaddingValues()
       IconButton(
+        modifier = Modifier.padding(insetPadding),
         onClick = onClose,
         colors = IconButtonDefaults.iconButtonColors(
           contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
@@ -110,23 +120,30 @@ fun SearchLogsTopBar(
       )
     },
     actions = {
-      IconButton(
-        onClick = onPrevious,
-        enabled = hitCount > 0,
-        colors = IconButtonDefaults.iconButtonColors(
-          contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-        ),
+      val insetPadding = WindowInsets.displayCutout
+        .only(WindowInsetsSides.Right)
+        .asPaddingValues()
+      Row(
+        modifier = Modifier.padding(insetPadding)
       ) {
-        Icon(imageVector = Icons.Default.KeyboardArrowUp, contentDescription = null)
-      }
-      IconButton(
-        onClick = onNext,
-        enabled = hitCount > 0,
-        colors = IconButtonDefaults.iconButtonColors(
-          contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-        ),
-      ) {
-        Icon(imageVector = Icons.Default.KeyboardArrowDown, contentDescription = null)
+        IconButton(
+          onClick = onPrevious,
+          enabled = hitCount > 0,
+          colors = IconButtonDefaults.iconButtonColors(
+            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+          ),
+        ) {
+          Icon(imageVector = Icons.Default.KeyboardArrowUp, contentDescription = null)
+        }
+        IconButton(
+          onClick = onNext,
+          enabled = hitCount > 0,
+          colors = IconButtonDefaults.iconButtonColors(
+            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+          ),
+        ) {
+          Icon(imageVector = Icons.Default.KeyboardArrowDown, contentDescription = null)
+        }
       }
     },
     colors = TopAppBarDefaults.topAppBarColors(
