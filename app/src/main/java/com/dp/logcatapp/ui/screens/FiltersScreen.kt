@@ -88,7 +88,6 @@ import com.dp.logcatapp.ui.theme.AppTypography
 import com.dp.logcatapp.util.findActivity
 import com.dp.logcatapp.util.rememberAppInfoByUidMap
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -491,9 +490,8 @@ private fun AddFilterSheet(
         onValueChange = { tag = it },
       )
       Spacer(modifier = Modifier.height(16.dp))
-      val uidSupported by LogcatSession.isUidOptionSupported.filterNotNull()
-        .collectAsState(initial = false)
-      if (uidSupported) {
+      val uidSupported by LogcatSession.uidOptionSupported.collectAsState()
+      if (uidSupported == true) {
         InputField(
           modifier = Modifier
             .fillMaxWidth()

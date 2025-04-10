@@ -58,16 +58,20 @@ class LogcatSession(
   @Volatile private var active = false
 
   companion object {
-    private val _isUidOptionSupported = MutableStateFlow<Boolean?>(null)
-    val isUidOptionSupported = _isUidOptionSupported.asStateFlow()
+    private val _uidOptionSupported = MutableStateFlow<Boolean?>(null)
+    val uidOptionSupported = _uidOptionSupported.asStateFlow()
 
     init {
       // This is ok since we are simply executing a `logcat` process and getting the result from
       // it without accessing any Android APIs.
       @OptIn(DelicateCoroutinesApi::class)
       GlobalScope.launch(Dispatchers.IO) {
-        _isUidOptionSupported.value = isUidOptionSupportedHelper()
+        _uidOptionSupported.value = isUidOptionSupportedHelper()
       }
+    }
+
+    suspend fun isUidOptionSupported(): Boolean {
+      return uidOptionSupported.filterNotNull().first()
     }
 
     private fun isUidOptionSupportedHelper(): Boolean {
@@ -128,7 +132,7 @@ class LogcatSession(
     logcatThread = thread {
       // calling runBlocking is fine here since this function runs a separate non-ui thread, and not
       // in a coroutine.
-      val uidSupported = runBlocking { isUidOptionSupported.filterNotNull().first() }
+      val uidSupported = runBlocking { isUidOptionSupported() }
       val process = startLogcatProcess(uidSupported)
       status.trySend(Status(process != null))
       if (process != null) {
