@@ -18,7 +18,7 @@ import androidx.core.app.ActivityCompat
 import com.dp.logcatapp.services.LogcatService
 import com.dp.logcatapp.ui.screens.DeviceLogsScreen
 import com.dp.logcatapp.ui.theme.LogcatReaderTheme
-import com.dp.logcatapp.util.PreferenceKeys
+import com.dp.logcatapp.util.SettingsPrefKeys
 import com.dp.logcatapp.util.getDefaultSharedPreferences
 import com.dp.logcatapp.util.setKeepScreenOn
 
@@ -77,8 +77,8 @@ class MainActivity : ComponentActivity() {
     super.onResume()
     setKeepScreenOn(
       getDefaultSharedPreferences().getBoolean(
-        PreferenceKeys.General.KEY_KEEP_SCREEN_ON,
-        PreferenceKeys.General.Default.KEY_KEEP_SCREEN_ON
+        SettingsPrefKeys.General.KEY_KEEP_SCREEN_ON,
+        SettingsPrefKeys.General.Default.KEY_KEEP_SCREEN_ON
       )
     )
   }

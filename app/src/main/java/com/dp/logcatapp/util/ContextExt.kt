@@ -76,13 +76,13 @@ private fun Context.setThemeLight() {
 fun Context.setTheme() {
   val prefs = getDefaultSharedPreferences()
   val theme = prefs.getString(
-    PreferenceKeys.Appearance.KEY_THEME,
-    PreferenceKeys.Appearance.Default.THEME
+    SettingsPrefKeys.Appearance.KEY_THEME,
+    SettingsPrefKeys.Appearance.Default.THEME
   )
   when (theme) {
-    PreferenceKeys.Appearance.Theme.AUTO -> setThemeAuto()
-    PreferenceKeys.Appearance.Theme.DARK -> setThemeDark()
-    PreferenceKeys.Appearance.Theme.LIGHT -> setThemeLight()
+    SettingsPrefKeys.Appearance.Theme.AUTO -> setThemeAuto()
+    SettingsPrefKeys.Appearance.Theme.DARK -> setThemeDark()
+    SettingsPrefKeys.Appearance.Theme.LIGHT -> setThemeLight()
   }
 }
 

@@ -2,7 +2,7 @@ package com.dp.logcatapp.util
 
 import com.dp.logcat.LogcatUtil
 
-object PreferenceKeys {
+object SettingsPrefKeys {
 
   object General {
     const val KEY_KEEP_SCREEN_ON = "pref_key_general_keep_screen_on"

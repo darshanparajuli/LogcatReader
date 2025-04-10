@@ -134,7 +134,7 @@ import com.dp.logcatapp.ui.common.rememberAppInfoByUidMap
 import com.dp.logcatapp.ui.common.searchLogs
 import com.dp.logcatapp.ui.theme.AppTypography
 import com.dp.logcatapp.util.AppInfo
-import com.dp.logcatapp.util.PreferenceKeys
+import com.dp.logcatapp.util.SettingsPrefKeys
 import com.dp.logcatapp.util.ShareUtils
 import com.dp.logcatapp.util.getDefaultSharedPreferences
 import com.dp.logcatapp.util.rememberBooleanSharedPreference
@@ -1560,8 +1560,8 @@ private fun createFile(context: Context, recording: Boolean = false): CreateFile
   }
 
   val customSaveLocation = context.getDefaultSharedPreferences().getString(
-    PreferenceKeys.Logcat.KEY_SAVE_LOCATION,
-    PreferenceKeys.Logcat.Default.SAVE_LOCATION
+    SettingsPrefKeys.Logcat.KEY_SAVE_LOCATION,
+    SettingsPrefKeys.Logcat.Default.SAVE_LOCATION
   )!!
 
   return if (customSaveLocation.isEmpty()) {

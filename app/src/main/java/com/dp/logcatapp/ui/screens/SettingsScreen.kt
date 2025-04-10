@@ -75,7 +75,7 @@ import com.dp.logcatapp.ui.screens.Preference.SectionName
 import com.dp.logcatapp.ui.theme.AppTypography
 import com.dp.logcatapp.ui.theme.Shapes
 import com.dp.logcatapp.ui.theme.isDynamicThemeAvailable
-import com.dp.logcatapp.util.PreferenceKeys
+import com.dp.logcatapp.util.SettingsPrefKeys
 import com.dp.logcatapp.util.findActivity
 import com.dp.logcatapp.util.isReadLogsPermissionGranted
 import com.dp.logcatapp.util.rememberBooleanSharedPreference
@@ -248,8 +248,8 @@ private fun KeepScreenOn(
   modifier: Modifier = Modifier,
 ) {
   val preference = rememberBooleanSharedPreference(
-    key = PreferenceKeys.General.KEY_KEEP_SCREEN_ON,
-    default = PreferenceKeys.General.Default.KEY_KEEP_SCREEN_ON,
+    key = SettingsPrefKeys.General.KEY_KEEP_SCREEN_ON,
+    default = SettingsPrefKeys.General.Default.KEY_KEEP_SCREEN_ON,
   )
   ListItem(
     modifier = modifier
@@ -274,8 +274,8 @@ private fun Theme(
   modifier: Modifier = Modifier,
 ) {
   val preference = rememberStringSharedPreference(
-    key = PreferenceKeys.Appearance.KEY_THEME,
-    default = PreferenceKeys.Appearance.Default.THEME,
+    key = SettingsPrefKeys.Appearance.KEY_THEME,
+    default = SettingsPrefKeys.Appearance.Default.THEME,
   )
   var showSelectionDialog by remember { mutableStateOf(false) }
   val themeValues = stringArrayResource(R.array.pref_appearance_theme_values)
@@ -314,8 +314,8 @@ private fun DynamicColor(
   modifier: Modifier = Modifier,
 ) {
   val preference = rememberBooleanSharedPreference(
-    key = PreferenceKeys.Appearance.KEY_DYNAMIC_COLOR,
-    default = PreferenceKeys.Appearance.Default.DYNAMIC_COLOR,
+    key = SettingsPrefKeys.Appearance.KEY_DYNAMIC_COLOR,
+    default = SettingsPrefKeys.Appearance.Default.DYNAMIC_COLOR,
   )
   ListItem(
     modifier = modifier
@@ -340,8 +340,8 @@ private fun PollInterval(
   modifier: Modifier = Modifier,
 ) {
   val preference = rememberIntSharedPreference(
-    key = PreferenceKeys.Logcat.KEY_POLL_INTERVAL,
-    default = PreferenceKeys.Logcat.Default.POLL_INTERVAL,
+    key = SettingsPrefKeys.Logcat.KEY_POLL_INTERVAL,
+    default = SettingsPrefKeys.Logcat.Default.POLL_INTERVAL,
   )
   var showInputDialog by remember { mutableStateOf(false) }
   ListItem(
@@ -386,8 +386,8 @@ private fun Buffers(
   modifier: Modifier = Modifier,
 ) {
   val preference = rememberStringSetSharedPreference(
-    key = PreferenceKeys.Logcat.KEY_BUFFERS,
-    default = PreferenceKeys.Logcat.Default.BUFFERS,
+    key = SettingsPrefKeys.Logcat.KEY_BUFFERS,
+    default = SettingsPrefKeys.Logcat.Default.BUFFERS,
   )
   val availableBuffers = LogcatUtil.AVAILABLE_BUFFERS
   var showBuffersSheet by remember { mutableStateOf(false) }
@@ -434,8 +434,8 @@ private fun MaxLogs(
   modifier: Modifier = Modifier,
 ) {
   val preference = rememberIntSharedPreference(
-    key = PreferenceKeys.Logcat.KEY_MAX_LOGS,
-    default = PreferenceKeys.Logcat.Default.MAX_LOGS,
+    key = SettingsPrefKeys.Logcat.KEY_MAX_LOGS,
+    default = SettingsPrefKeys.Logcat.Default.MAX_LOGS,
   )
   var showInputDialog by remember { mutableStateOf(false) }
   ListItem(
@@ -481,8 +481,8 @@ private fun SaveLocation(
   modifier: Modifier = Modifier,
 ) {
   val preference = rememberStringSharedPreference(
-    key = PreferenceKeys.Logcat.KEY_SAVE_LOCATION,
-    default = PreferenceKeys.Logcat.Default.SAVE_LOCATION,
+    key = SettingsPrefKeys.Logcat.KEY_SAVE_LOCATION,
+    default = SettingsPrefKeys.Logcat.Default.SAVE_LOCATION,
   )
   var showSelectionDialog by remember { mutableStateOf(false) }
   val isUsingInternal = preference.value!!.isEmpty()

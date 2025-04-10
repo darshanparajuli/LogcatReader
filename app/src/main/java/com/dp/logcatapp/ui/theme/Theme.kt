@@ -10,8 +10,8 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import com.dp.logcatapp.util.PreferenceKeys
-import com.dp.logcatapp.util.PreferenceKeys.Appearance.Theme
+import com.dp.logcatapp.util.SettingsPrefKeys
+import com.dp.logcatapp.util.SettingsPrefKeys.Appearance.Theme
 import com.dp.logcatapp.util.rememberBooleanSharedPreference
 import com.dp.logcatapp.util.rememberStringSharedPreference
 
@@ -102,13 +102,13 @@ fun LogcatReaderTheme(
 
   val context = LocalContext.current
   var appThemeSetting = rememberStringSharedPreference(
-    key = PreferenceKeys.Appearance.KEY_THEME,
-    default = PreferenceKeys.Appearance.Default.THEME,
+    key = SettingsPrefKeys.Appearance.KEY_THEME,
+    default = SettingsPrefKeys.Appearance.Default.THEME,
   ).value
 
   var dynamicColor = rememberBooleanSharedPreference(
-    key = PreferenceKeys.Appearance.KEY_DYNAMIC_COLOR,
-    default = PreferenceKeys.Appearance.Default.DYNAMIC_COLOR
+    key = SettingsPrefKeys.Appearance.KEY_DYNAMIC_COLOR,
+    default = SettingsPrefKeys.Appearance.Default.DYNAMIC_COLOR
   ).value
 
   val colorScheme = when (appThemeSetting) {
@@ -155,8 +155,8 @@ fun logListItemSecondaryColor(): Color =
 @Composable
 private fun isDarkThemeOn(): Boolean {
   var appThemeSetting = rememberStringSharedPreference(
-    key = PreferenceKeys.Appearance.KEY_THEME,
-    default = PreferenceKeys.Appearance.Default.THEME,
+    key = SettingsPrefKeys.Appearance.KEY_THEME,
+    default = SettingsPrefKeys.Appearance.Default.THEME,
   ).value
   return if (appThemeSetting == Theme.AUTO) {
     isSystemInDarkTheme()

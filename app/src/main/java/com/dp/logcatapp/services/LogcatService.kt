@@ -20,7 +20,7 @@ import com.dp.logcat.LogcatSession
 import com.dp.logcat.LogcatUtil
 import com.dp.logcatapp.R
 import com.dp.logcatapp.activities.MainActivity
-import com.dp.logcatapp.util.PreferenceKeys
+import com.dp.logcatapp.util.SettingsPrefKeys
 import com.dp.logcatapp.util.getDefaultSharedPreferences
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.BufferOverflow.DROP_OLDEST
@@ -87,13 +87,13 @@ class LogcatService : BaseService() {
   }
 
   override fun onPreRegisterSharedPreferenceChangeListener() {
-    val defaultBuffers = PreferenceKeys.Logcat.Default.BUFFERS
+    val defaultBuffers = SettingsPrefKeys.Logcat.Default.BUFFERS
     if (defaultBuffers.isNotEmpty() && LogcatUtil.AVAILABLE_BUFFERS.isNotEmpty()) {
       val buffers = getDefaultSharedPreferences()
-        .getStringSet(PreferenceKeys.Logcat.KEY_BUFFERS, emptySet())
+        .getStringSet(SettingsPrefKeys.Logcat.KEY_BUFFERS, emptySet())
       if (buffers == null || buffers.isEmpty()) {
         getDefaultSharedPreferences().edit {
-          putStringSet(PreferenceKeys.Logcat.KEY_BUFFERS, defaultBuffers)
+          putStringSet(SettingsPrefKeys.Logcat.KEY_BUFFERS, defaultBuffers)
         }
       }
     }
@@ -233,15 +233,15 @@ class LogcatService : BaseService() {
   ) {
     super.onSharedPreferenceChanged(sharedPreferences, key)
     when (key) {
-      PreferenceKeys.Logcat.KEY_POLL_INTERVAL -> {
+      SettingsPrefKeys.Logcat.KEY_POLL_INTERVAL -> {
         val pollInterval = sharedPreferences.getInt(
           key,
-          PreferenceKeys.Logcat.Default.POLL_INTERVAL
+          SettingsPrefKeys.Logcat.Default.POLL_INTERVAL
         )
         _logcatSession.value?.sessionOrNull?.apply { pollIntervalMs = pollInterval.toLong() }
       }
-      PreferenceKeys.Logcat.KEY_BUFFERS,
-      PreferenceKeys.Logcat.KEY_MAX_LOGS -> {
+      SettingsPrefKeys.Logcat.KEY_BUFFERS,
+      SettingsPrefKeys.Logcat.KEY_MAX_LOGS -> {
         restartTrigger.trySend(Unit)
       }
     }
@@ -250,16 +250,16 @@ class LogcatService : BaseService() {
   private fun newLogcatSession(): LogcatSession {
     val sharedPreferences = getDefaultSharedPreferences()
     val bufferValues = sharedPreferences.getStringSet(
-      PreferenceKeys.Logcat.KEY_BUFFERS,
-      PreferenceKeys.Logcat.Default.BUFFERS
+      SettingsPrefKeys.Logcat.KEY_BUFFERS,
+      SettingsPrefKeys.Logcat.Default.BUFFERS
     )!!
     val pollInterval = sharedPreferences.getInt(
-      PreferenceKeys.Logcat.KEY_POLL_INTERVAL,
-      PreferenceKeys.Logcat.Default.POLL_INTERVAL
+      SettingsPrefKeys.Logcat.KEY_POLL_INTERVAL,
+      SettingsPrefKeys.Logcat.Default.POLL_INTERVAL
     )
     val maxLogs = sharedPreferences.getInt(
-      PreferenceKeys.Logcat.KEY_MAX_LOGS,
-      PreferenceKeys.Logcat.Default.MAX_LOGS
+      SettingsPrefKeys.Logcat.KEY_MAX_LOGS,
+      SettingsPrefKeys.Logcat.Default.MAX_LOGS
     )
 
     val buffers = LogcatUtil.AVAILABLE_BUFFERS
@@ -269,8 +269,8 @@ class LogcatService : BaseService() {
     }.toSet().ifEmpty {
       sharedPreferences.edit {
         putStringSet(
-          PreferenceKeys.Logcat.KEY_BUFFERS,
-          PreferenceKeys.Logcat.Default.BUFFERS
+          SettingsPrefKeys.Logcat.KEY_BUFFERS,
+          SettingsPrefKeys.Logcat.Default.BUFFERS
         )
       }
       LogcatUtil.DEFAULT_BUFFERS
