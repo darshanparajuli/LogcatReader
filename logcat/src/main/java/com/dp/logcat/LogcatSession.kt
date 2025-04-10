@@ -4,12 +4,22 @@ import android.net.Uri
 import android.os.Build
 import com.dp.logger.Logger
 import com.logcat.collections.FixedCircularArray
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.consumeAsFlow
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import java.io.BufferedWriter
 import java.io.IOException
 import java.util.concurrent.LinkedBlockingQueue
@@ -47,6 +57,44 @@ class LogcatSession(
 
   @Volatile private var active = false
 
+  companion object {
+    private val _isUidOptionSupported = MutableStateFlow<Boolean?>(null)
+    val isUidOptionSupported = _isUidOptionSupported.asStateFlow()
+
+    init {
+      // This is ok since we are simply executing a `logcat` process and getting the result from
+      // it without accessing any Android APIs.
+      @OptIn(DelicateCoroutinesApi::class)
+      GlobalScope.launch(Dispatchers.IO) {
+        _isUidOptionSupported.value = isUidOptionSupportedHelper()
+      }
+    }
+
+    private fun isUidOptionSupportedHelper(): Boolean {
+      return try {
+        // Dump the log with `-v uid` cmdline option to see if it works.
+        val process = ProcessBuilder(
+          "logcat", "-v", "long", "-v", "uid", "-d",
+        ).start()
+        val stdoutReaderThread = thread {
+          try {
+            // Consume stdout. Without this, the process waits forever on some
+            // devices/os versions.
+            process.inputStream.bufferedReader().use {
+              it.lineSequence().forEach { }
+            }
+          } catch (_: Exception) {
+          }
+        }
+        val result = process.waitFor() == 0
+        stdoutReaderThread.join(THREAD_JOIN_TIMEOUT)
+        result
+      } catch (_: Exception) {
+        false
+      }
+    }
+  }
+
   private var logcatProcess: Process? = null
   private var logcatThread: Thread? = null
   private var pollerThread: Thread? = null
@@ -54,10 +102,12 @@ class LogcatSession(
   val isRecording: Boolean get() = lock.withLock { record }
 
   val logs: Flow<List<Log>> = channelFlow {
-    lock.withLock {
-      trySend(allLogs.filtered())
-      onNewLog = { logs ->
-        trySend(logs.filtered())
+    withContext(Dispatchers.Default) {
+      lock.withLock {
+        trySend(allLogs.filtered())
+        onNewLog = { logs ->
+          trySend(logs.filtered())
+        }
       }
     }
     awaitClose {
@@ -76,7 +126,10 @@ class LogcatSession(
     active = true
     val status = Channel<Status>(capacity = 1)
     logcatThread = thread {
-      val process = startLogcatProcess()
+      // calling runBlocking is fine here since this function runs a separate non-ui thread, and not
+      // in a coroutine.
+      val uidSupported = runBlocking { isUidOptionSupported.filterNotNull().first() }
+      val process = startLogcatProcess(uidSupported)
       status.trySend(Status(process != null))
       if (process != null) {
         readLogs(process)
@@ -98,31 +151,7 @@ class LogcatSession(
     }
   }
 
-  private fun isUidOptionSupported(): Boolean {
-    return try {
-      // Dump the log with `-v uid` cmdline option to see if it works.
-      val process = ProcessBuilder(
-        "logcat", "-v", "long", "-v", "uid", "-d",
-      ).start()
-      val stdoutReaderThread = thread {
-        try {
-          // Consume stdout. Without this, the process waits forever on some
-          // devices/os versions.
-          process.inputStream.bufferedReader().use {
-            it.lineSequence().forEach { }
-          }
-        } catch (_: Exception) {
-        }
-      }
-      val result = process.waitFor() == 0
-      stdoutReaderThread.join(THREAD_JOIN_TIMEOUT)
-      result
-    } catch (_: Exception) {
-      false
-    }
-  }
-
-  private fun startLogcatProcess(): Process? {
+  private fun startLogcatProcess(uidSupported: Boolean): Process? {
     val buffersArg = mutableListOf<String>()
     for (buffer in buffers) {
       buffersArg += "-b"
@@ -130,7 +159,7 @@ class LogcatSession(
     }
     val cmd = mutableListOf<String>()
     cmd += listOf("logcat", "-v", "long")
-    if (isUidOptionSupported()) {
+    if (uidSupported) {
       cmd += listOf("-v", "uid")
     }
     cmd += buffersArg

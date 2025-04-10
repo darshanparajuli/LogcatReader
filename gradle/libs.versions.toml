@@ -1,6 +1,7 @@
 [versions]
 activityComposeVersion = "1.10.1"
 appcompatVersion = "1.7.0"
+coilComposeVersion = "3.1.0"
 composeBomVersion = "2025.04.00"
 constraintLayoutVersion = "2.2.1"
 coreKtxVersion = "1.16.0"
@@ -24,6 +25,7 @@ kspVersion = "2.1.20-2.0.0"
 activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activityComposeVersion" }
 adaptive = { module = "androidx.compose.material3.adaptive:adaptive" }
 appcompat = { module = "androidx.appcompat:appcompat", version.ref = "appcompatVersion" }
+coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coilComposeVersion" }
 compose-bom = { module = "androidx.compose:compose-bom", version.ref = "composeBomVersion" }
 constraintlayout = { module = "androidx.constraintlayout:constraintlayout", version.ref = "constraintLayoutVersion" }
 core-ktx = { module = "androidx.core:core-ktx", version.ref = "coreKtxVersion" }

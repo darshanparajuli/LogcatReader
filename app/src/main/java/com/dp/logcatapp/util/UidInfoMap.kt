@@ -15,6 +15,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.BufferOverflow.DROP_OLDEST
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.withContext
 
@@ -34,13 +35,15 @@ private object PackageChangeNotifier {
 fun rememberAppInfoByUidMap(): Map<String, AppInfo> {
   val context = LocalContext.current
   var uidMap by remember(context) {
-    mutableStateOf<Map<String, AppInfo>>(context.getAppInfo())
+    mutableStateOf<Map<String, AppInfo>>(emptyMap())
   }
 
   LaunchedEffect(context) {
-    PackageChangeNotifier.packageChanged.collect {
-      uidMap = withContext(Dispatchers.IO) { context.getAppInfo() }
-    }
+    PackageChangeNotifier.packageChanged
+      .onStart { emit(Unit) }
+      .collect {
+        uidMap = withContext(Dispatchers.IO) { context.getAppInfo() }
+      }
   }
 
   return uidMap

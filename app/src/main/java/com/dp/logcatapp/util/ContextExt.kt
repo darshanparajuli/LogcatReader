@@ -9,6 +9,7 @@ import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.content.pm.PackageManager.GET_META_DATA
 import android.content.res.Configuration
+import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.os.Build.VERSION.SDK_INT
 import android.provider.OpenableColumns
@@ -17,6 +18,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
 import android.widget.Toast
+import androidx.annotation.WorkerThread
 import androidx.core.content.ContextCompat
 import androidx.preference.PreferenceManager
 import com.dp.logcatapp.R
@@ -170,14 +172,22 @@ fun Context.isReadLogsPermissionGranted(): Boolean {
 data class AppInfo(
   val uid: String,
   val packageName: String,
+  val name: String?,
+  // This is 0 if not available.
+  val enabled: Boolean,
+  val icon: Drawable,
 )
 
+@WorkerThread
 fun Context.getAppInfo(): Map<String, AppInfo> {
   val map = mutableMapOf<String, AppInfo>()
   packageManager.getInstalledApplications(GET_META_DATA).forEach { info ->
     map[info.uid.toString()] = AppInfo(
       uid = info.uid.toString(),
       packageName = info.packageName,
+      name = info.loadLabel(packageManager)?.toString(),
+      enabled = info.enabled,
+      icon = info.loadIcon(packageManager),
     )
   }
   return map

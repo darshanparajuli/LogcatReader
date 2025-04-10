@@ -90,6 +90,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
@@ -118,6 +119,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.dp.logcat.Filter
 import com.dp.logcat.Log
+import com.dp.logcat.LogcatSession
 import com.dp.logcat.LogcatSession.RecordingFileInfo
 import com.dp.logcat.LogcatUtil
 import com.dp.logcatapp.R
@@ -194,7 +196,7 @@ fun DeviceLogsScreen(
   val coroutineScope = rememberCoroutineScope()
   val focusManager = LocalFocusManager.current
 
-  val appInfoMap = rememberAppInfoByUidMap()
+  val appInfoMap by rememberUpdatedState(rememberAppInfoByUidMap())
   val logcatService = rememberLogcatServiceConnection()
   val lazyListState = rememberLazyListState()
 
@@ -248,8 +250,6 @@ fun DeviceLogsScreen(
     BackHandler { showSearchBar = false }
   }
 
-
-
   if (logcatService != null) {
     val db = remember(context) { LogcatReaderDatabase.getInstance(context) }
     LaunchedEffect(logcatService) {
@@ -275,28 +275,29 @@ fun DeviceLogsScreen(
             db.filterDao().filters()
               .collectLatest { filters ->
                 appliedFilters = filters.isNotEmpty()
-
-                val includeFilters = filters.filterNot { it.exclude }
-                val excludeFilters = filters.filter { it.exclude }
-
-                logcatSession.setFilters(
-                  filters = includeFilters.map { filterInfo ->
-                    LogFilter(
-                      filterInfo = filterInfo,
-                      appInfoMap = { appInfoMap.toMap() },
-                    )
-                  },
-                  exclusion = false
-                )
-                logcatSession.setFilters(
-                  filters = excludeFilters.map { filterInfo ->
-                    LogFilter(
-                      filterInfo = filterInfo,
-                      appInfoMap = { appInfoMap.toMap() },
-                    )
-                  },
-                  exclusion = true
-                )
+                val infoMap = snapshotFlow { appInfoMap }.filter { it.isNotEmpty() }.first()
+                withContext(Dispatchers.Default) {
+                  val includeFilters = filters.filterNot { it.exclude }
+                  val excludeFilters = filters.filter { it.exclude }
+                  logcatSession.setFilters(
+                    filters = includeFilters.map { filterInfo ->
+                      LogFilter(
+                        filterInfo = filterInfo,
+                        appInfoMap = infoMap,
+                      )
+                    },
+                    exclusion = false
+                  )
+                  logcatSession.setFilters(
+                    filters = excludeFilters.map { filterInfo ->
+                      LogFilter(
+                        filterInfo = filterInfo,
+                        appInfoMap = infoMap,
+                      )
+                    },
+                    exclusion = true
+                  )
+                }
 
                 logsState.clear()
                 isLogcatSessionLoading = false
@@ -883,6 +884,8 @@ private fun DisplayOptionsSheet(
         }
       }
       Spacer(modifier = Modifier.height(16.dp))
+      val uidSupported by LogcatSession.isUidOptionSupported.filterNotNull()
+        .collectAsState(initial = false)
       FlowRow(
         modifier = Modifier
           .fillMaxWidth()
@@ -890,18 +893,26 @@ private fun DisplayOptionsSheet(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalArrangement = Arrangement.spacedBy(0.dp),
       ) {
-        ToggleableLogItem.entries.fastForEach { entry ->
-          FilterChip(
-            selected = enabledLogcatItems.getValue(entry),
-            onClick = {
-              enabledLogcatItems[entry] = !enabledLogcatItems.getValue(entry)
-            },
-            enabled = !compactView || entry == ToggleableLogItem.Tag,
-            label = {
-              Text(stringResource(entry.labelRes))
+        ToggleableLogItem.entries
+          .filter { item ->
+            if (uidSupported) {
+              true
+            } else {
+              item != ToggleableLogItem.PackageName
             }
-          )
-        }
+          }
+          .fastForEach { entry ->
+            FilterChip(
+              selected = enabledLogcatItems.getValue(entry),
+              onClick = {
+                enabledLogcatItems[entry] = !enabledLogcatItems.getValue(entry)
+              },
+              enabled = !compactView || entry == ToggleableLogItem.Tag,
+              label = {
+                Text(stringResource(entry.labelRes))
+              }
+            )
+          }
       }
       ListItem(
         modifier = Modifier
@@ -1635,7 +1646,7 @@ sealed interface SavedLogsBottomSheetState {
 
 private class LogFilter(
   private val filterInfo: FilterInfo,
-  private val appInfoMap: () -> Map<String, AppInfo>,
+  private val appInfoMap: Map<String, AppInfo>,
 ) : Filter {
   private val priorities: Set<String> = if (!filterInfo.logLevels.isNullOrEmpty()) {
     filterInfo.logLevels.split(",").toSet()
@@ -1674,7 +1685,7 @@ private class LogFilter(
       return uid.contains(packageName, ignoreCase = true)
     }
 
-    val appInfo = appInfoMap()[log.uid]
+    val appInfo = appInfoMap[log.uid]
     if (appInfo == null) {
       return false
     }

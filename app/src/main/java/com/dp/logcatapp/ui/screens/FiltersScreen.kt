@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.displayCutout
+import androidx.compose.foundation.layout.displayCutoutPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -22,6 +23,7 @@ import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CornerSize
@@ -31,6 +33,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Apps
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.ClearAll
 import androidx.compose.material.icons.filled.MoreVert
@@ -75,13 +78,17 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastJoinToString
 import androidx.core.text.isDigitsOnly
+import coil3.compose.AsyncImage
 import com.dp.logcat.Log
+import com.dp.logcat.LogcatSession
 import com.dp.logcatapp.R
 import com.dp.logcatapp.db.FilterInfo
 import com.dp.logcatapp.db.LogcatReaderDatabase
 import com.dp.logcatapp.ui.theme.AppTypography
 import com.dp.logcatapp.util.findActivity
+import com.dp.logcatapp.util.rememberAppInfoByUidMap
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -100,6 +107,7 @@ fun FiltersScreen(
 
   var showAddFilterDialog by remember { mutableStateOf(prepopulateFilterInfo != null) }
   var showEditFilterDialog by remember { mutableStateOf<FilterInfo?>(null) }
+  var showPackageSelector by remember { mutableStateOf(false) }
   val coroutineScope = rememberCoroutineScope()
 
   Scaffold(
@@ -137,6 +145,14 @@ fun FiltersScreen(
           Row(
             modifier = Modifier.padding(insetPadding)
           ) {
+            IconButton(
+              onClick = { showPackageSelector = true },
+              colors = IconButtonDefaults.iconButtonColors(
+                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+              ),
+            ) {
+              Icon(Icons.Default.Apps, contentDescription = null)
+            }
             IconButton(
               onClick = { showDropDownMenu = true },
               colors = IconButtonDefaults.iconButtonColors(
@@ -287,6 +303,29 @@ fun FiltersScreen(
             withContext(Dispatchers.IO) {
               db.filterDao().insert(filterInfo)
             }
+          }
+        }
+      )
+    }
+
+    if (showPackageSelector) {
+      var savingInProgress by remember { mutableStateOf(false) }
+      PackageSelectorSheet(
+        initialSelected = filters.orEmpty().mapNotNull { it.packageName }.toSet(),
+        onDismiss = {
+          showPackageSelector = false
+        },
+        savingInProgress = savingInProgress,
+        onSelected = { selected ->
+          savingInProgress = true
+          val filters = selected.map {
+            FilterInfo(packageName = it)
+          }
+          coroutineScope.launch {
+            withContext(Dispatchers.IO) {
+              db.filterDao().insert(*filters.toTypedArray())
+            }
+            showPackageSelector = false
           }
         }
       )
@@ -452,15 +491,19 @@ private fun AddFilterSheet(
         onValueChange = { tag = it },
       )
       Spacer(modifier = Modifier.height(16.dp))
-      InputField(
-        modifier = Modifier
-          .fillMaxWidth()
-          .padding(horizontal = 16.dp),
-        label = stringResource(R.string.package_name),
-        value = packageName,
-        onValueChange = { packageName = it },
-      )
-      Spacer(modifier = Modifier.height(16.dp))
+      val uidSupported by LogcatSession.isUidOptionSupported.filterNotNull()
+        .collectAsState(initial = false)
+      if (uidSupported) {
+        InputField(
+          modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+          label = stringResource(R.string.package_name),
+          value = packageName,
+          onValueChange = { packageName = it },
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+      }
       InputField(
         modifier = Modifier
           .fillMaxWidth()
@@ -529,6 +572,103 @@ private fun AddFilterSheet(
           containerColor = MaterialTheme.colorScheme.surfaceContainer,
         )
       )
+    }
+  }
+}
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@Composable
+private fun PackageSelectorSheet(
+  initialSelected: Set<String>,
+  onDismiss: () -> Unit,
+  onSelected: (Set<String>) -> Unit,
+  modifier: Modifier = Modifier,
+  savingInProgress: Boolean = false,
+) {
+  var selected by remember { mutableStateOf<Set<String>>(initialSelected) }
+  ModalBottomSheet(
+    modifier = modifier.displayCutoutPadding(),
+    onDismissRequest = onDismiss,
+    containerColor = MaterialTheme.colorScheme.surfaceContainer,
+  ) {
+    val apps = rememberAppInfoByUidMap().values
+      .sortedBy { it.packageName }
+      .sortedBy { it.name }
+
+    Row(
+      modifier = Modifier.padding(horizontal = 16.dp),
+      verticalAlignment = Alignment.CenterVertically,
+    ) {
+      Text(
+        modifier = Modifier.weight(1f),
+        text = stringResource(R.string.select_apps_to_filter),
+        style = AppTypography.headlineMedium,
+      )
+      Button(
+        onClick = {
+          onSelected(selected)
+        },
+        enabled = selected.isNotEmpty() && !savingInProgress,
+      ) {
+        if (savingInProgress) {
+          CircularProgressIndicator(
+            modifier = Modifier.size(16.dp),
+            strokeWidth = 2.dp,
+          )
+        } else {
+          Text(
+            stringResource(R.string.done),
+            style = AppTypography.titleMedium,
+          )
+        }
+      }
+    }
+
+    LazyColumn {
+      items(
+        items = apps,
+        key = { it.packageName },
+      ) { app ->
+        ListItem(
+          modifier = Modifier
+            .fillMaxWidth()
+            .clickable {
+              if (app.packageName in selected) {
+                selected -= app.packageName
+              } else {
+                selected += app.packageName
+              }
+            },
+          leadingContent = {
+            AsyncImage(
+              model = app.icon,
+              modifier = Modifier.size(32.dp),
+              contentDescription = null,
+            )
+          },
+          headlineContent = {
+            if (app.name != null) {
+              Text(app.name)
+            } else {
+              Text(app.packageName)
+            }
+          },
+          supportingContent = if (app.name != null) {
+            {
+              Text(app.packageName)
+            }
+          } else null,
+          trailingContent = {
+            Checkbox(
+              checked = app.packageName in selected,
+              onCheckedChange = null,
+            )
+          },
+          colors = ListItemDefaults.colors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainer,
+          )
+        )
+      }
     }
   }
 }

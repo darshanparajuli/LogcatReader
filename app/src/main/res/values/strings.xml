@@ -139,4 +139,5 @@
   <string name="read_logs_permission_not_granted">READ_LOGS permission not granted</string>
   <string name="read_logs_permission_granted">READ_LOGS permission granted</string>
   <string name="display_options">Display options</string>
+  <string name="select_apps_to_filter">Select apps to filter</string>
 </resources>
