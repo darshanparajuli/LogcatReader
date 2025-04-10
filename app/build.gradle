@@ -11,8 +11,8 @@ def fileProvider = "file_provider"
 android {
   defaultConfig {
     applicationId "com.dp.logcatapp"
-    compileSdk 35
-    targetSdkVersion 35
+    compileSdk 36
+    targetSdkVersion 36
     minSdkVersion 21
     versionCode 36
     versionName "2.0.0"
