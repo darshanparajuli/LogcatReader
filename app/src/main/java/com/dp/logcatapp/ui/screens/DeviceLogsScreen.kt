@@ -275,7 +275,12 @@ fun DeviceLogsScreen(
             db.filterDao().filters()
               .collectLatest { filters ->
                 appliedFilters = filters.isNotEmpty()
-                val infoMap = snapshotFlow { appInfoMap }.filter { it.isNotEmpty() }.first()
+                val isUidSupposed = LogcatSession.isUidOptionSupported.filterNotNull().first()
+                val infoMap = if (isUidSupposed) {
+                  snapshotFlow { appInfoMap }.filterNotNull().first()
+                } else {
+                  null
+                }
                 withContext(Dispatchers.Default) {
                   val includeFilters = filters.filterNot { it.exclude }
                   val excludeFilters = filters.filter { it.exclude }
@@ -583,7 +588,7 @@ fun DeviceLogsScreen(
                 .collect { logs ->
                   val (map, sortedHitsByLogId) = searchLogs(
                     logs = logs,
-                    appInfoMap = appInfoMap,
+                    appInfoMap = appInfoMap.orEmpty(),
                     searchQuery = searchQuery,
                   )
                   searchHitsMap.clear()
@@ -759,7 +764,7 @@ fun DeviceLogsScreen(
           },
           enabledLogItems = enabledLogItems,
           logs = logsState,
-          appInfoMap = appInfoMap,
+          appInfoMap = appInfoMap.orEmpty(),
           searchHits = searchHitsMap,
           onClick = if (!compactViewPreference.value) {
             { index ->
@@ -786,7 +791,7 @@ fun DeviceLogsScreen(
       showLongClickOptionsSheet?.let { log ->
         val packageName = log.uid?.let { uid ->
           if (uid.isDigitsOnly()) {
-            appInfoMap[uid]?.packageName
+            appInfoMap.orEmpty()[uid]?.packageName
           } else {
             uid
           }
@@ -1646,7 +1651,7 @@ sealed interface SavedLogsBottomSheetState {
 
 private class LogFilter(
   private val filterInfo: FilterInfo,
-  private val appInfoMap: Map<String, AppInfo>,
+  private val appInfoMap: Map<String, AppInfo>?,
 ) : Filter {
   private val priorities: Set<String> = if (!filterInfo.logLevels.isNullOrEmpty()) {
     filterInfo.logLevels.split(",").toSet()
@@ -1671,6 +1676,10 @@ private class LogFilter(
   }
 
   private fun matchesPackageName(log: Log): Boolean {
+    if (appInfoMap == null) {
+      return true
+    }
+
     val packageName = filterInfo.packageName
     if (packageName == null) {
       return true
@@ -1685,12 +1694,8 @@ private class LogFilter(
       return uid.contains(packageName, ignoreCase = true)
     }
 
-    val appInfo = appInfoMap[log.uid]
-    if (appInfo == null) {
-      return false
-    }
-
-    return appInfo.packageName.contains(packageName, ignoreCase = true)
+    return appInfoMap[log.uid]?.packageName.orEmpty()
+      .contains(packageName, ignoreCase = true)
   }
 
   override fun apply(log: Log): Boolean {

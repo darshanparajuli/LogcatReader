@@ -32,10 +32,10 @@ private object PackageChangeNotifier {
 }
 
 @Composable
-fun rememberAppInfoByUidMap(): Map<String, AppInfo> {
+fun rememberAppInfoByUidMap(): Map<String, AppInfo>? {
   val context = LocalContext.current
   var uidMap by remember(context) {
-    mutableStateOf<Map<String, AppInfo>>(emptyMap())
+    mutableStateOf<Map<String, AppInfo>?>(null)
   }
 
   LaunchedEffect(context) {

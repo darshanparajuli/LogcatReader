@@ -263,7 +263,7 @@ fun SavedLogsViewerScreen(
                 searchInProgress = true
                 val (map, sortedHitsByLogId) = searchLogs(
                   logs = logs,
-                  appInfoMap = appInfoMap,
+                  appInfoMap = appInfoMap.orEmpty(),
                   searchQuery = searchQuery,
                 )
                 searchHitsMap.clear()
@@ -318,7 +318,7 @@ fun SavedLogsViewerScreen(
           LogsListStyle.Default
         },
         logs = logsState.logs,
-        appInfoMap = appInfoMap,
+        appInfoMap = appInfoMap.orEmpty(),
         currentSearchHitLogId = currentSearchHitLogId,
         onClick = if (!compactViewPreference.value) {
           { index ->

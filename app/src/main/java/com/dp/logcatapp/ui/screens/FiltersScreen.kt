@@ -591,7 +591,7 @@ private fun PackageSelectorSheet(
     onDismissRequest = onDismiss,
     containerColor = MaterialTheme.colorScheme.surfaceContainer,
   ) {
-    val apps = rememberAppInfoByUidMap().values
+    val apps = rememberAppInfoByUidMap().orEmpty().values
       .sortedBy { it.packageName }
       .sortedBy { it.name }
 
