@@ -5,7 +5,6 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts.OpenDocumentTree
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
@@ -19,10 +18,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
@@ -718,27 +715,23 @@ private fun SelectionDialog(
     },
     title = { Text(title) },
     content = {
-      Column(
-        modifier = Modifier.verticalScroll(rememberScrollState()),
-      ) {
-        options.fastForEachIndexed { index, option ->
-          ListItem(
-            modifier = Modifier
-              .fillMaxWidth()
-              .clickable {
-                selected = index
-              },
-            headlineContent = {
-              Text(option)
+      options.fastForEachIndexed { index, option ->
+        ListItem(
+          modifier = Modifier
+            .fillMaxWidth()
+            .clickable {
+              selected = index
             },
-            leadingContent = {
-              RadioButton(
-                selected = selected == index,
-                onClick = null,
-              )
-            }
-          )
-        }
+          headlineContent = {
+            Text(option)
+          },
+          leadingContent = {
+            RadioButton(
+              selected = selected == index,
+              onClick = null,
+            )
+          }
+        )
       }
     },
   )
@@ -766,31 +759,27 @@ private fun MultiSelectDialog(
     },
     title = { Text(title) },
     content = {
-      Column(
-        modifier = Modifier.verticalScroll(rememberScrollState()),
-      ) {
-        options.fastForEachIndexed { index, option ->
-          ListItem(
-            modifier = Modifier
-              .fillMaxWidth()
-              .clickable {
-                if (index in selected) {
-                  selected -= index
-                } else {
-                  selected += index
-                }
-              },
-            headlineContent = {
-              Text(option)
+      options.fastForEachIndexed { index, option ->
+        ListItem(
+          modifier = Modifier
+            .fillMaxWidth()
+            .clickable {
+              if (index in selected) {
+                selected -= index
+              } else {
+                selected += index
+              }
             },
-            leadingContent = {
-              Checkbox(
-                checked = index in selected,
-                onCheckedChange = null,
-              )
-            }
-          )
-        }
+          headlineContent = {
+            Text(option)
+          },
+          leadingContent = {
+            Checkbox(
+              checked = index in selected,
+              onCheckedChange = null,
+            )
+          }
+        )
       }
     },
   )

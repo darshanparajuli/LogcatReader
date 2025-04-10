@@ -42,6 +42,8 @@ import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ViewList
 import androidx.compose.material.icons.filled.ArrowDownward
@@ -849,81 +851,83 @@ private fun DisplayOptionsSheet(
     onDismissRequest = onDismiss,
     containerColor = MaterialTheme.colorScheme.surfaceContainer,
   ) {
-    var compactView by remember { mutableStateOf(initialCompactView) }
-    val enabledLogcatItems = remember {
-      mutableStateMapOf(
-        *ToggleableLogItem.entries.map { entry ->
-          Pair(entry, entry in initialEnabledLogcatItems)
-        }.toTypedArray()
-      )
-    }
-    Row(
-      modifier = Modifier.padding(horizontal = 16.dp),
-      verticalAlignment = Alignment.CenterVertically,
-    ) {
-      Text(
-        modifier = Modifier.weight(1f),
-        text = stringResource(R.string.display_options),
-        style = AppTypography.headlineMedium,
-      )
-      FilledTonalButton(
-        onClick = {
-          onSave(
-            enabledLogcatItems.filterValues { it }.keys,
-            compactView,
-          )
-        },
+    Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+      var compactView by remember { mutableStateOf(initialCompactView) }
+      val enabledLogcatItems = remember {
+        mutableStateMapOf(
+          *ToggleableLogItem.entries.map { entry ->
+            Pair(entry, entry in initialEnabledLogcatItems)
+          }.toTypedArray()
+        )
+      }
+      Row(
+        modifier = Modifier.padding(horizontal = 16.dp),
+        verticalAlignment = Alignment.CenterVertically,
       ) {
         Text(
-          stringResource(R.string.save),
-          style = AppTypography.titleMedium,
+          modifier = Modifier.weight(1f),
+          text = stringResource(R.string.display_options),
+          style = AppTypography.headlineMedium,
         )
-      }
-    }
-    Spacer(modifier = Modifier.height(16.dp))
-    FlowRow(
-      modifier = Modifier
-        .fillMaxWidth()
-        .padding(horizontal = 16.dp),
-      horizontalArrangement = Arrangement.spacedBy(8.dp),
-      verticalArrangement = Arrangement.spacedBy(0.dp),
-    ) {
-      ToggleableLogItem.entries.fastForEach { entry ->
-        FilterChip(
-          selected = enabledLogcatItems.getValue(entry),
+        FilledTonalButton(
           onClick = {
-            enabledLogcatItems[entry] = !enabledLogcatItems.getValue(entry)
+            onSave(
+              enabledLogcatItems.filterValues { it }.keys,
+              compactView,
+            )
           },
-          enabled = !compactView || entry == ToggleableLogItem.Tag,
-          label = {
-            Text(stringResource(entry.labelRes))
-          }
-        )
+        ) {
+          Text(
+            stringResource(R.string.save),
+            style = AppTypography.titleMedium,
+          )
+        }
       }
-    }
-    ListItem(
-      modifier = Modifier
-        .fillMaxWidth()
-        .clickable {
-          compactView = !compactView
+      Spacer(modifier = Modifier.height(16.dp))
+      FlowRow(
+        modifier = Modifier
+          .fillMaxWidth()
+          .padding(horizontal = 16.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(0.dp),
+      ) {
+        ToggleableLogItem.entries.fastForEach { entry ->
+          FilterChip(
+            selected = enabledLogcatItems.getValue(entry),
+            onClick = {
+              enabledLogcatItems[entry] = !enabledLogcatItems.getValue(entry)
+            },
+            enabled = !compactView || entry == ToggleableLogItem.Tag,
+            label = {
+              Text(stringResource(entry.labelRes))
+            }
+          )
+        }
+      }
+      ListItem(
+        modifier = Modifier
+          .fillMaxWidth()
+          .clickable {
+            compactView = !compactView
+          },
+        leadingContent = {
+          Icon(Icons.Default.ViewCompact, contentDescription = null)
         },
-      leadingContent = {
-        Icon(Icons.Default.ViewCompact, contentDescription = null)
-      },
-      headlineContent = {
-        Text(stringResource(R.string.compact_view))
-      },
-      trailingContent = {
-        Switch(
-          checked = compactView,
-          onCheckedChange = null,
-        )
-      },
-      colors = ListItemDefaults.colors(
-        containerColor = MaterialTheme.colorScheme.surfaceContainer,
-      ),
-    )
-    Spacer(modifier = Modifier.height(16.dp))
+        headlineContent = {
+          Text(stringResource(R.string.compact_view))
+        },
+        trailingContent = {
+          Switch(
+            checked = compactView,
+            onCheckedChange = null,
+          )
+        },
+        colors = ListItemDefaults.colors(
+          containerColor = MaterialTheme.colorScheme.surfaceContainer,
+        ),
+      )
+      Spacer(modifier = Modifier.height(16.dp))
+    }
   }
 }
 
@@ -940,47 +944,49 @@ private fun LongClickOptionsSheet(
     onDismissRequest = onDismiss,
     containerColor = MaterialTheme.colorScheme.surfaceContainer,
   ) {
-    if (showCopyToClipboard) {
+    Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+      if (showCopyToClipboard) {
+        ListItem(
+          modifier = Modifier
+            .fillMaxWidth()
+            .clickable {
+              onClickCopyToClipboard()
+            },
+          headlineContent = {
+            Text(stringResource(R.string.copy_to_clipboard))
+          },
+          colors = ListItemDefaults.colors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainer,
+          ),
+        )
+      }
       ListItem(
         modifier = Modifier
           .fillMaxWidth()
           .clickable {
-            onClickCopyToClipboard()
+            onClickFilter()
           },
         headlineContent = {
-          Text(stringResource(R.string.copy_to_clipboard))
+          Text(stringResource(R.string.filter))
+        },
+        colors = ListItemDefaults.colors(
+          containerColor = MaterialTheme.colorScheme.surfaceContainer,
+        ),
+      )
+      ListItem(
+        modifier = Modifier
+          .fillMaxWidth()
+          .clickable {
+            onClickExclude()
+          },
+        headlineContent = {
+          Text(stringResource(R.string.exclude))
         },
         colors = ListItemDefaults.colors(
           containerColor = MaterialTheme.colorScheme.surfaceContainer,
         ),
       )
     }
-    ListItem(
-      modifier = Modifier
-        .fillMaxWidth()
-        .clickable {
-          onClickFilter()
-        },
-      headlineContent = {
-        Text(stringResource(R.string.filter))
-      },
-      colors = ListItemDefaults.colors(
-        containerColor = MaterialTheme.colorScheme.surfaceContainer,
-      ),
-    )
-    ListItem(
-      modifier = Modifier
-        .fillMaxWidth()
-        .clickable {
-          onClickExclude()
-        },
-      headlineContent = {
-        Text(stringResource(R.string.exclude))
-      },
-      colors = ListItemDefaults.colors(
-        containerColor = MaterialTheme.colorScheme.surfaceContainer,
-      ),
-    )
   }
 }
 
@@ -997,59 +1003,61 @@ private fun SavedLogsBottomSheet(
     onDismissRequest = onDismiss,
     containerColor = MaterialTheme.colorScheme.surfaceContainer,
   ) {
-    ListItem(
-      modifier = Modifier.fillMaxWidth(),
-      headlineContent = {
-        Text(
-          modifier = Modifier.weight(1f),
-          text = stringResource(R.string.saved_as_filename).format(fileName),
-          style = AppTypography.titleMedium,
-        )
-      },
-      colors = ListItemDefaults.colors(
-        containerColor = MaterialTheme.colorScheme.surfaceContainer,
-      ),
-    )
-    ListItem(
-      modifier = Modifier
-        .fillMaxWidth()
-        .clickable {
-          onDismiss()
-          val intent = Intent(context, SavedLogsViewerActivity::class.java)
-          intent.setDataAndType(uri, "text/plain")
-          context.startActivity(intent)
-        },
-      leadingContent = {
-        Icon(imageVector = Icons.AutoMirrored.Default.ViewList, contentDescription = null)
-      },
-      headlineContent = {
-        Text(text = stringResource(R.string.view_log))
-      },
-      colors = ListItemDefaults.colors(
-        containerColor = MaterialTheme.colorScheme.surfaceContainer,
-      ),
-    )
-    ListItem(
-      modifier = Modifier
-        .fillMaxWidth()
-        .clickable {
-          onDismiss()
-          ShareUtils.shareSavedLogs(
-            context = context,
-            uri = uri,
-            isCustom = isCustomLocation,
+    Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+      ListItem(
+        modifier = Modifier.fillMaxWidth(),
+        headlineContent = {
+          Text(
+            modifier = Modifier.weight(1f),
+            text = stringResource(R.string.saved_as_filename).format(fileName),
+            style = AppTypography.titleMedium,
           )
         },
-      leadingContent = {
-        Icon(imageVector = Icons.Default.Share, contentDescription = null)
-      },
-      headlineContent = {
-        Text(text = stringResource(R.string.share))
-      },
-      colors = ListItemDefaults.colors(
-        containerColor = MaterialTheme.colorScheme.surfaceContainer,
-      ),
-    )
+        colors = ListItemDefaults.colors(
+          containerColor = MaterialTheme.colorScheme.surfaceContainer,
+        ),
+      )
+      ListItem(
+        modifier = Modifier
+          .fillMaxWidth()
+          .clickable {
+            onDismiss()
+            val intent = Intent(context, SavedLogsViewerActivity::class.java)
+            intent.setDataAndType(uri, "text/plain")
+            context.startActivity(intent)
+          },
+        leadingContent = {
+          Icon(imageVector = Icons.AutoMirrored.Default.ViewList, contentDescription = null)
+        },
+        headlineContent = {
+          Text(text = stringResource(R.string.view_log))
+        },
+        colors = ListItemDefaults.colors(
+          containerColor = MaterialTheme.colorScheme.surfaceContainer,
+        ),
+      )
+      ListItem(
+        modifier = Modifier
+          .fillMaxWidth()
+          .clickable {
+            onDismiss()
+            ShareUtils.shareSavedLogs(
+              context = context,
+              uri = uri,
+              isCustom = isCustomLocation,
+            )
+          },
+        leadingContent = {
+          Icon(imageVector = Icons.Default.Share, contentDescription = null)
+        },
+        headlineContent = {
+          Text(text = stringResource(R.string.share))
+        },
+        colors = ListItemDefaults.colors(
+          containerColor = MaterialTheme.colorScheme.surfaceContainer,
+        ),
+      )
+    }
   }
 }
 

@@ -6,11 +6,8 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.os.Process
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.CircularProgressIndicator
@@ -190,36 +187,33 @@ fun MaybeShowPermissionRequiredDialog(
         Text(stringResource(R.string.manual_method))
       },
       content = {
-        Column(
-          modifier = Modifier.verticalScroll(rememberScrollState()),
-        ) {
-          Text(
-            text = buildAnnotatedString {
-              append(stringResource(R.string.permission_instruction0))
-              appendLine(); appendLine()
-              append(stringResource(R.string.permission_instruction1))
-              appendLine()
-              append(stringResource(R.string.permission_instruction2))
-              appendLine()
-              append(
-                AnnotatedString(
-                  text = stringResource(R.string.permission_instruction3),
-                  spanStyle = SpanStyle(
-                    color = MaterialTheme.colorScheme.tertiary,
-                    fontFamily = FontFamily.Monospace,
-                    fontSize = 11.sp,
-                  )
+
+        Text(
+          text = buildAnnotatedString {
+            append(stringResource(R.string.permission_instruction0))
+            appendLine(); appendLine()
+            append(stringResource(R.string.permission_instruction1))
+            appendLine()
+            append(stringResource(R.string.permission_instruction2))
+            appendLine()
+            append(
+              AnnotatedString(
+                text = stringResource(R.string.permission_instruction3),
+                spanStyle = SpanStyle(
+                  color = MaterialTheme.colorScheme.tertiary,
+                  fontFamily = FontFamily.Monospace,
+                  fontSize = 11.sp,
                 )
               )
-              appendLine()
-              append(stringResource(R.string.permission_instruction4))
-              appendLine()
-              append(stringResource(R.string.permission_instruction5))
-              appendLine(); appendLine()
-              append(stringResource(R.string.permission_instruction6))
-            },
-          )
-        }
+            )
+            appendLine()
+            append(stringResource(R.string.permission_instruction4))
+            appendLine()
+            append(stringResource(R.string.permission_instruction5))
+            appendLine(); appendLine()
+            append(stringResource(R.string.permission_instruction6))
+          },
+        )
       },
       confirmButton = {
         TextButton(

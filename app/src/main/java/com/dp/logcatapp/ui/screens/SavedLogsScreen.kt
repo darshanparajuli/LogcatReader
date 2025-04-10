@@ -684,54 +684,56 @@ private fun ExportBottomSheet(
     onDismissRequest = onDismiss,
     containerColor = MaterialTheme.colorScheme.surfaceContainer,
   ) {
-    ListItem(
-      modifier = Modifier.fillMaxWidth(),
-      headlineContent = {
-        Text(
-          modifier = Modifier.weight(1f),
-          text = stringResource(R.string.select_export_format),
-          style = AppTypography.titleMedium,
-        )
-      },
-      colors = ListItemDefaults.colors(
-        containerColor = MaterialTheme.colorScheme.surfaceContainer,
-      ),
-    )
+    Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+      ListItem(
+        modifier = Modifier.fillMaxWidth(),
+        headlineContent = {
+          Text(
+            modifier = Modifier.weight(1f),
+            text = stringResource(R.string.select_export_format),
+            style = AppTypography.titleMedium,
+          )
+        },
+        colors = ListItemDefaults.colors(
+          containerColor = MaterialTheme.colorScheme.surfaceContainer,
+        ),
+      )
 
-    if (savingInProgress) {
-      CircularProgressIndicator(
-        modifier = Modifier
-          .padding(16.dp)
-          .size(48.dp)
-          .align(Alignment.CenterHorizontally),
-      )
-    } else {
-      ListItem(
-        modifier = Modifier
-          .fillMaxWidth()
-          .clickable {
-            onClickDefault()
+      if (savingInProgress) {
+        CircularProgressIndicator(
+          modifier = Modifier
+            .padding(16.dp)
+            .size(48.dp)
+            .align(Alignment.CenterHorizontally),
+        )
+      } else {
+        ListItem(
+          modifier = Modifier
+            .fillMaxWidth()
+            .clickable {
+              onClickDefault()
+            },
+          headlineContent = {
+            Text(text = stringResource(R.string.export_format_default))
           },
-        headlineContent = {
-          Text(text = stringResource(R.string.export_format_default))
-        },
-        colors = ListItemDefaults.colors(
-          containerColor = MaterialTheme.colorScheme.surfaceContainer,
-        ),
-      )
-      ListItem(
-        modifier = Modifier
-          .fillMaxWidth()
-          .clickable {
-            onClickSingle()
+          colors = ListItemDefaults.colors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainer,
+          ),
+        )
+        ListItem(
+          modifier = Modifier
+            .fillMaxWidth()
+            .clickable {
+              onClickSingle()
+            },
+          headlineContent = {
+            Text(text = stringResource(R.string.export_format_single_line))
           },
-        headlineContent = {
-          Text(text = stringResource(R.string.export_format_single_line))
-        },
-        colors = ListItemDefaults.colors(
-          containerColor = MaterialTheme.colorScheme.surfaceContainer,
-        ),
-      )
+          colors = ListItemDefaults.colors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainer,
+          ),
+        )
+      }
     }
   }
 }

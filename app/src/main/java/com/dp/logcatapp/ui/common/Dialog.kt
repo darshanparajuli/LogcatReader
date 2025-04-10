@@ -3,9 +3,12 @@ package com.dp.logcatapp.ui.common
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LocalTextStyle
@@ -27,7 +30,7 @@ fun Dialog(
   dismissButton: @Composable (() -> Unit)? = null,
   icon: @Composable (() -> Unit)? = null,
   title: @Composable (() -> Unit)? = null,
-  content: @Composable (() -> Unit)? = null,
+  content: @Composable (ColumnScope.() -> Unit)? = null,
 ) {
   BasicAlertDialog(
     modifier = modifier,
@@ -45,6 +48,7 @@ fun Dialog(
         verticalArrangement = Arrangement.spacedBy(24.dp),
       ) {
         Column(
+          modifier = Modifier.weight(weight = 1f, fill = false),
           verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
           if (icon != null) {
@@ -69,8 +73,14 @@ fun Dialog(
               }
             }
           }
-          CompositionLocalProvider(LocalTextStyle provides AppTypography.bodyMedium) {
-            content?.invoke()
+          if (content != null) {
+            CompositionLocalProvider(LocalTextStyle provides AppTypography.bodyMedium) {
+              Column(
+                modifier = Modifier.verticalScroll(rememberScrollState()),
+              ) {
+                content()
+              }
+            }
           }
         }
         if (dismissButton != null || confirmButton != null) {

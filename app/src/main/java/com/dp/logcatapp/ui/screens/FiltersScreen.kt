@@ -23,9 +23,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
@@ -390,7 +392,9 @@ private fun AddFilterSheet(
     containerColor = MaterialTheme.colorScheme.surfaceContainer,
   ) {
     Column(
-      modifier = Modifier.padding(vertical = 16.dp),
+      modifier = Modifier
+        .verticalScroll(rememberScrollState())
+        .padding(vertical = 16.dp),
     ) {
       Row(
         modifier = Modifier.padding(horizontal = 16.dp),
