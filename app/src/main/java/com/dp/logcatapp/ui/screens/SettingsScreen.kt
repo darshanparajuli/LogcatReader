@@ -27,6 +27,8 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Checklist
 import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.ColorLens
+import androidx.compose.material.icons.filled.Folder
+import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Memory
 import androidx.compose.material.icons.filled.Poll
 import androidx.compose.material.icons.filled.Save
@@ -556,7 +558,7 @@ private fun SaveLocation(
         showSelectionDialog = true
       },
     leadingContent = {
-      Icon(Icons.Default.Save, contentDescription = null)
+      Icon(Icons.Default.Folder, contentDescription = null)
     },
     headlineContent = {
       Text(stringResource(R.string.save_location))

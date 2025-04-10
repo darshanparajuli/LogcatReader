@@ -53,7 +53,7 @@ import androidx.compose.material.icons.filled.DisplaySettings
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.FiberManualRecord
 import androidx.compose.material.icons.filled.FilterList
-import androidx.compose.material.icons.filled.FolderOpen
+import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Pause
@@ -1270,7 +1270,7 @@ private fun AppBar(
             )
             DropdownMenuItem(
               leadingIcon = {
-                Icon(Icons.Default.FolderOpen, contentDescription = null)
+                Icon(Icons.Default.Folder, contentDescription = null)
               },
               text = {
                 Text(
