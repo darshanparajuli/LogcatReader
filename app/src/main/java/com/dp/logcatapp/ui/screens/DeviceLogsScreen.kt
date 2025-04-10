@@ -141,13 +141,13 @@ import com.dp.logcatapp.ui.common.SearchLogsTopBar
 import com.dp.logcatapp.ui.common.SearchResult.SearchHitInfo
 import com.dp.logcatapp.ui.common.SearchResult.SearchHitSpan
 import com.dp.logcatapp.ui.common.ToggleableLogItem
-import com.dp.logcatapp.util.rememberAppInfoByUidMap
 import com.dp.logcatapp.ui.common.searchLogs
 import com.dp.logcatapp.ui.theme.AppTypography
 import com.dp.logcatapp.util.AppInfo
 import com.dp.logcatapp.util.SettingsPrefKeys
 import com.dp.logcatapp.util.ShareUtils
 import com.dp.logcatapp.util.getDefaultSharedPreferences
+import com.dp.logcatapp.util.rememberAppInfoByUidMap
 import com.dp.logcatapp.util.rememberBooleanSharedPreference
 import com.dp.logcatapp.util.rememberStringSetSharedPreference
 import com.dp.logcatapp.util.showToast
@@ -176,7 +176,6 @@ import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import kotlin.time.Duration.Companion.seconds
 
 private const val TAG = "HomeScreen"
 private const val SNAP_SCROLL_HIDE_DELAY_MS = 2000L
@@ -195,7 +194,7 @@ fun DeviceLogsScreen(
   val coroutineScope = rememberCoroutineScope()
   val focusManager = LocalFocusManager.current
 
-  val appInfoMap = rememberAppInfoByUidMap(refreshInterval = 1.seconds)
+  val appInfoMap = rememberAppInfoByUidMap()
   val logcatService = rememberLogcatServiceConnection()
   val lazyListState = rememberLazyListState()
 
