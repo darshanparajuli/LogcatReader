@@ -680,7 +680,7 @@ private fun InputDialog(
   Dialog(
     modifier = modifier,
     onDismissRequest = onDismiss,
-    title = { Text(label) },
+    title = label,
     primaryButton = DialogButton(
       text = stringResource(android.R.string.ok),
       onClick = {
@@ -746,7 +746,7 @@ private fun SelectionDialog(
         onClickOk(selected)
       },
     ),
-    title = { Text(title) },
+    title = title,
     content = {
       options.fastForEachIndexed { index, option ->
         ListItem(
@@ -789,7 +789,7 @@ private fun MultiSelectDialog(
         onClickOk(selected)
       },
     ),
-    title = { Text(title) },
+    title = title,
     content = {
       options.fastForEachIndexed { index, option ->
         ListItem(

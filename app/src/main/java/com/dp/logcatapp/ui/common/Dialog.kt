@@ -37,8 +37,8 @@ fun Dialog(
   modifier: Modifier = Modifier,
   primaryButton: DialogButton? = null,
   secondaryButton: DialogButton? = null,
+  title: String? = null,
   icon: @Composable (() -> Unit)? = null,
-  title: @Composable (() -> Unit)? = null,
   content: @Composable (ColumnScope.() -> Unit)? = null,
 ) {
   BasicAlertDialog(
@@ -78,7 +78,7 @@ fun Dialog(
               },
             ) {
               CompositionLocalProvider(LocalTextStyle provides AppTypography.titleLarge) {
-                title()
+                Text(title)
               }
             }
           }

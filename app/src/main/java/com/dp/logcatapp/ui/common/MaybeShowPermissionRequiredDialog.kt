@@ -76,7 +76,7 @@ fun MaybeShowPermissionRequiredDialog(
         showPermissionRequiredDialog = false
         onDismissed?.invoke()
       },
-      title = { Text(stringResource(R.string.read_logs_permission_required)) },
+      title = stringResource(R.string.read_logs_permission_required),
       content = { Text(stringResource(R.string.read_logs_permission_required_msg)) },
       secondaryButton = DialogButton(
         text = stringResource(R.string.root_method),
@@ -110,9 +110,7 @@ fun MaybeShowPermissionRequiredDialog(
           showPermissionInfoDialog.value = false
           onDismissed?.invoke()
         },
-        title = {
-          Text(stringResource(R.string.permission_granted_info_title))
-        },
+        title = stringResource(R.string.permission_granted_info_title),
         content = {
           Text(stringResource(R.string.permission_granted_info_body))
         },
@@ -148,9 +146,7 @@ fun MaybeShowPermissionRequiredDialog(
         showRestartAppDialog = false
         onDismissed?.invoke()
       },
-      title = {
-        Text(stringResource(R.string.app_restart_dialog_title))
-      },
+      title = stringResource(R.string.app_restart_dialog_title),
       content = {
         Text(stringResource(R.string.app_restart_dialog_msg_body))
       },
@@ -170,9 +166,7 @@ fun MaybeShowPermissionRequiredDialog(
         showManualMethodDialog = false
         onDismissed?.invoke()
       },
-      title = {
-        Text(stringResource(R.string.manual_method))
-      },
+      title = stringResource(R.string.manual_method),
       content = {
         Text(
           text = buildAnnotatedString {

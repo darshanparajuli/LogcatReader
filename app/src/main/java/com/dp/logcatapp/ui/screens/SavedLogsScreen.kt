@@ -637,9 +637,7 @@ private fun RenameLogDialog(
   }
   Dialog(
     onDismissRequest = onDismiss,
-    title = {
-      Text(stringResource(R.string.rename))
-    },
+    title = stringResource(R.string.rename),
     content = {
       TextField(
         modifier = Modifier.fillMaxWidth(),
