@@ -34,12 +34,10 @@ import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Style
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material3.Button
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -81,6 +79,7 @@ import com.dp.logcat.LogcatUtil
 import com.dp.logcatapp.BuildConfig
 import com.dp.logcatapp.R
 import com.dp.logcatapp.ui.common.Dialog
+import com.dp.logcatapp.ui.common.DialogButton
 import com.dp.logcatapp.ui.common.MaybeShowPermissionRequiredDialog
 import com.dp.logcatapp.ui.screens.Preference.PreferenceRow
 import com.dp.logcatapp.ui.screens.Preference.SectionDivider
@@ -682,19 +681,17 @@ private fun InputDialog(
     modifier = modifier,
     onDismissRequest = onDismiss,
     title = { Text(label) },
-    confirmButton = {
-      Button(
-        onClick = {
-          onOk(value.text.trim())
-        },
-        enabled = value.text.trim().isNotEmpty(),
-      ) { Text(stringResource(android.R.string.ok)) }
-    },
-    dismissButton = {
-      FilledTonalButton(
-        onClick = onDismiss,
-      ) { Text(stringResource(android.R.string.cancel)) }
-    },
+    primaryButton = DialogButton(
+      text = stringResource(android.R.string.ok),
+      onClick = {
+        onOk(value.text.trim())
+      },
+      enabled = value.text.trim().isNotEmpty(),
+    ),
+    secondaryButton = DialogButton(
+      text = stringResource(android.R.string.cancel),
+      onClick = onDismiss,
+    ),
     content = {
       val focusRequester = remember { FocusRequester() }
       LaunchedEffect(focusRequester) {
@@ -743,13 +740,12 @@ private fun SelectionDialog(
   Dialog(
     modifier = modifier,
     onDismissRequest = onDismiss,
-    confirmButton = {
-      Button(
-        onClick = {
-          onClickOk(selected)
-        },
-      ) { Text(stringResource(android.R.string.ok)) }
-    },
+    primaryButton = DialogButton(
+      text = stringResource(android.R.string.ok),
+      onClick = {
+        onClickOk(selected)
+      },
+    ),
     title = { Text(title) },
     content = {
       options.fastForEachIndexed { index, option ->
@@ -787,13 +783,12 @@ private fun MultiSelectDialog(
   Dialog(
     modifier = modifier,
     onDismissRequest = onDismiss,
-    confirmButton = {
-      Button(
-        onClick = {
-          onClickOk(selected)
-        },
-      ) { Text(stringResource(android.R.string.ok)) }
-    },
+    primaryButton = DialogButton(
+      text = stringResource(android.R.string.ok),
+      onClick = {
+        onClickOk(selected)
+      },
+    ),
     title = { Text(title) },
     content = {
       options.fastForEachIndexed { index, option ->

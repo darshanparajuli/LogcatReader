@@ -10,14 +10,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
-import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -68,42 +65,36 @@ fun MaybeShowPermissionRequiredDialog(
     val failMessage = stringResource(R.string.fail)
     Dialog(
       modifier = Modifier.fillMaxWidth(),
-      confirmButton = {
-        Button(
-          onClick = {
-            showPermissionRequiredDialog = false
-            showManualMethodDialog = true
-          }
-        ) {
-          Text(stringResource(R.string.manual_method))
-        }
-      },
+      primaryButton = DialogButton(
+        text = stringResource(R.string.manual_method),
+        onClick = {
+          showPermissionRequiredDialog = false
+          showManualMethodDialog = true
+        },
+      ),
       onDismissRequest = {
         showPermissionRequiredDialog = false
         onDismissed?.invoke()
       },
       title = { Text(stringResource(R.string.read_logs_permission_required)) },
       content = { Text(stringResource(R.string.read_logs_permission_required_msg)) },
-      dismissButton = {
-        FilledTonalButton(
-          onClick = {
-            showPermissionRequiredDialog = false
-            showAskingForRootPermissionDialog = true
-            coroutineScope.launch {
-              val result = grantPermissionWithRoot()
-              showAskingForRootPermissionDialog = false
-              if (result) {
-                showRestartAppDialog = true
-              } else {
-                showManualMethodDialog = true
-                context.showToast(failMessage)
-              }
+      secondaryButton = DialogButton(
+        text = stringResource(R.string.root_method),
+        onClick = {
+          showPermissionRequiredDialog = false
+          showAskingForRootPermissionDialog = true
+          coroutineScope.launch {
+            val result = grantPermissionWithRoot()
+            showAskingForRootPermissionDialog = false
+            if (result) {
+              showRestartAppDialog = true
+            } else {
+              showManualMethodDialog = true
+              context.showToast(failMessage)
             }
           }
-        ) {
-          Text(stringResource(R.string.root_method))
         }
-      },
+      ),
       icon = {
         Icon(Icons.Default.Info, contentDescription = null)
       }
@@ -125,16 +116,13 @@ fun MaybeShowPermissionRequiredDialog(
         content = {
           Text(stringResource(R.string.permission_granted_info_body))
         },
-        confirmButton = {
-          Button(
-            onClick = {
-              showPermissionInfoDialog.value = false
-              onDismissed?.invoke()
-            },
-          ) {
-            Text(stringResource(android.R.string.ok))
-          }
-        }
+        primaryButton = DialogButton(
+          text = stringResource(android.R.string.ok),
+          onClick = {
+            showPermissionInfoDialog.value = false
+            onDismissed?.invoke()
+          },
+        )
       )
     }
   }
@@ -166,16 +154,13 @@ fun MaybeShowPermissionRequiredDialog(
       content = {
         Text(stringResource(R.string.app_restart_dialog_msg_body))
       },
-      confirmButton = {
-        Button(
-          onClick = {
-            context.stopService(Intent(context, LogcatService::class.java))
-            Process.killProcess(Process.myPid())
-          }
-        ) {
-          Text(stringResource(android.R.string.ok))
+      primaryButton = DialogButton(
+        text = stringResource(android.R.string.ok),
+        onClick = {
+          context.stopService(Intent(context, LogcatService::class.java))
+          Process.killProcess(Process.myPid())
         }
-      }
+      )
     )
   }
 
@@ -189,7 +174,6 @@ fun MaybeShowPermissionRequiredDialog(
         Text(stringResource(R.string.manual_method))
       },
       content = {
-
         Text(
           text = buildAnnotatedString {
             append(stringResource(R.string.permission_instruction0))
@@ -217,21 +201,18 @@ fun MaybeShowPermissionRequiredDialog(
           },
         )
       },
-      confirmButton = {
-        Button(
-          onClick = {
-            showManualMethodDialog = false
-            onDismissed?.invoke()
-            val cmd = "adb shell pm grant ${BuildConfig.APPLICATION_ID} " +
-              Manifest.permission.READ_LOGS
-            val cm = context.getSystemService(Context.CLIPBOARD_SERVICE)
-              as ClipboardManager
-            cm.setPrimaryClip(ClipData.newPlainText("Adb command", cmd))
-          }
-        ) {
-          Text(stringResource(R.string.copy_adb_command))
+      primaryButton = DialogButton(
+        text = stringResource(R.string.copy_adb_command),
+        onClick = {
+          showManualMethodDialog = false
+          onDismissed?.invoke()
+          val cmd = "adb shell pm grant ${BuildConfig.APPLICATION_ID} " +
+            Manifest.permission.READ_LOGS
+          val cm = context.getSystemService(Context.CLIPBOARD_SERVICE)
+            as ClipboardManager
+          cm.setPrimaryClip(ClipData.newPlainText("Adb command", cmd))
         }
-      }
+      )
     )
   }
 }

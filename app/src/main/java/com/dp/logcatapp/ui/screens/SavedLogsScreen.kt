@@ -55,7 +55,6 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -103,6 +102,7 @@ import com.dp.logcatapp.activities.SavedLogsViewerActivity
 import com.dp.logcatapp.db.LogcatReaderDatabase
 import com.dp.logcatapp.db.SavedLogInfo
 import com.dp.logcatapp.ui.common.Dialog
+import com.dp.logcatapp.ui.common.DialogButton
 import com.dp.logcatapp.ui.common.LOGCAT_DIR
 import com.dp.logcatapp.ui.theme.AppTypography
 import com.dp.logcatapp.ui.theme.Shapes
@@ -652,23 +652,17 @@ private fun RenameLogDialog(
         shape = RoundedCornerShape(corner = CornerSize(8.dp)),
       )
     },
-    confirmButton = {
-      Button(
-        onClick = {
-          onConfirm(name.text)
-        },
-        enabled = name.text.isNotBlank(),
-      ) {
-        Text(stringResource(android.R.string.ok))
-      }
-    },
-    dismissButton = {
-      FilledTonalButton(
-        onClick = onDismiss,
-      ) {
-        Text(stringResource(android.R.string.cancel))
-      }
-    }
+    primaryButton = DialogButton(
+      text = stringResource(android.R.string.ok),
+      onClick = {
+        onConfirm(name.text)
+      },
+      enabled = name.text.isNotBlank(),
+    ),
+    secondaryButton = DialogButton(
+      text = stringResource(android.R.string.cancel),
+      onClick = onDismiss,
+    ),
   )
 }
 

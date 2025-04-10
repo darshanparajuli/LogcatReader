@@ -10,10 +10,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.BasicAlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
@@ -21,13 +24,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.dp.logcatapp.ui.theme.AppTypography
 
+data class DialogButton(
+  val text: String,
+  val enabled: Boolean = true,
+  val onClick: () -> Unit,
+)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Dialog(
   onDismissRequest: () -> Unit,
   modifier: Modifier = Modifier,
-  confirmButton: (@Composable () -> Unit)? = null,
-  dismissButton: @Composable (() -> Unit)? = null,
+  primaryButton: DialogButton? = null,
+  secondaryButton: DialogButton? = null,
   icon: @Composable (() -> Unit)? = null,
   title: @Composable (() -> Unit)? = null,
   content: @Composable (ColumnScope.() -> Unit)? = null,
@@ -83,15 +92,29 @@ fun Dialog(
             }
           }
         }
-        if (dismissButton != null || confirmButton != null) {
+        if (secondaryButton != null || primaryButton != null) {
           Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp, alignment = Alignment.End),
             verticalAlignment = Alignment.CenterVertically,
           ) {
             CompositionLocalProvider(LocalTextStyle provides AppTypography.bodyMedium) {
-              dismissButton?.invoke()
-              confirmButton?.invoke()
+              if (secondaryButton != null) {
+                FilledTonalButton(
+                  onClick = secondaryButton.onClick,
+                  enabled = secondaryButton.enabled,
+                ) {
+                  Text(secondaryButton.text)
+                }
+              }
+              if (primaryButton != null) {
+                Button(
+                  onClick = primaryButton.onClick,
+                  enabled = primaryButton.enabled,
+                ) {
+                  Text(primaryButton.text)
+                }
+              }
             }
           }
         }
