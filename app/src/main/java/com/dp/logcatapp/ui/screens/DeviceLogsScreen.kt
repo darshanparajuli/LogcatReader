@@ -275,8 +275,8 @@ fun DeviceLogsScreen(
             db.filterDao().filters()
               .collectLatest { filters ->
                 appliedFilters = filters.isNotEmpty()
-                val isUidSupposed = LogcatSession.isUidOptionSupported.filterNotNull().first()
-                val infoMap = if (isUidSupposed) {
+                val uidSupported = LogcatSession.isUidOptionSupported.filterNotNull().first()
+                val infoMap = if (uidSupported) {
                   snapshotFlow { appInfoMap }.filterNotNull().first()
                 } else {
                   null
