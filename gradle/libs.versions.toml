@@ -8,7 +8,7 @@ documentFileVersion = "1.0.1"
 espressoCoreVersion = "3.6.1"
 gradleVersion = "8.9.1"
 junitVersion = "4.13.2"
-kotlinVersion = "2.0.21"
+kotlinVersion = "2.1.20"
 coroutinesAndroidVersion = "1.10.2"
 coroutinesCoreVersion = "1.10.2"
 lifecycleCommonJava8Version = "2.8.7"
@@ -18,7 +18,7 @@ multidexVersion = "2.0.1"
 preferenceKtxVersion = "1.2.1"
 roomVersion = "2.7.0"
 testRunnerVersion = "1.6.2"
-kspVersion = "2.0.21-1.0.25"
+kspVersion = "2.1.20-2.0.0"
 
 [libraries]
 activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activityComposeVersion" }
