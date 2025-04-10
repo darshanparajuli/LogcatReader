@@ -20,6 +20,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
@@ -85,6 +86,7 @@ import com.dp.logcatapp.util.showToast
 import java.text.NumberFormat
 
 private const val REPO_URL = "https://github.com/darshanparajuli/LogcatReader"
+private const val PLAY_URL = "https://play.google.com/store/apps/details?id=%s"
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -561,14 +563,27 @@ private fun GithubRepoInfo(
 private fun AppInfo(
   modifier: Modifier = Modifier,
 ) {
+  val appName = stringResource(R.string.app_name)
+  val context = LocalContext.current
   ListItem(
     modifier = modifier
-      .fillMaxWidth(),
+      .fillMaxWidth()
+      .clickable {
+        val sendIntent = Intent(Intent.ACTION_SEND).apply {
+          type = "text/plain"
+          putExtra(Intent.EXTRA_TITLE, appName)
+          putExtra(Intent.EXTRA_TEXT, PLAY_URL.format(context.packageName))
+        }
+        context.startActivity(Intent.createChooser(sendIntent, appName))
+      },
     headlineContent = {
       Text(stringResource(R.string.app_name))
     },
     supportingContent = {
       Text(stringResource(R.string.version_fmt).format(BuildConfig.VERSION_NAME))
+    },
+    trailingContent = {
+      Icon(Icons.Default.Share, contentDescription = null)
     },
   )
 }
