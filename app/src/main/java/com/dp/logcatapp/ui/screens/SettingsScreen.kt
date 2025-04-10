@@ -22,8 +22,17 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Adb
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Checklist
+import androidx.compose.material.icons.filled.Code
+import androidx.compose.material.icons.filled.ColorLens
+import androidx.compose.material.icons.filled.Memory
+import androidx.compose.material.icons.filled.Poll
+import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.Style
+import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
@@ -293,6 +302,9 @@ private fun KeepScreenOn(
       .clickable {
         preference.value = !preference.value
       },
+    leadingContent = {
+      Icon(Icons.Default.Visibility, contentDescription = null)
+    },
     headlineContent = {
       Text(stringResource(R.string.pref_general_keep_screen_on))
     },
@@ -322,6 +334,9 @@ private fun Theme(
       .clickable {
         showSelectionDialog = true
       },
+    leadingContent = {
+      Icon(Icons.Default.ColorLens, contentDescription = null)
+    },
     headlineContent = {
       Text(stringResource(R.string.pref_theme_title))
     },
@@ -359,6 +374,9 @@ private fun DynamicColor(
       .clickable {
         preference.value = !preference.value
       },
+    leadingContent = {
+      Icon(Icons.Default.Style, contentDescription = null)
+    },
     headlineContent = {
       Text(stringResource(R.string.pref_dynamic_color))
     },
@@ -386,6 +404,9 @@ private fun PollInterval(
       .clickable {
         showInputDialog = true
       },
+    leadingContent = {
+      Icon(Icons.Default.Poll, contentDescription = null)
+    },
     headlineContent = {
       Text(stringResource(R.string.pref_poll_interval_title))
     },
@@ -434,6 +455,9 @@ private fun Buffers(
       .clickable {
         showBuffersSheet = true
       },
+    leadingContent = {
+      Icon(Icons.Default.Checklist, contentDescription = null)
+    },
     headlineContent = {
       Text(stringResource(R.string.pref_logcat_buffer_title))
     },
@@ -480,6 +504,9 @@ private fun MaxLogs(
       .clickable {
         showInputDialog = true
       },
+    leadingContent = {
+      Icon(Icons.Default.Memory, contentDescription = null)
+    },
     headlineContent = {
       Text(stringResource(R.string.pref_logcat_max_recent_logs_to_keep_in_memory))
     },
@@ -528,6 +555,9 @@ private fun SaveLocation(
       .clickable {
         showSelectionDialog = true
       },
+    leadingContent = {
+      Icon(Icons.Default.Save, contentDescription = null)
+    },
     headlineContent = {
       Text(stringResource(R.string.save_location))
     },
@@ -586,6 +616,9 @@ private fun GithubRepoInfo(
       .clickable {
         context.startActivity(Intent(Intent.ACTION_VIEW, REPO_URL.toUri()))
       },
+    leadingContent = {
+      Icon(Icons.Default.Code, contentDescription = null)
+    },
     headlineContent = {
       Text(stringResource(R.string.pref_key_about_github_repo_title))
     },
@@ -612,6 +645,9 @@ private fun AppInfo(
         }
         context.startActivity(Intent.createChooser(sendIntent, appName))
       },
+    leadingContent = {
+      Icon(Icons.Default.Adb, contentDescription = null)
+    },
     headlineContent = {
       Text(stringResource(R.string.app_name))
     },
