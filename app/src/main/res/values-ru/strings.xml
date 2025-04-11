@@ -137,4 +137,13 @@
   <string name="read_logs_permission_not_granted">Разрешение READ_LOGS не предоставлено</string>
   <string name="read_logs_permission_granted">Разрешение READ_LOGS предоставлено</string>
   <string name="display_options">Параметры отображения</string>
+  <string name="select_apps_to_filter">Выберите приложения для фильтрации</string>
+  <string name="filter_by_apps">Фильтровать по приложениям</string>
+  <string name="saving_recorded_logs">Сохранение записанных журналов</string>
+  <string name="more_options">Больше возможностей</string>
+  <string name="close">Закрывать</string>
+  <string name="previous">Предыдущий</string>
+  <string name="next">Следующий</string>
+  <string name="navigate_up">Перейти вверх</string>
+  <string name="sort">Сортировать</string>
 </resources>

@@ -140,4 +140,12 @@
   <string name="read_logs_permission_granted">READ_LOGS permission granted</string>
   <string name="display_options">Display options</string>
   <string name="select_apps_to_filter">Select apps to filter</string>
+  <string name="filter_by_apps">Filter by apps</string>
+  <string name="saving_recorded_logs">Saving recorded logs</string>
+  <string name="more_options">More options</string>
+  <string name="close">Close</string>
+  <string name="previous">Previous</string>
+  <string name="next">Next</string>
+  <string name="navigate_up">Navigate up</string>
+  <string name="sort">Sort</string>
 </resources>

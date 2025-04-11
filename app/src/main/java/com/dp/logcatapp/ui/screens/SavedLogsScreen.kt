@@ -104,6 +104,7 @@ import com.dp.logcatapp.db.SavedLogInfo
 import com.dp.logcatapp.ui.common.Dialog
 import com.dp.logcatapp.ui.common.DialogButton
 import com.dp.logcatapp.ui.common.LOGCAT_DIR
+import com.dp.logcatapp.ui.common.WithTooltip
 import com.dp.logcatapp.ui.theme.AppTypography
 import com.dp.logcatapp.ui.theme.Shapes
 import com.dp.logcatapp.util.ShareUtils
@@ -423,19 +424,23 @@ private fun AppBar(
       val insetPadding = WindowInsets.displayCutout
         .only(WindowInsetsSides.Left)
         .asPaddingValues()
-      IconButton(
+      WithTooltip(
         modifier = Modifier.padding(insetPadding),
-        onClick = {
-          context.findActivity()?.finish()
-        },
-        colors = IconButtonDefaults.iconButtonColors(
-          contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-        ),
+        text = stringResource(R.string.navigate_up),
       ) {
-        Icon(
-          imageVector = Icons.AutoMirrored.Default.ArrowBack,
-          contentDescription = null,
-        )
+        IconButton(
+          onClick = {
+            context.findActivity()?.finish()
+          },
+          colors = IconButtonDefaults.iconButtonColors(
+            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+          ),
+        ) {
+          Icon(
+            imageVector = Icons.AutoMirrored.Default.ArrowBack,
+            contentDescription = null,
+          )
+        }
       }
     },
     title = {
@@ -462,14 +467,19 @@ private fun AppBar(
       Row(
         modifier = Modifier.padding(insetPadding)
       ) {
-        IconButton(
-          onClick = onClickSort,
-          enabled = sortEnabled,
-          colors = IconButtonDefaults.iconButtonColors(
-            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-          ),
+        WithTooltip(
+          modifier = Modifier.padding(insetPadding),
+          text = stringResource(R.string.sort),
         ) {
-          Icon(Icons.AutoMirrored.Default.Sort, contentDescription = null)
+          IconButton(
+            onClick = onClickSort,
+            enabled = sortEnabled,
+            colors = IconButtonDefaults.iconButtonColors(
+              contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+            ),
+          ) {
+            Icon(Icons.AutoMirrored.Default.Sort, contentDescription = null)
+          }
         }
       }
     },
@@ -497,17 +507,21 @@ private fun SelectLogsAppBar(
       val insetPadding = WindowInsets.displayCutout
         .only(WindowInsetsSides.Left)
         .asPaddingValues()
-      IconButton(
+      WithTooltip(
         modifier = Modifier.padding(insetPadding),
-        onClick = onClickClose,
-        colors = IconButtonDefaults.iconButtonColors(
-          contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-        ),
+        text = stringResource(R.string.close)
       ) {
-        Icon(
-          imageVector = Icons.Default.Close,
-          contentDescription = null,
-        )
+        IconButton(
+          onClick = onClickClose,
+          colors = IconButtonDefaults.iconButtonColors(
+            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+          ),
+        ) {
+          Icon(
+            imageVector = Icons.Default.Close,
+            contentDescription = null,
+          )
+        }
       }
     },
     title = {
@@ -530,66 +544,86 @@ private fun SelectLogsAppBar(
           exit = fadeOut() + scaleOut(targetScale = 0.9f),
         ) {
           Row {
-            IconButton(
-              onClick = onClickRename,
-              colors = IconButtonDefaults.iconButtonColors(
-                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-              ),
+            WithTooltip(
+              text = stringResource(R.string.rename),
             ) {
-              Icon(
-                imageVector = Icons.Default.Edit,
-                contentDescription = null,
-              )
+              IconButton(
+                onClick = onClickRename,
+                colors = IconButtonDefaults.iconButtonColors(
+                  contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                ),
+              ) {
+                Icon(
+                  imageVector = Icons.Default.Edit,
+                  contentDescription = null,
+                )
+              }
             }
-            IconButton(
-              onClick = onClickExport,
-              colors = IconButtonDefaults.iconButtonColors(
-                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-              ),
+            WithTooltip(
+              text = stringResource(R.string.export),
             ) {
-              Icon(
-                imageVector = Icons.Default.SaveAs,
-                contentDescription = null,
-              )
+              IconButton(
+                onClick = onClickExport,
+                colors = IconButtonDefaults.iconButtonColors(
+                  contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                ),
+              ) {
+                Icon(
+                  imageVector = Icons.Default.SaveAs,
+                  contentDescription = null,
+                )
+              }
             }
-            IconButton(
-              onClick = onClickShare,
-              colors = IconButtonDefaults.iconButtonColors(
-                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-              ),
+            WithTooltip(
+              text = stringResource(R.string.share),
             ) {
-              Icon(
-                imageVector = Icons.Default.Share,
-                contentDescription = null,
-              )
+              IconButton(
+                onClick = onClickShare,
+                colors = IconButtonDefaults.iconButtonColors(
+                  contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                ),
+              ) {
+                Icon(
+                  imageVector = Icons.Default.Share,
+                  contentDescription = null,
+                )
+              }
             }
           }
         }
-        IconButton(
-          onClick = onClickSelectAll,
-          colors = IconButtonDefaults.iconButtonColors(
-            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-          ),
+        WithTooltip(
+          text = stringResource(R.string.select_all),
         ) {
-          Icon(
-            imageVector = Icons.Default.SelectAll,
-            contentDescription = null,
-          )
-        }
-        Box {
-          var showDropDownMenu by remember { mutableStateOf(false) }
           IconButton(
-            onClick = {
-              showDropDownMenu = true
-            },
+            onClick = onClickSelectAll,
             colors = IconButtonDefaults.iconButtonColors(
               contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
             ),
           ) {
             Icon(
-              imageVector = Icons.Default.MoreVert,
+              imageVector = Icons.Default.SelectAll,
               contentDescription = null,
             )
+          }
+        }
+        Box {
+          var showDropDownMenu by remember { mutableStateOf(false) }
+          WithTooltip(
+            text = stringResource(R.string.more_options),
+          ) {
+            IconButton(
+              onClick = {
+                showDropDownMenu = true
+              },
+              colors = IconButtonDefaults.iconButtonColors(
+                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+              ),
+            ) {
+              Icon(
+                imageVector = Icons.Default.MoreVert,
+                contentDescription = null,
+              )
+            }
           }
           DropdownMenu(
             expanded = showDropDownMenu,

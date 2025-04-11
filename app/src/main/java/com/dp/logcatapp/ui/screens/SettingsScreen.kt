@@ -81,6 +81,7 @@ import com.dp.logcatapp.R
 import com.dp.logcatapp.ui.common.Dialog
 import com.dp.logcatapp.ui.common.DialogButton
 import com.dp.logcatapp.ui.common.MaybeShowPermissionRequiredDialog
+import com.dp.logcatapp.ui.common.WithTooltip
 import com.dp.logcatapp.ui.screens.Preference.PreferenceRow
 import com.dp.logcatapp.ui.screens.Preference.SectionDivider
 import com.dp.logcatapp.ui.screens.Preference.SectionName
@@ -114,19 +115,23 @@ fun SettingsScreen(
           val insetPadding = WindowInsets.displayCutout
             .only(WindowInsetsSides.Left)
             .asPaddingValues()
-          IconButton(
+          WithTooltip(
             modifier = Modifier.padding(insetPadding),
-            onClick = {
-              context.findActivity()?.finish()
-            },
-            colors = IconButtonDefaults.iconButtonColors(
-              contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-            ),
+            text = stringResource(R.string.navigate_up),
           ) {
-            Icon(
-              imageVector = Icons.AutoMirrored.Default.ArrowBack,
-              contentDescription = null,
-            )
+            IconButton(
+              onClick = {
+                context.findActivity()?.finish()
+              },
+              colors = IconButtonDefaults.iconButtonColors(
+                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+              ),
+            ) {
+              Icon(
+                imageVector = Icons.AutoMirrored.Default.ArrowBack,
+                contentDescription = null,
+              )
+            }
           }
         },
         title = {

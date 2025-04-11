@@ -64,14 +64,18 @@ fun SearchLogsTopBar(
       val insetPadding = WindowInsets.displayCutout
         .only(WindowInsetsSides.Left)
         .asPaddingValues()
-      IconButton(
+      WithTooltip(
         modifier = Modifier.padding(insetPadding),
-        onClick = onClose,
-        colors = IconButtonDefaults.iconButtonColors(
-          contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-        ),
+        text = stringResource(R.string.close),
       ) {
-        Icon(imageVector = Icons.Default.Close, contentDescription = null)
+        IconButton(
+          onClick = onClose,
+          colors = IconButtonDefaults.iconButtonColors(
+            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+          ),
+        ) {
+          Icon(imageVector = Icons.Default.Close, contentDescription = null)
+        }
       }
     },
     title = {
@@ -126,23 +130,33 @@ fun SearchLogsTopBar(
       Row(
         modifier = Modifier.padding(insetPadding)
       ) {
-        IconButton(
-          onClick = onPrevious,
-          enabled = hitCount > 0,
-          colors = IconButtonDefaults.iconButtonColors(
-            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-          ),
+        WithTooltip(
+          modifier = Modifier.padding(insetPadding),
+          text = stringResource(R.string.previous),
         ) {
-          Icon(imageVector = Icons.Default.KeyboardArrowUp, contentDescription = null)
+          IconButton(
+            onClick = onPrevious,
+            enabled = hitCount > 0,
+            colors = IconButtonDefaults.iconButtonColors(
+              contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+            ),
+          ) {
+            Icon(imageVector = Icons.Default.KeyboardArrowUp, contentDescription = null)
+          }
         }
-        IconButton(
-          onClick = onNext,
-          enabled = hitCount > 0,
-          colors = IconButtonDefaults.iconButtonColors(
-            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-          ),
+        WithTooltip(
+          modifier = Modifier.padding(insetPadding),
+          text = stringResource(R.string.next),
         ) {
-          Icon(imageVector = Icons.Default.KeyboardArrowDown, contentDescription = null)
+          IconButton(
+            onClick = onNext,
+            enabled = hitCount > 0,
+            colors = IconButtonDefaults.iconButtonColors(
+              contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+            ),
+          ) {
+            Icon(imageVector = Icons.Default.KeyboardArrowDown, contentDescription = null)
+          }
         }
       }
     },

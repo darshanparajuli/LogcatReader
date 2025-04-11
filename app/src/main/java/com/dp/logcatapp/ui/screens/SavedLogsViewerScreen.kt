@@ -76,12 +76,13 @@ import com.dp.logcatapp.ui.common.SearchHitKey
 import com.dp.logcatapp.ui.common.SearchLogsTopBar
 import com.dp.logcatapp.ui.common.SearchResult.SearchHitInfo
 import com.dp.logcatapp.ui.common.SearchResult.SearchHitSpan
-import com.dp.logcatapp.util.rememberAppInfoByUidMap
+import com.dp.logcatapp.ui.common.WithTooltip
 import com.dp.logcatapp.ui.common.searchLogs
 import com.dp.logcatapp.ui.theme.AppTypography
 import com.dp.logcatapp.util.closeQuietly
 import com.dp.logcatapp.util.findActivity
 import com.dp.logcatapp.util.getFileNameFromUri
+import com.dp.logcatapp.util.rememberAppInfoByUidMap
 import com.dp.logcatapp.util.rememberBooleanSharedPreference
 import com.dp.logcatapp.util.showToast
 import kotlinx.coroutines.Dispatchers
@@ -372,19 +373,23 @@ private fun AppBar(
       val insetPadding = WindowInsets.displayCutout
         .only(WindowInsetsSides.Left)
         .asPaddingValues()
-      IconButton(
+      WithTooltip(
         modifier = Modifier.padding(insetPadding),
-        onClick = {
-          context.findActivity()?.finish()
-        },
-        colors = IconButtonDefaults.iconButtonColors(
-          contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-        ),
+        text = stringResource(R.string.navigate_up),
       ) {
-        Icon(
-          imageVector = Icons.AutoMirrored.Default.ArrowBack,
-          contentDescription = null,
-        )
+        IconButton(
+          onClick = {
+            context.findActivity()?.finish()
+          },
+          colors = IconButtonDefaults.iconButtonColors(
+            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+          ),
+        ) {
+          Icon(
+            imageVector = Icons.AutoMirrored.Default.ArrowBack,
+            contentDescription = null,
+          )
+        }
       }
     },
     title = {
@@ -408,21 +413,29 @@ private fun AppBar(
       Row(
         modifier = Modifier.displayCutoutPadding()
       ) {
-        IconButton(
-          onClick = onClickSearch,
-          colors = IconButtonDefaults.iconButtonColors(
-            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-          ),
+        WithTooltip(
+          text = stringResource(R.string.search),
         ) {
-          Icon(Icons.Default.Search, contentDescription = null)
+          IconButton(
+            onClick = onClickSearch,
+            colors = IconButtonDefaults.iconButtonColors(
+              contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+            ),
+          ) {
+            Icon(Icons.Default.Search, contentDescription = null)
+          }
         }
-        IconButton(
-          onClick = onShowDropdownMenu,
-          colors = IconButtonDefaults.iconButtonColors(
-            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-          ),
+        WithTooltip(
+          text = stringResource(R.string.more_options),
         ) {
-          Icon(Icons.Default.MoreVert, contentDescription = null)
+          IconButton(
+            onClick = onShowDropdownMenu,
+            colors = IconButtonDefaults.iconButtonColors(
+              contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+            ),
+          ) {
+            Icon(Icons.Default.MoreVert, contentDescription = null)
+          }
         }
         DropdownMenu(
           expanded = showDropDownMenu,

@@ -143,6 +143,7 @@ import com.dp.logcatapp.ui.common.SearchLogsTopBar
 import com.dp.logcatapp.ui.common.SearchResult.SearchHitInfo
 import com.dp.logcatapp.ui.common.SearchResult.SearchHitSpan
 import com.dp.logcatapp.ui.common.ToggleableLogItem
+import com.dp.logcatapp.ui.common.WithTooltip
 import com.dp.logcatapp.ui.common.searchLogs
 import com.dp.logcatapp.ui.theme.AppTypography
 import com.dp.logcatapp.util.AppInfo
@@ -1183,58 +1184,88 @@ private fun AppBar(
       Row(
         modifier = Modifier.displayCutoutPadding()
       ) {
-        IconButton(
-          onClick = onClickSearch,
-          colors = IconButtonDefaults.iconButtonColors(
-            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-          ),
+        WithTooltip(
+          text = stringResource(R.string.search)
         ) {
-          Icon(Icons.Default.Search, contentDescription = null)
-        }
-        IconButton(
-          onClick = onClickPause,
-          enabled = pauseEnabled,
-          colors = IconButtonDefaults.iconButtonColors(
-            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-          ),
-        ) {
-          if (isPaused) {
-            Icon(Icons.Default.PlayArrow, contentDescription = null)
-          } else {
-            Icon(Icons.Default.Pause, contentDescription = null)
-          }
-        }
-
-        IconButton(
-          onClick = onClickRecord,
-          enabled = recordEnabled,
-          colors = IconButtonDefaults.iconButtonColors(
-            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-          ),
-        ) {
-          when (recordStatus) {
-            RecordStatus.Idle -> {
-              Icon(Icons.Default.FiberManualRecord, contentDescription = null)
-            }
-            RecordStatus.RecordingInProgress -> {
-              Icon(Icons.Default.Stop, contentDescription = null)
-            }
-            RecordStatus.SaveRecordedLogs -> {
-              CircularProgressIndicator(
-                modifier = Modifier.size(20.dp),
-                strokeWidth = 2.dp,
-              )
-            }
-          }
-        }
-        Box {
           IconButton(
-            onClick = onShowDropdownMenu,
+            onClick = onClickSearch,
             colors = IconButtonDefaults.iconButtonColors(
               contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
             ),
           ) {
-            Icon(Icons.Default.MoreVert, contentDescription = null)
+            Icon(Icons.Default.Search, contentDescription = null)
+          }
+        }
+        WithTooltip(
+          text = if (isPaused) {
+            stringResource(R.string.resume)
+          } else {
+            stringResource(R.string.pause)
+          }
+        ) {
+          IconButton(
+            onClick = onClickPause,
+            enabled = pauseEnabled,
+            colors = IconButtonDefaults.iconButtonColors(
+              contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+            ),
+          ) {
+            if (isPaused) {
+              Icon(Icons.Default.PlayArrow, contentDescription = null)
+            } else {
+              Icon(Icons.Default.Pause, contentDescription = null)
+            }
+          }
+        }
+
+        WithTooltip(
+          text = when (recordStatus) {
+            RecordStatus.Idle -> {
+              stringResource(R.string.start_recording)
+            }
+            RecordStatus.RecordingInProgress -> {
+              stringResource(R.string.stop_recording)
+            }
+            RecordStatus.SaveRecordedLogs -> {
+              stringResource(R.string.saving_recorded_logs)
+            }
+          }
+        ) {
+          IconButton(
+            onClick = onClickRecord,
+            enabled = recordEnabled,
+            colors = IconButtonDefaults.iconButtonColors(
+              contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+            ),
+          ) {
+            when (recordStatus) {
+              RecordStatus.Idle -> {
+                Icon(Icons.Default.FiberManualRecord, contentDescription = null)
+              }
+              RecordStatus.RecordingInProgress -> {
+                Icon(Icons.Default.Stop, contentDescription = null)
+              }
+              RecordStatus.SaveRecordedLogs -> {
+                CircularProgressIndicator(
+                  modifier = Modifier.size(20.dp),
+                  strokeWidth = 2.dp,
+                )
+              }
+            }
+          }
+        }
+        Box {
+          WithTooltip(
+            text = stringResource(R.string.more_options),
+          ) {
+            IconButton(
+              onClick = onShowDropdownMenu,
+              colors = IconButtonDefaults.iconButtonColors(
+                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+              ),
+            ) {
+              Icon(Icons.Default.MoreVert, contentDescription = null)
+            }
           }
           DropdownMenu(
             expanded = showDropDownMenu,

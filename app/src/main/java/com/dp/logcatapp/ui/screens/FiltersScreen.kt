@@ -1,5 +1,6 @@
 package com.dp.logcatapp.ui.screens
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -88,6 +89,7 @@ import com.dp.logcat.LogcatSession
 import com.dp.logcatapp.R
 import com.dp.logcatapp.db.FilterInfo
 import com.dp.logcatapp.db.LogcatReaderDatabase
+import com.dp.logcatapp.ui.common.WithTooltip
 import com.dp.logcatapp.ui.theme.AppTypography
 import com.dp.logcatapp.util.AppInfo
 import com.dp.logcatapp.util.findActivity
@@ -98,7 +100,10 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@OptIn(
+  ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class,
+  ExperimentalFoundationApi::class
+)
 @Composable
 fun FiltersScreen(
   modifier: Modifier,
@@ -125,16 +130,20 @@ fun FiltersScreen(
           val insetPadding = WindowInsets.displayCutout
             .only(WindowInsetsSides.Left)
             .asPaddingValues()
-          IconButton(
+          WithTooltip(
             modifier = Modifier.padding(insetPadding),
-            onClick = {
-              context.findActivity()?.finish()
-            },
-            colors = IconButtonDefaults.iconButtonColors(
-              contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-            ),
+            text = stringResource(R.string.navigate_up),
           ) {
-            Icon(imageVector = Icons.AutoMirrored.Default.ArrowBack, contentDescription = null)
+            IconButton(
+              onClick = {
+                context.findActivity()?.finish()
+              },
+              colors = IconButtonDefaults.iconButtonColors(
+                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+              ),
+            ) {
+              Icon(imageVector = Icons.AutoMirrored.Default.ArrowBack, contentDescription = null)
+            }
           }
         },
         title = {
@@ -151,21 +160,29 @@ fun FiltersScreen(
           Row(
             modifier = Modifier.padding(insetPadding)
           ) {
-            IconButton(
-              onClick = { showPackageSelector = true },
-              colors = IconButtonDefaults.iconButtonColors(
-                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-              ),
+            WithTooltip(
+              text = stringResource(R.string.filter_by_apps)
             ) {
-              Icon(Icons.Default.Apps, contentDescription = null)
+              IconButton(
+                onClick = { showPackageSelector = true },
+                colors = IconButtonDefaults.iconButtonColors(
+                  contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                ),
+              ) {
+                Icon(Icons.Default.Apps, contentDescription = null)
+              }
             }
-            IconButton(
-              onClick = { showDropDownMenu = true },
-              colors = IconButtonDefaults.iconButtonColors(
-                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-              ),
+            WithTooltip(
+              text = stringResource(R.string.more_options)
             ) {
-              Icon(Icons.Default.MoreVert, contentDescription = null)
+              IconButton(
+                onClick = { showDropDownMenu = true },
+                colors = IconButtonDefaults.iconButtonColors(
+                  contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                ),
+              ) {
+                Icon(Icons.Default.MoreVert, contentDescription = null)
+              }
             }
             DropdownMenu(
               expanded = showDropDownMenu,
