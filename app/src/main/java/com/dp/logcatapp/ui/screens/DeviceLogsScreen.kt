@@ -130,7 +130,9 @@ import com.dp.logcatapp.activities.SavedLogsViewerActivity
 import com.dp.logcatapp.activities.SettingsActivity
 import com.dp.logcatapp.db.FilterInfo
 import com.dp.logcatapp.db.LogcatReaderDatabase
+import com.dp.logcatapp.db.RegexFilterType
 import com.dp.logcatapp.db.SavedLogInfo
+import com.dp.logcatapp.db.regexFilterTypes
 import com.dp.logcatapp.services.LogcatService
 import com.dp.logcatapp.services.LogcatService.LogcatSessionStatus
 import com.dp.logcatapp.services.getService
@@ -1690,10 +1692,40 @@ private class LogFilter(
   private val filterInfo: FilterInfo,
   private val appInfoMap: Map<String, AppInfo>?,
 ) : Filter {
+  private val regexEnabledTypes = filterInfo.regexFilterTypes
+  private val messageRegex = filterInfo.message?.let { text ->
+    if (RegexFilterType.Message in regexEnabledTypes) {
+      text.toRegex()
+    } else {
+      null
+    }
+  }
+  private val tagRegex = filterInfo.tag?.let { text ->
+    if (RegexFilterType.Tag in regexEnabledTypes) {
+      text.toRegex()
+    } else {
+      null
+    }
+  }
+  private val packageNameRegex = filterInfo.packageName?.let { text ->
+    if (RegexFilterType.PackageName in regexEnabledTypes) {
+      text.toRegex()
+    } else {
+      null
+    }
+  }
   private val priorities: Set<String> = if (!filterInfo.logLevels.isNullOrEmpty()) {
     filterInfo.logLevels.split(",").toSet()
   } else {
     emptySet()
+  }
+
+  private fun matches(regex: Regex?, target: String): Boolean {
+    return if (regex == null) {
+      true
+    } else {
+      regex.matches(target)
+    }
   }
 
   private fun matches(keyword: String?, target: String): Boolean {
@@ -1728,19 +1760,44 @@ private class LogFilter(
     }
 
     if (!uid.isDigitsOnly()) {
-      return uid.contains(packageName, ignoreCase = true)
+      if (packageNameRegex != null) {
+        return packageNameRegex.matches(uid)
+      } else {
+        return uid.contains(packageName, ignoreCase = true)
+      }
     }
 
-    return appInfoMap[log.uid]?.packageName.orEmpty()
-      .contains(packageName, ignoreCase = true)
+    return appInfoMap[log.uid]?.packageName.orEmpty().let { it ->
+      if (packageNameRegex != null) {
+        packageNameRegex.matches(it)
+      } else {
+        it.contains(packageName, ignoreCase = true)
+      }
+    }
   }
 
   override fun apply(log: Log): Boolean {
-    if (!matches(keyword = filterInfo.tag, target = log.tag)) {
-      return false
+    if (tagRegex != null) {
+      if (!matches(regex = tagRegex, target = log.tag)) {
+        return false
+      }
+    } else {
+      if (!matches(keyword = filterInfo.tag, target = log.tag)) {
+        return false
+      }
     }
 
-    if (!matches(keyword = filterInfo.message, target = log.msg)) {
+    if (messageRegex != null) {
+      if (!matches(regex = messageRegex, target = log.msg)) {
+        return false
+      }
+    } else {
+      if (!matches(keyword = filterInfo.message, target = log.msg)) {
+        return false
+      }
+    }
+
+    if (!matchesPackageName(log)) {
       return false
     }
 
@@ -1753,10 +1810,6 @@ private class LogFilter(
     }
 
     if (!matchesPriority(log)) {
-      return false
-    }
-
-    if (!matchesPackageName(log)) {
       return false
     }
 

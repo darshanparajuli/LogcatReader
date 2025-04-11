@@ -130,6 +130,7 @@ abstract class LogcatReaderDatabase : RoomDatabase() {
               `log_levels` TEXT,
               `exclude` INTEGER NOT NULL,
               `enabled` INTEGER NOT NULL,
+              `useRegex` TEXT,
               PRIMARY KEY (`id`)
             )
           """.trimIndent()
@@ -138,9 +139,9 @@ abstract class LogcatReaderDatabase : RoomDatabase() {
           """
             INSERT OR IGNORE INTO `filters_new` (
               `id`, `tag`, `message`, `package_name`, `pid`, `tid`, `log_levels`, `exclude`, 
-              `enabled`
+              `enabled`, `regex_enabled_filter_types`
             ) 
-            SELECT `id`, `tag`, `message`, null, `pid`, `tid`, `log_levels`, `exclude`, true 
+            SELECT `id`, `tag`, `message`, null, `pid`, `tid`, `log_levels`, `exclude`, true, null
             FROM `filters`
           """.trimIndent()
         )

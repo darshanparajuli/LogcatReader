@@ -22,7 +22,30 @@ data class FilterInfo(
   @ColumnInfo(name = "log_levels") val logLevels: String? = null,
   @ColumnInfo(name = "exclude") val exclude: Boolean = false,
   @ColumnInfo(name = "enabled") val enabled: Boolean = true,
+  // Comma separated values of `RegexFilterType`
+  @ColumnInfo(name = "regex_enabled_filter_types") val regexEnabledFilterTypes: String? = null,
 )
+
+fun FilterInfo.enableRegexFor(
+  vararg types: RegexFilterType
+): FilterInfo {
+  return copy(
+    regexEnabledFilterTypes = types.joinToString(separator = ",") { it.ordinal.toString() },
+  )
+}
+
+val FilterInfo.regexFilterTypes: Set<RegexFilterType>
+  get() = regexEnabledFilterTypes?.split(",")
+    ?.mapNotNull { it.toIntOrNull() }
+    ?.map { RegexFilterType.entries[it] }
+    ?.toSet()
+    .orEmpty()
+
+enum class RegexFilterType {
+  Tag,
+  Message,
+  PackageName,
+}
 
 @Dao
 interface FilterDao {

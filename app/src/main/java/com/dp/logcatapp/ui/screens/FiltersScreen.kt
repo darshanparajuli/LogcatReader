@@ -64,6 +64,8 @@ import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -99,8 +101,12 @@ import com.dp.logcat.LogcatSession
 import com.dp.logcatapp.R
 import com.dp.logcatapp.db.FilterInfo
 import com.dp.logcatapp.db.LogcatReaderDatabase
+import com.dp.logcatapp.db.RegexFilterType
+import com.dp.logcatapp.db.enableRegexFor
+import com.dp.logcatapp.db.regexFilterTypes
 import com.dp.logcatapp.ui.common.WithTooltip
 import com.dp.logcatapp.ui.theme.AppTypography
+import com.dp.logcatapp.ui.theme.Shapes
 import com.dp.logcatapp.util.AppInfo
 import com.dp.logcatapp.util.findActivity
 import com.dp.logcatapp.util.rememberAppInfoByUidMap
@@ -312,6 +318,7 @@ fun FiltersScreen(
           LogLevel.entries.find { it.name.first().toString() == level }
         }?.toSet().orEmpty(),
         initialEnabled = filterInfo.enabled,
+        initialRegexEnabledTypes = filterInfo.regexFilterTypes,
         onDismiss = { showEditFilterDialog = null },
         onSave = { data ->
           showEditFilterDialog = null
@@ -324,6 +331,7 @@ fun FiltersScreen(
           val packageName = data.packageName
           val enabled = data.enabled
           val selectedLogLevels = data.selectedLogLevels
+          val regexEnabledTypes = data.regexEnabledTypes
 
           val filterInfo = filterInfo.copy(
             tag = tag.takeIf { it.isNotEmpty() },
@@ -340,7 +348,7 @@ fun FiltersScreen(
             },
             exclude = exclude,
             enabled = enabled ?: filterInfo.enabled,
-          )
+          ).enableRegexFor(*regexEnabledTypes.toTypedArray())
 
           coroutineScope.launch {
             withContext(Dispatchers.IO) {
@@ -373,6 +381,7 @@ fun FiltersScreen(
           val exclude = data.exclude
           val packageName = data.packageName
           val selectedLogLevels = data.selectedLogLevels
+          val regexEnabledTypes = data.regexEnabledTypes
 
           val filterInfo = FilterInfo(
             tag = tag.takeIf { it.isNotEmpty() },
@@ -388,7 +397,7 @@ fun FiltersScreen(
                 .joinToString(separator = ",")
             },
             exclude = exclude,
-          )
+          ).enableRegexFor(*regexEnabledTypes.toTypedArray())
 
           coroutineScope.launch {
             withContext(Dispatchers.IO) {
@@ -638,6 +647,7 @@ private data class FilterData(
   val selectedLogLevels: Set<LogLevel>,
   val exclude: Boolean,
   val enabled: Boolean?,
+  val regexEnabledTypes: Set<RegexFilterType>,
 )
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
@@ -654,6 +664,7 @@ private fun AddOrEditFilterSheet(
   initialExclude: Boolean? = null,
   initialLogLevels: Set<LogLevel> = emptySet(),
   initialEnabled: Boolean? = null,
+  initialRegexEnabledTypes: Set<RegexFilterType> = emptySet(),
 ) {
   val selectedLogLevels = remember {
     mutableStateMapOf<LogLevel, Boolean>().apply {
@@ -669,6 +680,7 @@ private fun AddOrEditFilterSheet(
   var tid by remember { mutableStateOf(initialTid.orEmpty()) }
   var exclude by remember { mutableStateOf(initialExclude ?: false) }
   var enabledState by remember { mutableStateOf(initialEnabled) }
+  var regexEnabledTypes by remember { mutableStateOf(initialRegexEnabledTypes) }
   ModalBottomSheet(
     modifier = modifier.statusBarsPadding(),
     sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
@@ -701,6 +713,7 @@ private fun AddOrEditFilterSheet(
                 selectedLogLevels = selectedLogLevels.filterValues { it }.keys.toSet(),
                 exclude = exclude,
                 enabled = enabledState,
+                regexEnabledTypes = regexEnabledTypes,
               )
             )
           },
@@ -718,35 +731,92 @@ private fun AddOrEditFilterSheet(
         }
       }
       Spacer(modifier = Modifier.height(16.dp))
-      InputField(
-        modifier = Modifier
-          .fillMaxWidth()
-          .padding(horizontal = 16.dp),
-        label = stringResource(R.string.keyword),
-        value = keyword,
-        onValueChange = { keyword = it },
-      )
+      Row(
+        modifier = Modifier.padding(horizontal = 16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+      ) {
+        InputField(
+          modifier = Modifier.weight(1f),
+          label = stringResource(R.string.keyword),
+          value = keyword,
+          onValueChange = { keyword = it },
+        )
+        SingleChoiceSegmentedButtonRow {
+          SegmentedButton(
+            selected = RegexFilterType.Message in regexEnabledTypes,
+            onClick = {
+              if (RegexFilterType.Message in regexEnabledTypes) {
+                regexEnabledTypes -= RegexFilterType.Message
+              } else {
+                regexEnabledTypes += RegexFilterType.Message
+              }
+            },
+            shape = Shapes.medium,
+          ) {
+            Text(".*")
+          }
+        }
+      }
       Spacer(modifier = Modifier.height(16.dp))
-      InputField(
-        modifier = Modifier
-          .fillMaxWidth()
-          .padding(horizontal = 16.dp),
-        label = stringResource(R.string.tag),
-        maxLines = 1,
-        value = tag,
-        onValueChange = { tag = it },
-      )
+      Row(
+        modifier = Modifier.padding(horizontal = 16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+      ) {
+        InputField(
+          modifier = Modifier.weight(1f),
+          label = stringResource(R.string.tag),
+          maxLines = 1,
+          value = tag,
+          onValueChange = { tag = it },
+        )
+        SingleChoiceSegmentedButtonRow {
+          SegmentedButton(
+            selected = RegexFilterType.Tag in regexEnabledTypes,
+            onClick = {
+              if (RegexFilterType.Tag in regexEnabledTypes) {
+                regexEnabledTypes -= RegexFilterType.Tag
+              } else {
+                regexEnabledTypes += RegexFilterType.Tag
+              }
+            },
+            shape = Shapes.medium,
+          ) {
+            Text(".*")
+          }
+        }
+      }
       Spacer(modifier = Modifier.height(16.dp))
       val uidSupported by LogcatSession.uidOptionSupported.collectAsState()
       if (uidSupported == true) {
-        InputField(
-          modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp),
-          label = stringResource(R.string.package_name),
-          value = packageName,
-          onValueChange = { packageName = it },
-        )
+        Row(
+          modifier = Modifier.padding(horizontal = 16.dp),
+          verticalAlignment = Alignment.CenterVertically,
+          horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+          InputField(
+            modifier = Modifier.weight(1f),
+            label = stringResource(R.string.package_name),
+            value = packageName,
+            onValueChange = { packageName = it },
+          )
+          SingleChoiceSegmentedButtonRow {
+            SegmentedButton(
+              selected = RegexFilterType.PackageName in regexEnabledTypes,
+              onClick = {
+                if (RegexFilterType.PackageName in regexEnabledTypes) {
+                  regexEnabledTypes -= RegexFilterType.PackageName
+                } else {
+                  regexEnabledTypes += RegexFilterType.PackageName
+                }
+              },
+              shape = Shapes.medium,
+            ) {
+              Text(".*")
+            }
+          }
+        }
         Spacer(modifier = Modifier.height(16.dp))
       }
       InputField(
@@ -1116,7 +1186,7 @@ private fun InputField(
       focusedIndicatorColor = Color.Transparent,
       unfocusedIndicatorColor = Color.Transparent,
     ),
-    shape = RoundedCornerShape(corner = CornerSize(8.dp)),
+    shape = Shapes.medium,
     keyboardOptions = KeyboardOptions.Default.copy(
       keyboardType = keyboardType,
     ),
