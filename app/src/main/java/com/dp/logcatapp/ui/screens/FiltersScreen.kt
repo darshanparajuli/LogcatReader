@@ -95,8 +95,6 @@ import com.dp.logcatapp.util.AppInfo
 import com.dp.logcatapp.util.findActivity
 import com.dp.logcatapp.util.rememberAppInfoByUidMap
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -112,6 +110,7 @@ fun FiltersScreen(
   val context = LocalContext.current
   val db = remember(context) { LogcatReaderDatabase.getInstance(context) }
 
+  val appInfoMap by rememberUpdatedState(rememberAppInfoByUidMap())
   val filters by db.filterDao()
     .filters()
     .collectAsState(null)
@@ -340,6 +339,7 @@ fun FiltersScreen(
         filters.orEmpty().mapNotNull { it.packageName }.toSet()
       }
       PackageSelectorSheet(
+        installedApps = appInfoMap?.values?.toList().orEmpty(),
         initialSelected = currentPackageNameFilters,
         onDismiss = {
           showPackageSelector = false
@@ -609,6 +609,7 @@ private fun AddFilterSheet(
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 private fun PackageSelectorSheet(
+  installedApps: List<AppInfo>,
   initialSelected: Set<String>,
   onDismiss: () -> Unit,
   onSelected: (Set<String>) -> Unit,
@@ -622,31 +623,25 @@ private fun PackageSelectorSheet(
     onDismissRequest = onDismiss,
     containerColor = MaterialTheme.colorScheme.surfaceContainer,
   ) {
-    val appInfoMap by rememberUpdatedState(rememberAppInfoByUidMap())
     var filtered by remember { mutableStateOf<List<AppInfo>>(emptyList()) }
     var searchQuery by remember { mutableStateOf("") }
 
-    LaunchedEffect(Unit) {
-      snapshotFlow { appInfoMap }
-        .filterNotNull()
-        .map { info -> info.values }
-        .collect { apps ->
-          snapshotFlow { searchQuery }
-            .collect { query ->
-              if (query.isEmpty()) {
-                filtered = apps
-                  .sortedBy { it.packageName }
-                  .sortedBy { it.name }
-              } else {
-                filtered = apps
-                  .filter { info ->
-                    info.packageName.startsWith(query, ignoreCase = true) ||
-                      info.name?.startsWith(query, ignoreCase = true) == true
-                  }
-                  .sortedBy { it.packageName }
-                  .sortedBy { it.name }
+    LaunchedEffect(installedApps) {
+      snapshotFlow { searchQuery }
+        .collect { query ->
+          if (query.isEmpty()) {
+            filtered = installedApps
+              .sortedBy { it.packageName }
+              .sortedBy { it.name }
+          } else {
+            filtered = installedApps
+              .filter { info ->
+                info.packageName.startsWith(query, ignoreCase = true) ||
+                  info.name?.startsWith(query, ignoreCase = true) == true
               }
-            }
+              .sortedBy { it.packageName }
+              .sortedBy { it.name }
+          }
         }
     }
 
