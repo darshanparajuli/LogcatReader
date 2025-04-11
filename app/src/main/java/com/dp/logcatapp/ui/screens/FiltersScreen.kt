@@ -160,16 +160,19 @@ fun FiltersScreen(
           Row(
             modifier = Modifier.padding(insetPadding)
           ) {
-            WithTooltip(
-              text = stringResource(R.string.filter_by_apps)
-            ) {
-              IconButton(
-                onClick = { showPackageSelector = true },
-                colors = IconButtonDefaults.iconButtonColors(
-                  contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                ),
+            val uidOptionSupported by LogcatSession.uidOptionSupported.collectAsState()
+            if (uidOptionSupported == true) {
+              WithTooltip(
+                text = stringResource(R.string.filter_by_apps)
               ) {
-                Icon(Icons.Default.Apps, contentDescription = null)
+                IconButton(
+                  onClick = { showPackageSelector = true },
+                  colors = IconButtonDefaults.iconButtonColors(
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                  ),
+                ) {
+                  Icon(Icons.Default.Apps, contentDescription = null)
+                }
               }
             }
             WithTooltip(
