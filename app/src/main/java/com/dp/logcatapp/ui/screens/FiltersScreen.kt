@@ -706,6 +706,11 @@ private fun PackageSelectorSheet(
                 selected += app.packageName
               }
             },
+          overlineContent = if (app.isSystem) {
+            {
+              Text(stringResource(R.string.system_app))
+            }
+          } else null,
           leadingContent = {
             AsyncImage(
               model = app.icon,

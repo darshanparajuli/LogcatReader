@@ -6,6 +6,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
 import android.content.SharedPreferences
+import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.content.pm.PackageManager.GET_META_DATA
 import android.content.res.Configuration
@@ -176,6 +177,7 @@ data class AppInfo(
   // This is 0 if not available.
   val enabled: Boolean,
   val icon: Drawable,
+  val isSystem: Boolean,
 )
 
 @WorkerThread
@@ -188,6 +190,7 @@ fun Context.getAppInfo(): Map<String, AppInfo> {
       name = info.loadLabel(packageManager)?.toString(),
       enabled = info.enabled,
       icon = info.loadIcon(packageManager),
+      isSystem = (info.flags and ApplicationInfo.FLAG_SYSTEM) != 0,
     )
   }
   return map
