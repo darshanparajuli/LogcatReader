@@ -109,9 +109,7 @@ class LogcatSession(
     withContext(Dispatchers.Default) {
       lock.withLock {
         trySend(allLogs.filtered())
-        onNewLog = { logs ->
-          trySend(logs.filtered())
-        }
+        onNewLog = ::trySend
       }
     }
     awaitClose {
@@ -214,10 +212,10 @@ class LogcatSession(
 
         // If recording is enabled, then add to record buffer.
         if (record) {
-          recordBuffer += pending
+          recordBuffer += pending.filtered()
         }
 
-        onNewLog?.invoke(pending)
+        onNewLog?.invoke(pending.filtered())
       }
       Thread.sleep(pollIntervalMs)
     }
