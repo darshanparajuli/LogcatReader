@@ -238,7 +238,7 @@ fun FiltersScreen(
     val filters = filters
 
     showEditFilterDialog?.let { filterInfo ->
-      AddFilterSheet(
+      AddOrEditFilterSheet(
         initialTag = filterInfo.tag,
         initialKeyword = filterInfo.message,
         initialPackageName = filterInfo.packageName,
@@ -248,6 +248,7 @@ fun FiltersScreen(
         initialLogLevels = filterInfo.logLevels?.split(",")?.mapNotNull { level ->
           LogLevel.entries.find { it.name.first().toString() == level }
         }?.toSet().orEmpty(),
+        initialEnabled = filterInfo.enabled,
         onDismiss = { showEditFilterDialog = null },
         onSave = { data ->
           showEditFilterDialog = null
@@ -258,6 +259,7 @@ fun FiltersScreen(
           val tid = data.tid
           val exclude = data.exclude
           val packageName = data.packageName
+          val enabled = data.enabled
           val selectedLogLevels = data.selectedLogLevels
 
           val filterInfo = filterInfo.copy(
@@ -274,6 +276,7 @@ fun FiltersScreen(
                 .joinToString(separator = ",")
             },
             exclude = exclude,
+            enabled = enabled ?: filterInfo.enabled,
           )
 
           coroutineScope.launch {
@@ -285,7 +288,7 @@ fun FiltersScreen(
       )
     }
     if (showAddFilterDialog) {
-      AddFilterSheet(
+      AddOrEditFilterSheet(
         initialTag = prepopulateFilterInfo?.log?.tag,
         initialPackageName = prepopulateFilterInfo?.packageName,
         initialPid = prepopulateFilterInfo?.log?.pid,
@@ -401,6 +404,7 @@ fun FiltersScreen(
             priorities = item.logLevels,
             exclude = item.exclude,
             packageName = item.packageName,
+            enabled = item.enabled,
             onClickRemove = {
               coroutineScope.launch {
                 val filterDao = db.filterDao()
@@ -427,11 +431,12 @@ private data class FilterData(
   val packageName: String,
   val selectedLogLevels: Set<LogLevel>,
   val exclude: Boolean,
+  val enabled: Boolean?,
 )
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
-private fun AddFilterSheet(
+private fun AddOrEditFilterSheet(
   onDismiss: () -> Unit,
   onSave: (FilterData) -> Unit,
   modifier: Modifier = Modifier,
@@ -442,6 +447,7 @@ private fun AddFilterSheet(
   initialTid: String? = null,
   initialExclude: Boolean? = null,
   initialLogLevels: Set<LogLevel> = emptySet(),
+  initialEnabled: Boolean? = null,
 ) {
   val selectedLogLevels = remember {
     mutableStateMapOf<LogLevel, Boolean>().apply {
@@ -456,6 +462,7 @@ private fun AddFilterSheet(
   var pid by remember { mutableStateOf(initialPid.orEmpty()) }
   var tid by remember { mutableStateOf(initialTid.orEmpty()) }
   var exclude by remember { mutableStateOf(initialExclude ?: false) }
+  var enabledState by remember { mutableStateOf(initialEnabled) }
   ModalBottomSheet(
     modifier = modifier.statusBarsPadding(),
     sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
@@ -487,6 +494,7 @@ private fun AddFilterSheet(
                 packageName = packageName,
                 selectedLogLevels = selectedLogLevels.filterValues { it }.keys.toSet(),
                 exclude = exclude,
+                enabled = enabledState,
               )
             )
           },
@@ -603,6 +611,27 @@ private fun AddFilterSheet(
           containerColor = MaterialTheme.colorScheme.surfaceContainer,
         )
       )
+      enabledState?.let { enabled ->
+        ListItem(
+          modifier = Modifier
+            .fillMaxWidth()
+            .clickable {
+              enabledState = !enabled
+            },
+          headlineContent = {
+            Text("Enabled")
+          },
+          trailingContent = {
+            Checkbox(
+              checked = enabled,
+              onCheckedChange = null,
+            )
+          },
+          colors = ListItemDefaults.colors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainer,
+          )
+        )
+      }
     }
   }
 }
@@ -754,6 +783,7 @@ private fun FilterItem(
   tid: String?,
   priorities: String?,
   exclude: Boolean,
+  enabled: Boolean,
   onClickRemove: () -> Unit,
 ) {
   ListItem(
@@ -834,6 +864,11 @@ private fun FilterItem(
     overlineContent = if (exclude) {
       {
         Text(stringResource(R.string.exclude))
+      }
+    } else null,
+    supportingContent = if (!enabled) {
+      {
+        Text("Disabled")
       }
     } else null,
     trailingContent = {

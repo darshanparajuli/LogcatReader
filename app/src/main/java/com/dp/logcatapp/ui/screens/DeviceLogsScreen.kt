@@ -275,6 +275,7 @@ fun DeviceLogsScreen(
             }
 
             db.filterDao().filters()
+              .map { filters -> filters.filter { it.enabled } }
               .collectLatest { filters ->
                 appliedFilters = filters.isNotEmpty()
                 val infoMap = if (LogcatSession.isUidOptionSupported()) {

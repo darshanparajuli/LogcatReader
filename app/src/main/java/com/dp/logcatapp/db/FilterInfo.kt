@@ -21,6 +21,7 @@ data class FilterInfo(
   @ColumnInfo(name = "package_name") val packageName: String? = null,
   @ColumnInfo(name = "log_levels") val logLevels: String? = null,
   @ColumnInfo(name = "exclude") val exclude: Boolean = false,
+  @ColumnInfo(name = "enabled") val enabled: Boolean = true,
 )
 
 @Dao

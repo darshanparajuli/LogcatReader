@@ -140,9 +140,10 @@ abstract class LogcatReaderDatabase : RoomDatabase() {
         db.execSQL(
           """
             INSERT OR IGNORE INTO `filters_new` (
-              `id`, `tag`, `message`, `package_name`, `pid`, `tid`, `log_levels`, `exclude`
+              `id`, `tag`, `message`, `package_name`, `pid`, `tid`, `log_levels`, `exclude`, 
+              `enabled`
             ) 
-            SELECT `id`, `tag`, `message`, null, `pid`, `tid`, `log_levels`, `exclude` 
+            SELECT `id`, `tag`, `message`, null, `pid`, `tid`, `log_levels`, `exclude`, true 
             FROM `filters`
           """.trimIndent()
         )
