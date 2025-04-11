@@ -22,6 +22,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.room.util.TableInfo
 import com.dp.logcatapp.ui.theme.AppTypography
 
 data class DialogButton(
@@ -30,6 +31,11 @@ data class DialogButton(
   val onClick: () -> Unit,
 )
 
+enum class DialogButtonArrangement {
+  Stack,
+  Row
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Dialog(
@@ -37,6 +43,7 @@ fun Dialog(
   modifier: Modifier = Modifier,
   primaryButton: DialogButton? = null,
   secondaryButton: DialogButton? = null,
+  arrangement: DialogButtonArrangement = DialogButtonArrangement.Row,
   title: String? = null,
   icon: @Composable (() -> Unit)? = null,
   content: @Composable (ColumnScope.() -> Unit)? = null,
@@ -93,26 +100,54 @@ fun Dialog(
           }
         }
         if (secondaryButton != null || primaryButton != null) {
-          Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp, alignment = Alignment.End),
-            verticalAlignment = Alignment.CenterVertically,
-          ) {
-            CompositionLocalProvider(LocalTextStyle provides AppTypography.bodyMedium) {
-              if (secondaryButton != null) {
-                FilledTonalButton(
-                  onClick = secondaryButton.onClick,
-                  enabled = secondaryButton.enabled,
-                ) {
-                  Text(secondaryButton.text)
+          if (arrangement == DialogButtonArrangement.Row) {
+            Row(
+              modifier = Modifier.fillMaxWidth(),
+              horizontalArrangement = Arrangement.spacedBy(8.dp, alignment = Alignment.End),
+              verticalAlignment = Alignment.CenterVertically,
+            ) {
+              CompositionLocalProvider(LocalTextStyle provides AppTypography.bodyMedium) {
+                if (secondaryButton != null) {
+                  FilledTonalButton(
+                    onClick = secondaryButton.onClick,
+                    enabled = secondaryButton.enabled,
+                  ) {
+                    Text(secondaryButton.text)
+                  }
+                }
+                if (primaryButton != null) {
+                  Button(
+                    onClick = primaryButton.onClick,
+                    enabled = primaryButton.enabled,
+                  ) {
+                    Text(primaryButton.text)
+                  }
                 }
               }
-              if (primaryButton != null) {
-                Button(
-                  onClick = primaryButton.onClick,
-                  enabled = primaryButton.enabled,
-                ) {
-                  Text(primaryButton.text)
+            }
+          } else {
+            Column(
+              modifier = Modifier.fillMaxWidth(),
+              verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+              CompositionLocalProvider(LocalTextStyle provides AppTypography.bodyMedium) {
+                if (primaryButton != null) {
+                  Button(
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = primaryButton.onClick,
+                    enabled = primaryButton.enabled,
+                  ) {
+                    Text(primaryButton.text)
+                  }
+                }
+                if (secondaryButton != null) {
+                  FilledTonalButton(
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = secondaryButton.onClick,
+                    enabled = secondaryButton.enabled,
+                  ) {
+                    Text(secondaryButton.text)
+                  }
                 }
               }
             }

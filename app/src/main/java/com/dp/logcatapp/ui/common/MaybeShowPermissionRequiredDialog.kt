@@ -76,6 +76,7 @@ fun MaybeShowPermissionRequiredDialog(
         showPermissionRequiredDialog = false
         onDismissed?.invoke()
       },
+      arrangement = DialogButtonArrangement.Stack,
       title = stringResource(R.string.read_logs_permission_required),
       content = { Text(stringResource(R.string.read_logs_permission_required_msg)) },
       secondaryButton = DialogButton(
@@ -167,6 +168,7 @@ fun MaybeShowPermissionRequiredDialog(
         onDismissed?.invoke()
       },
       title = stringResource(R.string.manual_method),
+      arrangement = DialogButtonArrangement.Stack,
       content = {
         Text(
           text = buildAnnotatedString {
