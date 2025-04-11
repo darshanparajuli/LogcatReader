@@ -3,6 +3,7 @@ package com.dp.logcatapp.ui.common
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -26,9 +27,11 @@ import com.dp.logcatapp.ui.theme.AppTypography
 fun CopyLogClipboardBottomSheet(
   log: Log,
   onDismiss: () -> Unit,
+  modifier: Modifier = Modifier,
 ) {
   val clipboard = LocalClipboardManager.current
   ModalBottomSheet(
+    modifier = modifier.statusBarsPadding(),
     onDismissRequest = onDismiss,
     containerColor = MaterialTheme.colorScheme.surfaceContainer,
   ) {

@@ -37,6 +37,7 @@ import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.width
@@ -851,8 +852,10 @@ private fun DisplayOptionsSheet(
   initialCompactView: Boolean,
   onSave: (enabledLogItems: Set<ToggleableLogItem>, compactView: Boolean) -> Unit,
   onDismiss: () -> Unit,
+  modifier: Modifier = Modifier,
 ) {
   ModalBottomSheet(
+    modifier = modifier.statusBarsPadding(),
     onDismissRequest = onDismiss,
     containerColor = MaterialTheme.colorScheme.surfaceContainer,
   ) {
@@ -953,8 +956,10 @@ private fun LongClickOptionsSheet(
   onClickFilter: () -> Unit,
   onClickExclude: () -> Unit,
   onClickCopyToClipboard: () -> Unit,
+  modifier: Modifier = Modifier,
 ) {
   ModalBottomSheet(
+    modifier = modifier.statusBarsPadding(),
     onDismissRequest = onDismiss,
     containerColor = MaterialTheme.colorScheme.surfaceContainer,
   ) {
@@ -1011,9 +1016,11 @@ private fun SavedLogsBottomSheet(
   uri: Uri,
   isCustomLocation: Boolean,
   onDismiss: () -> Unit,
+  modifier: Modifier = Modifier,
 ) {
   val context = LocalContext.current
   ModalBottomSheet(
+    modifier = modifier.statusBarsPadding(),
     onDismissRequest = onDismiss,
     containerColor = MaterialTheme.colorScheme.surfaceContainer,
   ) {

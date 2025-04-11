@@ -32,6 +32,7 @@ import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -72,6 +73,7 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -705,8 +707,10 @@ private fun ExportBottomSheet(
   onDismiss: () -> Unit,
   onClickDefault: () -> Unit,
   onClickSingle: () -> Unit,
+  modifier: Modifier = Modifier,
 ) {
   ModalBottomSheet(
+    modifier = modifier.statusBarsPadding(),
     onDismissRequest = onDismiss,
     containerColor = MaterialTheme.colorScheme.surfaceContainer,
   ) {
@@ -771,8 +775,11 @@ private fun SortOptionsSheet(
   initialSortOrder: SortOrder,
   onClickDone: (SortBy, SortOrder) -> Unit,
   onDismiss: () -> Unit,
+  modifier: Modifier = Modifier,
 ) {
   ModalBottomSheet(
+    modifier = modifier.statusBarsPadding(),
+    sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
     onDismissRequest = onDismiss,
     containerColor = MaterialTheme.colorScheme.surfaceContainer,
   ) {
