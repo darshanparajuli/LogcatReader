@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -47,6 +48,7 @@ import androidx.compose.material.icons.filled.FilterListOff
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.SelectAll
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
@@ -64,9 +66,8 @@ import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
@@ -731,92 +732,60 @@ private fun AddOrEditFilterSheet(
         }
       }
       Spacer(modifier = Modifier.height(16.dp))
-      Row(
-        modifier = Modifier.padding(horizontal = 16.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-      ) {
-        InputField(
-          modifier = Modifier.weight(1f),
-          label = stringResource(R.string.keyword),
-          value = keyword,
-          onValueChange = { keyword = it },
-        )
-        SingleChoiceSegmentedButtonRow {
-          SegmentedButton(
-            selected = RegexFilterType.Message in regexEnabledTypes,
-            onClick = {
-              if (RegexFilterType.Message in regexEnabledTypes) {
-                regexEnabledTypes -= RegexFilterType.Message
-              } else {
-                regexEnabledTypes += RegexFilterType.Message
-              }
-            },
-            shape = Shapes.medium,
-          ) {
-            Text(".*")
+
+      InputField(
+        modifier = Modifier
+          .fillMaxWidth()
+          .padding(horizontal = 16.dp),
+        label = stringResource(R.string.keyword),
+        value = keyword,
+        onValueChange = { keyword = it },
+        regexEnabled = RegexFilterType.Message in regexEnabledTypes,
+        onClickRegex = {
+          if (RegexFilterType.Message in regexEnabledTypes) {
+            regexEnabledTypes -= RegexFilterType.Message
+          } else {
+            regexEnabledTypes += RegexFilterType.Message
           }
-        }
-      }
+        },
+      )
       Spacer(modifier = Modifier.height(16.dp))
-      Row(
-        modifier = Modifier.padding(horizontal = 16.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-      ) {
-        InputField(
-          modifier = Modifier.weight(1f),
-          label = stringResource(R.string.tag),
-          maxLines = 1,
-          value = tag,
-          onValueChange = { tag = it },
-        )
-        SingleChoiceSegmentedButtonRow {
-          SegmentedButton(
-            selected = RegexFilterType.Tag in regexEnabledTypes,
-            onClick = {
-              if (RegexFilterType.Tag in regexEnabledTypes) {
-                regexEnabledTypes -= RegexFilterType.Tag
-              } else {
-                regexEnabledTypes += RegexFilterType.Tag
-              }
-            },
-            shape = Shapes.medium,
-          ) {
-            Text(".*")
+      InputField(
+        modifier = Modifier
+          .fillMaxWidth()
+          .padding(horizontal = 16.dp),
+        label = stringResource(R.string.tag),
+        maxLines = 1,
+        value = tag,
+        onValueChange = { tag = it },
+        regexEnabled = RegexFilterType.Tag in regexEnabledTypes,
+        onClickRegex = {
+          if (RegexFilterType.Tag in regexEnabledTypes) {
+            regexEnabledTypes -= RegexFilterType.Tag
+          } else {
+            regexEnabledTypes += RegexFilterType.Tag
           }
-        }
-      }
+        },
+      )
       Spacer(modifier = Modifier.height(16.dp))
       val uidSupported by LogcatSession.uidOptionSupported.collectAsState()
       if (uidSupported == true) {
-        Row(
-          modifier = Modifier.padding(horizontal = 16.dp),
-          verticalAlignment = Alignment.CenterVertically,
-          horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-          InputField(
-            modifier = Modifier.weight(1f),
-            label = stringResource(R.string.package_name),
-            value = packageName,
-            onValueChange = { packageName = it },
-          )
-          SingleChoiceSegmentedButtonRow {
-            SegmentedButton(
-              selected = RegexFilterType.PackageName in regexEnabledTypes,
-              onClick = {
-                if (RegexFilterType.PackageName in regexEnabledTypes) {
-                  regexEnabledTypes -= RegexFilterType.PackageName
-                } else {
-                  regexEnabledTypes += RegexFilterType.PackageName
-                }
-              },
-              shape = Shapes.medium,
-            ) {
-              Text(".*")
+        InputField(
+          modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+          label = stringResource(R.string.package_name),
+          value = packageName,
+          onValueChange = { packageName = it },
+          regexEnabled = RegexFilterType.PackageName in regexEnabledTypes,
+          onClickRegex = {
+            if (RegexFilterType.PackageName in regexEnabledTypes) {
+              regexEnabledTypes -= RegexFilterType.PackageName
+            } else {
+              regexEnabledTypes += RegexFilterType.PackageName
             }
-          }
-        }
+          },
+        )
         Spacer(modifier = Modifier.height(16.dp))
       }
       InputField(
@@ -1173,6 +1142,8 @@ private fun InputField(
   value: String,
   maxLines: Int = Int.MAX_VALUE,
   onValueChange: (String) -> Unit,
+  regexEnabled: Boolean = false,
+  onClickRegex: (() -> Unit)? = null,
   keyboardType: KeyboardType = KeyboardOptions.Default.keyboardType,
 ) {
   TextField(
@@ -1190,6 +1161,28 @@ private fun InputField(
     keyboardOptions = KeyboardOptions.Default.copy(
       keyboardType = keyboardType,
     ),
+    trailingIcon = if (onClickRegex != null) {
+      {
+        val textButtonColors = ButtonDefaults.textButtonColors()
+        WithTooltip(
+          text = stringResource(R.string.regex)
+        ) {
+          TextButton(
+            onClick = onClickRegex,
+            colors = ButtonDefaults.textButtonColors(
+              contentColor = if (regexEnabled) {
+                textButtonColors.contentColor
+              } else {
+                textButtonColors.disabledContentColor
+              },
+            ),
+            contentPadding = PaddingValues(),
+          ) {
+            Text(".*")
+          }
+        }
+      }
+    } else null,
   )
 }
 
