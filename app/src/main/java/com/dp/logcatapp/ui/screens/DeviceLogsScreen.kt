@@ -231,6 +231,7 @@ fun DeviceLogsScreen(
   var searchInProgress by remember { mutableStateOf(false) }
   var showDropDownMenu by remember { mutableStateOf(false) }
   var showSearchBar by remember { mutableStateOf(false) }
+  var useRegexForSearch by remember { mutableStateOf(false) }
   var logcatPaused by remember { mutableStateOf(false) }
   var searchQuery by remember { mutableStateOf("") }
   // Value: tagIndex start and end.
@@ -549,6 +550,10 @@ fun DeviceLogsScreen(
           onNext = {
             focusManager.clearFocus()
             currentSearchHitIndex = (currentSearchHitIndex + 1) % searchHitsMap.size
+          },
+          regexEnabled = useRegexForSearch,
+          onClickRegex = {
+            useRegexForSearch = !useRegexForSearch
           }
         )
       }
@@ -581,20 +586,35 @@ fun DeviceLogsScreen(
   ) { innerPadding ->
     if (showSearchBar) {
       LaunchedEffect(Unit) {
-        snapshotFlow { searchQuery }
-          .collectLatest { searchQuery ->
+        snapshotFlow { Pair(searchQuery, useRegexForSearch) }
+          .collectLatest { (searchQuery, useRegex) ->
             delay(100L)
             showHitCount = searchQuery.isNotEmpty()
             if (searchQuery.isNotEmpty()) {
               searchInProgress = true
               var scrolled = false
+              val searchRegex = if (useRegex) {
+                withContext(Dispatchers.Default) {
+                  searchQuery.toRegex()
+                }
+              } else {
+                null
+              }
               snapshotFlow { logsState.toList() }
                 .collect { logs ->
-                  val (map, sortedHitsByLogId) = searchLogs(
-                    logs = logs,
-                    appInfoMap = appInfoMap.orEmpty(),
-                    searchQuery = searchQuery,
-                  )
+                  val (map, sortedHitsByLogId) = if (searchRegex != null) {
+                    searchLogs(
+                      logs = logs,
+                      appInfoMap = appInfoMap.orEmpty(),
+                      searchRegex = searchRegex,
+                    )
+                  } else {
+                    searchLogs(
+                      logs = logs,
+                      appInfoMap = appInfoMap.orEmpty(),
+                      searchQuery = searchQuery,
+                    )
+                  }
                   searchHitsMap.clear()
                   searchHitsMap.putAll(map)
                   sortedHitsByLogIdsState = sortedHitsByLogId

@@ -499,6 +499,52 @@ private fun LogItemCompact(
 suspend fun searchLogs(
   logs: List<Log>,
   appInfoMap: Map<String, AppInfo>,
+  searchRegex: Regex,
+) = withContext(Dispatchers.Default) {
+  val map = mutableMapOf<SearchHitKey, SearchHitSpan>()
+  val hits = mutableListOf<SearchHitInfo>()
+  logs.forEachIndexed { index, log ->
+    val msgRange = searchRegex.find(log.msg)?.range
+    val tagRange = searchRegex.find(log.tag)?.range
+    val uid = log.uid
+    val packageMatchRange = if (uid != null) {
+      val packageName = if (uid.isDigitsOnly()) {
+        appInfoMap[log.uid]?.packageName
+      } else {
+        uid
+      }
+      packageName?.let { searchRegex.find(it)?.range }
+    } else {
+      null
+    }
+    if (msgRange != null) {
+      map[SearchHitKey(logId = log.id, component = LogComponent.MSG)] =
+        SearchHitSpan(start = msgRange.start, end = msgRange.endInclusive + 1)
+      hits += SearchHitInfo(logId = log.id, index = index)
+    }
+    if (tagRange != null) {
+      map[SearchHitKey(logId = log.id, component = LogComponent.TAG)] =
+        SearchHitSpan(start = tagRange.start, end = tagRange.endInclusive + 1)
+      hits += SearchHitInfo(logId = log.id, index = index)
+    }
+    if (packageMatchRange != null) {
+      map[SearchHitKey(logId = log.id, component = LogComponent.PKG)] =
+        SearchHitSpan(start = packageMatchRange.start, end = packageMatchRange.endInclusive + 1)
+      hits += SearchHitInfo(logId = log.id, index = index)
+    }
+  }
+  Pair(
+    first = map,
+    second = hits.sortedBy {
+      // sort by log id
+      it.logId
+    },
+  )
+}
+
+suspend fun searchLogs(
+  logs: List<Log>,
+  appInfoMap: Map<String, AppInfo>,
   searchQuery: String,
 ) = withContext(Dispatchers.Default) {
   val map = mutableMapOf<SearchHitKey, SearchHitSpan>()

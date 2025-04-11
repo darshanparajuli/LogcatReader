@@ -1,5 +1,6 @@
 package com.dp.logcatapp.ui.common
 
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
@@ -14,6 +15,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -22,6 +24,7 @@ import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
@@ -52,6 +55,8 @@ fun SearchLogsTopBar(
   onClose: () -> Unit,
   onPrevious: () -> Unit,
   onNext: () -> Unit,
+  regexEnabled: Boolean,
+  onClickRegex: () -> Unit,
 ) {
   val focusRequester = remember { FocusRequester() }
   LaunchedEffect(focusRequester) {
@@ -120,6 +125,26 @@ fun SearchLogsTopBar(
               color = MaterialTheme.colorScheme.onPrimaryContainer,
             )
           }
+        },
+        trailingIcon = {
+          val textButtonColors = ButtonDefaults.textButtonColors()
+          WithTooltip(
+            text = stringResource(R.string.regex)
+          ) {
+            TextButton(
+              onClick = onClickRegex,
+              colors = ButtonDefaults.textButtonColors(
+                contentColor = if (regexEnabled) {
+                  textButtonColors.contentColor
+                } else {
+                  textButtonColors.disabledContentColor
+                },
+              ),
+              contentPadding = PaddingValues(),
+            ) {
+              Text(".*")
+            }
+          }
         }
       )
     },
@@ -131,7 +156,6 @@ fun SearchLogsTopBar(
         modifier = Modifier.padding(insetPadding)
       ) {
         WithTooltip(
-          modifier = Modifier.padding(insetPadding),
           text = stringResource(R.string.previous),
         ) {
           IconButton(
@@ -145,7 +169,6 @@ fun SearchLogsTopBar(
           }
         }
         WithTooltip(
-          modifier = Modifier.padding(insetPadding),
           text = stringResource(R.string.next),
         ) {
           IconButton(
