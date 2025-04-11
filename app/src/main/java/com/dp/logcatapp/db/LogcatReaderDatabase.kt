@@ -20,7 +20,7 @@ abstract class LogcatReaderDatabase : RoomDatabase() {
 
   companion object {
     private const val DB_NAME = "logcat_reader_db"
-    const val LATEST_VERSION = 5
+    const val LATEST_VERSION = 4
 
     private val instanceLock = Any()
 
@@ -41,7 +41,7 @@ abstract class LogcatReaderDatabase : RoomDatabase() {
               context.applicationContext,
               LogcatReaderDatabase::class.java, DB_NAME
             )
-            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
+            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
             .fallbackToDestructiveMigration(dropAllTables = true)
             .build()
         }
@@ -117,11 +117,7 @@ abstract class LogcatReaderDatabase : RoomDatabase() {
         )
         db.execSQL("DROP TABLE `saved_logs_info`")
         db.execSQL("ALTER TABLE `saved_logs_info_new` RENAME TO `saved_logs_info`")
-      }
-    }
 
-    private val MIGRATION_4_5 = object : Migration(4, 5) {
-      override fun migrate(db: SupportSQLiteDatabase) {
         db.execSQL(
           """
             CREATE TABLE `filters_new` (
@@ -133,6 +129,7 @@ abstract class LogcatReaderDatabase : RoomDatabase() {
               `tid` INTEGER,
               `log_levels` TEXT,
               `exclude` INTEGER NOT NULL,
+              `enabled` INTEGER NOT NULL,
               PRIMARY KEY (`id`)
             )
           """.trimIndent()
