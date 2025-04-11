@@ -788,26 +788,26 @@ private fun FilterItem(
   enabled: Boolean,
   onClickRemove: () -> Unit,
 ) {
-  ListItem(
-    modifier = modifier,
-    headlineContent = {
-      Column {
-        @Composable
-        fun FilterRow(
-          label: String,
-          value: String,
-          quote: Boolean = false,
-        ) {
-          val textStyle = LocalTextStyle.current.let { style ->
-            style.copy(
-              color = if (enabled) {
-                style.color
-              } else {
-                ListItemDefaults.colors().disabledHeadlineColor
-              },
-            )
-          }
-          CompositionLocalProvider(LocalTextStyle provides textStyle) {
+  val textStyle = LocalTextStyle.current.let { style ->
+    style.copy(
+      color = if (enabled) {
+        style.color
+      } else {
+        ListItemDefaults.colors().disabledHeadlineColor
+      },
+    )
+  }
+  CompositionLocalProvider(LocalTextStyle provides textStyle) {
+    ListItem(
+      modifier = modifier,
+      headlineContent = {
+        Column {
+          @Composable
+          fun FilterRow(
+            label: String,
+            value: String,
+            quote: Boolean = false,
+          ) {
             val textStyle = LocalTextStyle.current
             Row {
               Text(
@@ -826,76 +826,72 @@ private fun FilterItem(
               )
             }
           }
-        }
-        if (!tag.isNullOrEmpty()) {
-          FilterRow(
-            label = stringResource(R.string.tag),
-            value = tag,
-            quote = true,
-          )
-        }
-        if (!message.isNullOrEmpty()) {
-          FilterRow(
-            label = stringResource(R.string.message),
-            value = message,
-            quote = true,
-          )
-        }
-        if (!packageName.isNullOrEmpty()) {
-          FilterRow(
-            label = stringResource(R.string.package_name),
-            value = packageName,
-            quote = true,
-          )
-        }
-        val priorityMap = remember {
-          LogLevel.entries.associate {
-            it.label.first().lowercase().toString() to it.label
+          if (!tag.isNullOrEmpty()) {
+            FilterRow(
+              label = stringResource(R.string.tag),
+              value = tag,
+              quote = true,
+            )
+          }
+          if (!message.isNullOrEmpty()) {
+            FilterRow(
+              label = stringResource(R.string.message),
+              value = message,
+              quote = true,
+            )
+          }
+          if (!packageName.isNullOrEmpty()) {
+            FilterRow(
+              label = stringResource(R.string.package_name),
+              value = packageName,
+              quote = true,
+            )
+          }
+          val priorityMap = remember {
+            LogLevel.entries.associate {
+              it.label.first().lowercase().toString() to it.label
+            }
+          }
+          if (!priorities.isNullOrEmpty()) {
+            FilterRow(
+              label = stringResource(R.string.log_priority),
+              value = priorities.split(",").map {
+                priorityMap.getValue(it.lowercase())
+              }.fastJoinToString(separator = ", "),
+            )
+          }
+          if (!pid.isNullOrEmpty()) {
+            FilterRow(
+              label = stringResource(R.string.process_id),
+              value = pid,
+            )
+          }
+          if (!tid.isNullOrEmpty()) {
+            FilterRow(
+              label = stringResource(R.string.thread_id),
+              value = tid,
+            )
           }
         }
-        if (!priorities.isNullOrEmpty()) {
-          FilterRow(
-            label = stringResource(R.string.log_priority),
-            value = priorities.split(",").map {
-              priorityMap.getValue(it.lowercase())
-            }.fastJoinToString(separator = ", "),
-          )
+      },
+      overlineContent = if (exclude) {
+        {
+          Text(stringResource(R.string.exclude))
         }
-        if (!pid.isNullOrEmpty()) {
-          FilterRow(
-            label = stringResource(R.string.process_id),
-            value = pid,
-          )
-        }
-        if (!tid.isNullOrEmpty()) {
-          FilterRow(
-            label = stringResource(R.string.thread_id),
-            value = tid,
-          )
-        }
-      }
-    },
-    overlineContent = if (exclude) {
-      {
-        Text(stringResource(R.string.exclude))
-      }
-    } else null,
-    trailingContent = {
-      Row(
-        verticalAlignment = Alignment.CenterVertically,
-      ) {
-        IconButton(
-          onClick = onClickRemove,
-          colors = IconButtonDefaults.iconButtonColors(
-            containerColor = Color.Transparent,
-            contentColor = MaterialTheme.colorScheme.onSurface,
-          )
+      } else null,
+      trailingContent = {
+        Row(
+          verticalAlignment = Alignment.CenterVertically,
         ) {
-          Icon(imageVector = Icons.Default.Clear, contentDescription = null)
+          IconButton(
+            onClick = onClickRemove,
+          ) {
+            Icon(imageVector = Icons.Default.Clear, contentDescription = null)
+          }
         }
       }
-    }
-  )
+    )
+  }
 }
 
 @Composable
