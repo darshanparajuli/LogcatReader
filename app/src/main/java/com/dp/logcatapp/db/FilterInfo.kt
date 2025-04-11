@@ -37,7 +37,7 @@ interface FilterDao {
   fun delete(vararg info: FilterInfo)
 
   @Update(onConflict = OnConflictStrategy.REPLACE)
-  fun update(info: FilterInfo)
+  fun update(vararg info: FilterInfo)
 
   @Query("DELETE FROM filters")
   fun deleteAll()

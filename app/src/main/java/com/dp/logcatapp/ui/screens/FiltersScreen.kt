@@ -1,7 +1,11 @@
 package com.dp.logcatapp.ui.screens
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -35,9 +39,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Apps
-import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.ClearAll
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.FilterList
+import androidx.compose.material.icons.filled.FilterListOff
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.SelectAll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
@@ -120,6 +128,7 @@ fun FiltersScreen(
   var showAddFilterDialog by remember { mutableStateOf(prepopulateFilterInfo != null) }
   var showEditFilterDialog by remember { mutableStateOf<FilterInfo?>(null) }
   var showPackageSelector by remember { mutableStateOf(false) }
+  var selected by remember { mutableStateOf<Set<FilterInfo>>(emptySet()) }
   val coroutineScope = rememberCoroutineScope()
 
   Scaffold(
@@ -220,20 +229,72 @@ fun FiltersScreen(
           titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
         ),
       )
+      AnimatedVisibility(
+        visible = selected.isNotEmpty(),
+        enter = fadeIn(),
+        exit = fadeOut(),
+      ) {
+        SelectFiltersAppBar(
+          title = selected.size.toString(),
+          onClickClose = { selected = emptySet() },
+          onClickSelectAll = {
+            selected = filters.orEmpty().toSet()
+          },
+          onClickEnable = {
+            val selectedFilters = selected.toSet()
+            selected = emptySet()
+            coroutineScope.launch {
+              withContext(Dispatchers.IO) {
+                db.filterDao().update(
+                  *selectedFilters.map { it.copy(enabled = true) }
+                    .toTypedArray()
+                )
+              }
+            }
+          },
+          onClickDisable = {
+            val selectedFilters = selected.toSet()
+            selected = emptySet()
+            coroutineScope.launch {
+              withContext(Dispatchers.IO) {
+                db.filterDao().update(
+                  *selectedFilters.map { it.copy(enabled = false) }
+                    .toTypedArray()
+                )
+              }
+            }
+          },
+          onClickDelete = {
+            val selectedFilters = selected.toSet()
+            selected = emptySet()
+            coroutineScope.launch {
+              withContext(Dispatchers.IO) {
+                db.filterDao().delete(*selectedFilters.toTypedArray())
+              }
+            }
+          }
+        )
+      }
     },
     floatingActionButton = {
-      FloatingActionButton(
-        modifier = Modifier
-          .safeDrawingPadding()
-          .size(48.dp),
-        onClick = {
-          showAddFilterDialog = true
-        }
+      AnimatedVisibility(
+        visible = selected.isEmpty(),
+        enter = fadeIn(),
+        exit = fadeOut(),
       ) {
-        Icon(
-          imageVector = Icons.Filled.Add,
-          contentDescription = null
-        )
+        FloatingActionButton(
+          modifier = Modifier
+            .safeDrawingPadding()
+            .size(48.dp),
+          onClick = {
+            showAddFilterDialog = true
+          }
+        ) {
+          Icon(
+            imageVector = Icons.Filled.Add,
+            contentDescription = null
+          )
+        }
       }
     },
   ) { innerPadding ->
@@ -395,9 +456,22 @@ fun FiltersScreen(
           FilterItem(
             modifier = Modifier
               .fillMaxWidth()
-              .clickable {
-                showEditFilterDialog = item
-              }
+              .combinedClickable(
+                onLongClick = {
+                  selected += item
+                },
+                onClick = {
+                  if (selected.isEmpty()) {
+                    showEditFilterDialog = item
+                  } else {
+                    if (item in selected) {
+                      selected -= item
+                    } else {
+                      selected += item
+                    }
+                  }
+                }
+              )
               .safeDrawingPadding(),
             tag = item.tag,
             message = item.message,
@@ -407,14 +481,8 @@ fun FiltersScreen(
             exclude = item.exclude,
             packageName = item.packageName,
             enabled = item.enabled,
-            onClickRemove = {
-              coroutineScope.launch {
-                val filterDao = db.filterDao()
-                withContext(Dispatchers.IO) {
-                  filterDao.delete(item)
-                }
-              }
-            }
+            selectable = selected.isNotEmpty(),
+            selected = item in selected,
           )
           HorizontalDivider(
             modifier = Modifier.fillMaxWidth(),
@@ -423,6 +491,142 @@ fun FiltersScreen(
       }
     }
   }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SelectFiltersAppBar(
+  title: String,
+  onClickClose: () -> Unit,
+  onClickSelectAll: () -> Unit,
+  onClickEnable: () -> Unit,
+  onClickDisable: () -> Unit,
+  onClickDelete: () -> Unit,
+) {
+  TopAppBar(
+    navigationIcon = {
+      val insetPadding = WindowInsets.displayCutout
+        .only(WindowInsetsSides.Left)
+        .asPaddingValues()
+      WithTooltip(
+        modifier = Modifier.padding(insetPadding),
+        text = stringResource(R.string.close)
+      ) {
+        IconButton(
+          onClick = onClickClose,
+          colors = IconButtonDefaults.iconButtonColors(
+            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+          ),
+        ) {
+          Icon(
+            imageVector = Icons.Default.Close,
+            contentDescription = null,
+          )
+        }
+      }
+    },
+    title = {
+      Text(
+        text = title,
+        overflow = TextOverflow.Ellipsis,
+        maxLines = 1,
+      )
+    },
+    actions = {
+      val insetPadding = WindowInsets.displayCutout
+        .only(WindowInsetsSides.Right)
+        .asPaddingValues()
+      Row(
+        modifier = Modifier.padding(insetPadding)
+      ) {
+        WithTooltip(
+          text = stringResource(R.string.enable),
+        ) {
+          IconButton(
+            onClick = onClickEnable,
+            colors = IconButtonDefaults.iconButtonColors(
+              contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+            ),
+          ) {
+            Icon(
+              imageVector = Icons.Default.FilterList,
+              contentDescription = null,
+            )
+          }
+        }
+        WithTooltip(
+          text = stringResource(R.string.disable),
+        ) {
+          IconButton(
+            onClick = onClickDisable,
+            colors = IconButtonDefaults.iconButtonColors(
+              contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+            ),
+          ) {
+            Icon(
+              imageVector = Icons.Default.FilterListOff,
+              contentDescription = null,
+            )
+          }
+        }
+        WithTooltip(
+          text = stringResource(R.string.select_all),
+        ) {
+          IconButton(
+            onClick = onClickSelectAll,
+            colors = IconButtonDefaults.iconButtonColors(
+              contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+            ),
+          ) {
+            Icon(
+              imageVector = Icons.Default.SelectAll,
+              contentDescription = null,
+            )
+          }
+        }
+        Box {
+          var showDropDownMenu by remember { mutableStateOf(false) }
+          WithTooltip(
+            text = stringResource(R.string.more_options),
+          ) {
+            IconButton(
+              onClick = {
+                showDropDownMenu = true
+              },
+              colors = IconButtonDefaults.iconButtonColors(
+                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+              ),
+            ) {
+              Icon(
+                imageVector = Icons.Default.MoreVert,
+                contentDescription = null,
+              )
+            }
+          }
+          DropdownMenu(
+            expanded = showDropDownMenu,
+            onDismissRequest = { showDropDownMenu = false },
+          ) {
+            DropdownMenuItem(
+              leadingIcon = {
+                Icon(Icons.Default.Delete, contentDescription = null)
+              },
+              text = {
+                Text(
+                  text = stringResource(R.string.delete),
+                )
+              },
+              onClick = onClickDelete,
+            )
+          }
+        }
+      }
+    },
+    colors = TopAppBarDefaults.topAppBarColors(
+      containerColor = MaterialTheme.colorScheme.primaryContainer,
+      titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+    ),
+  )
 }
 
 private data class FilterData(
@@ -786,7 +990,8 @@ private fun FilterItem(
   priorities: String?,
   exclude: Boolean,
   enabled: Boolean,
-  onClickRemove: () -> Unit,
+  selectable: Boolean = false,
+  selected: Boolean = false,
 ) {
   val textStyle = LocalTextStyle.current.let { style ->
     style.copy(
@@ -879,17 +1084,14 @@ private fun FilterItem(
           Text(stringResource(R.string.exclude))
         }
       } else null,
-      trailingContent = {
-        Row(
-          verticalAlignment = Alignment.CenterVertically,
-        ) {
-          IconButton(
-            onClick = onClickRemove,
-          ) {
-            Icon(imageVector = Icons.Default.Clear, contentDescription = null)
-          }
+      trailingContent = if (selectable) {
+        {
+          Checkbox(
+            checked = selected,
+            onCheckedChange = null,
+          )
         }
-      }
+      } else null,
     )
   }
 }

@@ -149,4 +149,6 @@
   <string name="navigate_up">Navigate up</string>
   <string name="sort">Sort</string>
   <string name="system_app">System app</string>
+  <string name="enable">Enable</string>
+  <string name="disable">Disable</string>
 </resources>
