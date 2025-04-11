@@ -52,6 +52,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
@@ -62,6 +63,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -796,21 +798,33 @@ private fun FilterItem(
           value: String,
           quote: Boolean = false,
         ) {
-          Row {
-            Text(
-              text = "$label:",
-              fontWeight = FontWeight.Bold,
-              style = AppTypography.bodySmall,
-              modifier = Modifier.alignByBaseline(),
+          val textStyle = LocalTextStyle.current.let { style ->
+            style.copy(
+              color = if (enabled) {
+                style.color
+              } else {
+                ListItemDefaults.colors().disabledHeadlineColor
+              },
             )
-            Spacer(modifier = Modifier.width(4.dp))
-            Text(
-              text = if (quote) {
-                "'$value'"
-              } else value,
-              style = AppTypography.bodyMedium,
-              modifier = Modifier.alignByBaseline(),
-            )
+          }
+          CompositionLocalProvider(LocalTextStyle provides textStyle) {
+            val textStyle = LocalTextStyle.current
+            Row {
+              Text(
+                text = "$label:",
+                fontWeight = FontWeight.Bold,
+                style = textStyle.merge(AppTypography.bodySmall),
+                modifier = Modifier.alignByBaseline(),
+              )
+              Spacer(modifier = Modifier.width(4.dp))
+              Text(
+                text = if (quote) {
+                  "'$value'"
+                } else value,
+                style = textStyle.merge(AppTypography.bodyMedium),
+                modifier = Modifier.alignByBaseline(),
+              )
+            }
           }
         }
         if (!tag.isNullOrEmpty()) {
@@ -866,20 +880,19 @@ private fun FilterItem(
         Text(stringResource(R.string.exclude))
       }
     } else null,
-    supportingContent = if (!enabled) {
-      {
-        Text("Disabled")
-      }
-    } else null,
     trailingContent = {
-      IconButton(
-        onClick = onClickRemove,
-        colors = IconButtonDefaults.iconButtonColors(
-          containerColor = Color.Transparent,
-          contentColor = MaterialTheme.colorScheme.onSurface,
-        )
+      Row(
+        verticalAlignment = Alignment.CenterVertically,
       ) {
-        Icon(imageVector = Icons.Default.Clear, contentDescription = null)
+        IconButton(
+          onClick = onClickRemove,
+          colors = IconButtonDefaults.iconButtonColors(
+            containerColor = Color.Transparent,
+            contentColor = MaterialTheme.colorScheme.onSurface,
+          )
+        ) {
+          Icon(imageVector = Icons.Default.Clear, contentDescription = null)
+        }
       }
     }
   )

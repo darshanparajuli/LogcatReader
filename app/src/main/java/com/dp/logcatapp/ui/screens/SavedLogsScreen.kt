@@ -208,7 +208,7 @@ fun SavedLogsScreen(
         enter = fadeIn(),
         exit = fadeOut(),
       ) {
-        SelectLogsAppBar(
+        SelectFiltersAppBar(
           title = selected.size.toString(),
           singleLogSelected = selected.size == 1,
           onClickClose = {
@@ -494,7 +494,7 @@ private fun AppBar(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun SelectLogsAppBar(
+private fun SelectFiltersAppBar(
   title: String,
   singleLogSelected: Boolean,
   onClickClose: () -> Unit,
