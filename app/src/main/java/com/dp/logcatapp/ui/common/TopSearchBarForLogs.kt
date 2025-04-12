@@ -146,14 +146,16 @@ fun SearchLogsTopBar(
               onClick = onClickRegex,
               colors = ButtonDefaults.textButtonColors(
                 contentColor = if (regexEnabled) {
-                  textButtonColors.contentColor
+                  MaterialTheme.colorScheme.onPrimaryContainer
                 } else {
                   textButtonColors.disabledContentColor
                 },
               ),
               contentPadding = PaddingValues(),
             ) {
-              Text(".*")
+              Text(
+                text = ".*",
+              )
             }
           }
         }
