@@ -147,4 +147,6 @@
   <string name="navigate_up">Перейти вверх</string>
   <string name="sort">Сортировать</string>
   <string name="system_app">Системное приложение</string>
+  <string name="enable">Давать возможность</string>
+  <string name="disable">Запрещать</string>
 </resources>

@@ -144,4 +144,6 @@
   <string name="navigate_up">向上导航</string>
   <string name="sort">种类</string>
   <string name="system_app">系统应用程序</string>
+  <string name="enable">使能够</string>
+  <string name="disable">禁用</string>
 </resources>
