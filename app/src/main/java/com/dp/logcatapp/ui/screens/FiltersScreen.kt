@@ -111,6 +111,7 @@ import com.dp.logcatapp.ui.theme.Shapes
 import com.dp.logcatapp.util.AppInfo
 import com.dp.logcatapp.util.findActivity
 import com.dp.logcatapp.util.rememberAppInfoByUidMap
+import com.dp.logcatapp.util.toRegexOrNull
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -674,9 +675,12 @@ private fun AddOrEditFilterSheet(
       }
     }
   }
-  var keyword by remember { mutableStateOf(initialKeyword.orEmpty()) }
+  var message by remember { mutableStateOf(initialKeyword.orEmpty()) }
   var tag by remember { mutableStateOf(initialTag.orEmpty()) }
   var packageName by remember { mutableStateOf(initialPackageName.orEmpty()) }
+  var messageRegexError by remember { mutableStateOf(false) }
+  var tagRegexError by remember { mutableStateOf(false) }
+  var packageNameRegexError by remember { mutableStateOf(false) }
   var pid by remember { mutableStateOf(initialPid.orEmpty()) }
   var tid by remember { mutableStateOf(initialTid.orEmpty()) }
   var exclude by remember { mutableStateOf(initialExclude ?: false) }
@@ -706,7 +710,7 @@ private fun AddOrEditFilterSheet(
           onClick = {
             onSave(
               FilterData(
-                keyword = keyword,
+                keyword = message,
                 tag = tag,
                 pid = pid,
                 tid = tid,
@@ -718,12 +722,13 @@ private fun AddOrEditFilterSheet(
               )
             )
           },
-          enabled = keyword.isNotEmpty() ||
+          enabled = (message.isNotEmpty() ||
             tag.isNotEmpty() ||
             pid.isNotEmpty() ||
             tid.isNotEmpty() ||
             packageName.isNotEmpty() ||
-            selectedLogLevels.any { (_, selected) -> selected },
+            selectedLogLevels.any { (_, selected) -> selected }) &&
+            !messageRegexError && !tagRegexError && !packageNameRegexError,
         ) {
           Text(
             stringResource(R.string.save),
@@ -733,23 +738,34 @@ private fun AddOrEditFilterSheet(
       }
       Spacer(modifier = Modifier.height(16.dp))
 
+      val messageRegexEnabled = RegexFilterType.Message in regexEnabledTypes
       InputField(
         modifier = Modifier
           .fillMaxWidth()
           .padding(horizontal = 16.dp),
-        label = stringResource(R.string.keyword),
-        value = keyword,
-        onValueChange = { keyword = it },
-        regexEnabled = RegexFilterType.Message in regexEnabledTypes,
-        onClickRegex = {
-          if (RegexFilterType.Message in regexEnabledTypes) {
-            regexEnabledTypes -= RegexFilterType.Message
-          } else {
-            regexEnabledTypes += RegexFilterType.Message
+        label = stringResource(R.string.message),
+        value = message,
+        onValueChange = {
+          message = it
+          if (messageRegexEnabled) {
+            messageRegexError = message.toRegexOrNull() == null
           }
         },
+        regexEnabled = messageRegexEnabled,
+        onClickRegex = {
+          if (messageRegexEnabled) {
+            regexEnabledTypes -= RegexFilterType.Message
+            messageRegexError = false
+          } else {
+            regexEnabledTypes += RegexFilterType.Message
+            messageRegexError = message.toRegexOrNull() == null
+          }
+        },
+        isError = messageRegexError,
       )
       Spacer(modifier = Modifier.height(16.dp))
+
+      val tagRegexEnabled = RegexFilterType.Tag in regexEnabledTypes
       InputField(
         modifier = Modifier
           .fillMaxWidth()
@@ -757,34 +773,51 @@ private fun AddOrEditFilterSheet(
         label = stringResource(R.string.tag),
         maxLines = 1,
         value = tag,
-        onValueChange = { tag = it },
-        regexEnabled = RegexFilterType.Tag in regexEnabledTypes,
-        onClickRegex = {
-          if (RegexFilterType.Tag in regexEnabledTypes) {
-            regexEnabledTypes -= RegexFilterType.Tag
-          } else {
-            regexEnabledTypes += RegexFilterType.Tag
+        onValueChange = {
+          tag = it
+          if (tagRegexEnabled) {
+            tagRegexError = tag.toRegexOrNull() == null
           }
         },
+        regexEnabled = tagRegexEnabled,
+        onClickRegex = {
+          if (tagRegexEnabled) {
+            regexEnabledTypes -= RegexFilterType.Tag
+            tagRegexError = false
+          } else {
+            regexEnabledTypes += RegexFilterType.Tag
+            tagRegexError = tag.toRegexOrNull() == null
+          }
+        },
+        isError = tagRegexError,
       )
       Spacer(modifier = Modifier.height(16.dp))
       val uidSupported by LogcatSession.uidOptionSupported.collectAsState()
       if (uidSupported == true) {
+        val packageNameRegexEnabled = RegexFilterType.PackageName in regexEnabledTypes
         InputField(
           modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp),
           label = stringResource(R.string.package_name),
           value = packageName,
-          onValueChange = { packageName = it },
-          regexEnabled = RegexFilterType.PackageName in regexEnabledTypes,
-          onClickRegex = {
-            if (RegexFilterType.PackageName in regexEnabledTypes) {
-              regexEnabledTypes -= RegexFilterType.PackageName
-            } else {
-              regexEnabledTypes += RegexFilterType.PackageName
+          onValueChange = {
+            packageName = it
+            if (packageNameRegexEnabled) {
+              packageNameRegexError = packageName.toRegexOrNull() == null
             }
           },
+          regexEnabled = packageNameRegexEnabled,
+          onClickRegex = {
+            if (packageNameRegexEnabled) {
+              regexEnabledTypes -= RegexFilterType.PackageName
+              packageNameRegexError = false
+            } else {
+              regexEnabledTypes += RegexFilterType.PackageName
+              packageNameRegexError = packageName.toRegexOrNull() == null
+            }
+          },
+          isError = packageNameRegexError,
         )
         Spacer(modifier = Modifier.height(16.dp))
       }
@@ -1145,6 +1178,7 @@ private fun InputField(
   regexEnabled: Boolean = false,
   onClickRegex: (() -> Unit)? = null,
   keyboardType: KeyboardType = KeyboardOptions.Default.keyboardType,
+  isError: Boolean = false,
 ) {
   TextField(
     modifier = modifier,
@@ -1153,9 +1187,12 @@ private fun InputField(
     onValueChange = onValueChange,
     maxLines = maxLines,
     singleLine = maxLines == 1,
+    isError = isError,
     colors = TextFieldDefaults.colors(
       focusedIndicatorColor = Color.Transparent,
       unfocusedIndicatorColor = Color.Transparent,
+      errorIndicatorColor = Color.Transparent,
+      errorTextColor = MaterialTheme.colorScheme.error,
     ),
     shape = Shapes.medium,
     keyboardOptions = KeyboardOptions.Default.copy(

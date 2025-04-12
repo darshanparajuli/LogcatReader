@@ -500,7 +500,7 @@ suspend fun searchLogs(
   logs: List<Log>,
   appInfoMap: Map<String, AppInfo>,
   searchRegex: Regex,
-) = withContext(Dispatchers.Default) {
+): Pair<Map<SearchHitKey, SearchHitSpan>, List<SearchHitInfo>> = withContext(Dispatchers.Default) {
   val map = mutableMapOf<SearchHitKey, SearchHitSpan>()
   val hits = mutableListOf<SearchHitInfo>()
   logs.forEachIndexed { index, log ->
@@ -546,7 +546,7 @@ suspend fun searchLogs(
   logs: List<Log>,
   appInfoMap: Map<String, AppInfo>,
   searchQuery: String,
-) = withContext(Dispatchers.Default) {
+): Pair<Map<SearchHitKey, SearchHitSpan>, List<SearchHitInfo>> = withContext(Dispatchers.Default) {
   val map = mutableMapOf<SearchHitKey, SearchHitSpan>()
   val hits = mutableListOf<SearchHitInfo>()
   logs.forEachIndexed { index, log ->

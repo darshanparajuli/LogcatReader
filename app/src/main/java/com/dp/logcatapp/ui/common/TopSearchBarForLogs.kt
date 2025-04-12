@@ -56,6 +56,7 @@ fun SearchLogsTopBar(
   onPrevious: () -> Unit,
   onNext: () -> Unit,
   regexEnabled: Boolean,
+  regexError: Boolean,
   onClickRegex: () -> Unit,
 ) {
   val focusRequester = remember { FocusRequester() }
@@ -92,6 +93,7 @@ fun SearchLogsTopBar(
         onValueChange = onQueryChange,
         maxLines = 1,
         singleLine = true,
+        isError = regexError,
         placeholder = {
           Row(modifier = Modifier.fillMaxHeight()) {
             Text(
@@ -101,12 +103,22 @@ fun SearchLogsTopBar(
           }
         },
         colors = TextFieldDefaults.colors(
-          focusedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-          unfocusedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+          focusedContainerColor = Color.Transparent,
+          unfocusedContainerColor = Color.Transparent,
           focusedIndicatorColor = Color.Transparent,
           unfocusedIndicatorColor = Color.Transparent,
+          errorIndicatorColor = Color.Transparent,
           focusedTextColor = MaterialTheme.colorScheme.onPrimaryContainer,
+          focusedSuffixColor = MaterialTheme.colorScheme.onPrimaryContainer,
+          unfocusedSuffixColor = MaterialTheme.colorScheme.onPrimaryContainer,
           unfocusedTextColor = MaterialTheme.colorScheme.onPrimaryContainer,
+          errorContainerColor = Color.Transparent,
+          errorLabelColor = Color.Transparent,
+          errorTextColor = MaterialTheme.colorScheme.error,
+          errorSuffixColor = MaterialTheme.colorScheme.error,
+          errorTrailingIconColor = Color.Transparent,
+          errorLeadingIconColor = Color.Transparent,
+          errorPlaceholderColor = MaterialTheme.colorScheme.error,
         ),
         textStyle = LocalTextStyle.current.copy(
           fontSize = 18.sp,
@@ -121,8 +133,7 @@ fun SearchLogsTopBar(
             val current = currentHitIndex.takeIf { it != -1 }?.let { it + 1 } ?: 0
             Text(
               text = "$current/$hitCount",
-              style = AppTypography.bodySmall,
-              color = MaterialTheme.colorScheme.onPrimaryContainer,
+              style = LocalTextStyle.current.merge(AppTypography.bodySmall),
             )
           }
         },

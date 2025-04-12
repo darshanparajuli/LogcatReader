@@ -85,6 +85,7 @@ import com.dp.logcatapp.util.getFileNameFromUri
 import com.dp.logcatapp.util.rememberAppInfoByUidMap
 import com.dp.logcatapp.util.rememberBooleanSharedPreference
 import com.dp.logcatapp.util.showToast
+import com.dp.logcatapp.util.toRegexOrNull
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.SharingStarted.Companion.Eagerly
@@ -125,6 +126,7 @@ fun SavedLogsViewerScreen(
   val listState = rememberLazyListState()
   var showSearchBar by remember { mutableStateOf(false) }
   var useRegexForSearch by remember { mutableStateOf(false) }
+  var searchRegexError by remember { mutableStateOf(false) }
   var searchQuery by remember { mutableStateOf("") }
   var currentSearchHitIndex by remember { mutableIntStateOf(-1) }
   var currentSearchHitLogId by remember { mutableIntStateOf(-1) }
@@ -228,7 +230,13 @@ fun SavedLogsViewerScreen(
             currentSearchHitIndex = (currentSearchHitIndex + 1) % searchHitsMap.size
           },
           regexEnabled = useRegexForSearch,
-          onClickRegex = { useRegexForSearch = !useRegexForSearch },
+          regexError = searchRegexError,
+          onClickRegex = {
+            useRegexForSearch = !useRegexForSearch
+            if (!useRegexForSearch) {
+              searchRegexError = false
+            }
+          },
         )
       }
     },
@@ -267,23 +275,31 @@ fun SavedLogsViewerScreen(
                 searchInProgress = true
                 val searchRegex = if (useRegex) {
                   withContext(Dispatchers.Default) {
-                    searchQuery.toRegex()
+                    searchQuery.toRegexOrNull()
+                  }.also { searchRegex ->
+                    searchRegexError = searchRegex == null
                   }
                 } else {
                   null
                 }
-                val (map, sortedHitsByLogId) = if (searchRegex != null) {
-                  searchLogs(
-                    logs = logs,
-                    appInfoMap = appInfoMap.orEmpty(),
-                    searchRegex = searchRegex,
-                  )
-                } else {
-                  searchLogs(
-                    logs = logs,
-                    appInfoMap = appInfoMap.orEmpty(),
-                    searchQuery = searchQuery,
-                  )
+                val (map, sortedHitsByLogId) = when {
+                  useRegex && searchRegex == null -> {
+                    Pair(emptyMap(), emptyList())
+                  }
+                  searchRegex != null -> {
+                    searchLogs(
+                      logs = logs,
+                      appInfoMap = appInfoMap.orEmpty(),
+                      searchRegex = searchRegex,
+                    )
+                  }
+                  else -> {
+                    searchLogs(
+                      logs = logs,
+                      appInfoMap = appInfoMap.orEmpty(),
+                      searchQuery = searchQuery,
+                    )
+                  }
                 }
                 searchHitsMap.clear()
                 searchHitsMap.putAll(map)
@@ -296,6 +312,7 @@ fun SavedLogsViewerScreen(
                   currentSearchHitLogId = -1
                 }
               } else {
+                searchRegexError = false
                 searchHitsMap.clear()
                 sortedHitsByLogIdsState = emptyList()
                 currentSearchHitIndex = -1
