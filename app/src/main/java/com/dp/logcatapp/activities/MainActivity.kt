@@ -109,7 +109,7 @@ class MainActivity : ComponentActivity() {
 
   override fun onDestroy() {
     super.onDestroy()
-    if (!recordingIsActive) {
+    if (!recordingIsActive && !isChangingConfigurations) {
       stopService(Intent(this, LogcatService::class.java))
     }
   }
