@@ -24,10 +24,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -141,15 +143,16 @@ fun FiltersScreen(
 
   Scaffold(
     modifier = modifier,
+    contentWindowInsets = WindowInsets.safeDrawing.only(WindowInsetsSides.Vertical),
     topBar = {
       var showDropDownMenu by remember { mutableStateOf(false) }
       TopAppBar(
         navigationIcon = {
-          val insetPadding = WindowInsets.displayCutout
-            .only(WindowInsetsSides.Left)
-            .asPaddingValues()
           WithTooltip(
-            modifier = Modifier.padding(insetPadding),
+            modifier = Modifier.windowInsetsPadding(
+              WindowInsets.safeDrawing
+                .only(WindowInsetsSides.Left)
+            ),
             text = stringResource(R.string.navigate_up),
           ) {
             IconButton(
@@ -292,7 +295,7 @@ fun FiltersScreen(
       ) {
         FloatingActionButton(
           modifier = Modifier
-            .safeDrawingPadding()
+            .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal))
             .size(48.dp),
           onClick = {
             showAddFilterDialog = true
@@ -483,7 +486,11 @@ fun FiltersScreen(
                   }
                 }
               )
-              .safeDrawingPadding(),
+              .windowInsetsPadding(
+                WindowInsets.safeDrawing.only(
+                  WindowInsetsSides.Horizontal,
+                )
+              ),
             tag = item.tag,
             message = item.message,
             pid = item.pid?.toString(),
@@ -516,11 +523,11 @@ private fun SelectFiltersAppBar(
 ) {
   TopAppBar(
     navigationIcon = {
-      val insetPadding = WindowInsets.displayCutout
-        .only(WindowInsetsSides.Left)
-        .asPaddingValues()
       WithTooltip(
-        modifier = Modifier.padding(insetPadding),
+        modifier = Modifier.windowInsetsPadding(
+          WindowInsets.safeDrawing
+            .only(WindowInsetsSides.Left)
+        ),
         text = stringResource(R.string.close)
       ) {
         IconButton(
@@ -544,11 +551,11 @@ private fun SelectFiltersAppBar(
       )
     },
     actions = {
-      val insetPadding = WindowInsets.displayCutout
-        .only(WindowInsetsSides.Right)
-        .asPaddingValues()
       Row(
-        modifier = Modifier.padding(insetPadding)
+        modifier = Modifier.windowInsetsPadding(
+          WindowInsets.safeDrawing
+            .only(WindowInsetsSides.Right)
+        ),
       ) {
         WithTooltip(
           text = stringResource(R.string.enable),

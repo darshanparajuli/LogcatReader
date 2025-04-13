@@ -11,13 +11,16 @@ import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.displayCutoutPadding
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
@@ -124,8 +127,9 @@ fun LogsList(
               onLongClick = { onLongClick?.invoke(index) },
               onClick = { expanded = !expanded },
             )
-            .displayCutoutPadding()
-            .navigationBarsPadding()
+            .windowInsetsPadding(
+              WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal)
+            )
             .wrapContentHeight(),
           priority = item.priority,
           tag = if (expanded || ToggleableLogItem.Tag in enabledLogItems) {
@@ -177,8 +181,9 @@ fun LogsList(
               onLongClick = { onLongClick?.invoke(index) },
               onClick = { onClick?.invoke(index) },
             )
-            .displayCutoutPadding()
-            .navigationBarsPadding()
+            .windowInsetsPadding(
+              WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal)
+            )
             .wrapContentHeight(),
           priority = item.priority,
           tag = if (ToggleableLogItem.Tag in enabledLogItems) {

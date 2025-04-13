@@ -23,17 +23,17 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
-import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.consumeWindowInsets
-import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -180,6 +180,7 @@ fun SavedLogsScreen(
 
   Scaffold(
     modifier = modifier,
+    contentWindowInsets = WindowInsets.safeDrawing.only(WindowInsetsSides.Vertical),
     topBar = {
       // For smart-casting.
       val savedLogs = savedLogs
@@ -363,7 +364,11 @@ fun SavedLogsScreen(
                   }
                 }
               )
-              .safeDrawingPadding(),
+              .windowInsetsPadding(
+                WindowInsets.safeDrawing.only(
+                  WindowInsetsSides.Horizontal,
+                )
+              ),
             headlineContent = {
               Text(item.info.fileName)
             },
@@ -423,11 +428,11 @@ private fun AppBar(
   val context = LocalContext.current
   TopAppBar(
     navigationIcon = {
-      val insetPadding = WindowInsets.displayCutout
-        .only(WindowInsetsSides.Left)
-        .asPaddingValues()
       WithTooltip(
-        modifier = Modifier.padding(insetPadding),
+        modifier = Modifier.windowInsetsPadding(
+          WindowInsets.safeDrawing
+            .only(WindowInsetsSides.Left)
+        ),
         text = stringResource(R.string.navigate_up),
       ) {
         IconButton(
@@ -463,14 +468,13 @@ private fun AppBar(
       }
     },
     actions = {
-      val insetPadding = WindowInsets.displayCutout
-        .only(WindowInsetsSides.Right)
-        .asPaddingValues()
       Row(
-        modifier = Modifier.padding(insetPadding)
+        modifier = Modifier.windowInsetsPadding(
+          WindowInsets.safeDrawing
+            .only(WindowInsetsSides.Right)
+        )
       ) {
         WithTooltip(
-          modifier = Modifier.padding(insetPadding),
           text = stringResource(R.string.sort),
         ) {
           IconButton(
@@ -506,11 +510,11 @@ private fun SelectSavedLogsAppBar(
 ) {
   TopAppBar(
     navigationIcon = {
-      val insetPadding = WindowInsets.displayCutout
-        .only(WindowInsetsSides.Left)
-        .asPaddingValues()
       WithTooltip(
-        modifier = Modifier.padding(insetPadding),
+        modifier = Modifier.windowInsetsPadding(
+          WindowInsets.safeDrawing
+            .only(WindowInsetsSides.Left)
+        ),
         text = stringResource(R.string.close)
       ) {
         IconButton(
@@ -534,11 +538,11 @@ private fun SelectSavedLogsAppBar(
       )
     },
     actions = {
-      val insetPadding = WindowInsets.displayCutout
-        .only(WindowInsetsSides.Right)
-        .asPaddingValues()
       Row(
-        modifier = Modifier.padding(insetPadding)
+        modifier = Modifier.windowInsetsPadding(
+          WindowInsets.safeDrawing
+            .only(WindowInsetsSides.Right)
+        ),
       ) {
         AnimatedVisibility(
           visible = singleLogSelected,

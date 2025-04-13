@@ -26,21 +26,18 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
-import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.consumeWindowInsets
-import androidx.compose.foundation.layout.displayCutout
-import androidx.compose.foundation.layout.displayCutoutPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.systemBars
-import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
@@ -330,6 +327,7 @@ fun DeviceLogsScreen(
 
   Scaffold(
     modifier = modifier,
+    contentWindowInsets = WindowInsets.safeDrawing.only(WindowInsetsSides.Vertical),
     topBar = {
       val startedRecordingMessage = stringResource(R.string.started_recording)
       val saveFailedMessage = stringResource(R.string.failed_to_save_logs)
@@ -1133,12 +1131,9 @@ private fun FloatingActionButtons(
     enter = fadeIn() + slideInHorizontally(initialOffsetX = { it }),
     exit = fadeOut() + slideOutHorizontally(targetOffsetX = { it }),
   ) {
-    val insetsPadding = WindowInsets.systemBars
-      .union(WindowInsets.displayCutout)
-      .only(WindowInsetsSides.Left + WindowInsetsSides.Right)
-      .asPaddingValues()
     Column(
-      modifier = Modifier.padding(insetsPadding),
+      modifier = Modifier
+        .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal))
     ) {
       FloatingActionButton(
         modifier = Modifier.size(48.dp),
@@ -1192,12 +1187,12 @@ private fun AppBar(
   onClickRestartLogcat: () -> Unit,
   onClickSettings: () -> Unit,
 ) {
-  val insetPadding = WindowInsets.displayCutout
-    .only(WindowInsetsSides.Left)
-    .asPaddingValues()
   TopAppBar(
     title = {
-      Column(modifier = Modifier.padding(insetPadding)) {
+      Column(
+        modifier = Modifier
+          .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Left))
+      ) {
         Text(
           text = title,
           overflow = TextOverflow.Ellipsis,
@@ -1227,7 +1222,7 @@ private fun AppBar(
     ),
     actions = {
       Row(
-        modifier = Modifier.displayCutoutPadding()
+        modifier = Modifier.windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Right))
       ) {
         WithTooltip(
           text = stringResource(R.string.search)

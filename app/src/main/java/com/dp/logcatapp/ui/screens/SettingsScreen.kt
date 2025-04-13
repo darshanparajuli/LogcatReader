@@ -8,14 +8,13 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
-import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.consumeWindowInsets
-import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.text.KeyboardActions
@@ -109,14 +108,15 @@ fun SettingsScreen(
   val context = LocalContext.current
   Scaffold(
     modifier = modifier,
+    contentWindowInsets = WindowInsets.safeDrawing.only(WindowInsetsSides.Vertical),
     topBar = {
       TopAppBar(
         navigationIcon = {
-          val insetPadding = WindowInsets.displayCutout
-            .only(WindowInsetsSides.Left)
-            .asPaddingValues()
           WithTooltip(
-            modifier = Modifier.padding(insetPadding),
+            modifier = Modifier.windowInsetsPadding(
+              WindowInsets.safeDrawing
+                .only(WindowInsetsSides.Left)
+            ),
             text = stringResource(R.string.navigate_up),
           ) {
             IconButton(
@@ -161,7 +161,11 @@ fun SettingsScreen(
         ReadLogsPermissionStatus(
           modifier = Modifier
             .fillMaxWidth()
-            .safeDrawingPadding()
+            .windowInsetsPadding(
+              WindowInsets.safeDrawing.only(
+                WindowInsetsSides.Horizontal,
+              )
+            )
             .padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 4.dp),
           onClickPermissionNotGranted = {
             showPermissionDialog = true
@@ -184,7 +188,11 @@ fun SettingsScreen(
           is SectionName -> {
             Text(
               modifier = Modifier
-                .safeDrawingPadding()
+                .windowInsetsPadding(
+                  WindowInsets.safeDrawing.only(
+                    WindowInsetsSides.Horizontal,
+                  )
+                )
                 .fillMaxWidth()
                 .padding(start = 16.dp, end = 16.dp, top = 16.dp),
               text = stringResource(item.nameRes),
@@ -195,39 +203,75 @@ fun SettingsScreen(
           is PreferenceRow -> when (item.type) {
             PreferenceType.KeepScreenOn -> KeepScreenOn(
               modifier = Modifier
-                .safeDrawingPadding(),
+                .windowInsetsPadding(
+                  WindowInsets.safeDrawing.only(
+                    WindowInsetsSides.Horizontal,
+                  )
+                ),
             )
             PreferenceType.Theme -> Theme(
               modifier = Modifier
-                .safeDrawingPadding(),
+                .windowInsetsPadding(
+                  WindowInsets.safeDrawing.only(
+                    WindowInsetsSides.Horizontal,
+                  )
+                ),
             )
             PreferenceType.DynamicColor -> DynamicColor(
               modifier = Modifier
-                .safeDrawingPadding(),
+                .windowInsetsPadding(
+                  WindowInsets.safeDrawing.only(
+                    WindowInsetsSides.Horizontal,
+                  )
+                ),
             )
             PreferenceType.PollInterval -> PollInterval(
               modifier = Modifier
-                .safeDrawingPadding(),
+                .windowInsetsPadding(
+                  WindowInsets.safeDrawing.only(
+                    WindowInsetsSides.Horizontal,
+                  )
+                ),
             )
             PreferenceType.Buffers -> Buffers(
               modifier = Modifier
-                .safeDrawingPadding(),
+                .windowInsetsPadding(
+                  WindowInsets.safeDrawing.only(
+                    WindowInsetsSides.Horizontal,
+                  )
+                ),
             )
             PreferenceType.MaxLogs -> MaxLogs(
               modifier = Modifier
-                .safeDrawingPadding(),
+                .windowInsetsPadding(
+                  WindowInsets.safeDrawing.only(
+                    WindowInsetsSides.Horizontal,
+                  )
+                ),
             )
             PreferenceType.SaveLocation -> SaveLocation(
               modifier = Modifier
-                .safeDrawingPadding(),
+                .windowInsetsPadding(
+                  WindowInsets.safeDrawing.only(
+                    WindowInsetsSides.Horizontal,
+                  )
+                ),
             )
             PreferenceType.GithubRepoInfo -> GithubRepoInfo(
               modifier = Modifier
-                .safeDrawingPadding(),
+                .windowInsetsPadding(
+                  WindowInsets.safeDrawing.only(
+                    WindowInsetsSides.Horizontal,
+                  )
+                ),
             )
             PreferenceType.AppInfo -> AppInfo(
               modifier = Modifier
-                .safeDrawingPadding(),
+                .windowInsetsPadding(
+                  WindowInsets.safeDrawing.only(
+                    WindowInsetsSides.Horizontal,
+                  )
+                ),
             )
           }
           SectionDivider -> {

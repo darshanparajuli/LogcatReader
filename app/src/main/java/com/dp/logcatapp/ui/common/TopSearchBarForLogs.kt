@@ -4,13 +4,12 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
-import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.only
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.KeyboardArrowDown
@@ -67,11 +66,10 @@ fun SearchLogsTopBar(
   TopAppBar(
     modifier = Modifier.fillMaxWidth(),
     navigationIcon = {
-      val insetPadding = WindowInsets.displayCutout
-        .only(WindowInsetsSides.Left)
-        .asPaddingValues()
       WithTooltip(
-        modifier = Modifier.padding(insetPadding),
+        modifier = Modifier.windowInsetsPadding(
+          WindowInsets.safeDrawing.only(WindowInsetsSides.Left)
+        ),
         text = stringResource(R.string.close),
       ) {
         IconButton(
@@ -162,11 +160,10 @@ fun SearchLogsTopBar(
       )
     },
     actions = {
-      val insetPadding = WindowInsets.displayCutout
-        .only(WindowInsetsSides.Right)
-        .asPaddingValues()
       Row(
-        modifier = Modifier.padding(insetPadding)
+        modifier = Modifier.windowInsetsPadding(
+          WindowInsets.safeDrawing.only(WindowInsetsSides.Right)
+        ),
       ) {
         WithTooltip(
           text = stringResource(R.string.previous),
