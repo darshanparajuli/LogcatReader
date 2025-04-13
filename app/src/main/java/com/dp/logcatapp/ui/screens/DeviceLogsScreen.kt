@@ -97,6 +97,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
@@ -205,8 +206,8 @@ fun DeviceLogsScreen(
   val updatedOnStartRecording by rememberUpdatedState(onStartRecording)
   val updatedOnStopRecording by rememberUpdatedState(onStopRecording)
   val updatedStopRecordingSignal by rememberUpdatedState(stopRecordingSignal)
+  var snapToBottom by rememberSaveable { mutableStateOf(true) }
 
-  var snapToBottom by remember { mutableStateOf(true) }
   val scrollToTopInteractionSource = remember { MutableInteractionSource() }
   val scrollToBottomInteractionSource = remember { MutableInteractionSource() }
   val snapScrollInfo = rememberSnapScrollInfo(
@@ -226,13 +227,15 @@ fun DeviceLogsScreen(
   )
 
   val logsState = remember { mutableStateListOf<Log>() }
-  var searchInProgress by remember { mutableStateOf(false) }
-  var showDropDownMenu by remember { mutableStateOf(false) }
-  var showSearchBar by remember { mutableStateOf(false) }
-  var useRegexForSearch by remember { mutableStateOf(false) }
-  var searchQuery by remember { mutableStateOf("") }
-  var searchRegexError by remember { mutableStateOf(false) }
   var logcatPaused by remember { mutableStateOf(false) }
+  var showDropDownMenu by remember { mutableStateOf(false) }
+
+  var showSearchBar by rememberSaveable { mutableStateOf(false) }
+  var searchInProgress by rememberSaveable { mutableStateOf(false) }
+  var useRegexForSearch by rememberSaveable { mutableStateOf(false) }
+  var searchQuery by rememberSaveable { mutableStateOf("") }
+  var searchRegexError by remember { mutableStateOf(false) }
+
   // Value: tagIndex start and end.
   val searchHitsMap = remember { mutableStateMapOf<SearchHitKey, SearchHitSpan>() }
   // List of pair of logId and it's index on the list.

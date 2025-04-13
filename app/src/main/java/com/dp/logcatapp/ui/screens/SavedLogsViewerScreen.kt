@@ -54,6 +54,7 @@ import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
@@ -121,15 +122,17 @@ fun SavedLogsViewerScreen(
 
   val focusManager = LocalFocusManager.current
   val listState = rememberLazyListState()
-  var showSearchBar by remember { mutableStateOf(false) }
-  var useRegexForSearch by remember { mutableStateOf(false) }
+
+  var showSearchBar by rememberSaveable { mutableStateOf(false) }
+  var searchInProgress by rememberSaveable { mutableStateOf(false) }
+  var useRegexForSearch by rememberSaveable { mutableStateOf(false) }
+  var searchQuery by rememberSaveable { mutableStateOf("") }
   var searchRegexError by remember { mutableStateOf(false) }
-  var searchQuery by remember { mutableStateOf("") }
+
   var currentSearchHitIndex by remember { mutableIntStateOf(-1) }
   var currentSearchHitLogId by remember { mutableIntStateOf(-1) }
   var showHitCount by remember { mutableStateOf(false) }
   val searchHitsMap = remember { mutableStateMapOf<SearchHitKey, SearchHitSpan>() }
-  var searchInProgress by remember { mutableStateOf(false) }
   var sortedHitsByLogIdsState by remember { mutableStateOf<List<SearchHitInfo>>(emptyList()) }
   var scrollSnapperVisible by remember { mutableStateOf(false) }
   var compactViewPreference = rememberBooleanSharedPreference(
