@@ -51,7 +51,7 @@ import com.dp.logcat.Log
 import com.dp.logcat.LogPriority
 import com.dp.logcatapp.R
 import com.dp.logcatapp.ui.common.SearchHitKey.LogComponent
-import com.dp.logcatapp.ui.common.SearchResult.SearchHitInfo
+import com.dp.logcatapp.ui.common.SearchResult.SearchHit
 import com.dp.logcatapp.ui.common.SearchResult.SearchHitSpan
 import com.dp.logcatapp.ui.theme.LogPriorityColors
 import com.dp.logcatapp.ui.theme.LogcatReaderTheme
@@ -71,9 +71,10 @@ fun LogsList(
   state: LazyListState,
   contentPadding: PaddingValues,
   logs: List<Log>,
-  searchHits: Map<SearchHitKey, SearchHitSpan>,
+  searchHitIndexMap: Map<SearchHitKey, List<HitIndex>>,
+  searchHits: List<SearchHit>,
   appInfoMap: Map<String, AppInfo> = emptyMap(),
-  currentSearchHitLogId: Int,
+  currentSearchHitIndex: Int,
   listStyle: LogsListStyle = LogsListStyle.Default,
   enabledLogItems: Set<ToggleableLogItem> = DEFAULT_ENABLED_LIST_ITEMS,
   // onClick is only available for LogsListStyle.Default.
@@ -96,22 +97,35 @@ fun LogsList(
       }
 
       fun maybeHighlightSearchHit(target: String, searchHitKey: SearchHitKey): AnnotatedString {
-        val hit = if (searchHits.isNotEmpty()) searchHits[searchHitKey] else null
-        return if (hit != null) {
+        val hits = if (searchHitIndexMap.isNotEmpty()) {
+          searchHitIndexMap[searchHitKey].orEmpty().mapNotNull { hitIndex ->
+            val hits = searchHits.getOrNull(hitIndex.value)
+            if (hits == null) {
+              null
+            } else {
+              Pair(hitIndex.value, hits)
+            }
+          }
+        } else {
+          emptyList()
+        }
+        return if (hits.isNotEmpty()) {
           buildAnnotatedString {
             append(target)
-            val color = if (item.id == currentSearchHitLogId) {
-              currentSearchHitColor
-            } else {
-              textSelectionColors.backgroundColor
+            hits.forEach { (hitIndex, hitInfo) ->
+              val color = if (hitIndex == currentSearchHitIndex) {
+                currentSearchHitColor
+              } else {
+                textSelectionColors.backgroundColor
+              }
+              addStyle(
+                SpanStyle(
+                  background = color
+                ),
+                start = hitInfo.span.start,
+                end = hitInfo.span.end,
+              )
             }
-            addStyle(
-              SpanStyle(
-                background = color
-              ),
-              start = hit.start,
-              end = hit.end,
-            )
           }
         } else {
           AnnotatedString(target)
@@ -135,12 +149,12 @@ fun LogsList(
           tag = if (expanded || ToggleableLogItem.Tag in enabledLogItems) {
             maybeHighlightSearchHit(
               target = item.tag,
-              searchHitKey = SearchHitKey(logId = item.id, component = LogComponent.TAG),
+              searchHitKey = SearchHitKey(logId = item.id, component = LogComponent.Tag),
             )
           } else null,
           message = maybeHighlightSearchHit(
             target = item.msg,
-            searchHitKey = SearchHitKey(logId = item.id, component = LogComponent.MSG),
+            searchHitKey = SearchHitKey(logId = item.id, component = LogComponent.Message),
           ),
           packageName = if (ToggleableLogItem.PackageName in enabledLogItems) {
             item.uid?.let { uid ->
@@ -152,7 +166,10 @@ fun LogsList(
               packageName?.let {
                 maybeHighlightSearchHit(
                   target = it,
-                  searchHitKey = SearchHitKey(logId = item.id, component = LogComponent.PKG),
+                  searchHitKey = SearchHitKey(
+                    logId = item.id,
+                    component = LogComponent.PackageName
+                  ),
                 )
               }
             }
@@ -186,15 +203,15 @@ fun LogsList(
             )
             .wrapContentHeight(),
           priority = item.priority,
-          tag = if (ToggleableLogItem.Tag in enabledLogItems) {
+          tag = item.tag.takeIf { ToggleableLogItem.Tag in enabledLogItems }?.let { tag ->
             maybeHighlightSearchHit(
-              target = item.tag,
-              searchHitKey = SearchHitKey(logId = item.id, component = LogComponent.TAG),
+              target = tag,
+              searchHitKey = SearchHitKey(logId = item.id, component = LogComponent.Tag),
             )
-          } else null,
+          },
           message = maybeHighlightSearchHit(
             target = item.msg,
-            searchHitKey = SearchHitKey(logId = item.id, component = LogComponent.MSG),
+            searchHitKey = SearchHitKey(logId = item.id, component = LogComponent.Message),
           ),
           packageName = if (ToggleableLogItem.PackageName in enabledLogItems) {
             item.uid?.let { uid ->
@@ -206,15 +223,38 @@ fun LogsList(
               packageName?.let {
                 maybeHighlightSearchHit(
                   target = it,
-                  searchHitKey = SearchHitKey(logId = item.id, component = LogComponent.PKG),
+                  searchHitKey = SearchHitKey(
+                    logId = item.id,
+                    component = LogComponent.PackageName
+                  ),
                 )
               }
             }
           } else null,
-          date = item.date.takeIf { ToggleableLogItem.Date in enabledLogItems },
-          time = item.time.takeIf { ToggleableLogItem.Time in enabledLogItems },
-          pid = item.pid.takeIf { ToggleableLogItem.Pid in enabledLogItems },
-          tid = item.tid.takeIf { ToggleableLogItem.Tid in enabledLogItems },
+          date = item.date.takeIf { ToggleableLogItem.Date in enabledLogItems }?.let { date ->
+            maybeHighlightSearchHit(
+              target = date,
+              searchHitKey = SearchHitKey(logId = item.id, component = LogComponent.Date),
+            )
+          },
+          time = item.time.takeIf { ToggleableLogItem.Time in enabledLogItems }?.let { time ->
+            maybeHighlightSearchHit(
+              target = time,
+              searchHitKey = SearchHitKey(logId = item.id, component = LogComponent.Time),
+            )
+          },
+          pid = item.pid.takeIf { ToggleableLogItem.Pid in enabledLogItems }?.let { pid ->
+            maybeHighlightSearchHit(
+              target = pid,
+              searchHitKey = SearchHitKey(logId = item.id, component = LogComponent.Pid),
+            )
+          },
+          tid = item.tid.takeIf { ToggleableLogItem.Tid in enabledLogItems }?.let { tid ->
+            maybeHighlightSearchHit(
+              target = tid,
+              searchHitKey = SearchHitKey(logId = item.id, component = LogComponent.Tid),
+            )
+          },
           priorityColor = when (item.priority) {
             LogPriority.ASSERT -> LogPriorityColors.priorityAssert
             LogPriority.DEBUG -> LogPriorityColors.priorityDebug
@@ -238,10 +278,10 @@ private fun LogItem(
   tag: AnnotatedString?,
   message: AnnotatedString,
   packageName: AnnotatedString?,
-  date: String?,
-  time: String?,
-  pid: String?,
-  tid: String?,
+  date: AnnotatedString?,
+  time: AnnotatedString?,
+  pid: AnnotatedString?,
+  tid: AnnotatedString?,
   priorityColor: Color,
 ) {
   val textColor = logListItemSecondaryColor()
@@ -508,45 +548,13 @@ suspend fun searchLogs(
   logs: List<Log>,
   appInfoMap: Map<String, AppInfo>,
   searchRegex: Regex,
-): Pair<Map<SearchHitKey, SearchHitSpan>, List<SearchHitInfo>> = withContext(Dispatchers.Default) {
-  val map = mutableMapOf<SearchHitKey, SearchHitSpan>()
-  val hits = mutableListOf<SearchHitInfo>()
-  logs.forEachIndexed { index, log ->
-    val msgRange = searchRegex.find(log.msg)?.range
-    val tagRange = searchRegex.find(log.tag)?.range
-    val uid = log.uid
-    val packageMatchRange = if (uid != null) {
-      val packageName = if (uid.isDigitsOnly()) {
-        appInfoMap[log.uid]?.packageName
-      } else {
-        uid
-      }
-      packageName?.let { searchRegex.find(it)?.range }
-    } else {
-      null
+): Pair<Map<SearchHitKey, List<HitIndex>>, List<SearchHit>> {
+  return searchLogs(
+    logs = logs,
+    appInfoMap = appInfoMap,
+    searchFunction = { target ->
+      search(target = target, query = searchRegex)
     }
-    if (msgRange != null) {
-      map[SearchHitKey(logId = log.id, component = LogComponent.MSG)] =
-        SearchHitSpan(start = msgRange.start, end = msgRange.endInclusive + 1)
-      hits += SearchHitInfo(logId = log.id, index = index)
-    }
-    if (tagRange != null) {
-      map[SearchHitKey(logId = log.id, component = LogComponent.TAG)] =
-        SearchHitSpan(start = tagRange.start, end = tagRange.endInclusive + 1)
-      hits += SearchHitInfo(logId = log.id, index = index)
-    }
-    if (packageMatchRange != null) {
-      map[SearchHitKey(logId = log.id, component = LogComponent.PKG)] =
-        SearchHitSpan(start = packageMatchRange.start, end = packageMatchRange.endInclusive + 1)
-      hits += SearchHitInfo(logId = log.id, index = index)
-    }
-  }
-  Pair(
-    first = map,
-    second = hits.sortedBy {
-      // sort by log id
-      it.logId
-    },
   )
 }
 
@@ -554,60 +562,115 @@ suspend fun searchLogs(
   logs: List<Log>,
   appInfoMap: Map<String, AppInfo>,
   searchQuery: String,
-): Pair<Map<SearchHitKey, SearchHitSpan>, List<SearchHitInfo>> = withContext(Dispatchers.Default) {
-  val map = mutableMapOf<SearchHitKey, SearchHitSpan>()
-  val hits = mutableListOf<SearchHitInfo>()
+): Pair<Map<SearchHitKey, List<HitIndex>>, List<SearchHit>> {
+  return searchLogs(
+    logs = logs,
+    appInfoMap = appInfoMap,
+    searchFunction = { target ->
+      search(target = target, query = searchQuery)
+    }
+  )
+}
+
+@JvmInline
+value class HitIndex(val value: Int)
+
+suspend fun searchLogs(
+  logs: List<Log>,
+  appInfoMap: Map<String, AppInfo>,
+  searchFunction: (String) -> Sequence<SearchHitSpan>,
+): Pair<Map<SearchHitKey, List<HitIndex>>, List<SearchHit>> = withContext(Dispatchers.Default) {
+  val map = mutableMapOf<SearchHitKey, List<HitIndex>>()
+  val hits = mutableListOf<SearchHit>()
   logs.forEachIndexed { index, log ->
-    val msgIndex = log.msg.indexOf(string = searchQuery, ignoreCase = true)
-    val tagIndex = log.tag.indexOf(string = searchQuery, ignoreCase = true)
-    val uid = log.uid
-    val packageNameIndex = if (uid != null) {
+    val msgSearchResult = searchFunction(log.msg)
+    val tagSearchResult = searchFunction(log.tag)
+    val dateSearchResult = searchFunction(log.date)
+    val timeSearchResult = searchFunction(log.time)
+    val pidSearchResult = searchFunction(log.pid)
+    val tidSearchResult = searchFunction(log.tid)
+    val packageNameSearchResult = log.uid?.let { uid ->
       val packageName = if (uid.isDigitsOnly()) {
         appInfoMap[log.uid]?.packageName
       } else {
         uid
       }
-      packageName?.indexOf(string = searchQuery, ignoreCase = true) ?: -1
-    } else {
-      -1
+      packageName?.let { searchFunction(it) }.orEmpty()
+    } ?: emptySequence()
+
+    fun addSpans(
+      spans: Sequence<SearchHitSpan>,
+      component: LogComponent,
+    ) {
+      val hitIndices = mutableListOf<HitIndex>()
+      spans.forEach { span ->
+        hitIndices += HitIndex(hits.size)
+        hits += SearchHit(
+          logId = log.id,
+          index = index,
+          span = span,
+        )
+      }
+      map[SearchHitKey(logId = log.id, component = component)] = hitIndices
     }
-    if (msgIndex != -1) {
-      map[SearchHitKey(logId = log.id, component = LogComponent.MSG)] =
-        SearchHitSpan(start = msgIndex, end = msgIndex + searchQuery.length)
-      hits += SearchHitInfo(logId = log.id, index = index)
-    }
-    if (tagIndex != -1) {
-      map[SearchHitKey(logId = log.id, component = LogComponent.TAG)] =
-        SearchHitSpan(start = tagIndex, end = tagIndex + searchQuery.length)
-      hits += SearchHitInfo(logId = log.id, index = index)
-    }
-    if (packageNameIndex != -1) {
-      map[SearchHitKey(logId = log.id, component = LogComponent.PKG)] =
-        SearchHitSpan(start = packageNameIndex, end = packageNameIndex + searchQuery.length)
-      hits += SearchHitInfo(logId = log.id, index = index)
-    }
+
+    addSpans(msgSearchResult, LogComponent.Message)
+    addSpans(tagSearchResult, LogComponent.Tag)
+    addSpans(packageNameSearchResult, LogComponent.PackageName)
+    addSpans(dateSearchResult, LogComponent.Date)
+    addSpans(timeSearchResult, LogComponent.Time)
+    addSpans(pidSearchResult, LogComponent.Pid)
+    addSpans(tidSearchResult, LogComponent.Tid)
   }
   Pair(
     first = map,
-    second = hits.sortedBy {
-      // sort by log id
-      it.logId
-    },
+    second = hits,
   )
 }
 
+private fun search(
+  target: String,
+  query: String,
+): Sequence<SearchHitSpan> {
+  fun nextSearchHit(
+    startIndex: Int = 0,
+  ): SearchHitSpan? {
+    return target.indexOf(string = query, ignoreCase = true, startIndex = startIndex)
+      .takeIf { it != -1 }
+      ?.let { index ->
+        SearchHitSpan(start = index, end = index + query.length)
+      }
+  }
+  return generateSequence(
+    seedFunction = ::nextSearchHit,
+    nextFunction = { span ->
+      nextSearchHit(startIndex = span.end)
+    }
+  )
+}
+
+private fun search(
+  target: String,
+  query: Regex,
+): Sequence<SearchHitSpan> {
+  return query.findAll(target).map { result ->
+    SearchHitSpan(start = result.range.start, end = result.range.endInclusive + 1)
+  }
+}
+
 data class SearchResult(
-  val map: Map<SearchHitKey, SearchHitSpan>,
-  val hitsSortedById: List<SearchHitInfo>
+  val map: Map<SearchHitKey, SearchHit>,
+  val hitsSortedById: List<SearchHit>
 ) {
   data class SearchHitSpan(
     val start: Int,
     val end: Int,
   )
 
-  data class SearchHitInfo(
+  data class SearchHit(
     val logId: Int,
     val index: Int,
+    val span: SearchHitSpan,
   )
 }
 
@@ -616,9 +679,13 @@ data class SearchHitKey(
   val component: LogComponent,
 ) {
   enum class LogComponent {
-    MSG,
-    TAG,
-    PKG,
+    Message,
+    Tag,
+    PackageName,
+    Time,
+    Date,
+    Pid,
+    Tid,
   }
 }
 
@@ -647,10 +714,10 @@ private fun LogItemPreview() {
       priority = "D",
       tag = AnnotatedString("Tag"),
       message = AnnotatedString("This is a log"),
-      date = "01-12",
-      time = "21:10:46.123",
-      pid = "1600",
-      tid = "123123",
+      date = AnnotatedString("01-12"),
+      time = AnnotatedString("21:10:46.123"),
+      pid = AnnotatedString("1600"),
+      tid = AnnotatedString("123123"),
       packageName = AnnotatedString("com.dp.logcatapp"),
       priorityColor = LogPriorityColors.priorityDebug,
     )

@@ -139,14 +139,14 @@ import com.dp.logcatapp.services.LogcatService
 import com.dp.logcatapp.services.LogcatService.LogcatSessionStatus
 import com.dp.logcatapp.services.getService
 import com.dp.logcatapp.ui.common.CopyLogClipboardBottomSheet
+import com.dp.logcatapp.ui.common.HitIndex
 import com.dp.logcatapp.ui.common.LOGCAT_DIR
 import com.dp.logcatapp.ui.common.LogsList
 import com.dp.logcatapp.ui.common.LogsListStyle
 import com.dp.logcatapp.ui.common.MaybeShowPermissionRequiredDialog
 import com.dp.logcatapp.ui.common.SearchHitKey
 import com.dp.logcatapp.ui.common.SearchLogsTopBar
-import com.dp.logcatapp.ui.common.SearchResult.SearchHitInfo
-import com.dp.logcatapp.ui.common.SearchResult.SearchHitSpan
+import com.dp.logcatapp.ui.common.SearchResult.SearchHit
 import com.dp.logcatapp.ui.common.ToggleableLogItem
 import com.dp.logcatapp.ui.common.WithTooltip
 import com.dp.logcatapp.ui.common.searchLogs
@@ -240,11 +240,10 @@ fun DeviceLogsScreen(
   var searchRegexError by remember { mutableStateOf(false) }
 
   // Value: tagIndex start and end.
-  val searchHitsMap = remember { mutableStateMapOf<SearchHitKey, SearchHitSpan>() }
-  // List of pair of logId and it's index on the list.
-  var sortedHitsByLogIdsState by remember { mutableStateOf<List<SearchHitInfo>>(emptyList()) }
+  val searchHitIndexMap = remember { mutableStateMapOf<SearchHitKey, List<HitIndex>>() }
+  var searchHits by remember { mutableStateOf<List<SearchHit>>(emptyList()) }
   var currentSearchHitIndex by remember { mutableIntStateOf(-1) }
-  var currentSearchHitLogId by remember { mutableIntStateOf(-1) }
+  // var currentSearchHitLogId by remember { mutableIntStateOf(-1) }
   var showHitCount by remember { mutableStateOf(false) }
   var recordStatus by viewModel.recordStatus
   val snackbarHostState = remember { SnackbarHostState() }
@@ -543,15 +542,14 @@ fun DeviceLogsScreen(
           searchQuery = searchQuery,
           searchInProgress = searchInProgress,
           showHitCount = showHitCount,
-          hitCount = searchHitsMap.size,
+          hitCount = searchHitIndexMap.size,
           currentHitIndex = currentSearchHitIndex,
           onQueryChange = { searchQuery = it },
           onClose = {
             showSearchBar = false
-            searchHitsMap.clear()
-            sortedHitsByLogIdsState = emptyList()
+            searchHitIndexMap.clear()
+            searchHits = emptyList()
             currentSearchHitIndex = -1
-            currentSearchHitLogId = -1
             focusManager.clearFocus()
             searchQuery = ""
           },
@@ -560,12 +558,12 @@ fun DeviceLogsScreen(
             if (currentSearchHitIndex - 1 >= 0) {
               currentSearchHitIndex -= 1
             } else {
-              currentSearchHitIndex = searchHitsMap.size - 1
+              currentSearchHitIndex = searchHitIndexMap.size - 1
             }
           },
           onNext = {
             focusManager.clearFocus()
-            currentSearchHitIndex = (currentSearchHitIndex + 1) % searchHitsMap.size
+            currentSearchHitIndex = (currentSearchHitIndex + 1) % searchHitIndexMap.size
           },
           regexEnabled = useRegexForSearch,
           regexError = searchRegexError,
@@ -624,7 +622,7 @@ fun DeviceLogsScreen(
               }
               snapshotFlow { logsState.toList() }
                 .collect { logs ->
-                  val (map, sortedHitsByLogId) = when {
+                  val (indexMap, hits) = when {
                     useRegex && searchRegex == null -> {
                       Pair(emptyMap(), emptyList())
                     }
@@ -643,42 +641,38 @@ fun DeviceLogsScreen(
                       )
                     }
                   }
-                  searchHitsMap.clear()
-                  searchHitsMap.putAll(map)
-                  sortedHitsByLogIdsState = sortedHitsByLogId
+                  searchHitIndexMap.clear()
+                  searchHitIndexMap.putAll(indexMap)
+                  searchHits = hits
 
                   if (!scrolled) {
                     searchInProgress = false
-                    if (sortedHitsByLogIdsState.isNotEmpty()) {
+                    if (searchHits.isNotEmpty()) {
                       currentSearchHitIndex = 0
-                      currentSearchHitLogId = sortedHitsByLogIdsState.first().logId
                       snapToBottom = false
                       scrolled = true
                     } else {
                       currentSearchHitIndex = -1
-                      currentSearchHitLogId = -1
                     }
                   }
                 }
             } else {
               searchRegexError = false
               searchInProgress = false
-              searchHitsMap.clear()
-              sortedHitsByLogIdsState = emptyList()
+              searchHitIndexMap.clear()
+              searchHits = emptyList()
               currentSearchHitIndex = -1
-              currentSearchHitLogId = -1
             }
           }
       }
       if (searchQuery.isNotEmpty()) {
         LaunchedEffect(lazyListState, searchQuery) {
-          snapshotFlow { sortedHitsByLogIdsState to currentSearchHitIndex }
-            .filter { (_, index) -> index != -1 }
+          snapshotFlow { searchHits to currentSearchHitIndex }
+            .filter { (_, hitIndex) -> hitIndex != -1 }
             .distinctUntilChangedBy { (_, index) -> index }
-            .collectLatest { (hits, index) ->
-              if (index < hits.size) {
-                currentSearchHitLogId = hits[index].logId
-                val scrollIndex = hits[index].index
+            .collectLatest { (hits, hitIndex) ->
+              if (hitIndex < hits.size) {
+                val scrollIndex = hits[hitIndex].index
                 if (scrollIndex != -1 && scrollIndex < lazyListState.layoutInfo.totalItemsCount) {
                   lazyListState.scrollToItem(scrollIndex)
                 }
@@ -818,7 +812,8 @@ fun DeviceLogsScreen(
           enabledLogItems = enabledLogItems,
           logs = logsState,
           appInfoMap = appInfoMap.orEmpty(),
-          searchHits = searchHitsMap,
+          searchHitIndexMap = searchHitIndexMap,
+          searchHits = searchHits,
           onClick = if (!compactViewPreference.value) {
             { index ->
               showCopyToClipboardSheet = logsState[index]
@@ -830,7 +825,7 @@ fun DeviceLogsScreen(
             snapToBottom = false
           },
           state = lazyListState,
-          currentSearchHitLogId = currentSearchHitLogId,
+          currentSearchHitIndex = currentSearchHitIndex,
         )
 
         showCopyToClipboardSheet?.let { log ->
