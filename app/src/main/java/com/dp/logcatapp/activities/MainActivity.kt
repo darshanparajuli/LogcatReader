@@ -34,7 +34,7 @@ class MainActivity : ComponentActivity() {
     super.onCreate(savedInstanceState)
     enableEdgeToEdge()
 
-    if (checkShouldTheAppExit(intent)) {
+    if (handleExitNotificationAction(intent)) {
       return
     }
 
@@ -45,7 +45,7 @@ class MainActivity : ComponentActivity() {
     if (Build.VERSION.SDK_INT >= 33) {
       registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         if (!granted) {
-          // TODO(darshan): show help text regarding why we need notifications permission.
+          // TODO: show help text regarding why we need notifications permission.
         }
         val logcatServiceIntent = Intent(this, LogcatService::class.java)
         startForegroundService(logcatServiceIntent)
@@ -84,12 +84,18 @@ class MainActivity : ComponentActivity() {
 
   override fun onNewIntent(intent: Intent, caller: ComponentCaller) {
     super.onNewIntent(intent)
-    checkShouldTheAppExit(intent)
+    if (handleExitNotificationAction(intent)) {
+      return
+    }
     handleStopRecordingIntent(intent)
   }
 
   private fun Intent?.shouldStopRecording(): Boolean {
     return this?.getBooleanExtra(STOP_RECORDING_EXTRA, false) == true
+  }
+
+  private fun Intent?.shouldExit(): Boolean {
+    return this?.getBooleanExtra(EXIT_EXTRA, false) == true
   }
 
   private fun handleStopRecordingIntent(intent: Intent?) {
@@ -98,8 +104,10 @@ class MainActivity : ComponentActivity() {
     }
   }
 
-  private fun checkShouldTheAppExit(intent: Intent?): Boolean =
-    if (intent?.getBooleanExtra(EXIT_EXTRA, false) == true) {
+  private fun handleExitNotificationAction(intent: Intent?): Boolean =
+    if (intent.shouldExit()) {
+      // Stop logcat service first.
+      stopService(Intent(this, LogcatService::class.java))
       ActivityCompat.finishAfterTransition(this)
       true
     } else {
