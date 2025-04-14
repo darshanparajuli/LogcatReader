@@ -1,5 +1,6 @@
 package com.dp.logcatapp.ui.screens
 
+import android.app.Application
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
@@ -114,13 +115,16 @@ import androidx.core.net.toFile
 import androidx.core.net.toUri
 import androidx.core.text.isDigitsOnly
 import androidx.documentfile.provider.DocumentFile
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.dp.logcat.Filter
 import com.dp.logcat.Log
 import com.dp.logcat.LogcatSession
 import com.dp.logcat.LogcatSession.RecordingFileInfo
 import com.dp.logcat.LogcatUtil
+import com.dp.logcatapp.LogcatApp
 import com.dp.logcatapp.R
 import com.dp.logcatapp.activities.FiltersActivity
 import com.dp.logcatapp.activities.SavedLogsActivity
@@ -192,20 +196,18 @@ private const val ENABLED_LOG_ITEMS_KEY = "toggleable_log_items_pref_key"
 @Composable
 fun DeviceLogsScreen(
   modifier: Modifier,
-  stopRecordingSignal: Boolean,
-  onStartRecording: () -> Unit,
-  onStopRecording: () -> Unit,
+  stopRecordingSignal: Flow<Unit>,
+  viewModel: DeviceLogsViewModel = viewModel(
+    key = "device_logs_view_model",
+  ),
 ) {
   val context = LocalContext.current
   val coroutineScope = rememberCoroutineScope()
   val focusManager = LocalFocusManager.current
 
   val appInfoMap by rememberUpdatedState(rememberAppInfoByUidMap())
-  val logcatService = rememberLogcatServiceConnection()
   val lazyListState = rememberLazyListState()
 
-  val updatedOnStartRecording by rememberUpdatedState(onStartRecording)
-  val updatedOnStopRecording by rememberUpdatedState(onStopRecording)
   val updatedStopRecordingSignal by rememberUpdatedState(stopRecordingSignal)
   var snapToBottom by rememberSaveable { mutableStateOf(true) }
 
@@ -244,7 +246,7 @@ fun DeviceLogsScreen(
   var currentSearchHitIndex by remember { mutableIntStateOf(-1) }
   var currentSearchHitLogId by remember { mutableIntStateOf(-1) }
   var showHitCount by remember { mutableStateOf(false) }
-  var recordStatus by remember { mutableStateOf<RecordStatus>(RecordStatus.Idle) }
+  var recordStatus by viewModel.recordStatus
   val snackbarHostState = remember { SnackbarHostState() }
   var savedLogsSheetState by remember {
     mutableStateOf<SavedLogsBottomSheetState>(SavedLogsBottomSheetState.Hide)
@@ -258,6 +260,7 @@ fun DeviceLogsScreen(
     BackHandler { showSearchBar = false }
   }
 
+  val logcatService = viewModel.logcatService
   if (logcatService != null) {
     val db = remember(context) { LogcatReaderDatabase.getInstance(context) }
     LaunchedEffect(logcatService) {
@@ -281,12 +284,14 @@ fun DeviceLogsScreen(
                 recordStatus = RecordStatus.RecordingInProgress
               }
 
-              if (updatedStopRecordingSignal) {
-                if (recordStatus == RecordStatus.RecordingInProgress) {
-                  if (logcatSession.isRecording) {
-                    recordStatus = RecordStatus.SaveRecordedLogs
-                  } else {
-                    recordStatus = RecordStatus.Idle
+              launch {
+                updatedStopRecordingSignal.collect {
+                  if (recordStatus == RecordStatus.RecordingInProgress) {
+                    if (logcatSession.isRecording) {
+                      recordStatus = RecordStatus.SaveRecordedLogs
+                    } else {
+                      recordStatus = RecordStatus.Idle
+                    }
                   }
                 }
               }
@@ -388,7 +393,6 @@ fun DeviceLogsScreen(
                     writer = writer,
                   )
 
-                  updatedOnStartRecording()
                   lastShownSnackBar?.cancel()
                   lastShownSnackBar = launch {
                     snackbarHostState.showSnackbar(
@@ -427,7 +431,6 @@ fun DeviceLogsScreen(
                     )
                   }
                 }
-                updatedOnStopRecording()
               }
             }
           }
@@ -1857,5 +1860,48 @@ private class LogFilter(
     }
 
     return true
+  }
+}
+
+class DeviceLogsViewModel(
+  application: Application,
+) : AndroidViewModel(application) {
+
+  val context: Context
+    get() = getApplication<LogcatApp>().applicationContext
+
+  private val _logcatService = mutableStateOf<LogcatService?>(null)
+  val logcatService by _logcatService
+
+  var recordStatus = mutableStateOf<RecordStatus>(RecordStatus.Idle)
+
+  private val serviceConnection = object : ServiceConnection {
+    override fun onServiceConnected(
+      name: ComponentName?,
+      service: IBinder,
+    ) {
+      Logger.debug(TAG, "LogcatService - onServiceConnected")
+      _logcatService.value = service.getService()
+    }
+
+    override fun onServiceDisconnected(name: ComponentName) {
+      Logger.debug(TAG, "LogcatService - onServiceDisconnected")
+      _logcatService.value = null
+    }
+  }
+
+  init {
+    application.bindService(
+      Intent(application, LogcatService::class.java),
+      serviceConnection,
+      Context.BIND_ABOVE_CLIENT,
+    )
+  }
+
+  override fun onCleared() {
+    // Stop the service if recording is not active.
+    if (recordStatus.value == RecordStatus.Idle) {
+      context.stopService(Intent(context, LogcatService::class.java))
+    }
   }
 }
