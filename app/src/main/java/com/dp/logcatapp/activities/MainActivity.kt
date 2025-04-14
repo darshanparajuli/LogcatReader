@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.core.app.ActivityCompat
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.dp.logcatapp.services.LogcatService
 import com.dp.logcatapp.ui.screens.DeviceLogsScreen
 import com.dp.logcatapp.ui.theme.LogcatReaderTheme
@@ -31,6 +32,8 @@ class MainActivity : ComponentActivity() {
   )
 
   override fun onCreate(savedInstanceState: Bundle?) {
+    installSplashScreen()
+
     super.onCreate(savedInstanceState)
     enableEdgeToEdge()
 
