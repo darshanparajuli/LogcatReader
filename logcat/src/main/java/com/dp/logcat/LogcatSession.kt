@@ -56,6 +56,19 @@ class LogcatSession(
   // }
 
   @Volatile private var active = false
+  @Volatile private var paused = false
+  private val pauseWaiter = Object()
+
+  var isPaused: Boolean
+    get() = paused
+    set(value) {
+      synchronized(pauseWaiter) {
+        paused = value
+        if (!paused) {
+          pauseWaiter.notify()
+        }
+      }
+    }
 
   companion object {
     private val _uidOptionSupported = MutableStateFlow<Boolean?>(null)
@@ -204,6 +217,15 @@ class LogcatSession(
 
   private fun poll() {
     while (active) {
+      synchronized(pauseWaiter) {
+        while (paused) {
+          try {
+            pauseWaiter.wait()
+          } catch (_: InterruptedException) {
+          }
+        }
+      }
+
       lock.withLock {
         val pending = pendingLogs.toList()
         pendingLogs.clear()
@@ -225,6 +247,7 @@ class LogcatSession(
     Logger.debug(LogcatSession::class, "stopping")
     active = false
     record = false
+    isPaused = false
     if (Build.VERSION.SDK_INT >= 26) {
       logcatProcess?.destroyForcibly()
     } else {

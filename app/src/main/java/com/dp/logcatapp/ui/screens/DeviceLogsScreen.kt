@@ -159,6 +159,7 @@ import com.dp.logcatapp.util.toRegexOrNull
 import com.dp.logger.Logger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted.Companion.Eagerly
@@ -264,62 +265,71 @@ fun DeviceLogsScreen(
         .filterNotNull()
         .collectLatest { status ->
           if (status is LogcatSessionStatus.Started) {
-            val logcatSession = status.session
-            if (logcatSession.isRecording) {
-              recordStatus = RecordStatus.RecordingInProgress
-            }
+            coroutineScope {
+              val logcatSession = status.session
+              logcatPaused = logcatSession.isPaused
 
-            if (updatedStopRecordingSignal) {
-              if (recordStatus == RecordStatus.RecordingInProgress) {
-                if (logcatSession.isRecording) {
-                  recordStatus = RecordStatus.SaveRecordedLogs
-                } else {
-                  recordStatus = RecordStatus.Idle
-                }
+              // Listen for changes to `logcatPaused` and pause/resume LogcatSession accordingly.
+              launch {
+                snapshotFlow { logcatPaused }
+                  .collect {
+                    logcatSession.isPaused = it
+                  }
               }
-            }
 
-            db.filterDao().filters()
-              .map { filters -> filters.filter { it.enabled } }
-              .collectLatest { filters ->
-                appliedFilters = filters.isNotEmpty()
-                val infoMap = if (LogcatSession.isUidOptionSupported()) {
-                  snapshotFlow { appInfoMap }.filterNotNull().first()
-                } else {
-                  null
-                }
-                withContext(Dispatchers.Default) {
-                  val includeFilters = filters.filterNot { it.exclude }
-                  val excludeFilters = filters.filter { it.exclude }
-                  logcatSession.setFilters(
-                    filters = includeFilters.map { filterInfo ->
-                      LogFilter(
-                        filterInfo = filterInfo,
-                        appInfoMap = infoMap,
-                      )
-                    },
-                    exclusion = false
-                  )
-                  logcatSession.setFilters(
-                    filters = excludeFilters.map { filterInfo ->
-                      LogFilter(
-                        filterInfo = filterInfo,
-                        appInfoMap = infoMap,
-                      )
-                    },
-                    exclusion = true
-                  )
-                }
+              if (logcatSession.isRecording) {
+                recordStatus = RecordStatus.RecordingInProgress
+              }
 
-                logsState.clear()
-                isLogcatSessionLoading = false
-                logcatSession.logs.collect { logs ->
-                  logsState += logs
-                  if (logcatPaused) {
-                    snapshotFlow { logcatPaused }.first { !it }
+              if (updatedStopRecordingSignal) {
+                if (recordStatus == RecordStatus.RecordingInProgress) {
+                  if (logcatSession.isRecording) {
+                    recordStatus = RecordStatus.SaveRecordedLogs
+                  } else {
+                    recordStatus = RecordStatus.Idle
                   }
                 }
               }
+
+              db.filterDao().filters()
+                .map { filters -> filters.filter { it.enabled } }
+                .collectLatest { filters ->
+                  appliedFilters = filters.isNotEmpty()
+                  val infoMap = if (LogcatSession.isUidOptionSupported()) {
+                    snapshotFlow { appInfoMap }.filterNotNull().first()
+                  } else {
+                    null
+                  }
+                  withContext(Dispatchers.Default) {
+                    val includeFilters = filters.filterNot { it.exclude }
+                    val excludeFilters = filters.filter { it.exclude }
+                    logcatSession.setFilters(
+                      filters = includeFilters.map { filterInfo ->
+                        LogFilter(
+                          filterInfo = filterInfo,
+                          appInfoMap = infoMap,
+                        )
+                      },
+                      exclusion = false
+                    )
+                    logcatSession.setFilters(
+                      filters = excludeFilters.map { filterInfo ->
+                        LogFilter(
+                          filterInfo = filterInfo,
+                          appInfoMap = infoMap,
+                        )
+                      },
+                      exclusion = true
+                    )
+                  }
+
+                  logsState.clear()
+                  isLogcatSessionLoading = false
+                  logcatSession.logs.collect { logs ->
+                    logsState += logs
+                  }
+                }
+            }
           } else {
             errorStartingLogcat = true
             isLogcatSessionLoading = false
