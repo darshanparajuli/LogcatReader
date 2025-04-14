@@ -37,8 +37,10 @@
 
   <style name="MyPreferenceTheme" parent="@style/PreferenceThemeOverlay.v14.Material" />
 
-  <style name="SplashScreenThemeCommon" parent="Theme.AppCompat.NoActionBar">
-    <item name="android:windowBackground">@drawable/splash_screen</item>
+  <style name="SplashScreenThemeCommon" parent="Theme.SplashScreen">
+    <item name="windowSplashScreenBackground">@color/color_primary</item>
+    <item name="windowSplashScreenAnimatedIcon">@drawable/splash_screen</item>
+    <item name="postSplashScreenTheme">@style/LightTheme</item>
   </style>
 
   <style name="SplashScreenTheme" parent="SplashScreenThemeCommon" />
