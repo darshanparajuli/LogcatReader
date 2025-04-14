@@ -1867,7 +1867,7 @@ class DeviceLogsViewModel(
   application: Application,
 ) : AndroidViewModel(application) {
 
-  val context: Context
+  private val context: Context
     get() = getApplication<LogcatApp>().applicationContext
 
   private val _logcatService = mutableStateOf<LogcatService?>(null)
