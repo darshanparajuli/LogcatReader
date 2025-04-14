@@ -146,6 +146,7 @@ import com.dp.logcatapp.ui.common.LogsListStyle
 import com.dp.logcatapp.ui.common.MaybeShowPermissionRequiredDialog
 import com.dp.logcatapp.ui.common.SearchHitKey
 import com.dp.logcatapp.ui.common.SearchLogsTopBar
+import com.dp.logcatapp.ui.common.SearchResult
 import com.dp.logcatapp.ui.common.SearchResult.SearchHit
 import com.dp.logcatapp.ui.common.ToggleableLogItem
 import com.dp.logcatapp.ui.common.WithTooltip
@@ -622,9 +623,9 @@ fun DeviceLogsScreen(
               }
               snapshotFlow { logsState.toList() }
                 .collect { logs ->
-                  val (indexMap, hits) = when {
+                  val (hitIndexMap, hits) = when {
                     useRegex && searchRegex == null -> {
-                      Pair(emptyMap(), emptyList())
+                      SearchResult(hitIndexMap = emptyMap(), hits = emptyList())
                     }
                     searchRegex != null -> {
                       searchLogs(
@@ -642,7 +643,7 @@ fun DeviceLogsScreen(
                     }
                   }
                   searchHitIndexMap.clear()
-                  searchHitIndexMap.putAll(indexMap)
+                  searchHitIndexMap.putAll(hitIndexMap)
                   searchHits = hits
 
                   if (!scrolled) {

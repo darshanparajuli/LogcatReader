@@ -548,7 +548,7 @@ suspend fun searchLogs(
   logs: List<Log>,
   appInfoMap: Map<String, AppInfo>,
   searchRegex: Regex,
-): Pair<Map<SearchHitKey, List<HitIndex>>, List<SearchHit>> {
+): SearchResult {
   return searchLogs(
     logs = logs,
     appInfoMap = appInfoMap,
@@ -562,7 +562,7 @@ suspend fun searchLogs(
   logs: List<Log>,
   appInfoMap: Map<String, AppInfo>,
   searchQuery: String,
-): Pair<Map<SearchHitKey, List<HitIndex>>, List<SearchHit>> {
+): SearchResult {
   return searchLogs(
     logs = logs,
     appInfoMap = appInfoMap,
@@ -579,7 +579,7 @@ suspend fun searchLogs(
   logs: List<Log>,
   appInfoMap: Map<String, AppInfo>,
   searchFunction: (String) -> Sequence<SearchHitSpan>,
-): Pair<Map<SearchHitKey, List<HitIndex>>, List<SearchHit>> = withContext(Dispatchers.Default) {
+): SearchResult = withContext(Dispatchers.Default) {
   val map = mutableMapOf<SearchHitKey, List<HitIndex>>()
   val hits = mutableListOf<SearchHit>()
   logs.forEachIndexed { index, log ->
@@ -622,9 +622,9 @@ suspend fun searchLogs(
     addSpans(pidSearchResult, LogComponent.Pid)
     addSpans(tidSearchResult, LogComponent.Tid)
   }
-  Pair(
-    first = map,
-    second = hits,
+  SearchResult(
+    hitIndexMap = map,
+    hits = hits,
   )
 }
 
@@ -659,8 +659,8 @@ private fun search(
 }
 
 data class SearchResult(
-  val map: Map<SearchHitKey, SearchHit>,
-  val hitsSortedById: List<SearchHit>
+  val hitIndexMap: Map<SearchHitKey, List<HitIndex>>,
+  val hits: List<SearchHit>
 ) {
   data class SearchHitSpan(
     val start: Int,

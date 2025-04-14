@@ -73,6 +73,7 @@ import com.dp.logcatapp.ui.common.LogsList
 import com.dp.logcatapp.ui.common.LogsListStyle
 import com.dp.logcatapp.ui.common.SearchHitKey
 import com.dp.logcatapp.ui.common.SearchLogsTopBar
+import com.dp.logcatapp.ui.common.SearchResult
 import com.dp.logcatapp.ui.common.SearchResult.SearchHit
 import com.dp.logcatapp.ui.common.WithTooltip
 import com.dp.logcatapp.ui.common.searchLogs
@@ -281,9 +282,9 @@ fun SavedLogsViewerScreen(
                 } else {
                   null
                 }
-                val (indexMap, hits) = when {
+                val (hitIndexMap, hits) = when {
                   useRegex && searchRegex == null -> {
-                    Pair(emptyMap(), emptyList())
+                    SearchResult(hitIndexMap = emptyMap(), hits = emptyList())
                   }
                   searchRegex != null -> {
                     searchLogs(
@@ -301,7 +302,7 @@ fun SavedLogsViewerScreen(
                   }
                 }
                 searchHitIndexMap.clear()
-                searchHitIndexMap.putAll(indexMap)
+                searchHitIndexMap.putAll(hitIndexMap)
                 searchHits = hits
                 if (searchHits.isNotEmpty()) {
                   currentSearchHitIndex = 0
