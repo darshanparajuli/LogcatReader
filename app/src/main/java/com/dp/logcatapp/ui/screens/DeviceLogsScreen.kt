@@ -1901,6 +1901,7 @@ class DeviceLogsViewModel(
   override fun onCleared() {
     // Stop the service if recording is not active.
     if (recordStatus.value == RecordStatus.Idle) {
+      Logger.debug(TAG, "LogcatService - stopping service")
       context.stopService(Intent(context, LogcatService::class.java))
     }
   }
