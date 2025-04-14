@@ -409,7 +409,7 @@ private fun AppBar(
       WithTooltip(
         modifier = Modifier.windowInsetsPadding(
           WindowInsets.safeDrawing
-            .only(WindowInsetsSides.Left)
+            .only(WindowInsetsSides.Start)
         ),
         text = stringResource(R.string.navigate_up),
       ) {
@@ -449,7 +449,7 @@ private fun AppBar(
       Row(
         modifier = Modifier.windowInsetsPadding(
           WindowInsets.safeDrawing
-            .only(WindowInsetsSides.Right)
+            .only(WindowInsetsSides.End)
         )
       ) {
         WithTooltip(

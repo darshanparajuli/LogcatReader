@@ -115,7 +115,7 @@ fun SettingsScreen(
           WithTooltip(
             modifier = Modifier.windowInsetsPadding(
               WindowInsets.safeDrawing
-                .only(WindowInsetsSides.Left)
+                .only(WindowInsetsSides.Start)
             ),
             text = stringResource(R.string.navigate_up),
           ) {

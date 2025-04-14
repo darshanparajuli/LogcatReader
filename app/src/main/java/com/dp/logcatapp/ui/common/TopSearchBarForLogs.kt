@@ -68,7 +68,7 @@ fun SearchLogsTopBar(
     navigationIcon = {
       WithTooltip(
         modifier = Modifier.windowInsetsPadding(
-          WindowInsets.safeDrawing.only(WindowInsetsSides.Left)
+          WindowInsets.safeDrawing.only(WindowInsetsSides.Start)
         ),
         text = stringResource(R.string.close),
       ) {
@@ -162,7 +162,7 @@ fun SearchLogsTopBar(
     actions = {
       Row(
         modifier = Modifier.windowInsetsPadding(
-          WindowInsets.safeDrawing.only(WindowInsetsSides.Right)
+          WindowInsets.safeDrawing.only(WindowInsetsSides.End)
         ),
       ) {
         WithTooltip(

@@ -151,7 +151,7 @@ fun FiltersScreen(
           WithTooltip(
             modifier = Modifier.windowInsetsPadding(
               WindowInsets.safeDrawing
-                .only(WindowInsetsSides.Left)
+                .only(WindowInsetsSides.Start)
             ),
             text = stringResource(R.string.navigate_up),
           ) {
@@ -176,7 +176,7 @@ fun FiltersScreen(
         },
         actions = {
           val insetPadding = WindowInsets.displayCutout
-            .only(WindowInsetsSides.Right)
+            .only(WindowInsetsSides.End)
             .asPaddingValues()
           Row(
             modifier = Modifier.padding(insetPadding)
@@ -526,7 +526,7 @@ private fun SelectFiltersAppBar(
       WithTooltip(
         modifier = Modifier.windowInsetsPadding(
           WindowInsets.safeDrawing
-            .only(WindowInsetsSides.Left)
+            .only(WindowInsetsSides.Start)
         ),
         text = stringResource(R.string.close)
       ) {
@@ -554,7 +554,7 @@ private fun SelectFiltersAppBar(
       Row(
         modifier = Modifier.windowInsetsPadding(
           WindowInsets.safeDrawing
-            .only(WindowInsetsSides.Right)
+            .only(WindowInsetsSides.End)
         ),
       ) {
         WithTooltip(

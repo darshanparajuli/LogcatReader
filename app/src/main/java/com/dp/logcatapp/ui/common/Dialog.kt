@@ -22,7 +22,6 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.room.util.TableInfo
 import com.dp.logcatapp.ui.theme.AppTypography
 
 data class DialogButton(

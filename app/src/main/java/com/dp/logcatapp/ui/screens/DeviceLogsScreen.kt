@@ -1207,7 +1207,7 @@ private fun AppBar(
     title = {
       Column(
         modifier = Modifier
-          .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Left))
+          .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Start))
       ) {
         Text(
           text = title,
@@ -1238,7 +1238,7 @@ private fun AppBar(
     ),
     actions = {
       Row(
-        modifier = Modifier.windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Right))
+        modifier = Modifier.windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.End))
       ) {
         WithTooltip(
           text = stringResource(R.string.search)

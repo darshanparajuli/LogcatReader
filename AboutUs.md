@@ -1,24 +1,29 @@
 # Logcat Reader
 
 ### What?
-Logcat Reader is an android app tool that allows access to messages from applications and services running on an Android device. Most Android developers depend heavily on logcat (and adb) during development to debug their applications. 
-Logcat Reader merges different logging information available from different Android subsystems.
-This app was developed to help simplify the processes involved for developers and app testers in getting android log information.
 
-In Logcat Reader, we have added the following into the provided log details: 
+Logcat Reader is an android app tool that allows access to messages from applications and services
+running on an Android device. Most Android developers depend heavily on logcat (and adb) during
+development to debug their applications.
+Logcat Reader merges different logging information available from different Android subsystems.
+This app was developed to help simplify the processes involved for developers and app testers in
+getting android log information.
+
+In Logcat Reader, we have added the following into the provided log details:
 
 #### 1 Priority (this indicates the severity of a log message):
 
-* Verbose, 
+* Verbose,
 * Debug,
-* Info, 
-* Warning, 
+* Info,
+* Warning,
 * Error and,
 * Assert
 
 #### 2 Tag
 
- This identifies  the software component that generated the message, which is being used to filter messages.
+This identifies the software component that generated the message, which is being used to filter
+messages.
 
 #### 3 The actual message
 
