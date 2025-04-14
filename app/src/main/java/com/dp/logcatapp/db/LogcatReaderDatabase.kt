@@ -130,7 +130,7 @@ abstract class LogcatReaderDatabase : RoomDatabase() {
               `log_levels` TEXT,
               `exclude` INTEGER NOT NULL,
               `enabled` INTEGER NOT NULL,
-              `useRegex` TEXT,
+              `regex_enabled_filter_types` TEXT,
               PRIMARY KEY (`id`)
             )
           """.trimIndent()
