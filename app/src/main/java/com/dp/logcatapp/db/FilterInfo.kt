@@ -119,15 +119,8 @@ class LogLevelsTypeConverter {
   }
 }
 
-
 // Format: comma separated values of `RegexFilterType`
 class RegexEnabledFilterTypeConverter {
-  companion object {
-    private val logLevelsMap = LogLevel.entries.associate {
-      Pair(it.label.first().toString(), it)
-    }
-  }
-
   @TypeConverter
   fun fromFilterTypes(types: Set<RegexEnabledFilterType>?): String? {
     if (types == null) {
