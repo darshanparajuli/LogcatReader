@@ -496,6 +496,7 @@ fun FiltersScreen(
             enabled = item.enabled,
             selectable = selected.isNotEmpty(),
             selected = item in selected,
+            regexEnabledFilterType = item.regexEnabledFilterTypes.orEmpty(),
           )
           HorizontalDivider(
             modifier = Modifier.fillMaxWidth(),
@@ -1062,6 +1063,7 @@ private fun FilterItem(
   pid: String?,
   tid: String?,
   priorities: Set<LogLevel>?,
+  regexEnabledFilterType: Set<RegexEnabledFilterType>,
   exclude: Boolean,
   enabled: Boolean,
   selectable: Boolean = false,
@@ -1086,20 +1088,22 @@ private fun FilterItem(
             label: String,
             value: String,
             quote: Boolean = false,
+            regex: Boolean = false,
           ) {
             val textStyle = LocalTextStyle.current
             Row {
               Text(
-                text = "$label:",
+                text = if (regex) "$label (.*):" else "$label:",
                 fontWeight = FontWeight.Bold,
                 style = textStyle.merge(AppTypography.bodySmall),
                 modifier = Modifier.alignByBaseline(),
               )
               Spacer(modifier = Modifier.width(4.dp))
+              val maybeQuoted = if (quote) {
+                "'$value'"
+              } else value
               Text(
-                text = if (quote) {
-                  "'$value'"
-                } else value,
+                text = maybeQuoted,
                 style = textStyle.merge(AppTypography.bodyMedium),
                 modifier = Modifier.alignByBaseline(),
               )
@@ -1110,6 +1114,7 @@ private fun FilterItem(
               label = stringResource(R.string.tag),
               value = tag,
               quote = true,
+              regex = RegexEnabledFilterType.Tag in regexEnabledFilterType,
             )
           }
           if (!message.isNullOrEmpty()) {
@@ -1117,6 +1122,7 @@ private fun FilterItem(
               label = stringResource(R.string.message),
               value = message,
               quote = true,
+              regex = RegexEnabledFilterType.Message in regexEnabledFilterType,
             )
           }
           if (!packageName.isNullOrEmpty()) {
@@ -1124,6 +1130,7 @@ private fun FilterItem(
               label = stringResource(R.string.package_name),
               value = packageName,
               quote = true,
+              regex = RegexEnabledFilterType.PackageName in regexEnabledFilterType,
             )
           }
           if (!priorities.isNullOrEmpty()) {
