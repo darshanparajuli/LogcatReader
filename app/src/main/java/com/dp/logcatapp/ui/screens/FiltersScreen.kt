@@ -103,10 +103,9 @@ import com.dp.logcat.Log
 import com.dp.logcat.LogcatSession
 import com.dp.logcatapp.R
 import com.dp.logcatapp.db.FilterInfo
+import com.dp.logcatapp.db.LogLevel
 import com.dp.logcatapp.db.LogcatReaderDatabase
-import com.dp.logcatapp.db.RegexFilterType
-import com.dp.logcatapp.db.enableRegexFor
-import com.dp.logcatapp.db.regexFilterTypes
+import com.dp.logcatapp.db.RegexEnabledFilterType
 import com.dp.logcatapp.ui.common.WithTooltip
 import com.dp.logcatapp.ui.theme.AppTypography
 import com.dp.logcatapp.ui.theme.Shapes
@@ -319,11 +318,9 @@ fun FiltersScreen(
         initialPid = filterInfo.pid?.toString(),
         initialTid = filterInfo.tid?.toString(),
         initialExclude = filterInfo.exclude,
-        initialLogLevels = filterInfo.logLevels?.split(",")?.mapNotNull { level ->
-          LogLevel.entries.find { it.name.first().toString() == level }
-        }?.toSet().orEmpty(),
+        initialLogLevels = filterInfo.logLevels.orEmpty(),
         initialEnabled = filterInfo.enabled,
-        initialRegexEnabledTypes = filterInfo.regexFilterTypes,
+        initialRegexEnabledTypes = filterInfo.regexEnabledFilterTypes.orEmpty(),
         onDismiss = { showEditFilterDialog = null },
         onSave = { data ->
           showEditFilterDialog = null
@@ -347,13 +344,12 @@ fun FiltersScreen(
             logLevels = if (selectedLogLevels.isEmpty()) {
               null
             } else {
-              selectedLogLevels.map { it.label.first().toString() }
-                .sorted()
-                .joinToString(separator = ",")
+              selectedLogLevels
             },
             exclude = exclude,
             enabled = enabled ?: filterInfo.enabled,
-          ).enableRegexFor(*regexEnabledTypes.toTypedArray())
+            regexEnabledFilterTypes = regexEnabledTypes,
+          )
 
           coroutineScope.launch {
             withContext(Dispatchers.IO) {
@@ -397,12 +393,11 @@ fun FiltersScreen(
             logLevels = if (selectedLogLevels.isEmpty()) {
               null
             } else {
-              selectedLogLevels.map { it.label.first().toString() }
-                .sorted()
-                .joinToString(separator = ",")
+              selectedLogLevels
             },
             exclude = exclude,
-          ).enableRegexFor(*regexEnabledTypes.toTypedArray())
+            regexEnabledFilterTypes = regexEnabledTypes,
+          )
 
           coroutineScope.launch {
             withContext(Dispatchers.IO) {
@@ -656,7 +651,7 @@ private data class FilterData(
   val selectedLogLevels: Set<LogLevel>,
   val exclude: Boolean,
   val enabled: Boolean?,
-  val regexEnabledTypes: Set<RegexFilterType>,
+  val regexEnabledTypes: Set<RegexEnabledFilterType>,
 )
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
@@ -673,7 +668,7 @@ private fun AddOrEditFilterSheet(
   initialExclude: Boolean? = null,
   initialLogLevels: Set<LogLevel> = emptySet(),
   initialEnabled: Boolean? = null,
-  initialRegexEnabledTypes: Set<RegexFilterType> = emptySet(),
+  initialRegexEnabledTypes: Set<RegexEnabledFilterType> = emptySet(),
 ) {
   val selectedLogLevels = remember {
     mutableStateMapOf<LogLevel, Boolean>().apply {
@@ -745,7 +740,7 @@ private fun AddOrEditFilterSheet(
       }
       Spacer(modifier = Modifier.height(16.dp))
 
-      val messageRegexEnabled = RegexFilterType.Message in regexEnabledTypes
+      val messageRegexEnabled = RegexEnabledFilterType.Message in regexEnabledTypes
       InputField(
         modifier = Modifier
           .fillMaxWidth()
@@ -761,10 +756,10 @@ private fun AddOrEditFilterSheet(
         regexEnabled = messageRegexEnabled,
         onClickRegex = {
           if (messageRegexEnabled) {
-            regexEnabledTypes -= RegexFilterType.Message
+            regexEnabledTypes -= RegexEnabledFilterType.Message
             messageRegexError = false
           } else {
-            regexEnabledTypes += RegexFilterType.Message
+            regexEnabledTypes += RegexEnabledFilterType.Message
             messageRegexError = message.toRegexOrNull() == null
           }
         },
@@ -772,7 +767,7 @@ private fun AddOrEditFilterSheet(
       )
       Spacer(modifier = Modifier.height(16.dp))
 
-      val tagRegexEnabled = RegexFilterType.Tag in regexEnabledTypes
+      val tagRegexEnabled = RegexEnabledFilterType.Tag in regexEnabledTypes
       InputField(
         modifier = Modifier
           .fillMaxWidth()
@@ -789,10 +784,10 @@ private fun AddOrEditFilterSheet(
         regexEnabled = tagRegexEnabled,
         onClickRegex = {
           if (tagRegexEnabled) {
-            regexEnabledTypes -= RegexFilterType.Tag
+            regexEnabledTypes -= RegexEnabledFilterType.Tag
             tagRegexError = false
           } else {
-            regexEnabledTypes += RegexFilterType.Tag
+            regexEnabledTypes += RegexEnabledFilterType.Tag
             tagRegexError = tag.toRegexOrNull() == null
           }
         },
@@ -801,7 +796,7 @@ private fun AddOrEditFilterSheet(
       Spacer(modifier = Modifier.height(16.dp))
       val uidSupported by LogcatSession.uidOptionSupported.collectAsState()
       if (uidSupported == true) {
-        val packageNameRegexEnabled = RegexFilterType.PackageName in regexEnabledTypes
+        val packageNameRegexEnabled = RegexEnabledFilterType.PackageName in regexEnabledTypes
         InputField(
           modifier = Modifier
             .fillMaxWidth()
@@ -817,10 +812,10 @@ private fun AddOrEditFilterSheet(
           regexEnabled = packageNameRegexEnabled,
           onClickRegex = {
             if (packageNameRegexEnabled) {
-              regexEnabledTypes -= RegexFilterType.PackageName
+              regexEnabledTypes -= RegexEnabledFilterType.PackageName
               packageNameRegexError = false
             } else {
-              regexEnabledTypes += RegexFilterType.PackageName
+              regexEnabledTypes += RegexEnabledFilterType.PackageName
               packageNameRegexError = packageName.toRegexOrNull() == null
             }
           },
@@ -1066,7 +1061,7 @@ private fun FilterItem(
   packageName: String?,
   pid: String?,
   tid: String?,
-  priorities: String?,
+  priorities: Set<LogLevel>?,
   exclude: Boolean,
   enabled: Boolean,
   selectable: Boolean = false,
@@ -1131,17 +1126,11 @@ private fun FilterItem(
               quote = true,
             )
           }
-          val priorityMap = remember {
-            LogLevel.entries.associate {
-              it.label.first().lowercase().toString() to it.label
-            }
-          }
           if (!priorities.isNullOrEmpty()) {
             FilterRow(
               label = stringResource(R.string.log_priority),
-              value = priorities.split(",").map {
-                priorityMap.getValue(it.lowercase())
-              }.fastJoinToString(separator = ", "),
+              value = priorities.map { it.label }.sorted()
+                .fastJoinToString(separator = ", "),
             )
           }
           if (!pid.isNullOrEmpty()) {
@@ -1235,15 +1224,3 @@ data class PrepopulateFilterInfo(
   val packageName: String?,
   val exclude: Boolean,
 )
-
-private enum class LogLevel(
-  val label: String
-) {
-  Assert("Assert"),
-  Debug("Debug"),
-  Error("Error"),
-  Fatal("Fatal"),
-  Info("Info"),
-  Verbose("Verbose"),
-  Warning("Warning"),
-}

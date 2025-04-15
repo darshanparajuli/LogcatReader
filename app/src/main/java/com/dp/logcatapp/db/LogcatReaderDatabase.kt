@@ -5,6 +5,7 @@ import androidx.annotation.GuardedBy
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.TypeConverters
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
@@ -13,6 +14,11 @@ import androidx.sqlite.db.SupportSQLiteDatabase
   exportSchema = false,
   version = LogcatReaderDatabase.LATEST_VERSION,
 )
+@TypeConverters(
+  DateRangeTypeConverter::class,
+  LogLevelsTypeConverter::class,
+  RegexEnabledFilterTypeConverter::class,
+)
 abstract class LogcatReaderDatabase : RoomDatabase() {
   abstract fun filterDao(): FilterDao
 
@@ -20,7 +26,7 @@ abstract class LogcatReaderDatabase : RoomDatabase() {
 
   companion object {
     private const val DB_NAME = "logcat_reader_db"
-    const val LATEST_VERSION = 4
+    const val LATEST_VERSION = 5
 
     private val instanceLock = Any()
 
@@ -41,7 +47,12 @@ abstract class LogcatReaderDatabase : RoomDatabase() {
               context.applicationContext,
               LogcatReaderDatabase::class.java, DB_NAME
             )
-            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
+            .addMigrations(
+              MIGRATION_1_2,
+              MIGRATION_2_3,
+              MIGRATION_3_4,
+              MIGRATION_4_5,
+            )
             .fallbackToDestructiveMigration(dropAllTables = true)
             .build()
         }
@@ -147,6 +158,12 @@ abstract class LogcatReaderDatabase : RoomDatabase() {
         )
         db.execSQL("DROP TABLE `filters`")
         db.execSQL("ALTER TABLE `filters_new` RENAME TO `filters`")
+      }
+    }
+
+    private val MIGRATION_4_5 = object : Migration(4, 5) {
+      override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE `filters` ADD COLUMN `date_range` TEXT DEFAULT null")
       }
     }
   }

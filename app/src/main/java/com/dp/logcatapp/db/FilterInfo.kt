@@ -8,8 +8,10 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.PrimaryKey
 import androidx.room.Query
+import androidx.room.TypeConverter
 import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
+import java.util.Date
 
 @Entity(tableName = "filters")
 data class FilterInfo(
@@ -19,32 +21,34 @@ data class FilterInfo(
   @ColumnInfo(name = "pid") val pid: Int? = null,
   @ColumnInfo(name = "tid") val tid: Int? = null,
   @ColumnInfo(name = "package_name") val packageName: String? = null,
-  @ColumnInfo(name = "log_levels") val logLevels: String? = null,
+  @ColumnInfo(name = "log_levels") val logLevels: Set<LogLevel>? = null,
+  @ColumnInfo(name = "date_range") val dateRange: DateRange? = null,
   @ColumnInfo(name = "exclude") val exclude: Boolean = false,
   @ColumnInfo(name = "enabled") val enabled: Boolean = true,
-  // Comma separated values of `RegexFilterType`
-  @ColumnInfo(name = "regex_enabled_filter_types") val regexEnabledFilterTypes: String? = null,
+  @ColumnInfo(name = "regex_enabled_filter_types") val regexEnabledFilterTypes: Set<RegexEnabledFilterType>? = null,
 )
 
-fun FilterInfo.enableRegexFor(
-  vararg types: RegexFilterType
-): FilterInfo {
-  return copy(
-    regexEnabledFilterTypes = types.joinToString(separator = ",") { it.ordinal.toString() },
-  )
-}
+data class DateRange(
+  val start: Date,
+  val end: Date,
+)
 
-val FilterInfo.regexFilterTypes: Set<RegexFilterType>
-  get() = regexEnabledFilterTypes?.split(",")
-    ?.mapNotNull { it.toIntOrNull() }
-    ?.map { RegexFilterType.entries[it] }
-    ?.toSet()
-    .orEmpty()
-
-enum class RegexFilterType {
+enum class RegexEnabledFilterType {
   Tag,
   Message,
   PackageName,
+}
+
+enum class LogLevel(
+  val label: String
+) {
+  Assert("Assert"),
+  Debug("Debug"),
+  Error("Error"),
+  Fatal("Fatal"),
+  Info("Info"),
+  Verbose("Verbose"),
+  Warning("Warning"),
 }
 
 @Dao
@@ -64,4 +68,81 @@ interface FilterDao {
 
   @Query("DELETE FROM filters")
   fun deleteAll()
+}
+
+// Format: "<start millis>:<end millis>"
+class DateRangeTypeConverter {
+  @TypeConverter
+  fun fromDateRage(dateRange: DateRange?): String? {
+    if (dateRange == null) {
+      return null
+    }
+    return "${dateRange.start.time}:${dateRange.end.time}"
+  }
+
+  @TypeConverter
+  fun toDateRange(s: String?): DateRange? {
+    if (s == null) {
+      return null
+    }
+    val (start, end) = s.split(":")
+    return DateRange(
+      start = Date(start.toLong()),
+      end = Date(end.toLong()),
+    )
+  }
+}
+
+class LogLevelsTypeConverter {
+  companion object {
+    private val logLevelsMap = LogLevel.entries.associate {
+      Pair(it.label.first().toString(), it)
+    }
+  }
+
+  @TypeConverter
+  fun fromLogLevels(logLevels: Set<LogLevel>?): String? {
+    if (logLevels == null) {
+      return null
+    }
+    return logLevels.map { it.label.first().toString() }
+      .sorted()
+      .joinToString(separator = ",")
+  }
+
+  @TypeConverter
+  fun toLogLevels(s: String?): Set<LogLevel>? {
+    if (s == null) {
+      return null
+    }
+    return s.split(",").mapNotNull { logLevelsMap[it] }.toSet()
+  }
+}
+
+
+// Format: comma separated values of `RegexFilterType`
+class RegexEnabledFilterTypeConverter {
+  companion object {
+    private val logLevelsMap = LogLevel.entries.associate {
+      Pair(it.label.first().toString(), it)
+    }
+  }
+
+  @TypeConverter
+  fun fromFilterTypes(types: Set<RegexEnabledFilterType>?): String? {
+    if (types == null) {
+      return null
+    }
+    return types.joinToString(separator = ",") { it.ordinal.toString() }
+  }
+
+  @TypeConverter
+  fun toFilterTypes(s: String?): Set<RegexEnabledFilterType>? {
+    if (s == null) {
+      return null
+    }
+    return s.split(",").mapNotNull { it.toIntOrNull() }
+      .map { RegexEnabledFilterType.entries[it] }
+      .toSet()
+  }
 }

@@ -132,9 +132,8 @@ import com.dp.logcatapp.activities.SavedLogsViewerActivity
 import com.dp.logcatapp.activities.SettingsActivity
 import com.dp.logcatapp.db.FilterInfo
 import com.dp.logcatapp.db.LogcatReaderDatabase
-import com.dp.logcatapp.db.RegexFilterType
+import com.dp.logcatapp.db.RegexEnabledFilterType
 import com.dp.logcatapp.db.SavedLogInfo
-import com.dp.logcatapp.db.regexFilterTypes
 import com.dp.logcatapp.services.LogcatService
 import com.dp.logcatapp.services.LogcatService.LogcatSessionStatus
 import com.dp.logcatapp.services.getService
@@ -1734,30 +1733,30 @@ private class LogFilter(
   private val filterInfo: FilterInfo,
   private val appInfoMap: Map<String, AppInfo>?,
 ) : Filter {
-  private val regexEnabledTypes = filterInfo.regexFilterTypes
+  private val regexEnabledTypes = filterInfo.regexEnabledFilterTypes.orEmpty()
   private val messageRegex = filterInfo.message?.let { text ->
-    if (RegexFilterType.Message in regexEnabledTypes) {
+    if (RegexEnabledFilterType.Message in regexEnabledTypes) {
       text.toRegex()
     } else {
       null
     }
   }
   private val tagRegex = filterInfo.tag?.let { text ->
-    if (RegexFilterType.Tag in regexEnabledTypes) {
+    if (RegexEnabledFilterType.Tag in regexEnabledTypes) {
       text.toRegex()
     } else {
       null
     }
   }
   private val packageNameRegex = filterInfo.packageName?.let { text ->
-    if (RegexFilterType.PackageName in regexEnabledTypes) {
+    if (RegexEnabledFilterType.PackageName in regexEnabledTypes) {
       text.toRegex()
     } else {
       null
     }
   }
   private val priorities: Set<String> = if (!filterInfo.logLevels.isNullOrEmpty()) {
-    filterInfo.logLevels.split(",").toSet()
+    filterInfo.logLevels.map { it.label.first().toString() }.toSet()
   } else {
     emptySet()
   }
