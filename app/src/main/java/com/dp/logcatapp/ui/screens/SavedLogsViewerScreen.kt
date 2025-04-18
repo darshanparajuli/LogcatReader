@@ -2,6 +2,7 @@ package com.dp.logcatapp.ui.screens
 
 import android.content.Context
 import android.net.Uri
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -142,6 +143,10 @@ fun SavedLogsViewerScreen(
 
   val scrollToTopInteractionSource = remember { MutableInteractionSource() }
   val scrollToBottomInteractionSource = remember { MutableInteractionSource() }
+
+  if (showSearchBar) {
+    BackHandler { showSearchBar = false }
+  }
 
   LaunchedEffect(listState) {
     val scrollToBottomStateFlow = scrollToBottomInteractionSource.interactions.stateIn(

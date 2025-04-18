@@ -1,5 +1,6 @@
 package com.dp.logcatapp.ui.screens
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -157,6 +158,10 @@ fun FiltersScreen(
   var showPackageSelector by remember { mutableStateOf(false) }
   var selected by remember { mutableStateOf<Set<FilterInfo>>(emptySet()) }
   val coroutineScope = rememberCoroutineScope()
+
+  if (selected.isNotEmpty()) {
+    BackHandler { selected = emptySet() }
+  }
 
   Scaffold(
     modifier = modifier,
