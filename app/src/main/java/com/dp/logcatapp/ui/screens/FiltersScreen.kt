@@ -112,6 +112,8 @@ import com.dp.logcatapp.db.FilterInfo
 import com.dp.logcatapp.db.LogLevel
 import com.dp.logcatapp.db.LogcatReaderDatabase
 import com.dp.logcatapp.db.RegexEnabledFilterType
+import com.dp.logcatapp.ui.common.Dialog
+import com.dp.logcatapp.ui.common.DialogButton
 import com.dp.logcatapp.ui.common.WithTooltip
 import com.dp.logcatapp.ui.theme.AppTypography
 import com.dp.logcatapp.ui.theme.Shapes
@@ -958,7 +960,7 @@ private fun AddOrEditFilterSheet(
     }
   }
   if (showDateRangeSheet) {
-    DateRangeSheet(
+    SelectDateRangeDialog(
       initialDateRange = dateRange,
       onDismiss = { showDateRangeSheet = false },
       onDone = { result ->
@@ -995,7 +997,7 @@ private fun formatDateRange(dateRange: DateRange?): AnnotatedString {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun DateRangeSheet(
+private fun SelectDateRangeDialog(
   initialDateRange: DateRange?,
   onDismiss: () -> Unit,
   onDone: (DateRange) -> Unit,
@@ -1075,137 +1077,116 @@ private fun DateRangeSheet(
     }
   }
 
-  ModalBottomSheet(
-    modifier = modifier.statusBarsPadding(),
-    sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-    onDismissRequest = onDismiss,
-    containerColor = MaterialTheme.colorScheme.surfaceContainer,
-  ) {
-    Column(
-      modifier = Modifier
-        .verticalScroll(rememberScrollState())
-        .padding(vertical = 16.dp),
-    ) {
-      Row(
-        modifier = Modifier.padding(horizontal = 16.dp),
-        verticalAlignment = Alignment.CenterVertically,
-      ) {
-        Text(
-          modifier = Modifier.weight(1f),
-          text = stringResource(R.string.select_date_and_time),
-          style = AppTypography.headlineMedium,
-        )
-        val context = LocalContext.current
-        Button(
-          onClick = {
-            val cal = Calendar.getInstance()
-            // `MONTH` starts at 0.
-            val currentMonth = cal.get(Calendar.MONTH) + 1
-            val currentDay = cal.get(Calendar.DAY_OF_MONTH)
-            val dateTimeFormat = SimpleDateFormat(DATE_TIME_FORMAT).apply { isLenient = false }
-            try {
-              val start = when {
-                startDateText.isNotEmpty() && startTimeText.isNotEmpty() -> {
-                  dateTimeFormat.parse("$currentYear-$startDateText $startTimeText")
-                }
-                startDateText.isNotEmpty() -> {
-                  dateFormat.parse("$currentYear-$startDateText 00:00")
-                }
-                startTimeText.isNotEmpty() -> {
-                  dateTimeFormat.parse("$currentYear-$currentMonth-$currentDay $startTimeText")
-                }
-                else -> null
-              }
-
-              val end = when {
-                endDateText.isNotEmpty() && endTimeText.isNotEmpty() -> {
-                  dateTimeFormat.parse("$currentYear-$endDateText $endTimeText")
-                }
-                endDateText.isNotEmpty() -> {
-                  dateFormat.parse("$currentYear-$endDateText 00:00")
-                }
-                endTimeText.isNotEmpty() -> {
-                  dateTimeFormat.parse("$currentYear-$currentMonth-$currentDay $endTimeText")
-                }
-                else -> null
-              }
-              onDone(DateRange(start = start, end = end))
-            } catch (_: ParseException) {
-              context.showToast(context.getString(R.string.error))
+  val context = LocalContext.current
+  Dialog(
+    title = stringResource(R.string.select_date_and_time),
+    primaryButton = DialogButton(
+      text = stringResource(R.string.done),
+      enabled = (startDateText.isNotEmpty() || endDateText.isNotEmpty() ||
+        startTimeText.isNotEmpty() || endTimeText.isNotEmpty()) &&
+        !startDateError && !startTimeError &&
+        !endDateError && !endTimeError,
+      onClick = {
+        val cal = Calendar.getInstance()
+        // `MONTH` starts at 0.
+        val currentMonth = cal.get(Calendar.MONTH) + 1
+        val currentDay = cal.get(Calendar.DAY_OF_MONTH)
+        val dateTimeFormat = SimpleDateFormat(DATE_TIME_FORMAT).apply { isLenient = false }
+        try {
+          val start = when {
+            startDateText.isNotEmpty() && startTimeText.isNotEmpty() -> {
+              dateTimeFormat.parse("$currentYear-$startDateText $startTimeText")
             }
-          },
-          enabled = (startDateText.isNotEmpty() || endDateText.isNotEmpty() ||
-            startTimeText.isNotEmpty() || endTimeText.isNotEmpty()) &&
-            !startDateError && !startTimeError &&
-            !endDateError && !endTimeError,
-        ) {
-          Text(
-            stringResource(R.string.done),
-            style = AppTypography.titleMedium,
-          )
+            startDateText.isNotEmpty() -> {
+              dateFormat.parse("$currentYear-$startDateText 00:00")
+            }
+            startTimeText.isNotEmpty() -> {
+              dateTimeFormat.parse("$currentYear-$currentMonth-$currentDay $startTimeText")
+            }
+            else -> null
+          }
+
+          val end = when {
+            endDateText.isNotEmpty() && endTimeText.isNotEmpty() -> {
+              dateTimeFormat.parse("$currentYear-$endDateText $endTimeText")
+            }
+            endDateText.isNotEmpty() -> {
+              dateFormat.parse("$currentYear-$endDateText 00:00")
+            }
+            endTimeText.isNotEmpty() -> {
+              dateTimeFormat.parse("$currentYear-$currentMonth-$currentDay $endTimeText")
+            }
+            else -> null
+          }
+          onDone(DateRange(start = start, end = end))
+        } catch (_: ParseException) {
+          context.showToast(context.getString(R.string.error))
         }
       }
-      Spacer(modifier = Modifier.height(16.dp))
+    ),
+    secondaryButton = DialogButton(
+      text = stringResource(android.R.string.cancel),
+      onClick = onDismiss,
+    ),
+    modifier = modifier,
+    onDismissRequest = onDismiss,
+  ) {
+    Row(
+      horizontalArrangement = Arrangement.spacedBy(8.dp),
+      verticalAlignment = Alignment.CenterVertically,
+    ) {
+      InputField(
+        modifier = Modifier.weight(1f),
+        label = stringResource(R.string.start_date),
+        hint = DATE_FORMAT_NO_YEAR,
+        value = startDateText,
+        isError = startDateText.isNotEmpty() && startDateError,
+        onValueChange = { value ->
+          startDateText = value
+          startDateError = value.isNotEmpty() && !validateDate(value)
+        },
+      )
 
-      Row(
-        modifier = Modifier.padding(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-      ) {
-        InputField(
-          modifier = Modifier.weight(1f),
-          label = stringResource(R.string.start_date),
-          hint = DATE_FORMAT_NO_YEAR,
-          value = startDateText,
-          isError = startDateText.isNotEmpty() && startDateError,
-          onValueChange = { value ->
-            startDateText = value
-            startDateError = value.isNotEmpty() && !validateDate(value)
-          },
-        )
+      InputField(
+        modifier = Modifier.weight(1f),
+        label = stringResource(R.string.start_time),
+        hint = TIME_FORMAT,
+        value = startTimeText,
+        isError = startTimeText.isNotEmpty() && startTimeError,
+        onValueChange = { value ->
+          startTimeText = value
+          startTimeError = value.isNotEmpty() && !validateTime(value)
+        },
+      )
+    }
+    Spacer(modifier = Modifier.height(16.dp))
+    Row(
+      horizontalArrangement = Arrangement.spacedBy(8.dp),
+      verticalAlignment = Alignment.CenterVertically,
+    ) {
+      InputField(
+        modifier = Modifier.weight(1f),
+        label = stringResource(R.string.end_date),
+        hint = DATE_FORMAT_NO_YEAR,
+        value = endDateText,
+        isError = endDateText.isNotEmpty() && endDateError,
+        onValueChange = { value ->
+          endDateText = value
+          endDateError = value.isNotEmpty() && !validateDate(value)
+        },
+      )
 
-        InputField(
-          modifier = Modifier.weight(1f),
-          label = stringResource(R.string.start_time),
-          hint = TIME_FORMAT,
-          value = startTimeText,
-          isError = startTimeText.isNotEmpty() && startTimeError,
-          onValueChange = { value ->
-            startTimeText = value
-            startTimeError = value.isNotEmpty() && !validateTime(value)
-          },
-        )
-      }
-      Spacer(modifier = Modifier.height(16.dp))
-      Row(
-        modifier = Modifier.padding(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-      ) {
-        InputField(
-          modifier = Modifier.weight(1f),
-          label = stringResource(R.string.end_date),
-          hint = DATE_FORMAT_NO_YEAR,
-          value = endDateText,
-          isError = endDateText.isNotEmpty() && endDateError,
-          onValueChange = { value ->
-            endDateText = value
-            endDateError = value.isNotEmpty() && !validateDate(value)
-          },
-        )
-
-        InputField(
-          modifier = Modifier.weight(1f),
-          label = stringResource(R.string.end_time),
-          hint = TIME_FORMAT,
-          value = endTimeText,
-          isError = endTimeText.isNotEmpty() && endTimeError,
-          onValueChange = { value ->
-            endTimeText = value
-            endTimeError = value.isNotEmpty() && !validateTime(value)
-          },
-        )
-      }
+      InputField(
+        modifier = Modifier.weight(1f),
+        label = stringResource(R.string.end_time),
+        hint = TIME_FORMAT,
+        value = endTimeText,
+        isError = endTimeText.isNotEmpty() && endTimeError,
+        onValueChange = { value ->
+          endTimeText = value
+          endTimeError = value.isNotEmpty() && !validateTime(value)
+        },
+      )
     }
   }
 }
