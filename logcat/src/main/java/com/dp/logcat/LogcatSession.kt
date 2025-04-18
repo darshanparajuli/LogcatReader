@@ -70,48 +70,6 @@ class LogcatSession(
       }
     }
 
-  companion object {
-    private val _uidOptionSupported = MutableStateFlow<Boolean?>(null)
-    val uidOptionSupported = _uidOptionSupported.asStateFlow()
-
-    init {
-      // This is ok since we are simply executing a `logcat` process and getting the result from
-      // it without accessing any Android APIs.
-      @OptIn(DelicateCoroutinesApi::class)
-      GlobalScope.launch(Dispatchers.IO) {
-        _uidOptionSupported.value = isUidOptionSupportedHelper()
-      }
-    }
-
-    suspend fun isUidOptionSupported(): Boolean {
-      return uidOptionSupported.filterNotNull().first()
-    }
-
-    private fun isUidOptionSupportedHelper(): Boolean {
-      return try {
-        // Dump the log with `-v uid` cmdline option to see if it works.
-        val process = ProcessBuilder(
-          "logcat", "-v", "long", "-v", "uid", "-d",
-        ).start()
-        val stdoutReaderThread = thread {
-          try {
-            // Consume stdout. Without this, the process waits forever on some
-            // devices/os versions.
-            process.inputStream.bufferedReader().use {
-              it.lineSequence().forEach { }
-            }
-          } catch (_: Exception) {
-          }
-        }
-        val result = process.waitFor() == 0
-        stdoutReaderThread.join(THREAD_JOIN_TIMEOUT)
-        result
-      } catch (_: Exception) {
-        false
-      }
-    }
-  }
-
   private var logcatProcess: Process? = null
   private var logcatThread: Thread? = null
   private var pollerThread: Thread? = null
@@ -144,7 +102,11 @@ class LogcatSession(
       // calling runBlocking is fine here since this function runs a separate non-ui thread, and not
       // in a coroutine.
       val uidSupported = runBlocking { isUidOptionSupported() }
-      val process = startLogcatProcess(uidSupported)
+      val yearSupported = runBlocking { isYearOptionSupported() }
+      val process = startLogcatProcess(
+        uidSupported = uidSupported,
+        yearSupported = yearSupported,
+      )
       status.trySend(Status(process != null))
       if (process != null) {
         readLogs(process)
@@ -166,19 +128,23 @@ class LogcatSession(
     }
   }
 
-  private fun startLogcatProcess(uidSupported: Boolean): Process? {
-    val buffersArg = mutableListOf<String>()
-    for (buffer in buffers) {
-      buffersArg += "-b"
-      buffersArg += buffer
+  private fun startLogcatProcess(
+    uidSupported: Boolean,
+    yearSupported: Boolean,
+  ): Process? {
+    val cmd = buildList {
+      addAll(listOf("logcat", "-v", "long"))
+      if (uidSupported) {
+        addAll(listOf("-v", "uid"))
+      }
+      if (yearSupported) {
+        addAll(listOf("-v", "year"))
+      }
+      for (buffer in buffers) {
+        add("-b")
+        add(buffer)
+      }
     }
-    val cmd = mutableListOf<String>()
-    cmd += listOf("logcat", "-v", "long")
-    if (uidSupported) {
-      cmd += listOf("-v", "uid")
-    }
-    // TODO: support passing `-v year` getting year info.
-    cmd += buffersArg
     return try {
       ProcessBuilder(cmd).start().also { process ->
         logcatProcess = process
@@ -343,4 +309,57 @@ class LogcatSession(
     val uri: Uri,
     val isCustomLocation: Boolean,
   )
+
+  companion object {
+    private val _uidOptionSupported = MutableStateFlow<Boolean?>(null)
+    val uidOptionSupported = _uidOptionSupported.asStateFlow()
+
+    private val _yearOptionSupported = MutableStateFlow<Boolean?>(null)
+    val yearOptionSupported = _uidOptionSupported.asStateFlow()
+
+    init {
+      // This is ok since we are simply executing a `logcat` process and getting the result from
+      // it without accessing any Android APIs.
+      @OptIn(DelicateCoroutinesApi::class)
+      GlobalScope.launch(Dispatchers.IO) {
+        _uidOptionSupported.value = dumpLogcatLogWithOptions("-v", "uid")
+        _yearOptionSupported.value = dumpLogcatLogWithOptions("-v", "year")
+      }
+    }
+
+    suspend fun isUidOptionSupported(): Boolean {
+      return uidOptionSupported.filterNotNull().first()
+    }
+
+    suspend fun isYearOptionSupported(): Boolean {
+      return yearOptionSupported.filterNotNull().first()
+    }
+
+    private fun dumpLogcatLogWithOptions(
+      vararg options: String
+    ): Boolean {
+      check(options.isNotEmpty())
+      return try {
+        // Dump the log with `-v uid` cmdline option to see if it works.
+        val process = ProcessBuilder(
+          "logcat", "-v", "long", *options, "-d",
+        ).start()
+        val stdoutReaderThread = thread {
+          try {
+            // Consume stdout. Without this, the process waits forever on some
+            // devices/os versions.
+            process.inputStream.bufferedReader().use {
+              it.lineSequence().forEach { }
+            }
+          } catch (_: Exception) {
+          }
+        }
+        val result = process.waitFor() == 0
+        stdoutReaderThread.join(THREAD_JOIN_TIMEOUT)
+        result
+      } catch (_: Exception) {
+        false
+      }
+    }
+  }
 }

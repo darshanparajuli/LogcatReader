@@ -1789,7 +1789,13 @@ private class LogFilter(
   }
 
   private fun Log.parseDate(): Date? {
-    val dateTime = "$currentYear-$date $time"
+    val dateTime = if (date.count { it == '-' } == 2) {
+      // `date` is in `yyyy-MM-dd` format.
+      "$date $time"
+    } else {
+      // `date` is in `MM-dd` format.
+      "$currentYear-$date $time"
+    }
     return try {
       // Try parsing seconds & ms first.
       dateTimeFormat.parse(dateTime)
