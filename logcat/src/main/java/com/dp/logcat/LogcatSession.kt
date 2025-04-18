@@ -177,6 +177,7 @@ class LogcatSession(
     if (uidSupported) {
       cmd += listOf("-v", "uid")
     }
+    // TODO: support passing `-v year` getting year info.
     cmd += buffersArg
     return try {
       ProcessBuilder(cmd).start().also { process ->

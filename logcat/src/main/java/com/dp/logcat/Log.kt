@@ -50,6 +50,8 @@ data class Log(
         startIndex++
       }
 
+      // TODO: support parsing year.
+
       val hasUid = trimmedMetadata.substring(
         startIndex = startIndex,
         endIndex = trimmedMetadata.indexOf(char = '/', startIndex = startIndex)

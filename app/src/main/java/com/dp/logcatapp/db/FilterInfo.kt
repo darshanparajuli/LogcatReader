@@ -29,9 +29,15 @@ data class FilterInfo(
 )
 
 data class DateRange(
-  val start: Date,
-  val end: Date,
-)
+  val start: Date?,
+  val end: Date?,
+) {
+  init {
+    check(start != null || end != null) {
+      "both start and end cannot be null"
+    }
+  }
+}
 
 enum class RegexEnabledFilterType {
   Tag,
@@ -77,7 +83,15 @@ class DateRangeTypeConverter {
     if (dateRange == null) {
       return null
     }
-    return "${dateRange.start.time}:${dateRange.end.time}"
+    return buildString {
+      if (dateRange.start != null) {
+        append(dateRange.start.time)
+      }
+      append(":")
+      if (dateRange.end != null) {
+        append(dateRange.end.time)
+      }
+    }
   }
 
   @TypeConverter
@@ -87,8 +101,8 @@ class DateRangeTypeConverter {
     }
     val (start, end) = s.split(":")
     return DateRange(
-      start = Date(start.toLong()),
-      end = Date(end.toLong()),
+      start = start.takeIf { it.isNotEmpty() }?.let { Date(it.toLong()) },
+      end = end.takeIf { it.isNotEmpty() }?.let { Date(it.toLong()) },
     )
   }
 }

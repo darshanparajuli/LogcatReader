@@ -152,4 +152,10 @@
   <string name="enable">Enable</string>
   <string name="disable">Disable</string>
   <string name="regex" translatable="false">Regex</string>
+  <string name="select_date_and_time">Select date and time</string>
+  <string name="start_date">Start date</string>
+  <string name="start_time">Start time</string>
+  <string name="end_time">End time</string>
+  <string name="end_date">End date</string>
+  <string name="enabled">Enabled</string>
 </resources>

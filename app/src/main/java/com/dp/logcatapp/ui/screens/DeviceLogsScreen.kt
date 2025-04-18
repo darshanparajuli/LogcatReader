@@ -183,7 +183,9 @@ import kotlinx.coroutines.withContext
 import java.io.BufferedWriter
 import java.io.File
 import java.io.IOException
+import java.text.ParseException
 import java.text.SimpleDateFormat
+import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 
@@ -1733,6 +1735,9 @@ private class LogFilter(
   private val filterInfo: FilterInfo,
   private val appInfoMap: Map<String, AppInfo>?,
 ) : Filter {
+  private val dateTimeFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS")
+  private val dateTimeFormatByMinutes = SimpleDateFormat("yyyy-MM-dd HH:mm")
+  private val currentYear = Calendar.getInstance().get(Calendar.YEAR)
   private val regexEnabledTypes = filterInfo.regexEnabledFilterTypes.orEmpty()
   private val messageRegex = filterInfo.message?.let { text ->
     if (RegexEnabledFilterType.Message in regexEnabledTypes) {
@@ -1759,6 +1764,43 @@ private class LogFilter(
     filterInfo.logLevels.map { it.label.first().toString() }.toSet()
   } else {
     emptySet()
+  }
+
+  private fun inDateRange(log: Log): Boolean {
+
+    val dateRange = filterInfo.dateRange
+    if (dateRange == null) {
+      return true
+    }
+
+    val date = log.parseDate() ?: run {
+      // Error parsing date time, let it through anyway?
+      return true
+    }
+
+    return when {
+      dateRange.start != null && dateRange.end != null -> {
+        date.time >= dateRange.start.time && date.time <= dateRange.end.time
+      }
+      dateRange.start != null -> date.time >= dateRange.start.time
+      dateRange.end != null -> date.time <= dateRange.end.time
+      else -> true
+    }
+  }
+
+  private fun Log.parseDate(): Date? {
+    val dateTime = "$currentYear-$date $time"
+    return try {
+      // Try parsing seconds & ms first.
+      dateTimeFormat.parse(dateTime)
+    } catch (_: ParseException) {
+      try {
+        // Try parsing minutes only in case parsing seconds/ms failed.
+        dateTimeFormatByMinutes.parse(dateTime)
+      } catch (_: ParseException) {
+        null
+      }
+    }
   }
 
   private fun matches(regex: Regex?, target: String): Boolean {
@@ -1839,6 +1881,10 @@ private class LogFilter(
     }
 
     if (!matchesPackageName(log)) {
+      return false
+    }
+
+    if (!inDateRange(log)) {
       return false
     }
 

@@ -6,12 +6,12 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -44,6 +44,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Apps
 import androidx.compose.material.icons.filled.ClearAll
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.FilterListOff
@@ -92,8 +93,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastJoinToString
@@ -102,6 +107,7 @@ import coil3.compose.AsyncImage
 import com.dp.logcat.Log
 import com.dp.logcat.LogcatSession
 import com.dp.logcatapp.R
+import com.dp.logcatapp.db.DateRange
 import com.dp.logcatapp.db.FilterInfo
 import com.dp.logcatapp.db.LogLevel
 import com.dp.logcatapp.db.LogcatReaderDatabase
@@ -112,10 +118,20 @@ import com.dp.logcatapp.ui.theme.Shapes
 import com.dp.logcatapp.util.AppInfo
 import com.dp.logcatapp.util.findActivity
 import com.dp.logcatapp.util.rememberAppInfoByUidMap
+import com.dp.logcatapp.util.showToast
 import com.dp.logcatapp.util.toRegexOrNull
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.text.ParseException
+import java.text.SimpleDateFormat
+import java.util.Calendar
+
+private const val DATE_TIME_FORMAT = "yyyy-MM-dd HH:mm"
+private const val DATE_TIME_FORMAT_NO_YEAR = "MM-dd HH:mm"
+private const val DATE_FORMAT = "yyyy-MM-dd"
+private const val DATE_FORMAT_NO_YEAR = "MM-dd"
+private const val TIME_FORMAT = "HH:mm"
 
 @OptIn(
   ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class,
@@ -321,6 +337,7 @@ fun FiltersScreen(
         initialLogLevels = filterInfo.logLevels.orEmpty(),
         initialEnabled = filterInfo.enabled,
         initialRegexEnabledTypes = filterInfo.regexEnabledFilterTypes.orEmpty(),
+        initialDateRange = filterInfo.dateRange,
         onDismiss = { showEditFilterDialog = null },
         onSave = { data ->
           showEditFilterDialog = null
@@ -349,6 +366,7 @@ fun FiltersScreen(
             exclude = exclude,
             enabled = enabled ?: filterInfo.enabled,
             regexEnabledFilterTypes = regexEnabledTypes,
+            dateRange = data.dateRange,
           )
 
           coroutineScope.launch {
@@ -397,6 +415,7 @@ fun FiltersScreen(
             },
             exclude = exclude,
             regexEnabledFilterTypes = regexEnabledTypes,
+            dateRange = data.dateRange,
           )
 
           coroutineScope.launch {
@@ -497,6 +516,7 @@ fun FiltersScreen(
             selectable = selected.isNotEmpty(),
             selected = item in selected,
             regexEnabledFilterType = item.regexEnabledFilterTypes.orEmpty(),
+            dateRange = item.dateRange,
           )
           HorizontalDivider(
             modifier = Modifier.fillMaxWidth(),
@@ -653,6 +673,7 @@ private data class FilterData(
   val exclude: Boolean,
   val enabled: Boolean?,
   val regexEnabledTypes: Set<RegexEnabledFilterType>,
+  val dateRange: DateRange?,
 )
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
@@ -667,6 +688,7 @@ private fun AddOrEditFilterSheet(
   initialPid: String? = null,
   initialTid: String? = null,
   initialExclude: Boolean? = null,
+  initialDateRange: DateRange? = null,
   initialLogLevels: Set<LogLevel> = emptySet(),
   initialEnabled: Boolean? = null,
   initialRegexEnabledTypes: Set<RegexEnabledFilterType> = emptySet(),
@@ -678,6 +700,7 @@ private fun AddOrEditFilterSheet(
       }
     }
   }
+
   var message by remember { mutableStateOf(initialKeyword.orEmpty()) }
   var tag by remember { mutableStateOf(initialTag.orEmpty()) }
   var packageName by remember { mutableStateOf(initialPackageName.orEmpty()) }
@@ -689,6 +712,12 @@ private fun AddOrEditFilterSheet(
   var exclude by remember { mutableStateOf(initialExclude ?: false) }
   var enabledState by remember { mutableStateOf(initialEnabled) }
   var regexEnabledTypes by remember { mutableStateOf(initialRegexEnabledTypes) }
+  var showDateRangeSheet by remember { mutableStateOf(false) }
+  var dateRange by remember { mutableStateOf<DateRange?>(initialDateRange) }
+  var dateRangeFormatted by remember {
+    mutableStateOf<AnnotatedString>(formatDateRange(initialDateRange))
+  }
+
   ModalBottomSheet(
     modifier = modifier.statusBarsPadding(),
     sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
@@ -722,6 +751,7 @@ private fun AddOrEditFilterSheet(
                 exclude = exclude,
                 enabled = enabledState,
                 regexEnabledTypes = regexEnabledTypes,
+                dateRange = dateRange,
               )
             )
           },
@@ -730,6 +760,7 @@ private fun AddOrEditFilterSheet(
             pid.isNotEmpty() ||
             tid.isNotEmpty() ||
             packageName.isNotEmpty() ||
+            dateRange != null ||
             selectedLogLevels.any { (_, selected) -> selected }) &&
             !messageRegexError && !tagRegexError && !packageNameRegexError,
         ) {
@@ -854,6 +885,17 @@ private fun AddOrEditFilterSheet(
         keyboardType = KeyboardType.Number,
       )
       Spacer(modifier = Modifier.height(16.dp))
+      DateInputField(
+        modifier = Modifier
+          .fillMaxWidth()
+          .padding(horizontal = 16.dp),
+        value = dateRangeFormatted,
+        hint = "Date/time range",
+        onClickSelectDateRange = {
+          showDateRangeSheet = true
+        }
+      )
+      Spacer(modifier = Modifier.height(16.dp))
       FlowRow(
         modifier = Modifier
           .fillMaxWidth()
@@ -900,7 +942,7 @@ private fun AddOrEditFilterSheet(
               enabledState = !enabled
             },
           headlineContent = {
-            Text("Enabled")
+            Text(stringResource(R.string.enabled))
           },
           trailingContent = {
             Checkbox(
@@ -911,6 +953,257 @@ private fun AddOrEditFilterSheet(
           colors = ListItemDefaults.colors(
             containerColor = MaterialTheme.colorScheme.surfaceContainer,
           )
+        )
+      }
+    }
+  }
+  if (showDateRangeSheet) {
+    DateRangeSheet(
+      initialDateRange = dateRange,
+      onDismiss = { showDateRangeSheet = false },
+      onDone = { result ->
+        showDateRangeSheet = false
+        dateRange = result
+        dateRangeFormatted = formatDateRange(result)
+      }
+    )
+  }
+}
+
+private fun formatDateRange(dateRange: DateRange?): AnnotatedString {
+  return if (dateRange == null) {
+    AnnotatedString("")
+  } else {
+    try {
+      val dateTimeFormatNoYear = SimpleDateFormat(DATE_TIME_FORMAT_NO_YEAR)
+      val start = dateRange.start?.let { dateTimeFormatNoYear.format(it) } ?: "n/a"
+      val end = dateRange.end?.let { dateTimeFormatNoYear.format(it) } ?: "n/a"
+      buildAnnotatedString {
+        pushStyle(SpanStyle(fontWeight = FontWeight.SemiBold))
+        append(start)
+        pop()
+        append(" — ")
+        pushStyle(SpanStyle(fontWeight = FontWeight.SemiBold))
+        append(end)
+        pop()
+      }
+    } catch (_: ParseException) {
+      AnnotatedString("")
+    }
+  }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun DateRangeSheet(
+  initialDateRange: DateRange?,
+  onDismiss: () -> Unit,
+  onDone: (DateRange) -> Unit,
+  modifier: Modifier = Modifier,
+) {
+  val dateRegex = remember { "(\\d\\d?)-(\\d\\d?)".toRegex() }
+  val timeRegex = remember { "(\\d\\d?):(\\d\\d?)".toRegex() }
+  val dateFormat = remember { SimpleDateFormat(DATE_FORMAT).apply { isLenient = false } }
+  val timeFormat = remember { SimpleDateFormat(TIME_FORMAT).apply { isLenient = false } }
+  val currentYear = remember { Calendar.getInstance().get(Calendar.YEAR) }
+
+  val (initialStartDate, initialStartTime, initialEndDate, initialEndTime) = remember {
+    if (initialDateRange == null) {
+      arrayOf("", "", "", "")
+    } else {
+      val dateFormatNoYear = SimpleDateFormat(DATE_FORMAT_NO_YEAR)
+      val timeFormat = SimpleDateFormat(TIME_FORMAT)
+      try {
+        when {
+          initialDateRange.start != null && initialDateRange.end != null -> {
+            val startDateFormatted = dateFormatNoYear.format(initialDateRange.start)
+            val startTimeFormatted = timeFormat.format(initialDateRange.start)
+            val endDateFormatted = dateFormatNoYear.format(initialDateRange.end)
+            val endTimeFormatted = timeFormat.format(initialDateRange.end)
+            arrayOf(startDateFormatted, startTimeFormatted, endDateFormatted, endTimeFormatted)
+          }
+          initialDateRange.start != null -> {
+            val startDateFormatted = dateFormatNoYear.format(initialDateRange.start)
+            val startTimeFormatted = timeFormat.format(initialDateRange.start)
+            arrayOf(startDateFormatted, startTimeFormatted, "", "")
+          }
+          initialDateRange.end != null -> {
+            val endDateFormatted = dateFormatNoYear.format(initialDateRange.end)
+            val endTimeFormatted = timeFormat.format(initialDateRange.end)
+            arrayOf("", "", endDateFormatted, endTimeFormatted)
+          }
+          else -> arrayOf("", "", "", "")
+        }
+      } catch (_: ParseException) {
+        arrayOf("", "", "", "")
+      }
+    }
+  }
+  var startDateText by remember { mutableStateOf(initialStartDate) }
+  var startTimeText by remember { mutableStateOf(initialStartTime) }
+  var startDateError by remember { mutableStateOf(false) }
+  var startTimeError by remember { mutableStateOf(false) }
+
+  var endDateText by remember { mutableStateOf(initialEndDate) }
+  var endTimeText by remember { mutableStateOf(initialEndTime) }
+  var endDateError by remember { mutableStateOf(false) }
+  var endTimeError by remember { mutableStateOf(false) }
+
+  fun validateDate(s: String): Boolean {
+    return if (dateRegex.matches(s)) {
+      try {
+        dateFormat.parse("${currentYear}-$s")
+        true
+      } catch (_: ParseException) {
+        false
+      }
+    } else {
+      false
+    }
+  }
+
+  fun validateTime(s: String): Boolean {
+    return if (timeRegex.matches(s)) {
+      try {
+        timeFormat.parse(s)
+        true
+      } catch (_: ParseException) {
+        false
+      }
+    } else {
+      false
+    }
+  }
+
+  ModalBottomSheet(
+    modifier = modifier.statusBarsPadding(),
+    sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+    onDismissRequest = onDismiss,
+    containerColor = MaterialTheme.colorScheme.surfaceContainer,
+  ) {
+    Column(
+      modifier = Modifier
+        .verticalScroll(rememberScrollState())
+        .padding(vertical = 16.dp),
+    ) {
+      Row(
+        modifier = Modifier.padding(horizontal = 16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+      ) {
+        Text(
+          modifier = Modifier.weight(1f),
+          text = stringResource(R.string.select_date_and_time),
+          style = AppTypography.headlineMedium,
+        )
+        val context = LocalContext.current
+        Button(
+          onClick = {
+            val cal = Calendar.getInstance()
+            // `MONTH` starts at 0.
+            val currentMonth = cal.get(Calendar.MONTH) + 1
+            val currentDay = cal.get(Calendar.DAY_OF_MONTH)
+            val dateTimeFormat = SimpleDateFormat(DATE_TIME_FORMAT).apply { isLenient = false }
+            try {
+              val start = when {
+                startDateText.isNotEmpty() && startTimeText.isNotEmpty() -> {
+                  dateTimeFormat.parse("$currentYear-$startDateText $startTimeText")
+                }
+                startDateText.isNotEmpty() -> {
+                  dateFormat.parse("$currentYear-$startDateText 00:00")
+                }
+                startTimeText.isNotEmpty() -> {
+                  dateTimeFormat.parse("$currentYear-$currentMonth-$currentDay $startTimeText")
+                }
+                else -> null
+              }
+
+              val end = when {
+                endDateText.isNotEmpty() && endTimeText.isNotEmpty() -> {
+                  dateTimeFormat.parse("$currentYear-$endDateText $endTimeText")
+                }
+                endDateText.isNotEmpty() -> {
+                  dateFormat.parse("$currentYear-$endDateText 00:00")
+                }
+                endTimeText.isNotEmpty() -> {
+                  dateTimeFormat.parse("$currentYear-$currentMonth-$currentDay $endTimeText")
+                }
+                else -> null
+              }
+              onDone(DateRange(start = start, end = end))
+            } catch (_: ParseException) {
+              context.showToast(context.getString(R.string.error))
+            }
+          },
+          enabled = (startDateText.isNotEmpty() || endDateText.isNotEmpty() ||
+            startTimeText.isNotEmpty() || endTimeText.isNotEmpty()) &&
+            !startDateError && !startTimeError &&
+            !endDateError && !endTimeError,
+        ) {
+          Text(
+            stringResource(R.string.done),
+            style = AppTypography.titleMedium,
+          )
+        }
+      }
+      Spacer(modifier = Modifier.height(16.dp))
+
+      Row(
+        modifier = Modifier.padding(horizontal = 16.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+      ) {
+        InputField(
+          modifier = Modifier.weight(1f),
+          label = stringResource(R.string.start_date),
+          hint = DATE_FORMAT_NO_YEAR,
+          value = startDateText,
+          isError = startDateText.isNotEmpty() && startDateError,
+          onValueChange = { value ->
+            startDateText = value
+            startDateError = value.isNotEmpty() && !validateDate(value)
+          },
+        )
+
+        InputField(
+          modifier = Modifier.weight(1f),
+          label = stringResource(R.string.start_time),
+          hint = TIME_FORMAT,
+          value = startTimeText,
+          isError = startTimeText.isNotEmpty() && startTimeError,
+          onValueChange = { value ->
+            startTimeText = value
+            startTimeError = value.isNotEmpty() && !validateTime(value)
+          },
+        )
+      }
+      Spacer(modifier = Modifier.height(16.dp))
+      Row(
+        modifier = Modifier.padding(horizontal = 16.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+      ) {
+        InputField(
+          modifier = Modifier.weight(1f),
+          label = stringResource(R.string.end_date),
+          hint = DATE_FORMAT_NO_YEAR,
+          value = endDateText,
+          isError = endDateText.isNotEmpty() && endDateError,
+          onValueChange = { value ->
+            endDateText = value
+            endDateError = value.isNotEmpty() && !validateDate(value)
+          },
+        )
+
+        InputField(
+          modifier = Modifier.weight(1f),
+          label = stringResource(R.string.end_time),
+          hint = TIME_FORMAT,
+          value = endTimeText,
+          isError = endTimeText.isNotEmpty() && endTimeError,
+          onValueChange = { value ->
+            endTimeText = value
+            endTimeError = value.isNotEmpty() && !validateTime(value)
+          },
         )
       }
     }
@@ -1064,6 +1357,7 @@ private fun FilterItem(
   tid: String?,
   priorities: Set<LogLevel>?,
   regexEnabledFilterType: Set<RegexEnabledFilterType>,
+  dateRange: DateRange?,
   exclude: Boolean,
   enabled: Boolean,
   selectable: Boolean = false,
@@ -1133,11 +1427,23 @@ private fun FilterItem(
               regex = RegexEnabledFilterType.PackageName in regexEnabledFilterType,
             )
           }
-          if (!priorities.isNullOrEmpty()) {
+          if (dateRange != null) {
+            val dateTimeFormatNoYear = SimpleDateFormat(DATE_TIME_FORMAT_NO_YEAR)
             FilterRow(
-              label = stringResource(R.string.log_priority),
-              value = priorities.map { it.label }.sorted()
-                .fastJoinToString(separator = ", "),
+              label = "Date/time range",
+              value = buildString {
+                if (dateRange.start != null) {
+                  append(dateTimeFormatNoYear.format(dateRange.start))
+                } else {
+                  append("n/a")
+                }
+                append(" — ")
+                if (dateRange.end != null) {
+                  append(dateTimeFormatNoYear.format(dateRange.end))
+                } else {
+                  append("n/a")
+                }
+              }
             )
           }
           if (!pid.isNullOrEmpty()) {
@@ -1150,6 +1456,13 @@ private fun FilterItem(
             FilterRow(
               label = stringResource(R.string.thread_id),
               value = tid,
+            )
+          }
+          if (!priorities.isNullOrEmpty()) {
+            FilterRow(
+              label = stringResource(R.string.log_priority),
+              value = priorities.map { it.label }.sorted()
+                .fastJoinToString(separator = ", "),
             )
           }
         }
@@ -1172,6 +1485,40 @@ private fun FilterItem(
 }
 
 @Composable
+private fun DateInputField(
+  modifier: Modifier,
+  hint: String,
+  value: AnnotatedString,
+  onClickSelectDateRange: () -> Unit,
+) {
+  TextField(
+    modifier = modifier.focusable(false),
+    value = TextFieldValue(value),
+    onValueChange = {},
+    placeholder = { Text(text = hint) },
+    readOnly = true,
+    colors = TextFieldDefaults.colors(
+      focusedIndicatorColor = Color.Transparent,
+      unfocusedIndicatorColor = Color.Transparent,
+      errorIndicatorColor = Color.Transparent,
+      errorTextColor = MaterialTheme.colorScheme.error,
+    ),
+    shape = Shapes.medium,
+    trailingIcon = {
+      WithTooltip(
+        text = stringResource(R.string.select_date_and_time),
+      ) {
+        IconButton(
+          onClick = onClickSelectDateRange,
+        ) {
+          Icon(Icons.Default.DateRange, contentDescription = null)
+        }
+      }
+    },
+  )
+}
+
+@Composable
 private fun InputField(
   modifier: Modifier,
   label: String,
@@ -1182,12 +1529,21 @@ private fun InputField(
   onClickRegex: (() -> Unit)? = null,
   keyboardType: KeyboardType = KeyboardOptions.Default.keyboardType,
   isError: Boolean = false,
+  hint: String? = null,
 ) {
   TextField(
     modifier = modifier,
     label = { Text(label) },
     value = value,
     onValueChange = onValueChange,
+    placeholder = hint?.let {
+      {
+        Text(
+          text = it,
+          style = LocalTextStyle.current.merge(AppTypography.bodySmall),
+        )
+      }
+    },
     maxLines = maxLines,
     singleLine = maxLines == 1,
     isError = isError,
@@ -1216,7 +1572,6 @@ private fun InputField(
                 textButtonColors.disabledContentColor
               },
             ),
-            contentPadding = PaddingValues(),
           ) {
             Text(".*")
           }
