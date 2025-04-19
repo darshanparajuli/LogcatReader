@@ -1,6 +1,6 @@
 <img src="/app/playstore_images/launcher_icon.png" width="192px" />
 
-# Logcat Reader [![Build Status](https://travis-ci.org/darshanparajuli/LogcatReader.svg?branch=master)](https://travis-ci.org/darshanparajuli/LogcatReader)
+# Logcat Reader
 
 A simple app for viewing logs on an android device.
 
