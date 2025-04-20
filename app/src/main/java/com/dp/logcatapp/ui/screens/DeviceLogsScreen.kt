@@ -245,7 +245,6 @@ fun DeviceLogsScreen(
   val searchHitIndexMap = remember { mutableStateMapOf<SearchHitKey, List<HitIndex>>() }
   var searchHits by remember { mutableStateOf<List<SearchHit>>(emptyList()) }
   var currentSearchHitIndex by remember { mutableIntStateOf(-1) }
-  // var currentSearchHitLogId by remember { mutableIntStateOf(-1) }
   var showHitCount by remember { mutableStateOf(false) }
   var recordStatus by viewModel.recordStatus
   val snackbarHostState = remember { SnackbarHostState() }
@@ -257,8 +256,17 @@ fun DeviceLogsScreen(
   var errorStartingLogcat by remember { mutableStateOf(false) }
   var showDisplayOptions by remember { mutableStateOf(false) }
 
+  fun closeSearchBar() {
+    showSearchBar = false
+    searchHitIndexMap.clear()
+    searchHits = emptyList()
+    currentSearchHitIndex = -1
+    focusManager.clearFocus()
+    searchQuery = ""
+  }
+
   if (showSearchBar) {
-    BackHandler { showSearchBar = false }
+    BackHandler { closeSearchBar() }
   }
 
   val logcatService = viewModel.logcatService
@@ -544,28 +552,21 @@ fun DeviceLogsScreen(
           searchQuery = searchQuery,
           searchInProgress = searchInProgress,
           showHitCount = showHitCount,
-          hitCount = searchHitIndexMap.size,
+          hitCount = searchHits.size,
           currentHitIndex = currentSearchHitIndex,
           onQueryChange = { searchQuery = it },
-          onClose = {
-            showSearchBar = false
-            searchHitIndexMap.clear()
-            searchHits = emptyList()
-            currentSearchHitIndex = -1
-            focusManager.clearFocus()
-            searchQuery = ""
-          },
+          onClose = ::closeSearchBar,
           onPrevious = {
             focusManager.clearFocus()
             if (currentSearchHitIndex - 1 >= 0) {
               currentSearchHitIndex -= 1
             } else {
-              currentSearchHitIndex = searchHitIndexMap.size - 1
+              currentSearchHitIndex = searchHits.size - 1
             }
           },
           onNext = {
             focusManager.clearFocus()
-            currentSearchHitIndex = (currentSearchHitIndex + 1) % searchHitIndexMap.size
+            currentSearchHitIndex = (currentSearchHitIndex + 1) % searchHits.size
           },
           regexEnabled = useRegexForSearch,
           regexError = searchRegexError,

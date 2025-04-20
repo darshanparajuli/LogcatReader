@@ -144,8 +144,17 @@ fun SavedLogsViewerScreen(
   val scrollToTopInteractionSource = remember { MutableInteractionSource() }
   val scrollToBottomInteractionSource = remember { MutableInteractionSource() }
 
+  fun closeSearchBar() {
+    showSearchBar = false
+    searchHitIndexMap.clear()
+    searchHits = emptyList()
+    currentSearchHitIndex = -1
+    focusManager.clearFocus()
+    searchQuery = ""
+  }
+
   if (showSearchBar) {
-    BackHandler { showSearchBar = false }
+    BackHandler { closeSearchBar() }
   }
 
   LaunchedEffect(listState) {
@@ -212,27 +221,20 @@ fun SavedLogsViewerScreen(
           onQueryChange = { searchQuery = it },
           searchInProgress = searchInProgress,
           showHitCount = showHitCount,
-          hitCount = searchHitIndexMap.size,
+          hitCount = searchHits.size,
           currentHitIndex = currentSearchHitIndex,
-          onClose = {
-            showSearchBar = false
-            searchHitIndexMap.clear()
-            searchHits = emptyList()
-            currentSearchHitIndex = -1
-            focusManager.clearFocus()
-            searchQuery = ""
-          },
+          onClose = ::closeSearchBar,
           onPrevious = {
             focusManager.clearFocus()
             if (currentSearchHitIndex - 1 >= 0) {
               currentSearchHitIndex -= 1
             } else {
-              currentSearchHitIndex = searchHitIndexMap.size - 1
+              currentSearchHitIndex = searchHits.size - 1
             }
           },
           onNext = {
             focusManager.clearFocus()
-            currentSearchHitIndex = (currentSearchHitIndex + 1) % searchHitIndexMap.size
+            currentSearchHitIndex = (currentSearchHitIndex + 1) % searchHits.size
           },
           regexEnabled = useRegexForSearch,
           regexError = searchRegexError,
