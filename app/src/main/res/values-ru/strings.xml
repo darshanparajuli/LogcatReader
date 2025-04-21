@@ -149,4 +149,10 @@
   <string name="system_app">Системное приложение</string>
   <string name="enable">Включить</string>
   <string name="disable">Отключить</string>
+  <string name="select_date_and_time">Выбор даты и времени</string>
+  <string name="start_date">Дата начала</string>
+  <string name="start_time">Время начала</string>
+  <string name="end_time">Время окончания</string>
+  <string name="end_date">Дата окончания</string>
+  <string name="enabled">Включено</string>
 </resources>
