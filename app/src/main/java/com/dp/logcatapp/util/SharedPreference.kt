@@ -103,7 +103,7 @@ private fun <T> rememberSharedPreference(
       setter(sharedPreferences, newValue)
     },
     deleter = {
-      sharedPreferences.edit { clear() }
+      sharedPreferences.edit { remove(key) }
     }
   )
 }
