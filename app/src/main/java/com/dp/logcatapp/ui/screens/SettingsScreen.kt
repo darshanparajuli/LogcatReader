@@ -57,6 +57,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -374,7 +375,7 @@ private fun Theme(
     key = SettingsPrefKeys.Appearance.KEY_THEME,
     default = SettingsPrefKeys.Appearance.Default.THEME,
   )
-  var showSelectionDialog by remember { mutableStateOf(false) }
+  var showSelectionDialog by rememberSaveable { mutableStateOf(false) }
   val themeValues = stringArrayResource(R.array.pref_appearance_theme_values)
   val themeOptions = stringArrayResource(R.array.pref_appearance_theme_entries)
   ListItem(
@@ -446,7 +447,7 @@ private fun PollInterval(
     key = SettingsPrefKeys.Logcat.KEY_POLL_INTERVAL,
     default = SettingsPrefKeys.Logcat.Default.POLL_INTERVAL,
   )
-  var showInputDialog by remember { mutableStateOf(false) }
+  var showInputDialog by rememberSaveable { mutableStateOf(false) }
   ListItem(
     modifier = modifier
       .fillMaxWidth()
@@ -496,7 +497,7 @@ private fun Buffers(
     default = SettingsPrefKeys.Logcat.Default.BUFFERS,
   )
   val availableBuffers = LogcatUtil.AVAILABLE_BUFFERS
-  var showBuffersSheet by remember { mutableStateOf(false) }
+  var showBuffersSheet by rememberSaveable { mutableStateOf(false) }
 
   ListItem(
     modifier = modifier
@@ -546,7 +547,7 @@ private fun MaxLogs(
     key = SettingsPrefKeys.Logcat.KEY_MAX_LOGS,
     default = SettingsPrefKeys.Logcat.Default.MAX_LOGS,
   )
-  var showInputDialog by remember { mutableStateOf(false) }
+  var showInputDialog by rememberSaveable { mutableStateOf(false) }
   ListItem(
     modifier = modifier
       .fillMaxWidth()
@@ -596,7 +597,7 @@ private fun SaveLocation(
     key = SettingsPrefKeys.Logcat.KEY_SAVE_LOCATION,
     default = SettingsPrefKeys.Logcat.Default.SAVE_LOCATION,
   )
-  var showSelectionDialog by remember { mutableStateOf(false) }
+  var showSelectionDialog by rememberSaveable { mutableStateOf(false) }
   val isUsingInternal = preference.value!!.isEmpty()
   ListItem(
     modifier = modifier
