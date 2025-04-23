@@ -87,6 +87,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
@@ -156,9 +157,8 @@ fun FiltersScreen(
     .filters()
     .collectAsState(null)
 
-  var showAddFilterDialog by remember { mutableStateOf(prepopulateFilterInfo != null) }
-  var showEditFilterDialog by remember { mutableStateOf<FilterInfo?>(null) }
-  var showPackageSelector by remember { mutableStateOf(false) }
+  var showAddFilterDialog by rememberSaveable { mutableStateOf(prepopulateFilterInfo != null) }
+  var showPackageSelector by rememberSaveable { mutableStateOf(false) }
   val coroutineScope = rememberCoroutineScope()
 
   if (viewModel.selected.isNotEmpty()) {
@@ -335,7 +335,7 @@ fun FiltersScreen(
   ) { innerPadding ->
     val filters = filters
 
-    showEditFilterDialog?.let { filterInfo ->
+    viewModel.showEditFilterDialog?.let { filterInfo ->
       AddOrEditFilterSheet(
         initialTag = filterInfo.tag,
         initialKeyword = filterInfo.message,
@@ -347,9 +347,9 @@ fun FiltersScreen(
         initialEnabled = filterInfo.enabled,
         initialRegexEnabledTypes = filterInfo.regexEnabledFilterTypes.orEmpty(),
         initialDateRange = filterInfo.dateRange,
-        onDismiss = { showEditFilterDialog = null },
+        onDismiss = { viewModel.showEditFilterDialog = null },
         onSave = { data ->
-          showEditFilterDialog = null
+          viewModel.showEditFilterDialog = null
 
           val keyword = data.keyword
           val tag = data.tag
@@ -499,7 +499,7 @@ fun FiltersScreen(
                 },
                 onClick = {
                   if (viewModel.selected.isEmpty()) {
-                    showEditFilterDialog = item
+                    viewModel.showEditFilterDialog = item
                   } else {
                     if (item in viewModel.selected) {
                       viewModel.selected -= item
@@ -710,18 +710,18 @@ private fun AddOrEditFilterSheet(
     }
   }
 
-  var message by remember { mutableStateOf(initialKeyword.orEmpty()) }
-  var tag by remember { mutableStateOf(initialTag.orEmpty()) }
-  var packageName by remember { mutableStateOf(initialPackageName.orEmpty()) }
-  var messageRegexError by remember { mutableStateOf(false) }
-  var tagRegexError by remember { mutableStateOf(false) }
-  var packageNameRegexError by remember { mutableStateOf(false) }
-  var pid by remember { mutableStateOf(initialPid.orEmpty()) }
-  var tid by remember { mutableStateOf(initialTid.orEmpty()) }
-  var exclude by remember { mutableStateOf(initialExclude ?: false) }
-  var enabledState by remember { mutableStateOf(initialEnabled) }
+  var message by rememberSaveable { mutableStateOf(initialKeyword.orEmpty()) }
+  var tag by rememberSaveable { mutableStateOf(initialTag.orEmpty()) }
+  var packageName by rememberSaveable { mutableStateOf(initialPackageName.orEmpty()) }
+  var messageRegexError by rememberSaveable { mutableStateOf(false) }
+  var tagRegexError by rememberSaveable { mutableStateOf(false) }
+  var packageNameRegexError by rememberSaveable { mutableStateOf(false) }
+  var pid by rememberSaveable { mutableStateOf(initialPid.orEmpty()) }
+  var tid by rememberSaveable { mutableStateOf(initialTid.orEmpty()) }
+  var exclude by rememberSaveable { mutableStateOf(initialExclude ?: false) }
+  var enabledState by rememberSaveable { mutableStateOf(initialEnabled) }
   var regexEnabledTypes by remember { mutableStateOf(initialRegexEnabledTypes) }
-  var showDateRangeSheet by remember { mutableStateOf(false) }
+  var showDateRangeSheet by rememberSaveable { mutableStateOf(false) }
   var dateRange by remember { mutableStateOf<DateRange?>(initialDateRange) }
   var dateRangeFormatted by remember {
     mutableStateOf<AnnotatedString>(formatDateRange(initialDateRange))
@@ -1048,15 +1048,15 @@ private fun SelectDateRangeDialog(
       }
     }
   }
-  var startDateText by remember { mutableStateOf(initialStartDate) }
-  var startTimeText by remember { mutableStateOf(initialStartTime) }
-  var startDateError by remember { mutableStateOf(false) }
-  var startTimeError by remember { mutableStateOf(false) }
+  var startDateText by rememberSaveable { mutableStateOf(initialStartDate) }
+  var startTimeText by rememberSaveable { mutableStateOf(initialStartTime) }
+  var startDateError by rememberSaveable { mutableStateOf(false) }
+  var startTimeError by rememberSaveable { mutableStateOf(false) }
 
-  var endDateText by remember { mutableStateOf(initialEndDate) }
-  var endTimeText by remember { mutableStateOf(initialEndTime) }
-  var endDateError by remember { mutableStateOf(false) }
-  var endTimeError by remember { mutableStateOf(false) }
+  var endDateText by rememberSaveable { mutableStateOf(initialEndDate) }
+  var endTimeText by rememberSaveable { mutableStateOf(initialEndTime) }
+  var endDateError by rememberSaveable { mutableStateOf(false) }
+  var endTimeError by rememberSaveable { mutableStateOf(false) }
 
   fun validateDate(s: String): Boolean {
     return if (dateRegex.matches(s)) {
@@ -1576,6 +1576,6 @@ data class PrepopulateFilterInfo(
 )
 
 class FiltersScreenViewModel : ViewModel() {
-
   var selected by mutableStateOf<Set<FilterInfo>>(emptySet())
+  var showEditFilterDialog by mutableStateOf<FilterInfo?>(null)
 }

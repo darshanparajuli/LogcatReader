@@ -249,6 +249,7 @@ fun DeviceLogsScreen(
   var appliedFilters by remember { mutableStateOf(false) }
   var isLogcatSessionLoading by remember { mutableStateOf(true) }
   var errorStartingLogcat by remember { mutableStateOf(false) }
+  var showDisplayOptions by rememberSaveable { mutableStateOf(false) }
 
   fun closeSearchBar() {
     showSearchBar = false
@@ -491,7 +492,7 @@ fun DeviceLogsScreen(
         },
         onClickDisplayOptions = {
           showDropDownMenu = false
-          viewModel.showDisplayOptions = true
+          showDisplayOptions = true
         },
         onClickSave = {
           coroutineScope.launch {
@@ -864,21 +865,21 @@ fun DeviceLogsScreen(
         )
       }
 
-      if (viewModel.showDisplayOptions) {
+      if (showDisplayOptions) {
         DisplayOptionsSheet(
           initialEnabledLogcatItems = toggleableLogItemsPref.value.orEmpty().map {
             ToggleableLogItem.entries[it.toInt()]
           }.toSet(),
           initialCompactView = compactViewPreference.value,
           onSave = { enabledLogItems, compactView ->
-            viewModel.showDisplayOptions = false
+            showDisplayOptions = false
             compactViewPreference.value = compactView
             toggleableLogItemsPref.value = enabledLogItems.map {
               it.ordinal.toString()
             }.toSet()
           },
           onDismiss = {
-            viewModel.showDisplayOptions = false
+            showDisplayOptions = false
           }
         )
       }
@@ -1916,7 +1917,6 @@ class DeviceLogsViewModel(
   var savedLogsSheetState by mutableStateOf<SavedLogsBottomSheetState>(
     SavedLogsBottomSheetState.Hide
   )
-  var showDisplayOptions by mutableStateOf(false)
   var showCopyToClipboardSheet by mutableStateOf<Log?>(null)
   var showLongClickOptionsSheet by mutableStateOf<Log?>(null)
 
