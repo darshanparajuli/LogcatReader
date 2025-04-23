@@ -96,6 +96,8 @@ import androidx.compose.ui.util.fastForEach
 import androidx.core.net.toFile
 import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.room.withTransaction
 import com.dp.logcat.LogcatStreamReader
 import com.dp.logcat.LogcatUtil.countLogs
@@ -139,6 +141,7 @@ private val SORT_ORDER_DEFAULT = SortOrder.Dsc.ordinal
 @Composable
 fun SavedLogsScreen(
   modifier: Modifier,
+  viewModel: SavedLogsScreenViewModel = viewModel(),
 ) {
   val context = LocalContext.current
   val coroutineScope = rememberCoroutineScope()
@@ -167,14 +170,13 @@ fun SavedLogsScreen(
     }
   }
 
-  var selected by remember { mutableStateOf<Set<LogFileInfo>>(emptySet()) }
   var renameLog by remember { mutableStateOf<LogFileInfo?>(null) }
   var exportLog by remember { mutableStateOf<LogFileInfo?>(null) }
   var showSortSheet by remember { mutableStateOf(false) }
 
-  if (selected.isNotEmpty()) {
+  if (viewModel.selected.isNotEmpty()) {
     BackHandler {
-      selected = emptySet()
+      viewModel.selected = emptySet()
     }
   }
 
@@ -205,21 +207,21 @@ fun SavedLogsScreen(
         onClickSort = { showSortSheet = true },
       )
       AnimatedVisibility(
-        visible = selected.isNotEmpty(),
+        visible = viewModel.selected.isNotEmpty(),
         enter = fadeIn(),
         exit = fadeOut(),
       ) {
         SelectSavedLogsAppBar(
-          title = selected.size.toString(),
-          singleLogSelected = selected.size == 1,
+          title = viewModel.selected.size.toString(),
+          singleLogSelected = viewModel.selected.size == 1,
           onClickClose = {
-            selected = emptySet()
+            viewModel.selected = emptySet()
           },
           onClickRename = {
-            renameLog = selected.first()
+            renameLog = viewModel.selected.first()
           },
           onClickExport = {
-            exportLog = selected.first()
+            exportLog = viewModel.selected.first()
           },
           onClickShare = {
             val fileInfo = requireNotNull(savedLogs).logFiles.first()
@@ -230,11 +232,11 @@ fun SavedLogsScreen(
             )
           },
           onClickSelectAll = {
-            selected = savedLogs?.logFiles?.toSet().orEmpty()
+            viewModel.selected = savedLogs?.logFiles?.toSet().orEmpty()
           },
           onClickDelete = {
-            val deleteList = selected.toList()
-            selected = emptySet()
+            val deleteList = viewModel.selected.toList()
+            viewModel.selected = emptySet()
             coroutineScope.launch {
               deleteLogs(logs = deleteList, db = db, context = context)
             }
@@ -253,7 +255,7 @@ fun SavedLogsScreen(
         onDismiss = { renameLog = null },
         onConfirm = { newName ->
           renameLog = null
-          selected = emptySet()
+          viewModel.selected = emptySet()
           coroutineScope.launch {
             val success = rename(
               newName = newName,
@@ -343,10 +345,10 @@ fun SavedLogsScreen(
               .fillMaxWidth()
               .animateItem()
               .then(
-                if (selected.isEmpty()) {
+                if (viewModel.selected.isEmpty()) {
                   Modifier.combinedClickable(
                     onLongClick = {
-                      selected += item
+                      viewModel.selected += item
                     },
                     onClick = {
                       val intent = Intent(context, SavedLogsViewerActivity::class.java)
@@ -356,10 +358,10 @@ fun SavedLogsScreen(
                   )
                 } else {
                   Modifier.clickable {
-                    if (item in selected) {
-                      selected -= item
+                    if (item in viewModel.selected) {
+                      viewModel.selected -= item
                     } else {
-                      selected += item
+                      viewModel.selected += item
                     }
                   }
                 }
@@ -389,10 +391,10 @@ fun SavedLogsScreen(
                 )
               }
             },
-            trailingContent = if (selected.isNotEmpty()) {
+            trailingContent = if (viewModel.selected.isNotEmpty()) {
               {
                 Checkbox(
-                  checked = item in selected,
+                  checked = item in viewModel.selected,
                   onCheckedChange = null,
                 )
               }
@@ -1129,3 +1131,7 @@ data class SavedLogsResult(
   val totalLogCount: Long,
   val logFiles: List<LogFileInfo>,
 )
+
+class SavedLogsScreenViewModel : ViewModel() {
+  var selected by mutableStateOf<Set<LogFileInfo>>(emptySet())
+}

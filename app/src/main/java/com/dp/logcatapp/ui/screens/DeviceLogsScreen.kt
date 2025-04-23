@@ -199,9 +199,7 @@ private const val ENABLED_LOG_ITEMS_KEY = "toggleable_log_items_pref_key"
 fun DeviceLogsScreen(
   modifier: Modifier,
   stopRecordingSignal: Flow<Unit>,
-  viewModel: DeviceLogsViewModel = viewModel(
-    key = "device_logs_view_model",
-  ),
+  viewModel: DeviceLogsViewModel = viewModel(),
 ) {
   val context = LocalContext.current
   val coroutineScope = rememberCoroutineScope()

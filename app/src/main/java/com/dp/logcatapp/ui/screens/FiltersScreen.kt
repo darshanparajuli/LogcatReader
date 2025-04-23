@@ -104,6 +104,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastJoinToString
 import androidx.core.text.isDigitsOnly
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import coil3.compose.AsyncImage
 import com.dp.logcat.Log
 import com.dp.logcat.LogcatSession
@@ -144,6 +146,7 @@ private const val TIME_FORMAT = "HH:mm"
 fun FiltersScreen(
   modifier: Modifier,
   prepopulateFilterInfo: PrepopulateFilterInfo?,
+  viewModel: FiltersScreenViewModel = viewModel(),
 ) {
   val context = LocalContext.current
   val db = remember(context) { LogcatReaderDatabase.getInstance(context) }
@@ -156,11 +159,10 @@ fun FiltersScreen(
   var showAddFilterDialog by remember { mutableStateOf(prepopulateFilterInfo != null) }
   var showEditFilterDialog by remember { mutableStateOf<FilterInfo?>(null) }
   var showPackageSelector by remember { mutableStateOf(false) }
-  var selected by remember { mutableStateOf<Set<FilterInfo>>(emptySet()) }
   val coroutineScope = rememberCoroutineScope()
 
-  if (selected.isNotEmpty()) {
-    BackHandler { selected = emptySet() }
+  if (viewModel.selected.isNotEmpty()) {
+    BackHandler { viewModel.selected = emptySet() }
   }
 
   Scaffold(
@@ -263,19 +265,19 @@ fun FiltersScreen(
         ),
       )
       AnimatedVisibility(
-        visible = selected.isNotEmpty(),
+        visible = viewModel.selected.isNotEmpty(),
         enter = fadeIn(),
         exit = fadeOut(),
       ) {
         SelectFiltersAppBar(
-          title = selected.size.toString(),
-          onClickClose = { selected = emptySet() },
+          title = viewModel.selected.size.toString(),
+          onClickClose = { viewModel.selected = emptySet() },
           onClickSelectAll = {
-            selected = filters.orEmpty().toSet()
+            viewModel.selected = filters.orEmpty().toSet()
           },
           onClickEnable = {
-            val selectedFilters = selected.toSet()
-            selected = emptySet()
+            val selectedFilters = viewModel.selected.toSet()
+            viewModel.selected = emptySet()
             coroutineScope.launch {
               withContext(Dispatchers.IO) {
                 db.filterDao().update(
@@ -286,8 +288,8 @@ fun FiltersScreen(
             }
           },
           onClickDisable = {
-            val selectedFilters = selected.toSet()
-            selected = emptySet()
+            val selectedFilters = viewModel.selected.toSet()
+            viewModel.selected = emptySet()
             coroutineScope.launch {
               withContext(Dispatchers.IO) {
                 db.filterDao().update(
@@ -298,8 +300,8 @@ fun FiltersScreen(
             }
           },
           onClickDelete = {
-            val selectedFilters = selected.toSet()
-            selected = emptySet()
+            val selectedFilters = viewModel.selected.toSet()
+            viewModel.selected = emptySet()
             coroutineScope.launch {
               withContext(Dispatchers.IO) {
                 db.filterDao().delete(*selectedFilters.toTypedArray())
@@ -311,7 +313,7 @@ fun FiltersScreen(
     },
     floatingActionButton = {
       AnimatedVisibility(
-        visible = selected.isEmpty(),
+        visible = viewModel.selected.isEmpty(),
         enter = fadeIn(),
         exit = fadeOut(),
       ) {
@@ -493,16 +495,16 @@ fun FiltersScreen(
               .fillMaxWidth()
               .combinedClickable(
                 onLongClick = {
-                  selected += item
+                  viewModel.selected += item
                 },
                 onClick = {
-                  if (selected.isEmpty()) {
+                  if (viewModel.selected.isEmpty()) {
                     showEditFilterDialog = item
                   } else {
-                    if (item in selected) {
-                      selected -= item
+                    if (item in viewModel.selected) {
+                      viewModel.selected -= item
                     } else {
-                      selected += item
+                      viewModel.selected += item
                     }
                   }
                 }
@@ -520,8 +522,8 @@ fun FiltersScreen(
             exclude = item.exclude,
             packageName = item.packageName,
             enabled = item.enabled,
-            selectable = selected.isNotEmpty(),
-            selected = item in selected,
+            selectable = viewModel.selected.isNotEmpty(),
+            selected = item in viewModel.selected,
             regexEnabledFilterType = item.regexEnabledFilterTypes.orEmpty(),
             dateRange = item.dateRange,
           )
@@ -1572,3 +1574,8 @@ data class PrepopulateFilterInfo(
   val packageName: String?,
   val exclude: Boolean,
 )
+
+class FiltersScreenViewModel : ViewModel() {
+
+  var selected by mutableStateOf<Set<FilterInfo>>(emptySet())
+}
