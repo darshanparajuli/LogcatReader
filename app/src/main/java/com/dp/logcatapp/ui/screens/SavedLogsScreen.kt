@@ -80,6 +80,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
@@ -170,9 +171,7 @@ fun SavedLogsScreen(
     }
   }
 
-  var renameLog by remember { mutableStateOf<LogFileInfo?>(null) }
-  var exportLog by remember { mutableStateOf<LogFileInfo?>(null) }
-  var showSortSheet by remember { mutableStateOf(false) }
+  var showSortSheet by rememberSaveable { mutableStateOf(false) }
 
   if (viewModel.selected.isNotEmpty()) {
     BackHandler {
@@ -218,10 +217,10 @@ fun SavedLogsScreen(
             viewModel.selected = emptySet()
           },
           onClickRename = {
-            renameLog = viewModel.selected.first()
+            viewModel.renameLog = viewModel.selected.first()
           },
           onClickExport = {
-            exportLog = viewModel.selected.first()
+            viewModel.exportLog = viewModel.selected.first()
           },
           onClickShare = {
             val fileInfo = requireNotNull(savedLogs).logFiles.first()
@@ -249,12 +248,12 @@ fun SavedLogsScreen(
     val logFormat = stringResource(R.string.log_count_fmt)
     val logsFormat = stringResource(R.string.log_count_fmt_plural)
 
-    renameLog?.let { logFileInfo ->
+    viewModel.renameLog?.let { logFileInfo ->
       RenameLogDialog(
         renameLog = logFileInfo,
-        onDismiss = { renameLog = null },
+        onDismiss = { viewModel.renameLog = null },
         onConfirm = { newName ->
-          renameLog = null
+          viewModel.renameLog = null
           viewModel.selected = emptySet()
           coroutineScope.launch {
             val success = rename(
@@ -270,14 +269,14 @@ fun SavedLogsScreen(
       )
     }
 
-    exportLog?.let { logFileInfo ->
+    viewModel.exportLog?.let { logFileInfo ->
       var useSingleLineExportFormat by remember { mutableStateOf(false) }
       var savingInProgress by remember { mutableStateOf(false) }
       val exportLauncher = rememberLauncherForActivityResult(
         contract = CreateDocument(mimeType = "text/plain")
       ) { result ->
         if (result != null) {
-          val fileInfo = exportLog ?: return@rememberLauncherForActivityResult
+          val fileInfo = viewModel.exportLog ?: return@rememberLauncherForActivityResult
           coroutineScope.launch {
             try {
               val src = context.contentResolver.openInputStream(fileInfo.info.path.toUri())
@@ -290,17 +289,17 @@ fun SavedLogsScreen(
             } catch (_: IOException) {
               context.showToast(context.getString(R.string.error_saving))
             } finally {
-              exportLog = null
+              viewModel.exportLog = null
             }
           }
         } else {
-          exportLog = null
+          viewModel.exportLog = null
         }
       }
 
       ExportBottomSheet(
         savingInProgress = savingInProgress,
-        onDismiss = { exportLog = null },
+        onDismiss = { viewModel.exportLog = null },
         onClickSingle = {
           useSingleLineExportFormat = true
           savingInProgress = true
@@ -1134,4 +1133,6 @@ data class SavedLogsResult(
 
 class SavedLogsScreenViewModel : ViewModel() {
   var selected by mutableStateOf<Set<LogFileInfo>>(emptySet())
+  var renameLog by mutableStateOf<LogFileInfo?>(null)
+  var exportLog by mutableStateOf<LogFileInfo?>(null)
 }
