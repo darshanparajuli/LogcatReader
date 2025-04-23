@@ -246,13 +246,9 @@ fun DeviceLogsScreen(
   var showHitCount by remember { mutableStateOf(false) }
   var recordStatus by viewModel.recordStatus
   val snackbarHostState = remember { SnackbarHostState() }
-  var savedLogsSheetState by remember {
-    mutableStateOf<SavedLogsBottomSheetState>(SavedLogsBottomSheetState.Hide)
-  }
   var appliedFilters by remember { mutableStateOf(false) }
   var isLogcatSessionLoading by remember { mutableStateOf(true) }
   var errorStartingLogcat by remember { mutableStateOf(false) }
-  var showDisplayOptions by remember { mutableStateOf(false) }
 
   fun closeSearchBar() {
     showSearchBar = false
@@ -367,7 +363,7 @@ fun DeviceLogsScreen(
         }
       }
 
-      LaunchedEffect(logcatService) {
+      LaunchedEffect(logcatService, viewModel) {
         var lastShownSnackBar: Job? = null
         snapshotFlow { recordStatus }
           .collect { status ->
@@ -422,7 +418,7 @@ fun DeviceLogsScreen(
                   lastShownSnackBar?.cancel()
                   lastShownSnackBar = null
                   recordStatus = RecordStatus.Idle
-                  savedLogsSheetState = SavedLogsBottomSheetState.Show(
+                  viewModel.savedLogsSheetState = SavedLogsBottomSheetState.Show(
                     fileName = info.fileName,
                     uri = info.uri,
                     isCustomLocation = info.isCustomLocation,
@@ -495,7 +491,7 @@ fun DeviceLogsScreen(
         },
         onClickDisplayOptions = {
           showDropDownMenu = false
-          showDisplayOptions = true
+          viewModel.showDisplayOptions = true
         },
         onClickSave = {
           coroutineScope.launch {
@@ -514,7 +510,7 @@ fun DeviceLogsScreen(
                   is SaveResult.Success -> {
                     saveLogsInProgress = false
                     showDropDownMenu = false
-                    savedLogsSheetState = SavedLogsBottomSheetState.Show(
+                    viewModel.savedLogsSheetState = SavedLogsBottomSheetState.Show(
                       fileName = result.fileName,
                       uri = result.uri,
                       isCustomLocation = result.isCustomLocation,
@@ -683,14 +679,14 @@ fun DeviceLogsScreen(
       }
     }
 
-    if (savedLogsSheetState is SavedLogsBottomSheetState.Show) {
-      val saveInfo = savedLogsSheetState as SavedLogsBottomSheetState.Show
+    if (viewModel.savedLogsSheetState is SavedLogsBottomSheetState.Show) {
+      val saveInfo = viewModel.savedLogsSheetState as SavedLogsBottomSheetState.Show
       SavedLogsBottomSheet(
         fileName = saveInfo.fileName,
         uri = saveInfo.uri,
         isCustomLocation = saveInfo.isCustomLocation,
         onDismiss = {
-          savedLogsSheetState = SavedLogsBottomSheetState.Hide
+          viewModel.savedLogsSheetState = SavedLogsBottomSheetState.Hide
         },
       )
     }
@@ -737,9 +733,6 @@ fun DeviceLogsScreen(
         }
       }
     } else {
-      var showCopyToClipboardSheet by remember { mutableStateOf<Log?>(null) }
-      var showLongClickOptionsSheet by remember { mutableStateOf<Log?>(null) }
-
       if (logsState.isEmpty()) {
         Box(
           modifier = Modifier
@@ -817,27 +810,27 @@ fun DeviceLogsScreen(
           searchHits = searchHits,
           onClick = if (!compactViewPreference.value) {
             { index ->
-              showCopyToClipboardSheet = logsState[index]
+              viewModel.showCopyToClipboardSheet = logsState[index]
               snapToBottom = false
             }
           } else null,
           onLongClick = { index ->
-            showLongClickOptionsSheet = logsState[index]
+            viewModel.showLongClickOptionsSheet = logsState[index]
             snapToBottom = false
           },
           state = lazyListState,
           currentSearchHitIndex = currentSearchHitIndex,
         )
 
-        showCopyToClipboardSheet?.let { log ->
+        viewModel.showCopyToClipboardSheet?.let { log ->
           CopyLogClipboardBottomSheet(
             log = log,
-            onDismiss = { showCopyToClipboardSheet = null },
+            onDismiss = { viewModel.showCopyToClipboardSheet = null },
           )
         }
       }
 
-      showLongClickOptionsSheet?.let { log ->
+      viewModel.showLongClickOptionsSheet?.let { log ->
         val packageName = log.uid?.let { uid ->
           if (uid.isDigitsOnly()) {
             appInfoMap.orEmpty()[uid]?.packageName
@@ -847,14 +840,14 @@ fun DeviceLogsScreen(
         }
         LongClickOptionsSheet(
           showCopyToClipboard = compactViewPreference.value,
-          onDismiss = { showLongClickOptionsSheet = null },
+          onDismiss = { viewModel.showLongClickOptionsSheet = null },
           onClickFilter = {
             val intent = Intent(context, FiltersActivity::class.java)
             intent.putExtra(FiltersActivity.EXTRA_LOG, log)
             intent.putExtra(FiltersActivity.EXTRA_PACKAGE_NAME, packageName)
             intent.putExtra(FiltersActivity.EXTRA_EXCLUDE, false)
             context.startActivity(intent)
-            showLongClickOptionsSheet = null
+            viewModel.showLongClickOptionsSheet = null
           },
           onClickExclude = {
             val intent = Intent(context, FiltersActivity::class.java)
@@ -862,30 +855,30 @@ fun DeviceLogsScreen(
             intent.putExtra(FiltersActivity.EXTRA_PACKAGE_NAME, packageName)
             intent.putExtra(FiltersActivity.EXTRA_EXCLUDE, true)
             context.startActivity(intent)
-            showLongClickOptionsSheet = null
+            viewModel.showLongClickOptionsSheet = null
           },
           onClickCopyToClipboard = {
-            showCopyToClipboardSheet = log
-            showLongClickOptionsSheet = null
+            viewModel.showCopyToClipboardSheet = log
+            viewModel.showLongClickOptionsSheet = null
           }
         )
       }
 
-      if (showDisplayOptions) {
+      if (viewModel.showDisplayOptions) {
         DisplayOptionsSheet(
           initialEnabledLogcatItems = toggleableLogItemsPref.value.orEmpty().map {
             ToggleableLogItem.entries[it.toInt()]
           }.toSet(),
           initialCompactView = compactViewPreference.value,
           onSave = { enabledLogItems, compactView ->
-            showDisplayOptions = false
+            viewModel.showDisplayOptions = false
             compactViewPreference.value = compactView
             toggleableLogItemsPref.value = enabledLogItems.map {
               it.ordinal.toString()
             }.toSet()
           },
           onDismiss = {
-            showDisplayOptions = false
+            viewModel.showDisplayOptions = false
           }
         )
       }
@@ -1920,6 +1913,12 @@ class DeviceLogsViewModel(
   val logcatService by _logcatService
 
   var recordStatus = mutableStateOf<RecordStatus>(RecordStatus.Idle)
+  var savedLogsSheetState by mutableStateOf<SavedLogsBottomSheetState>(
+    SavedLogsBottomSheetState.Hide
+  )
+  var showDisplayOptions by mutableStateOf(false)
+  var showCopyToClipboardSheet by mutableStateOf<Log?>(null)
+  var showLongClickOptionsSheet by mutableStateOf<Log?>(null)
 
   private val serviceConnection = object : ServiceConnection {
     override fun onServiceConnected(
