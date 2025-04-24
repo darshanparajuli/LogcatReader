@@ -82,7 +82,6 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -702,12 +701,12 @@ private fun AddOrEditFilterSheet(
   initialEnabled: Boolean? = null,
   initialRegexEnabledTypes: Set<RegexEnabledFilterType> = emptySet(),
 ) {
-  val selectedLogLevels = remember {
-    mutableStateMapOf<LogLevel, Boolean>().apply {
-      LogLevel.entries.filter { it in initialLogLevels }.forEach { level ->
-        put(level, true)
+  var selectedLogLevels by rememberSaveable {
+    mutableStateOf<Map<LogLevel, Boolean>>(
+      LogLevel.entries.filter { it in initialLogLevels }.associate { level ->
+        Pair(level, true)
       }
-    }
+    )
   }
 
   var message by rememberSaveable { mutableStateOf(initialKeyword.orEmpty()) }
@@ -720,12 +719,9 @@ private fun AddOrEditFilterSheet(
   var tid by rememberSaveable { mutableStateOf(initialTid.orEmpty()) }
   var exclude by rememberSaveable { mutableStateOf(initialExclude ?: false) }
   var enabledState by rememberSaveable { mutableStateOf(initialEnabled) }
-  var regexEnabledTypes by remember { mutableStateOf(initialRegexEnabledTypes) }
+  var regexEnabledTypes by rememberSaveable { mutableStateOf(initialRegexEnabledTypes) }
   var showDateRangeSheet by rememberSaveable { mutableStateOf(false) }
-  var dateRange by remember { mutableStateOf<DateRange?>(initialDateRange) }
-  var dateRangeFormatted by remember {
-    mutableStateOf<AnnotatedString>(formatDateRange(initialDateRange))
-  }
+  var dateRange by rememberSaveable { mutableStateOf<DateRange?>(initialDateRange) }
 
   ModalBottomSheet(
     modifier = modifier.statusBarsPadding(),
@@ -898,7 +894,7 @@ private fun AddOrEditFilterSheet(
         modifier = Modifier
           .fillMaxWidth()
           .padding(horizontal = 16.dp),
-        value = dateRangeFormatted,
+        value = remember(dateRange) { formatDateRange(dateRange) },
         hint = "Date/time range",
         onClickSelectDateRange = {
           showDateRangeSheet = true
@@ -916,7 +912,8 @@ private fun AddOrEditFilterSheet(
           FilterChip(
             selected = selectedLogLevels.getOrElse(logLevel) { false },
             onClick = {
-              selectedLogLevels[logLevel] = !selectedLogLevels.getOrElse(logLevel) { false }
+              selectedLogLevels =
+                selectedLogLevels + Pair(logLevel, !selectedLogLevels.getOrElse(logLevel) { false })
             },
             label = {
               Text(logLevel.label)
@@ -973,7 +970,6 @@ private fun AddOrEditFilterSheet(
       onDone = { result ->
         showDateRangeSheet = false
         dateRange = result
-        dateRangeFormatted = formatDateRange(result)
       }
     )
   }

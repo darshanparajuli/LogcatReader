@@ -1,5 +1,6 @@
 package com.dp.logcatapp.db
 
+import android.os.Parcelable
 import androidx.room.ColumnInfo
 import androidx.room.Dao
 import androidx.room.Delete
@@ -11,6 +12,7 @@ import androidx.room.Query
 import androidx.room.TypeConverter
 import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
+import kotlinx.parcelize.Parcelize
 import java.util.Date
 
 @Entity(tableName = "filters")
@@ -28,10 +30,11 @@ data class FilterInfo(
   @ColumnInfo(name = "regex_enabled_filter_types") val regexEnabledFilterTypes: Set<RegexEnabledFilterType>? = null,
 )
 
+@Parcelize
 data class DateRange(
   val start: Date?,
   val end: Date?,
-) {
+) : Parcelable {
   init {
     check(start != null || end != null) {
       "both start and end cannot be null"
@@ -39,15 +42,17 @@ data class DateRange(
   }
 }
 
-enum class RegexEnabledFilterType {
+@Parcelize
+enum class RegexEnabledFilterType : Parcelable {
   Tag,
   Message,
   PackageName,
 }
 
+@Parcelize
 enum class LogLevel(
   val label: String
-) {
+) : Parcelable {
   Assert("Assert"),
   Debug("Debug"),
   Error("Error"),
