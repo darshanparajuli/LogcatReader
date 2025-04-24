@@ -160,8 +160,8 @@ fun FiltersScreen(
   var showPackageSelector by rememberSaveable { mutableStateOf(false) }
   val coroutineScope = rememberCoroutineScope()
 
-  if (viewModel.selected.isNotEmpty()) {
-    BackHandler { viewModel.selected = emptySet() }
+  if (viewModel.selectedFilters.isNotEmpty()) {
+    BackHandler { viewModel.selectedFilters = emptySet() }
   }
 
   Scaffold(
@@ -264,19 +264,19 @@ fun FiltersScreen(
         ),
       )
       AnimatedVisibility(
-        visible = viewModel.selected.isNotEmpty(),
+        visible = viewModel.selectedFilters.isNotEmpty(),
         enter = fadeIn(),
         exit = fadeOut(),
       ) {
         SelectFiltersAppBar(
-          title = viewModel.selected.size.toString(),
-          onClickClose = { viewModel.selected = emptySet() },
+          title = viewModel.selectedFilters.size.toString(),
+          onClickClose = { viewModel.selectedFilters = emptySet() },
           onClickSelectAll = {
-            viewModel.selected = filters.orEmpty().toSet()
+            viewModel.selectedFilters = filters.orEmpty().toSet()
           },
           onClickEnable = {
-            val selectedFilters = viewModel.selected.toSet()
-            viewModel.selected = emptySet()
+            val selectedFilters = viewModel.selectedFilters.toSet()
+            viewModel.selectedFilters = emptySet()
             coroutineScope.launch {
               withContext(Dispatchers.IO) {
                 db.filterDao().update(
@@ -287,8 +287,8 @@ fun FiltersScreen(
             }
           },
           onClickDisable = {
-            val selectedFilters = viewModel.selected.toSet()
-            viewModel.selected = emptySet()
+            val selectedFilters = viewModel.selectedFilters.toSet()
+            viewModel.selectedFilters = emptySet()
             coroutineScope.launch {
               withContext(Dispatchers.IO) {
                 db.filterDao().update(
@@ -299,8 +299,8 @@ fun FiltersScreen(
             }
           },
           onClickDelete = {
-            val selectedFilters = viewModel.selected.toSet()
-            viewModel.selected = emptySet()
+            val selectedFilters = viewModel.selectedFilters.toSet()
+            viewModel.selectedFilters = emptySet()
             coroutineScope.launch {
               withContext(Dispatchers.IO) {
                 db.filterDao().delete(*selectedFilters.toTypedArray())
@@ -312,7 +312,7 @@ fun FiltersScreen(
     },
     floatingActionButton = {
       AnimatedVisibility(
-        visible = viewModel.selected.isEmpty(),
+        visible = viewModel.selectedFilters.isEmpty(),
         enter = fadeIn(),
         exit = fadeOut(),
       ) {
@@ -437,23 +437,15 @@ fun FiltersScreen(
 
     if (showPackageSelector) {
       var savingInProgress by remember { mutableStateOf(false) }
-      val currentPackageNameFilters = remember(filters) {
-        filters.orEmpty().mapNotNull { it.packageName }.toSet()
-      }
       PackageSelectorSheet(
         installedApps = appInfoMap?.values?.toList().orEmpty(),
-        initialSelected = currentPackageNameFilters,
         onDismiss = {
           showPackageSelector = false
         },
         savingInProgress = savingInProgress,
         onSelected = { selected ->
           savingInProgress = true
-          val filters = selected
-            .filter { it !in currentPackageNameFilters }
-            .map {
-              FilterInfo(packageName = it)
-            }
+          val filters = selected.map { FilterInfo(packageName = it) }
           coroutineScope.launch {
             withContext(Dispatchers.IO) {
               db.filterDao().insert(*filters.toTypedArray())
@@ -494,16 +486,16 @@ fun FiltersScreen(
               .fillMaxWidth()
               .combinedClickable(
                 onLongClick = {
-                  viewModel.selected += item
+                  viewModel.selectedFilters += item
                 },
                 onClick = {
-                  if (viewModel.selected.isEmpty()) {
+                  if (viewModel.selectedFilters.isEmpty()) {
                     viewModel.showEditFilterDialog = item
                   } else {
-                    if (item in viewModel.selected) {
-                      viewModel.selected -= item
+                    if (item in viewModel.selectedFilters) {
+                      viewModel.selectedFilters -= item
                     } else {
-                      viewModel.selected += item
+                      viewModel.selectedFilters += item
                     }
                   }
                 }
@@ -521,8 +513,8 @@ fun FiltersScreen(
             exclude = item.exclude,
             packageName = item.packageName,
             enabled = item.enabled,
-            selectable = viewModel.selected.isNotEmpty(),
-            selected = item in viewModel.selected,
+            selectable = viewModel.selectedFilters.isNotEmpty(),
+            selected = item in viewModel.selectedFilters,
             regexEnabledFilterType = item.regexEnabledFilterTypes.orEmpty(),
             dateRange = item.dateRange,
           )
@@ -1198,31 +1190,30 @@ private fun SelectDateRangeDialog(
 @Composable
 private fun PackageSelectorSheet(
   installedApps: List<AppInfo>,
-  initialSelected: Set<String>,
   onDismiss: () -> Unit,
   onSelected: (Set<String>) -> Unit,
   modifier: Modifier = Modifier,
   savingInProgress: Boolean = false,
+  viewModel: FiltersScreenViewModel = viewModel(),
 ) {
-  var selected by remember { mutableStateOf<Set<String>>(initialSelected) }
   ModalBottomSheet(
     modifier = modifier.statusBarsPadding(),
     sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
     onDismissRequest = onDismiss,
     containerColor = MaterialTheme.colorScheme.surfaceContainer,
   ) {
-    var filtered by remember { mutableStateOf<List<AppInfo>>(emptyList()) }
-    var searchQuery by remember { mutableStateOf("") }
+    var searchQuery by rememberSaveable { mutableStateOf("") }
+    var filteredApps by remember { mutableStateOf<List<AppInfo>>(emptyList()) }
 
-    LaunchedEffect(installedApps) {
+    LaunchedEffect(installedApps, viewModel) {
       snapshotFlow { searchQuery }
         .collect { query ->
           if (query.isEmpty()) {
-            filtered = installedApps
+            filteredApps = installedApps
               .sortedBy { it.packageName }
               .sortedBy { it.name }
           } else {
-            filtered = installedApps
+            filteredApps = installedApps
               .filter { info ->
                 info.packageName.startsWith(query, ignoreCase = true) ||
                   info.name?.startsWith(query, ignoreCase = true) == true
@@ -1244,9 +1235,9 @@ private fun PackageSelectorSheet(
       )
       Button(
         onClick = {
-          onSelected(selected)
+          onSelected(viewModel.selectedPackageNames)
         },
-        enabled = selected.isNotEmpty() && selected != initialSelected && !savingInProgress,
+        enabled = viewModel.selectedPackageNames.isNotEmpty() && !savingInProgress,
       ) {
         if (savingInProgress) {
           CircularProgressIndicator(
@@ -1279,17 +1270,17 @@ private fun PackageSelectorSheet(
 
     LazyColumn {
       items(
-        items = filtered,
+        items = filteredApps,
         key = { it.packageName },
       ) { app ->
         ListItem(
           modifier = Modifier
             .fillMaxWidth()
             .clickable {
-              if (app.packageName in selected) {
-                selected -= app.packageName
+              if (app.packageName in viewModel.selectedPackageNames) {
+                viewModel.selectedPackageNames -= app.packageName
               } else {
-                selected += app.packageName
+                viewModel.selectedPackageNames += app.packageName
               }
             },
           overlineContent = if (app.isSystem) {
@@ -1318,7 +1309,7 @@ private fun PackageSelectorSheet(
           } else null,
           trailingContent = {
             Checkbox(
-              checked = app.packageName in selected,
+              checked = app.packageName in viewModel.selectedPackageNames,
               onCheckedChange = null,
             )
           },
@@ -1572,6 +1563,7 @@ data class PrepopulateFilterInfo(
 )
 
 class FiltersScreenViewModel : ViewModel() {
-  var selected by mutableStateOf<Set<FilterInfo>>(emptySet())
+  var selectedFilters by mutableStateOf<Set<FilterInfo>>(emptySet())
   var showEditFilterDialog by mutableStateOf<FilterInfo?>(null)
+  var selectedPackageNames by mutableStateOf<Set<String>>(emptySet())
 }
