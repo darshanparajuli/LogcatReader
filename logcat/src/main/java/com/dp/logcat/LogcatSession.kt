@@ -57,6 +57,7 @@ class LogcatSession(
 
   @Volatile private var active = false
   @Volatile private var paused = false
+  private var stopped = false
   private val pauseWaiter = Object()
 
   var isPaused: Boolean
@@ -95,7 +96,8 @@ class LogcatSession(
 
   fun start(): Flow<Status> {
     Logger.debug(LogcatSession::class, "starting")
-    check(!active) { "Logcat is already active!" }
+    check(!stopped) { "LogcatSession was stopped, it cannot be re-started" }
+    check(!active) { "LogcatSession is already active!" }
     active = true
     val status = Channel<Status>(capacity = 1)
     logcatThread = thread {
@@ -212,6 +214,7 @@ class LogcatSession(
 
   fun stop() {
     Logger.debug(LogcatSession::class, "stopping")
+    stopped = true
     active = false
     record = false
     isPaused = false
