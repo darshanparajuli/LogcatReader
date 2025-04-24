@@ -47,12 +47,8 @@ suspend fun searchLogs(
   val map = mutableMapOf<SearchHitKey, List<HitIndex>>()
   val hits = mutableListOf<SearchHit>()
   logs.forEachIndexed { index, log ->
-    val msgSearchResult = searchFunction(log.msg)
     val tagSearchResult = searchFunction(log.tag)
-    val dateSearchResult = searchFunction(log.date)
-    val timeSearchResult = searchFunction(log.time)
-    val pidSearchResult = searchFunction(log.pid)
-    val tidSearchResult = searchFunction(log.tid)
+    val msgSearchResult = searchFunction(log.msg)
     val packageNameSearchResult = log.uid?.let { uid ->
       val packageName = if (uid.isDigitsOnly()) {
         appInfoMap[log.uid]?.packageName
@@ -61,6 +57,10 @@ suspend fun searchLogs(
       }
       packageName?.let { searchFunction(it) }.orEmpty()
     } ?: emptySequence()
+    val dateSearchResult = searchFunction(log.date)
+    val timeSearchResult = searchFunction(log.time)
+    val pidSearchResult = searchFunction(log.pid)
+    val tidSearchResult = searchFunction(log.tid)
 
     fun addSpans(
       spans: Sequence<SearchHitSpan>,
@@ -78,8 +78,8 @@ suspend fun searchLogs(
       map[SearchHitKey(logId = log.id, component = component)] = hitIndices
     }
 
-    addSpans(msgSearchResult, LogComponent.Message)
     addSpans(tagSearchResult, LogComponent.Tag)
+    addSpans(msgSearchResult, LogComponent.Message)
     addSpans(packageNameSearchResult, LogComponent.PackageName)
     addSpans(dateSearchResult, LogComponent.Date)
     addSpans(timeSearchResult, LogComponent.Time)
