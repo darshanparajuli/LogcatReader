@@ -985,10 +985,6 @@ private suspend fun savedLogs(context: Context, db: LogcatReaderDatabase): Flow<
       }
 
       val totalSize = logFiles.sumOf { it.size }
-      if (totalSize > 0) {
-        Utils.bytesToString(totalSize)
-      }
-
       SavedLogsResult(
         totalSize = if (totalSize > 0) {
           Utils.bytesToString(totalSize)
