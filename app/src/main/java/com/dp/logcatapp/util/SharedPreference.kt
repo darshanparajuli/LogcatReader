@@ -100,6 +100,9 @@ private fun <T> rememberSharedPreference(
   }
   return SharedPreference(
     key = key,
+    // Using a getter function instead of passing the currentValue directly in order to make
+    // SharedPreference.value observable via snapshotFlow. This works since getter() performs a read
+    // operation on a compose State (`currentValue`).
     getter = { currentValue },
     setter = { newValue ->
       setter(sharedPreferences, newValue)
