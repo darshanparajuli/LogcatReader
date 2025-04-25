@@ -175,7 +175,6 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.onStart
@@ -247,7 +246,6 @@ fun DeviceLogsScreen(
   var searchHits by remember { mutableStateOf<List<SearchHit>>(emptyList()) }
   var currentSearchHitIndex by remember { mutableIntStateOf(-1) }
   var showHitCount by remember { mutableStateOf(false) }
-  var recordStatus by viewModel.recordStatus
   val snackbarHostState = remember { SnackbarHostState() }
   var appliedFilters by remember { mutableStateOf(false) }
   var isLogcatSessionLoading by remember { mutableStateOf(true) }
@@ -272,7 +270,7 @@ fun DeviceLogsScreen(
   val logcatService = viewModel.logcatService
   if (logcatService != null) {
     val db = remember(context) { LogcatReaderDatabase.getInstance(context) }
-    LaunchedEffect(logcatService) {
+    LaunchedEffect(logcatService, viewModel) {
       logcatService.logcatSessionStatus
         .filterNotNull()
         .collectLatest { status ->
@@ -290,16 +288,16 @@ fun DeviceLogsScreen(
               }
 
               if (logcatSession.isRecording) {
-                recordStatus = RecordStatus.RecordingInProgress
+                viewModel.recordStatus = RecordStatus.RecordingInProgress
               }
 
               launch {
                 updatedStopRecordingSignal.collect {
-                  if (recordStatus == RecordStatus.RecordingInProgress) {
+                  if (viewModel.recordStatus == RecordStatus.RecordingInProgress) {
                     if (logcatSession.isRecording) {
-                      recordStatus = RecordStatus.SaveRecordedLogs
+                      viewModel.recordStatus = RecordStatus.SaveRecordedLogs
                     } else {
-                      recordStatus = RecordStatus.Idle
+                      viewModel.recordStatus = RecordStatus.Idle
                     }
                   }
                 }
@@ -364,8 +362,8 @@ fun DeviceLogsScreen(
       val saveFailedMessage = stringResource(R.string.failed_to_save_logs)
 
       if (logcatService != null) {
-        LaunchedEffect(logcatService) {
-          snapshotFlow { recordStatus }
+        LaunchedEffect(logcatService, viewModel) {
+          snapshotFlow { viewModel.recordStatus }
             .map { it == RecordStatus.RecordingInProgress }
             .collect { isRecording ->
               logcatService.updateNotification(showStopRecording = isRecording)
@@ -375,7 +373,7 @@ fun DeviceLogsScreen(
 
       LaunchedEffect(logcatService, viewModel) {
         var lastShownSnackBar: Job? = null
-        snapshotFlow { recordStatus }
+        snapshotFlow { viewModel.recordStatus }
           .collect { status ->
             when (status) {
               RecordStatus.Idle -> Unit
@@ -390,14 +388,14 @@ fun DeviceLogsScreen(
                   val recordingFileInfo = createFileToStartRecording(context)
                   if (recordingFileInfo == null) {
                     context.showToast(context.getString(R.string.error))
-                    recordStatus = RecordStatus.Idle
+                    viewModel.recordStatus = RecordStatus.Idle
                     return@collect
                   }
 
                   val writer = recordingFileInfo.createBufferedWriter(context)
                   if (writer == null) {
                     context.showToast(context.getString(R.string.error))
-                    recordStatus = RecordStatus.Idle
+                    viewModel.recordStatus = RecordStatus.Idle
                     return@collect
                   }
 
@@ -427,14 +425,14 @@ fun DeviceLogsScreen(
                 if (info != null) {
                   lastShownSnackBar?.cancel()
                   lastShownSnackBar = null
-                  recordStatus = RecordStatus.Idle
+                  viewModel.recordStatus = RecordStatus.Idle
                   viewModel.savedLogsSheetState = SavedLogsBottomSheetState.Show(
                     fileName = info.fileName,
                     uri = info.uri,
                     isCustomLocation = info.isCustomLocation,
                   )
                 } else {
-                  recordStatus = RecordStatus.Idle
+                  viewModel.recordStatus = RecordStatus.Idle
                   lastShownSnackBar?.cancel()
                   lastShownSnackBar = launch {
                     snackbarHostState.showSnackbar(
@@ -456,17 +454,17 @@ fun DeviceLogsScreen(
         subtitle = logsState.size.toString(),
         filtered = appliedFilters,
         isPaused = logcatPaused,
-        pauseEnabled = recordStatus == RecordStatus.Idle &&
+        pauseEnabled = viewModel.recordStatus.isIdle() &&
           !isLogcatSessionLoading && !errorStartingLogcat,
         recordEnabled = !logcatPaused && logcatService != null &&
-          recordStatus != RecordStatus.SaveRecordedLogs &&
+          viewModel.recordStatus != RecordStatus.SaveRecordedLogs &&
           !isLogcatSessionLoading && !errorStartingLogcat,
-        recordStatus = recordStatus,
+        recordStatus = viewModel.recordStatus,
         showDropDownMenu = showDropDownMenu,
         saveEnabled = logcatService != null && !isLogcatSessionLoading && !errorStartingLogcat
           && logsState.isNotEmpty(),
         saveLogsInProgress = saveLogsInProgress,
-        restartLogcatEnabled = logcatService != null && recordStatus == RecordStatus.Idle,
+        restartLogcatEnabled = logcatService != null && viewModel.recordStatus.isIdle(),
         onClickSearch = {
           showSearchBar = true
         },
@@ -474,12 +472,12 @@ fun DeviceLogsScreen(
           logcatPaused = !logcatPaused
         },
         onClickRecord = {
-          when (recordStatus) {
+          when (viewModel.recordStatus) {
             RecordStatus.Idle -> {
-              recordStatus = RecordStatus.RecordingInProgress
+              viewModel.recordStatus = RecordStatus.RecordingInProgress
             }
             RecordStatus.RecordingInProgress -> {
-              recordStatus = RecordStatus.SaveRecordedLogs
+              viewModel.recordStatus = RecordStatus.SaveRecordedLogs
             }
             RecordStatus.SaveRecordedLogs -> Unit
           }
@@ -512,28 +510,25 @@ fun DeviceLogsScreen(
           showDisplayOptions = true
         },
         onClickSave = {
+          saveLogsInProgress = true
           coroutineScope.launch {
             val logs = logsState.toList() // Create a copy
             if (logs.isNotEmpty()) {
-              saveLogsToFile(context, logs).collect { result ->
-                when (result) {
-                  SaveResult.InProgress -> {
-                    saveLogsInProgress = true
-                  }
-                  is SaveResult.Failure -> {
-                    context.showToast(saveFailedMessage)
-                    saveLogsInProgress = false
-                    showDropDownMenu = false
-                  }
-                  is SaveResult.Success -> {
-                    saveLogsInProgress = false
-                    showDropDownMenu = false
-                    viewModel.savedLogsSheetState = SavedLogsBottomSheetState.Show(
-                      fileName = result.fileName,
-                      uri = result.uri,
-                      isCustomLocation = result.isCustomLocation,
-                    )
-                  }
+              val result = saveLogsToFile(context, logs)
+              when (result) {
+                is SaveResult.Failure -> {
+                  context.showToast(saveFailedMessage)
+                  saveLogsInProgress = false
+                  showDropDownMenu = false
+                }
+                is SaveResult.Success -> {
+                  saveLogsInProgress = false
+                  showDropDownMenu = false
+                  viewModel.savedLogsSheetState = SavedLogsBottomSheetState.Show(
+                    fileName = result.fileName,
+                    uri = result.uri,
+                    isCustomLocation = result.isCustomLocation,
+                  )
                 }
               }
             }
@@ -1566,7 +1561,6 @@ private fun rememberSnapScrollInfo(
 }
 
 sealed interface SaveResult {
-  data object InProgress : SaveResult
   data class Success(
     val fileName: String,
     val uri: Uri,
@@ -1625,14 +1619,12 @@ private suspend fun RecordingFileInfo.createBufferedWriter(
   }
 }
 
-private fun saveLogsToFile(context: Context, logs: List<Log>): Flow<SaveResult> = flow {
-  emit(SaveResult.InProgress)
+private suspend fun saveLogsToFile(context: Context, logs: List<Log>): SaveResult {
   check(logs.isNotEmpty()) { "logs list is empty" }
 
   val createFileResult = withContext(Dispatchers.IO) { createFile(context) }
   if (createFileResult == null) {
-    emit(SaveResult.Failure)
-    return@flow
+    return SaveResult.Failure
   }
 
   val (uri, isCustomLocation, timestamp) = createFileResult
@@ -1644,40 +1636,37 @@ private fun saveLogsToFile(context: Context, logs: List<Log>): Flow<SaveResult> 
     }
   }
 
-  if (success) {
-    val fileName = if (isCustomLocation) {
-      DocumentFile.fromSingleUri(context, uri)?.name
-    } else {
-      uri.toFile().name
-    }
+  if (!success) {
+    return SaveResult.Failure
+  }
 
-    if (fileName == null) {
-      emit(SaveResult.Failure)
-      return@flow
-    }
+  val fileName = if (isCustomLocation) {
+    withContext(Dispatchers.IO) { DocumentFile.fromSingleUri(context, uri)?.name }
+  } else {
+    uri.toFile().name
+  }
 
-    val db = LogcatReaderDatabase.getInstance(context)
-    withContext(Dispatchers.IO) {
-      db.savedLogsDao().insert(
-        SavedLogInfo(
-          fileName = fileName,
-          path = uri.toString(),
-          isCustom = isCustomLocation,
-          timestamp = timestamp
-        )
-      )
-    }
+  if (fileName == null) {
+    return SaveResult.Failure
+  }
 
-    emit(
-      SaveResult.Success(
+  val db = LogcatReaderDatabase.getInstance(context)
+  withContext(Dispatchers.IO) {
+    db.savedLogsDao().insert(
+      SavedLogInfo(
         fileName = fileName,
-        uri = uri,
-        isCustomLocation = isCustomLocation,
+        path = uri.toString(),
+        isCustom = isCustomLocation,
+        timestamp = timestamp
       )
     )
-  } else {
-    emit(SaveResult.Failure)
   }
+
+  return SaveResult.Success(
+    fileName = fileName,
+    uri = uri,
+    isCustomLocation = isCustomLocation,
+  )
 }
 
 private data class CreateFileResult(
@@ -1730,6 +1719,9 @@ enum class RecordStatus {
   Idle,
   RecordingInProgress,
   SaveRecordedLogs,
+  ;
+
+  fun isIdle() = this == Idle
 }
 
 sealed interface SavedLogsBottomSheetState {
@@ -1930,7 +1922,7 @@ class DeviceLogsViewModel(
   private val _logcatService = mutableStateOf<LogcatService?>(null)
   val logcatService by _logcatService
 
-  var recordStatus = mutableStateOf<RecordStatus>(RecordStatus.Idle)
+  var recordStatus by mutableStateOf<RecordStatus>(RecordStatus.Idle)
   var savedLogsSheetState by mutableStateOf<SavedLogsBottomSheetState>(
     SavedLogsBottomSheetState.Hide
   )
@@ -1962,7 +1954,7 @@ class DeviceLogsViewModel(
 
   override fun onCleared() {
     // Stop the service if recording is not active.
-    if (recordStatus.value == RecordStatus.Idle) {
+    if (recordStatus.isIdle()) {
       Logger.debug(TAG, "LogcatService - stopping service")
       context.stopService(Intent(context, LogcatService::class.java))
     }
