@@ -163,6 +163,7 @@ import com.dp.logcatapp.util.toRegexOrNull
 import com.dp.logger.Logger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -177,6 +178,8 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
+import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -264,6 +267,8 @@ fun DeviceLogsScreen(
     BackHandler { closeSearchBar() }
   }
 
+  val restartLogCollectionTrigger = remember { Channel<Unit>(capacity = 1) }
+
   val logcatService = viewModel.logcatService
   if (logcatService != null) {
     val db = remember(context) { LogcatReaderDatabase.getInstance(context) }
@@ -332,11 +337,15 @@ fun DeviceLogsScreen(
                     )
                   }
 
-                  logsState.clear()
                   isLogcatSessionLoading = false
-                  logcatSession.logs.collect { logs ->
-                    logsState += logs
-                  }
+                  restartLogCollectionTrigger.receiveAsFlow()
+                    .onStart { emit(Unit) }
+                    .collectLatest {
+                      logsState.clear()
+                      logcatSession.logs.collect { logs ->
+                        logsState += logs
+                      }
+                    }
                 }
             }
           } else {
@@ -482,7 +491,15 @@ fun DeviceLogsScreen(
           showDropDownMenu = false
         },
         onClickClear = {
-          logsState.clear()
+          coroutineScope.launch {
+            val logcatSession = snapshotFlow { logcatService }.filterNotNull()
+              .mapNotNull { it.logcatSessionStatus.filterNotNull().first() }
+              .filterIsInstance<LogcatSessionStatus.Started>()
+              .map { it.session }
+              .first()
+            withContext(Dispatchers.Default) { logcatSession.clearLogs() }
+            restartLogCollectionTrigger.send(Unit)
+          }
           showDropDownMenu = false
         },
         onClickFilter = {

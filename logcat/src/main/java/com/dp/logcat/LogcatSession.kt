@@ -307,6 +307,13 @@ class LogcatSession(
     }
   }
 
+  fun clearLogs() {
+    lock.withLock {
+      allLogs.clear()
+      pendingLogs.clear()
+    }
+  }
+
   data class RecordingFileInfo(
     val fileName: String,
     val uri: Uri,
