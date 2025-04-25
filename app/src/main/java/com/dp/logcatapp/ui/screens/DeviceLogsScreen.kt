@@ -800,7 +800,7 @@ fun DeviceLogsScreen(
             .consumeWindowInsets(innerPadding)
             .pointerInput(Unit) {
               lifecycle.currentStateFlow.collectLatest { state ->
-                if (state == Lifecycle.State.RESUMED) {
+                if (state.isAtLeast(Lifecycle.State.RESUMED)) {
                   awaitPointerEventScope {
                     while (true) {
                       val event = awaitPointerEvent()
