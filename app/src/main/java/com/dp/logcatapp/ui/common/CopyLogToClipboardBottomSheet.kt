@@ -1,5 +1,6 @@
 package com.dp.logcatapp.ui.common
 
+import android.content.ClipData
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -13,14 +14,18 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.ClipEntry
+import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.util.fastForEach
 import com.dp.logcat.Log
 import com.dp.logcatapp.R
 import com.dp.logcatapp.ui.theme.AppTypography
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -29,7 +34,9 @@ fun CopyLogClipboardBottomSheet(
   onDismiss: () -> Unit,
   modifier: Modifier = Modifier,
 ) {
-  val clipboard = LocalClipboardManager.current
+  val coroutineScope = rememberCoroutineScope()
+  val clipboard = LocalClipboard.current
+  val clipLabel = stringResource(R.string.app_name)
   ModalBottomSheet(
     modifier = modifier.statusBarsPadding(),
     onDismissRequest = onDismiss,
@@ -49,21 +56,26 @@ fun CopyLogClipboardBottomSheet(
           containerColor = MaterialTheme.colorScheme.surfaceContainer,
         ),
       )
-      listOf(
-        R.string.log to log.toString(),
-        R.string.tag to log.tag,
-        R.string.message to log.msg,
-        R.string.date to log.date,
-        R.string.time to log.time,
-        R.string.process_id to log.pid,
-        R.string.thread_id to log.tid,
-      ).forEach { (labelRes, data) ->
+      val logData = remember(log) {
+        listOf(
+          R.string.log to log.toString(),
+          R.string.tag to log.tag,
+          R.string.message to log.msg,
+          R.string.date to log.date,
+          R.string.time to log.time,
+          R.string.process_id to log.pid,
+          R.string.thread_id to log.tid,
+        )
+      }
+      logData.fastForEach { (labelRes, data) ->
         ListItem(
           modifier = Modifier
             .fillMaxWidth()
             .clickable {
-              clipboard.setText(AnnotatedString(data))
-              onDismiss()
+              coroutineScope.launch {
+                clipboard.setClipEntry(ClipEntry(ClipData.newPlainText(clipLabel, data)))
+                onDismiss()
+              }
             },
           headlineContent = {
             Text(stringResource(labelRes))
