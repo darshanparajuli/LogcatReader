@@ -1023,11 +1023,8 @@ private suspend fun rename(
 ): Boolean {
   val file = fileInfo.path.toUri().toFile()
   val newFile = File(file.parent, newName)
-  val renameSuccessful = withContext(Dispatchers.IO) {
-    file.renameTo(newFile)
-  }
-  if (renameSuccessful) {
-    withContext(Dispatchers.IO) {
+  return withContext(Dispatchers.IO) {
+    if (file.renameTo(newFile)) {
       db.withTransaction {
         val dao = db.savedLogsDao()
         dao.delete(fileInfo)
@@ -1038,10 +1035,10 @@ private suspend fun rename(
           )
         )
       }
+      true
+    } else {
+      false
     }
-    return true
-  } else {
-    return false
   }
 }
 
