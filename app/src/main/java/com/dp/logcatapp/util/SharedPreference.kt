@@ -10,6 +10,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.edit
+import java.util.Objects
 
 @Composable
 fun rememberStringSharedPreference(
@@ -98,6 +99,7 @@ private fun <T> rememberSharedPreference(
     }
   }
   return SharedPreference(
+    key = key,
     getter = { currentValue },
     setter = { newValue ->
       setter(sharedPreferences, newValue)
@@ -108,11 +110,13 @@ private fun <T> rememberSharedPreference(
   )
 }
 
-data class SharedPreference<T>(
+class SharedPreference<T>(
+  private val key: String,
   private val getter: () -> T,
   private val setter: (T) -> Unit,
   private val deleter: () -> Unit,
 ) {
+
   var value: T
     get() = getter()
     set(newValue) {
@@ -121,5 +125,20 @@ data class SharedPreference<T>(
 
   fun delete() {
     deleter()
+  }
+
+  override fun equals(other: Any?): Boolean {
+    if (this === other) return true
+    if (javaClass != other?.javaClass) return false
+    other as SharedPreference<*>
+    if (key != other.key) return false
+    if (!Objects.equals(value, other.value)) return false
+    return true
+  }
+
+  override fun hashCode(): Int {
+    var result = key.hashCode()
+    result = 31 * result + (value?.hashCode() ?: 0)
+    return result
   }
 }
