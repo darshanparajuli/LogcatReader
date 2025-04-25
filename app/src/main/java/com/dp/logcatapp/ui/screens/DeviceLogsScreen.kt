@@ -1737,8 +1737,6 @@ private class LogFilter(
   private val filterInfo: FilterInfo,
   private val appInfoMap: Map<String, AppInfo>?,
 ) : Filter {
-  private val dateTimeFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS")
-  private val dateTimeFormatByMinutes = SimpleDateFormat("yyyy-MM-dd HH:mm")
   private val currentYear = Calendar.getInstance().get(Calendar.YEAR)
   private val regexEnabledTypes = filterInfo.regexEnabledFilterTypes.orEmpty()
   private val messageRegex = filterInfo.message?.let { text ->
@@ -1909,6 +1907,11 @@ private class LogFilter(
     }
 
     return true
+  }
+
+  companion object {
+    private val dateTimeFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS")
+    private val dateTimeFormatByMinutes = SimpleDateFormat("yyyy-MM-dd HH:mm")
   }
 }
 
