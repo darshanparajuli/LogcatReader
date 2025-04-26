@@ -190,7 +190,9 @@ fun SavedLogsViewerScreen(
     modifier = modifier,
     contentWindowInsets = WindowInsets.safeDrawing.only(WindowInsetsSides.Vertical),
     topBar = {
-      val fileName = remember(uri) { context.getFileNameFromUri(uri) }
+      val fileName = remember(uri) {
+        context.getFileNameFromUri(uri) ?: "n/a"
+      }
       var showDropDownMenu by remember { mutableStateOf(false) }
       AppBar(
         title = fileName,

@@ -3,6 +3,7 @@ package com.dp.logcatapp.util
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.content.ContentResolver
 import android.content.Context
 import android.content.ContextWrapper
 import android.content.SharedPreferences
@@ -21,6 +22,7 @@ import android.view.WindowManager
 import android.widget.Toast
 import androidx.annotation.WorkerThread
 import androidx.core.content.ContextCompat
+import androidx.core.net.toFile
 import androidx.preference.PreferenceManager
 import com.dp.logcatapp.R
 import com.dp.logger.Logger
@@ -89,33 +91,31 @@ fun Context.setTheme() {
   }
 }
 
-fun Context.getFileNameFromUri(uri: Uri): String {
-  var name: String? = null
-  if (uri.scheme == "content") {
-    val cursor = contentResolver.query(uri, null, null, null, null)
-    name = cursor?.use {
-      if (it.moveToFirst()) {
-        val index = it.getColumnIndex(OpenableColumns.DISPLAY_NAME)
-        if (index != -1) {
-          it.getString(index)
-        } else {
-          null
+fun Context.getFileNameFromUri(uri: Uri): String? {
+  return when (uri.scheme) {
+    ContentResolver.SCHEME_CONTENT -> {
+      try {
+        contentResolver.query(uri, null, null, null, null)?.use { cursor ->
+          cursor.moveToFirst()
+          cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+            .takeIf { it != -1 }
+            ?.let { index ->
+              cursor.getString(index)
+            }
         }
-      } else {
+      } catch (_: Exception) {
         null
       }
     }
-  }
-
-  if (name == null) {
-    name = uri.path!!
-    val lastSlashIndex = name.lastIndexOf('/')
-    if (lastSlashIndex != -1) {
-      name = name.substring(lastSlashIndex + 1)
+    ContentResolver.SCHEME_FILE -> {
+      try {
+        uri.toFile().name
+      } catch (_: Exception) {
+        null
+      }
     }
+    else -> null
   }
-
-  return name
 }
 
 private class ToastViewContextWrapper(base: Context) : ContextWrapper(base) {
