@@ -84,7 +84,7 @@ private fun <T> rememberSharedPreference(
 ): SharedPreference<T> {
   val context = LocalContext.current
   val sharedPreferences = remember(context) { context.getDefaultSharedPreferences() }
-  var currentValue by remember(sharedPreferences) {
+  var currentValue by remember(sharedPreferences, key) {
     mutableStateOf(getter(sharedPreferences))
   }
   DisposableEffect(sharedPreferences, key) {
