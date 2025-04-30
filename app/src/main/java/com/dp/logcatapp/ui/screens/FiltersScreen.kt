@@ -1216,7 +1216,7 @@ private fun PackageSelectorSheet(
             filteredApps = installedApps
               .filter { info ->
                 info.packageName.startsWith(query, ignoreCase = true) ||
-                  info.name?.startsWith(query, ignoreCase = true) == true
+                  info.name.startsWith(query, ignoreCase = true)
               }
               .sortedBy { it.packageName }
               .sortedBy { it.name }
@@ -1296,13 +1296,9 @@ private fun PackageSelectorSheet(
             )
           },
           headlineContent = {
-            if (app.name != null) {
-              Text(app.name)
-            } else {
-              Text(app.packageName)
-            }
+            Text(app.name)
           },
-          supportingContent = if (app.name != null) {
+          supportingContent = if (app.name != app.packageName) {
             {
               Text(app.packageName)
             }

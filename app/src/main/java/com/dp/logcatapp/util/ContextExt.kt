@@ -173,7 +173,7 @@ fun Context.isReadLogsPermissionGranted(): Boolean {
 data class AppInfo(
   val uid: String,
   val packageName: String,
-  val name: String?,
+  val name: String,
   // This is 0 if not available.
   val enabled: Boolean,
   val icon: Drawable,
@@ -187,7 +187,7 @@ fun Context.getAppInfo(): Map<String, AppInfo> {
     map[info.uid.toString()] = AppInfo(
       uid = info.uid.toString(),
       packageName = info.packageName,
-      name = info.loadLabel(packageManager)?.toString(),
+      name = info.loadLabel(packageManager).toString(),
       enabled = info.enabled,
       icon = info.loadIcon(packageManager),
       isSystem = (info.flags and ApplicationInfo.FLAG_SYSTEM) != 0,
