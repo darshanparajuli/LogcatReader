@@ -25,6 +25,7 @@ import androidx.compose.ui.util.fastForEach
 import com.dp.logcat.Log
 import com.dp.logcatapp.R
 import com.dp.logcatapp.ui.theme.AppTypography
+import com.dp.logcatapp.util.rememberAppInfoByUidMap
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -34,6 +35,7 @@ fun CopyLogClipboardBottomSheet(
   onDismiss: () -> Unit,
   modifier: Modifier = Modifier,
 ) {
+  val appInfo = rememberAppInfoByUidMap()
   val coroutineScope = rememberCoroutineScope()
   val clipboard = LocalClipboard.current
   val clipLabel = stringResource(R.string.app_name)
@@ -56,12 +58,15 @@ fun CopyLogClipboardBottomSheet(
           containerColor = MaterialTheme.colorScheme.surfaceContainer,
         ),
       )
-      val logData = remember(log) {
-        listOf(
+      val logData = remember(log, appInfo) {
+        listOfNotNull(
           R.string.log to log.toString(),
           R.string.tag to log.tag,
           R.string.message to log.msg,
           R.string.date to log.date,
+          log.uid?.let { uid ->
+            R.string.package_name to (appInfo?.get(uid)?.packageName ?: uid)
+          },
           R.string.time to log.time,
           R.string.process_id to log.pid,
           R.string.thread_id to log.tid,
