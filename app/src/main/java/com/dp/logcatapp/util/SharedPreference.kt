@@ -4,19 +4,20 @@ import android.content.SharedPreferences
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.edit
-import java.util.Objects
+import kotlinx.coroutines.flow.drop
 
 @Composable
 fun rememberStringSharedPreference(
   key: String,
   default: String? = null,
-): SharedPreference<String?> {
+): MutableState<String?> {
   return rememberSharedPreference(
     key = key,
     getter = { sharedPrefs ->
@@ -32,7 +33,7 @@ fun rememberStringSharedPreference(
 fun rememberIntSharedPreference(
   key: String,
   default: Int = -1,
-): SharedPreference<Int> {
+): MutableState<Int> {
   return rememberSharedPreference(
     key = key,
     getter = { sharedPrefs ->
@@ -48,7 +49,7 @@ fun rememberIntSharedPreference(
 fun rememberBooleanSharedPreference(
   key: String,
   default: Boolean = false,
-): SharedPreference<Boolean> {
+): MutableState<Boolean> {
   return rememberSharedPreference(
     key = key,
     getter = { sharedPrefs ->
@@ -64,7 +65,7 @@ fun rememberBooleanSharedPreference(
 fun rememberStringSetSharedPreference(
   key: String,
   default: Set<String>? = null,
-): SharedPreference<Set<String>?> {
+): MutableState<Set<String>?> {
   return rememberSharedPreference(
     key = key,
     getter = { sharedPrefs ->
@@ -81,16 +82,16 @@ private fun <T> rememberSharedPreference(
   key: String,
   getter: (SharedPreferences) -> T,
   setter: (SharedPreferences, newValue: T) -> Unit,
-): SharedPreference<T> {
+): MutableState<T> {
   val context = LocalContext.current
   val sharedPreferences = remember(context) { context.getDefaultSharedPreferences() }
-  var currentValue by remember(sharedPreferences, key) {
+  val currentValue = remember(sharedPreferences, key) {
     mutableStateOf(getter(sharedPreferences))
   }
   DisposableEffect(sharedPreferences, key) {
     val listener = OnSharedPreferenceChangeListener { prefs, k ->
       if (k == key) {
-        currentValue = getter(prefs)
+        currentValue.value = getter(prefs)
       }
     }
     sharedPreferences.registerOnSharedPreferenceChangeListener(listener)
@@ -98,50 +99,12 @@ private fun <T> rememberSharedPreference(
       sharedPreferences.unregisterOnSharedPreferenceChangeListener(listener)
     }
   }
-  return SharedPreference(
-    key = key,
-    // Using a getter function instead of passing the currentValue directly in order to make
-    // SharedPreference.value observable via snapshotFlow. This works since getter() performs a read
-    // operation on a compose State (`currentValue`).
-    getter = { currentValue },
-    setter = { newValue ->
-      setter(sharedPreferences, newValue)
-    },
-    deleter = {
-      sharedPreferences.edit { remove(key) }
-    }
-  )
-}
-
-class SharedPreference<T>(
-  private val key: String,
-  private val getter: () -> T,
-  private val setter: (T) -> Unit,
-  private val deleter: () -> Unit,
-) {
-
-  var value: T
-    get() = getter()
-    set(newValue) {
-      setter(newValue)
-    }
-
-  fun delete() {
-    deleter()
+  LaunchedEffect(key, sharedPreferences) {
+    snapshotFlow { currentValue.value }
+      .drop(1)
+      .collect { newValue ->
+        setter(sharedPreferences, newValue)
+      }
   }
-
-  override fun equals(other: Any?): Boolean {
-    if (this === other) return true
-    if (javaClass != other?.javaClass) return false
-    other as SharedPreference<*>
-    if (key != other.key) return false
-    if (!Objects.equals(value, other.value)) return false
-    return true
-  }
-
-  override fun hashCode(): Int {
-    var result = key.hashCode()
-    result = 31 * result + (value?.hashCode() ?: 0)
-    return result
-  }
+  return currentValue
 }

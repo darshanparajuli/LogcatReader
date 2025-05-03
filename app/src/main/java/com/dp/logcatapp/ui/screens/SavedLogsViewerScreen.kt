@@ -136,7 +136,7 @@ fun SavedLogsViewerScreen(
   val searchHitIndexMap = remember { mutableStateMapOf<SearchHitKey, List<HitIndex>>() }
   var searchHits by remember { mutableStateOf<List<SearchHit>>(emptyList()) }
   var scrollSnapperVisible by remember { mutableStateOf(false) }
-  var compactViewPreference = rememberBooleanSharedPreference(
+  var compactViewPreference by rememberBooleanSharedPreference(
     key = COMPACT_VIEW_KEY,
     default = false,
   )
@@ -197,7 +197,7 @@ fun SavedLogsViewerScreen(
       AppBar(
         title = fileName,
         subtitle = (logs as? LoadLogsState.Loaded)?.logs?.size?.toString(),
-        compactViewEnabled = compactViewPreference.value,
+        compactViewEnabled = compactViewPreference,
         showDropDownMenu = showDropDownMenu,
         onClickSearch = {
           showSearchBar = true
@@ -210,7 +210,7 @@ fun SavedLogsViewerScreen(
         },
         onClickCompactView = {
           showDropDownMenu = false
-          compactViewPreference.value = !compactViewPreference.value
+          compactViewPreference = !compactViewPreference
         }
       )
       AnimatedVisibility(
@@ -354,7 +354,7 @@ fun SavedLogsViewerScreen(
         state = listState,
         searchHitIndexMap = searchHitIndexMap,
         searchHits = searchHits,
-        listStyle = if (!showSearchBar && compactViewPreference.value) {
+        listStyle = if (!showSearchBar && compactViewPreference) {
           LogsListStyle.Compact
         } else {
           LogsListStyle.Default
@@ -362,12 +362,12 @@ fun SavedLogsViewerScreen(
         logs = logsState.logs,
         appInfoMap = appInfoMap.orEmpty(),
         currentSearchHitIndex = currentSearchHitIndex,
-        onClick = if (!compactViewPreference.value) {
+        onClick = if (!compactViewPreference) {
           { index ->
             showCopyToClipboardSheet = logsState.logs[index]
           }
         } else null,
-        onLongClick = if (compactViewPreference.value) {
+        onLongClick = if (compactViewPreference) {
           { index ->
             showCopyToClipboardSheet = logsState.logs[index]
           }

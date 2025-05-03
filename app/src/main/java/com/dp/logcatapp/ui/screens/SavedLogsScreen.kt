@@ -147,11 +147,11 @@ fun SavedLogsScreen(
   val context = LocalContext.current
   val coroutineScope = rememberCoroutineScope()
 
-  val sortByPref = rememberIntSharedPreference(
+  var sortByPref by rememberIntSharedPreference(
     key = SORT_BY_KEY,
     default = SORT_BY_DEFAULT,
   )
-  val sortOrderPref = rememberIntSharedPreference(
+  var sortOrderPref by rememberIntSharedPreference(
     key = SORT_ORDER_KEY,
     default = SORT_ORDER_DEFAULT,
   )
@@ -162,7 +162,7 @@ fun SavedLogsScreen(
     updateDbWithExistingInternalLogFiles(context, db)
     savedLogs(context, db).collect { result ->
       snapshotFlow {
-        Pair(SortBy.entries[sortByPref.value], SortOrder.entries[sortOrderPref.value])
+        Pair(SortBy.entries[sortByPref], SortOrder.entries[sortOrderPref])
       }.collect { (sortBy, sortOrder) ->
         savedLogs = result.copy(
           logFiles = result.logFiles.sortedWith(SortByComparator(sortBy, sortOrder))
@@ -315,11 +315,11 @@ fun SavedLogsScreen(
 
     if (showSortSheet) {
       SortOptionsSheet(
-        initialSortBy = SortBy.entries[sortByPref.value],
-        initialSortOrder = SortOrder.entries[sortOrderPref.value],
+        initialSortBy = SortBy.entries[sortByPref],
+        initialSortOrder = SortOrder.entries[sortOrderPref],
         onClickDone = { sortBy, sortOrder ->
-          sortByPref.value = sortBy.ordinal
-          sortOrderPref.value = sortOrder.ordinal
+          sortByPref = sortBy.ordinal
+          sortOrderPref = sortOrder.ordinal
           showSortSheet = false
         },
         onDismiss = {

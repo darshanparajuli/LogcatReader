@@ -101,12 +101,12 @@ fun LogcatReaderTheme(
 ) {
 
   val context = LocalContext.current
-  var appThemeSetting = rememberStringSharedPreference(
+  val appThemeSetting = rememberStringSharedPreference(
     key = SettingsPrefKeys.Appearance.KEY_THEME,
     default = SettingsPrefKeys.Appearance.Default.THEME,
   ).value
 
-  var dynamicColor = rememberBooleanSharedPreference(
+  val dynamicColor = rememberBooleanSharedPreference(
     key = SettingsPrefKeys.Appearance.KEY_DYNAMIC_COLOR,
     default = SettingsPrefKeys.Appearance.Default.DYNAMIC_COLOR
   ).value
@@ -154,7 +154,7 @@ fun logListItemSecondaryColor(): Color =
 
 @Composable
 private fun isDarkThemeOn(): Boolean {
-  var appThemeSetting = rememberStringSharedPreference(
+  val appThemeSetting = rememberStringSharedPreference(
     key = SettingsPrefKeys.Appearance.KEY_THEME,
     default = SettingsPrefKeys.Appearance.Default.THEME,
   ).value

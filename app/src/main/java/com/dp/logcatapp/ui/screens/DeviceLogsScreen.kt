@@ -222,11 +222,11 @@ fun DeviceLogsScreen(
     snapDownInteractionSource = scrollToBottomInteractionSource,
   )
 
-  var compactViewPreference = rememberBooleanSharedPreference(
+  var compactViewPreference by rememberBooleanSharedPreference(
     key = COMPACT_VIEW_KEY,
     default = false,
   )
-  var toggleableLogItemsPref = rememberStringSetSharedPreference(
+  var toggleableLogItemsPref by rememberStringSetSharedPreference(
     key = ENABLED_LOG_ITEMS_KEY,
     default = ToggleableLogItem.entries.map { it.ordinal.toString() }.toSet(),
   )
@@ -783,8 +783,8 @@ fun DeviceLogsScreen(
           }
         }
 
-        val enabledLogItems = remember(toggleableLogItemsPref.value) {
-          toggleableLogItemsPref.value.orEmpty().map {
+        val enabledLogItems = remember(toggleableLogItemsPref) {
+          toggleableLogItemsPref.orEmpty().map {
             ToggleableLogItem.entries[it.toInt()]
           }.toSet()
         }
@@ -811,7 +811,7 @@ fun DeviceLogsScreen(
               }
             },
           contentPadding = innerPadding,
-          listStyle = if (!showSearchBar && compactViewPreference.value) {
+          listStyle = if (!showSearchBar && compactViewPreference) {
             LogsListStyle.Compact
           } else {
             LogsListStyle.Default
@@ -821,7 +821,7 @@ fun DeviceLogsScreen(
           appInfoMap = appInfoMap.orEmpty(),
           searchHitIndexMap = searchHitIndexMap,
           searchHits = searchHits,
-          onClick = if (!compactViewPreference.value) {
+          onClick = if (!compactViewPreference) {
             { index ->
               viewModel.showCopyToClipboardSheet = logsState[index]
               snapToBottom = false
@@ -852,7 +852,7 @@ fun DeviceLogsScreen(
           }
         }
         LongClickOptionsSheet(
-          showCopyToClipboard = compactViewPreference.value,
+          showCopyToClipboard = compactViewPreference,
           onDismiss = { viewModel.showLongClickOptionsSheet = null },
           onClickFilter = {
             val intent = Intent(context, FiltersActivity::class.java)
@@ -879,14 +879,14 @@ fun DeviceLogsScreen(
 
       if (showDisplayOptions) {
         DisplayOptionsSheet(
-          initialEnabledLogcatItems = toggleableLogItemsPref.value.orEmpty().map {
+          initialEnabledLogcatItems = toggleableLogItemsPref.orEmpty().map {
             ToggleableLogItem.entries[it.toInt()]
           }.toSet(),
-          initialCompactView = compactViewPreference.value,
+          initialCompactView = compactViewPreference,
           onSave = { enabledLogItems, compactView ->
             showDisplayOptions = false
-            compactViewPreference.value = compactView
-            toggleableLogItemsPref.value = enabledLogItems.map {
+            compactViewPreference = compactView
+            toggleableLogItemsPref = enabledLogItems.map {
               it.ordinal.toString()
             }.toSet()
           },
