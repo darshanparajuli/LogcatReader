@@ -12,6 +12,8 @@
   <string name="press_back_again_to_exit">Press back again to exit</string>
   <string name="pref_cat_general">General</string>
   <string name="pref_general_keep_screen_on">Keep screen on</string>
+  <string name="pref_general_filter_on_search">Filter on search</string>
+  <string name="pref_general_filter_on_search_desc">Only shows matches</string>
   <string name="pref_dynamic_color">Dynamic color</string>
   <string name="pref_cat_appearance">Appearance</string>
   <string name="pref_theme_title">Theme</string>

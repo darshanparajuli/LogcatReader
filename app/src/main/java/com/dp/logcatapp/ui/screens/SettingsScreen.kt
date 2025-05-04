@@ -210,6 +210,14 @@ fun SettingsScreen(
                   )
                 ),
             )
+            PreferenceType.FilterOnSearch -> FilterOnSearch(
+              modifier = Modifier
+                .windowInsetsPadding(
+                  WindowInsets.safeDrawing.only(
+                    WindowInsetsSides.Horizontal,
+                  )
+                ),
+            )
             PreferenceType.Theme -> Theme(
               modifier = Modifier
                 .windowInsetsPadding(
@@ -357,6 +365,38 @@ private fun KeepScreenOn(
     },
     headlineContent = {
       Text(stringResource(R.string.pref_general_keep_screen_on))
+    },
+    trailingContent = {
+      Switch(
+        checked = preference,
+        onCheckedChange = null,
+      )
+    }
+  )
+}
+
+@Composable
+private fun FilterOnSearch(
+  modifier: Modifier = Modifier,
+) {
+  var preference by rememberBooleanSharedPreference(
+    key = SettingsPrefKeys.General.KEY_FILTER_ON_SEARCH,
+    default = SettingsPrefKeys.General.Default.KEY_FILTER_ON_SEARCH,
+  )
+  ListItem(
+    modifier = modifier
+      .fillMaxWidth()
+      .clickable {
+        preference = !preference
+      },
+    leadingContent = {
+      Icon(Icons.Default.Visibility, contentDescription = null)
+    },
+    headlineContent = {
+      Text(stringResource(R.string.pref_general_filter_on_search))
+    },
+    supportingContent = {
+      Text(stringResource(R.string.pref_general_filter_on_search_desc))
     },
     trailingContent = {
       Switch(
@@ -870,6 +910,7 @@ private fun MultiSelectDialog(
 private val settingRows = listOfNotNull<Preference>(
   SectionName(R.string.pref_cat_general),
   PreferenceRow(PreferenceType.KeepScreenOn),
+  PreferenceRow(PreferenceType.FilterOnSearch),
   SectionDivider,
   SectionName(R.string.pref_cat_appearance),
   PreferenceRow(PreferenceType.Theme),
@@ -892,6 +933,7 @@ private val settingRows = listOfNotNull<Preference>(
 
 private enum class PreferenceType {
   KeepScreenOn,
+  FilterOnSearch,
   Theme,
   DynamicColor,
   PollInterval,

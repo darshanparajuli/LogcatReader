@@ -57,6 +57,8 @@ fun SearchLogsTopBar(
   regexEnabled: Boolean,
   regexError: Boolean,
   onClickRegex: () -> Unit,
+  showSearchNav: Boolean = true,
+  showRegexOption: Boolean = true,
 ) {
   val focusRequester = remember { FocusRequester() }
   LaunchedEffect(focusRequester) {
@@ -121,74 +123,80 @@ fun SearchLogsTopBar(
         textStyle = LocalTextStyle.current.copy(
           fontSize = 18.sp,
         ),
-        suffix = {
-          if (searchInProgress) {
-            CircularProgressIndicator(
-              modifier = Modifier.size(20.dp),
-              strokeWidth = 2.dp,
-            )
-          } else if (showHitCount) {
-            val current = currentHitIndex.takeIf { it != -1 }?.let { it + 1 } ?: 0
-            Text(
-              text = "$current/$hitCount",
-              style = LocalTextStyle.current.merge(AppTypography.bodySmall),
-            )
-          }
-        },
-        trailingIcon = {
-          val textButtonColors = ButtonDefaults.textButtonColors()
-          WithTooltip(
-            text = stringResource(R.string.regex)
-          ) {
-            TextButton(
-              onClick = onClickRegex,
-              colors = ButtonDefaults.textButtonColors(
-                contentColor = if (regexEnabled) {
-                  MaterialTheme.colorScheme.onPrimaryContainer
-                } else {
-                  textButtonColors.disabledContentColor
-                },
-              ),
-              contentPadding = PaddingValues(),
-            ) {
+        suffix = if (searchInProgress || showHitCount) {
+          {
+            if (searchInProgress) {
+              CircularProgressIndicator(
+                modifier = Modifier.size(20.dp),
+                strokeWidth = 2.dp,
+              )
+            } else if (showHitCount) {
+              val current = currentHitIndex.takeIf { it != -1 }?.let { it + 1 } ?: 0
               Text(
-                text = ".*",
+                text = "$current/$hitCount",
+                style = LocalTextStyle.current.merge(AppTypography.bodySmall),
               )
             }
           }
-        }
+        } else null,
+        trailingIcon = if (showRegexOption) {
+          {
+            val textButtonColors = ButtonDefaults.textButtonColors()
+            WithTooltip(
+              text = stringResource(R.string.regex)
+            ) {
+              TextButton(
+                onClick = onClickRegex,
+                colors = ButtonDefaults.textButtonColors(
+                  contentColor = if (regexEnabled) {
+                    MaterialTheme.colorScheme.onPrimaryContainer
+                  } else {
+                    textButtonColors.disabledContentColor
+                  },
+                ),
+                contentPadding = PaddingValues(),
+              ) {
+                Text(
+                  text = ".*",
+                )
+              }
+            }
+          }
+        } else null,
       )
     },
     actions = {
-      Row(
-        modifier = Modifier.windowInsetsPadding(
-          WindowInsets.safeDrawing.only(WindowInsetsSides.End)
-        ),
-      ) {
-        WithTooltip(
-          text = stringResource(R.string.previous),
+      if (showSearchNav) {
+        Row(
+          modifier = Modifier.windowInsetsPadding(
+            WindowInsets.safeDrawing.only(WindowInsetsSides.End)
+          ),
         ) {
-          IconButton(
-            onClick = onPrevious,
-            enabled = hitCount > 0,
-            colors = IconButtonDefaults.iconButtonColors(
-              contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-            ),
+          WithTooltip(
+            text = stringResource(R.string.previous),
           ) {
-            Icon(imageVector = Icons.Default.KeyboardArrowUp, contentDescription = null)
+            IconButton(
+              onClick = onPrevious,
+              enabled = hitCount > 0,
+              colors = IconButtonDefaults.iconButtonColors(
+                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+              ),
+            ) {
+              Icon(imageVector = Icons.Default.KeyboardArrowUp, contentDescription = null)
+            }
           }
-        }
-        WithTooltip(
-          text = stringResource(R.string.next),
-        ) {
-          IconButton(
-            onClick = onNext,
-            enabled = hitCount > 0,
-            colors = IconButtonDefaults.iconButtonColors(
-              contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-            ),
+          WithTooltip(
+            text = stringResource(R.string.next),
           ) {
-            Icon(imageVector = Icons.Default.KeyboardArrowDown, contentDescription = null)
+            IconButton(
+              onClick = onNext,
+              enabled = hitCount > 0,
+              colors = IconButtonDefaults.iconButtonColors(
+                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+              ),
+            ) {
+              Icon(imageVector = Icons.Default.KeyboardArrowDown, contentDescription = null)
+            }
           }
         }
       }

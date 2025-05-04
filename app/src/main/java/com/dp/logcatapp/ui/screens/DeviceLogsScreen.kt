@@ -230,6 +230,10 @@ fun DeviceLogsScreen(
     key = ENABLED_LOG_ITEMS_KEY,
     default = ToggleableLogItem.entries.map { it.ordinal.toString() }.toSet(),
   )
+  val filterOnSearch by rememberBooleanSharedPreference(
+    key = SettingsPrefKeys.General.KEY_FILTER_ON_SEARCH,
+    default = SettingsPrefKeys.General.Default.KEY_FILTER_ON_SEARCH,
+  )
 
   val logsState = remember { mutableStateListOf<Log>() }
   var logcatPaused by remember { mutableStateOf(false) }
@@ -303,45 +307,72 @@ fun DeviceLogsScreen(
                 }
               }
 
-              db.filterDao().filters()
-                .map { filters -> filters.filter { it.enabled } }
-                .collectLatest { filters ->
-                  appliedFilters = filters.isNotEmpty()
-                  val infoMap = if (LogcatSession.isUidOptionSupported()) {
-                    snapshotFlow { appInfoMap }.filterNotNull().first()
-                  } else {
-                    null
-                  }
-                  withContext(Dispatchers.Default) {
-                    val includeFilters = filters.filterNot { it.exclude }
-                    val excludeFilters = filters.filter { it.exclude }
-                    logcatSession.setFilters(
-                      filters = includeFilters.map { filterInfo ->
-                        LogFilter(
-                          filterInfo = filterInfo,
-                          appInfoMap = infoMap,
-                        )
-                      },
-                      exclusion = false
-                    )
-                    logcatSession.setFilters(
-                      filters = excludeFilters.map { filterInfo ->
-                        LogFilter(
-                          filterInfo = filterInfo,
-                          appInfoMap = infoMap,
-                        )
-                      },
-                      exclusion = true
-                    )
-                  }
+              snapshotFlow { filterOnSearch }
+                .collectLatest { filterOnSearch ->
+                  db.filterDao().filters()
+                    .map { filters -> filters.filter { it.enabled } }
+                    .collectLatest { filters ->
+                      appliedFilters = filters.isNotEmpty()
 
-                  isLogcatSessionLoading = false
-                  restartLogCollectionTrigger.receiveAsFlow()
-                    .onStart { emit(Unit) }
-                    .collectLatest {
-                      logsState.clear()
-                      logcatSession.logs.collect { logs ->
-                        logsState += logs
+                      val infoMap = if (LogcatSession.isUidOptionSupported()) {
+                        snapshotFlow { appInfoMap }.filterNotNull().first()
+                      } else {
+                        null
+                      }
+
+                      val excludeFilters = filters.filter { it.exclude }
+                        .map { filterInfo ->
+                          LogFilter(
+                            filterInfo = filterInfo,
+                            appInfoMap = infoMap,
+                          )
+                        }
+
+                      suspend fun collectLogs(searchQuery: String? = null) {
+                        val includeFilters = filters.filter { !it.exclude }
+                          .map { filterInfo ->
+                            LogFilter(
+                              filterInfo = filterInfo,
+                              appInfoMap = infoMap,
+                            )
+                          }
+                          .toMutableList<Filter>()
+                        if (searchQuery != null) {
+                          includeFilters += SearchFilter(
+                            query = searchQuery,
+                            appInfoMap = infoMap,
+                          )
+                        }
+                        withContext(Dispatchers.Default) {
+                          logcatSession.setFilters(
+                            filters = includeFilters,
+                            exclusion = false
+                          )
+                          logcatSession.setFilters(
+                            filters = excludeFilters,
+                            exclusion = true
+                          )
+                        }
+
+                        isLogcatSessionLoading = false
+                        restartLogCollectionTrigger.receiveAsFlow()
+                          .onStart { emit(Unit) }
+                          .collectLatest {
+                            logsState.clear()
+                            logcatSession.logs.collect { logs ->
+                              logsState += logs
+                            }
+                          }
+                      }
+
+                      if (filterOnSearch) {
+                        snapshotFlow { searchQuery }
+                          .collectLatest { searchQuery ->
+                            delay(100)
+                            collectLogs(searchQuery.takeIf { it.isNotEmpty() })
+                          }
+                      } else {
+                        collectLogs()
                       }
                     }
                 }
@@ -557,8 +588,8 @@ fun DeviceLogsScreen(
       ) {
         SearchLogsTopBar(
           searchQuery = searchQuery,
-          searchInProgress = searchInProgress,
-          showHitCount = showHitCount,
+          searchInProgress = searchInProgress && !filterOnSearch,
+          showHitCount = showHitCount && !filterOnSearch,
           hitCount = searchHits.size,
           currentHitIndex = currentSearchHitIndex,
           onQueryChange = { searchQuery = it },
@@ -583,6 +614,8 @@ fun DeviceLogsScreen(
               searchRegexError = false
             }
           },
+          showRegexOption = !filterOnSearch,
+          showSearchNav = !filterOnSearch,
         )
       }
     },
@@ -612,7 +645,7 @@ fun DeviceLogsScreen(
       SnackbarHost(hostState = snackbarHostState)
     }
   ) { innerPadding ->
-    if (showSearchBar) {
+    if (showSearchBar && !filterOnSearch) {
       LaunchedEffect(Unit) {
         snapshotFlow { Pair(searchQuery, useRegexForSearch) }
           .collectLatest { (searchQuery, useRegex) ->
@@ -652,8 +685,8 @@ fun DeviceLogsScreen(
                     }
                   }
                   searchHitIndexMap.clear()
-                  searchHitIndexMap.putAll(hitIndexMap)
                   searchHits = hits
+                  searchHitIndexMap.putAll(hitIndexMap)
 
                   if (!scrolled) {
                     searchInProgress = false
@@ -1731,6 +1764,43 @@ sealed interface SavedLogsBottomSheetState {
     val uri: Uri,
     val isCustomLocation: Boolean,
   ) : SavedLogsBottomSheetState
+}
+
+private class SearchFilter(
+  private val query: String,
+  private val appInfoMap: Map<String, AppInfo>?,
+) : Filter {
+
+  private fun matches(s: String, q: String): Boolean {
+    return s.contains(other = q, ignoreCase = true)
+  }
+
+  private fun matchesPackageName(log: Log): Boolean {
+    if (appInfoMap == null) {
+      return true
+    }
+
+    val uid = log.uid
+    if (uid == null) {
+      return false
+    }
+    if (!uid.isDigitsOnly()) {
+      return uid.contains(query, ignoreCase = true)
+    }
+
+    return appInfoMap[log.uid]?.packageName.orEmpty().contains(query, ignoreCase = true)
+  }
+
+  override fun apply(log: Log): Boolean {
+    if (matches(log.tag, query)) return true
+    if (matches(log.msg, query)) return true
+    if (matches(log.date, query)) return true
+    if (matches(log.time, query)) return true
+    if (matches(log.pid, query)) return true
+    if (matches(log.tid, query)) return true
+    if (matchesPackageName(log)) return true
+    return false
+  }
 }
 
 private class LogFilter(

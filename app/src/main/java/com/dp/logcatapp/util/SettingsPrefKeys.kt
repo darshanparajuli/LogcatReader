@@ -6,9 +6,11 @@ object SettingsPrefKeys {
 
   object General {
     const val KEY_KEEP_SCREEN_ON = "pref_key_general_keep_screen_on"
+    const val KEY_FILTER_ON_SEARCH = "pref_key_general_filter_on_search"
 
     object Default {
       const val KEY_KEEP_SCREEN_ON = false
+      const val KEY_FILTER_ON_SEARCH = false
     }
   }
 
