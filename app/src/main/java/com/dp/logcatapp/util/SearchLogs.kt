@@ -1,6 +1,5 @@
 package com.dp.logcatapp.util
 
-import androidx.core.text.isDigitsOnly
 import com.dp.logcat.Log
 import com.dp.logcatapp.util.SearchHitKey.LogComponent
 import com.dp.logcatapp.util.SearchResult.SearchHit
@@ -50,10 +49,10 @@ suspend fun searchLogs(
     val tagSearchResult = searchFunction(log.tag)
     val msgSearchResult = searchFunction(log.msg)
     val packageNameSearchResult = log.uid?.let { uid ->
-      val packageName = if (uid.isDigitsOnly()) {
-        appInfoMap[log.uid]?.packageName
+      val packageName = if (uid.isNum) {
+        appInfoMap[uid.value]?.packageName
       } else {
-        uid
+        uid.value
       }
       packageName?.let { searchFunction(it) }.orEmpty()
     } ?: emptySequence()

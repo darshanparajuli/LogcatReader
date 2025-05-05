@@ -878,10 +878,10 @@ fun DeviceLogsScreen(
 
       viewModel.showLongClickOptionsSheet?.let { log ->
         val packageName = log.uid?.let { uid ->
-          if (uid.isDigitsOnly()) {
-            appInfoMap.orEmpty()[uid]?.packageName
+          if (uid.isNum) {
+            appInfoMap.orEmpty()[uid.value]?.packageName
           } else {
-            uid
+            uid.value
           }
         }
         LongClickOptionsSheet(
@@ -1784,11 +1784,11 @@ private class SearchFilter(
     if (uid == null) {
       return false
     }
-    if (!uid.isDigitsOnly()) {
-      return uid.contains(query, ignoreCase = true)
+    if (!uid.isNum) {
+      return uid.value.contains(query, ignoreCase = true)
     }
 
-    return appInfoMap[log.uid]?.packageName.orEmpty().contains(query, ignoreCase = true)
+    return appInfoMap[uid.value]?.packageName.orEmpty().contains(query, ignoreCase = true)
   }
 
   override fun apply(log: Log): Boolean {
@@ -1918,15 +1918,15 @@ private class LogFilter(
       return false
     }
 
-    if (!uid.isDigitsOnly()) {
+    if (!uid.isNum) {
       if (packageNameRegex != null) {
-        return packageNameRegex.matches(uid)
+        return packageNameRegex.matches(uid.value)
       } else {
-        return uid.contains(packageName, ignoreCase = true)
+        return uid.value.contains(packageName, ignoreCase = true)
       }
     }
 
-    return appInfoMap[log.uid]?.packageName.orEmpty().let { it ->
+    return appInfoMap[uid.value]?.packageName.orEmpty().let { it ->
       if (packageNameRegex != null) {
         packageNameRegex.matches(it)
       } else {

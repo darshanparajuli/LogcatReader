@@ -64,7 +64,7 @@ fun CopyLogClipboardBottomSheet(
           R.string.tag to log.tag,
           R.string.message to log.msg,
           R.string.date to log.date,
-          log.uid?.let { uid ->
+          log.uid?.value?.let { uid ->
             R.string.package_name to (appInfo?.get(uid)?.packageName ?: uid)
           },
           R.string.time to log.time,

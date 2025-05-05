@@ -157,10 +157,10 @@ fun LogsList(
           ),
           packageName = if (ToggleableLogItem.PackageName in enabledLogItems) {
             item.uid?.let { uid ->
-              val packageName = if (uid.isDigitsOnly()) {
-                appInfoMap[item.uid]?.packageName
+              val packageName = if (uid.isNum) {
+                appInfoMap[uid.value]?.packageName
               } else {
-                uid
+                uid.value
               }
               packageName?.let {
                 maybeHighlightSearchHit(
@@ -214,10 +214,10 @@ fun LogsList(
           ),
           packageName = if (ToggleableLogItem.PackageName in enabledLogItems) {
             item.uid?.let { uid ->
-              val packageName = if (uid.isDigitsOnly()) {
-                appInfoMap[item.uid]?.packageName
+              val packageName = if (uid.isNum) {
+                appInfoMap[uid.value]?.packageName
               } else {
-                uid
+                uid.value
               }
               packageName?.let {
                 maybeHighlightSearchHit(
