@@ -12,6 +12,7 @@
   <string name="press_back_again_to_exit">再次点击退出</string>
   <string name="pref_cat_general">通用</string>
   <string name="pref_general_keep_screen_on">保持屏幕开启</string>
+  <string name="pref_general_filter_on_search_desc">只显示匹配项</string>
   <string name="pref_dynamic_color">动态色彩</string>
   <string name="pref_cat_appearance">出现</string>
   <string name="pref_theme_title">主题</string>
@@ -146,4 +147,11 @@
   <string name="system_app">系统应用程序</string>
   <string name="enable">使能够</string>
   <string name="disable">禁用</string>
+  <string name="pref_general_filter_on_search">过滤搜索</string>
+  <string name="select_date_and_time">选择日期和时间</string>
+  <string name="start_date">开始日期</string>
+  <string name="start_time">开始时间</string>
+  <string name="end_time">结束时间</string>
+  <string name="end_date">结束日期</string>
+  <string name="enabled">启用</string>
 </resources>
