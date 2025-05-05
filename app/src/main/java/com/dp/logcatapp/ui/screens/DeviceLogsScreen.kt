@@ -113,7 +113,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
 import androidx.core.net.toFile
 import androidx.core.net.toUri
-import androidx.core.text.isDigitsOnly
 import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.Lifecycle
@@ -691,8 +690,11 @@ fun DeviceLogsScreen(
                   if (!scrolled) {
                     searchInProgress = false
                     if (searchHits.isNotEmpty()) {
-                      currentSearchHitIndex = 0
                       snapToBottom = false
+                      // Give it some time to stop auto-scroll before trying to scroll to the
+                      // first hit.
+                      delay(50)
+                      currentSearchHitIndex = 0
                       scrolled = true
                     } else {
                       currentSearchHitIndex = -1
