@@ -89,6 +89,7 @@ dependencies {
   implementation libs.multidex
   ksp libs.room.compiler
   implementation(libs.coil.compose)
+  implementation libs.core.splashscreen
 
   // Compose
   def composeBom = platform(libs.compose.bom)

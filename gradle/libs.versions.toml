@@ -5,6 +5,7 @@ coilComposeVersion = "3.1.0"
 composeBomVersion = "2025.04.01"
 constraintLayoutVersion = "2.2.1"
 coreKtxVersion = "1.16.0"
+coreSplashscreenVersion = "1.0.1"
 documentFileVersion = "1.0.1"
 espressoCoreVersion = "3.6.1"
 gradleVersion = "8.9.2"
@@ -29,6 +30,7 @@ coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coilCo
 compose-bom = { module = "androidx.compose:compose-bom", version.ref = "composeBomVersion" }
 constraintlayout = { module = "androidx.constraintlayout:constraintlayout", version.ref = "constraintLayoutVersion" }
 core-ktx = { module = "androidx.core:core-ktx", version.ref = "coreKtxVersion" }
+core-splashscreen = { module = "androidx.core:core-splashscreen", version.ref = "coreSplashscreenVersion" }
 documentfile = { module = "androidx.documentfile:documentfile", version.ref = "documentFileVersion" }
 espresso-core = { module = "androidx.test.espresso:espresso-core", version.ref = "espressoCoreVersion" }
 gradle = { module = "com.android.tools.build:gradle", version.ref = "gradleVersion" }
