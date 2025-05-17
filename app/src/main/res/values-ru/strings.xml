@@ -12,7 +12,8 @@
   <string name="press_back_again_to_exit">Нажмите ещё раз для выхода</string>
   <string name="pref_cat_general">Общие</string>
   <string name="pref_general_keep_screen_on">Держать экран включённым</string>
-  <string name="pref_general_filter_on_search_desc">Показывает только совпадения</string>
+  <string name="pref_general_filter_on_search">Фильтр поиска</string>
+  <string name="pref_general_filter_on_search_desc">Показывать только совпадения</string>
   <string name="pref_dynamic_color">Динамический цвет</string>
   <string name="pref_cat_appearance">Внешний вид</string>
   <string name="pref_theme_title">Тема</string>
@@ -156,5 +157,4 @@
   <string name="end_time">Время окончания</string>
   <string name="end_date">Дата окончания</string>
   <string name="enabled">Включено</string>
-  <string name="pref_general_filter_on_search">Фильтровать по поиску</string>
 </resources>
