@@ -2,6 +2,7 @@ package com.dp.logcat
 
 import android.os.Parcelable
 import androidx.core.text.isDigitsOnly
+import kotlinx.parcelize.IgnoredOnParcel
 import kotlinx.parcelize.Parcelize
 
 @Parcelize
@@ -21,6 +22,7 @@ data class Log(
   data class Uid(
     val value: String,
   ) : Parcelable {
+    @IgnoredOnParcel
     val isNum = value.isDigitsOnly()
   }
 
