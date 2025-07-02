@@ -93,7 +93,7 @@ abstract class LogcatReaderDatabase : RoomDatabase() {
         db.execSQL(
           """
             CREATE TABLE `filters` (
-              `id` INTEGER, 
+              `id` INTEGER,
               `tag` TEXT,
               `message` TEXT,
               `pid` INTEGER,
@@ -112,9 +112,9 @@ abstract class LogcatReaderDatabase : RoomDatabase() {
         db.execSQL(
           """
             CREATE TABLE IF NOT EXISTS `saved_logs_info_new` (
-              `name` TEXT NOT NULL, 
-              `path` TEXT NOT NULL, 
-              `is_custom` INTEGER NOT NULL, 
+              `name` TEXT NOT NULL,
+              `path` TEXT NOT NULL,
+              `is_custom` INTEGER NOT NULL,
               `timestamp` INTEGER,
               PRIMARY KEY (`path`)
             )
@@ -122,7 +122,7 @@ abstract class LogcatReaderDatabase : RoomDatabase() {
         )
         db.execSQL(
           """
-            INSERT OR IGNORE INTO `saved_logs_info_new` (`name`, `path`, `is_custom`, `timestamp`) 
+            INSERT OR IGNORE INTO `saved_logs_info_new` (`name`, `path`, `is_custom`, `timestamp`)
             SELECT `name`, `path`, `is_custom`, null FROM `saved_logs_info`
           """.trimIndent()
         )
@@ -132,7 +132,7 @@ abstract class LogcatReaderDatabase : RoomDatabase() {
         db.execSQL(
           """
             CREATE TABLE `filters_new` (
-              `id` INTEGER, 
+              `id` INTEGER,
               `tag` TEXT,
               `message` TEXT,
               `package_name` TEXT,
@@ -149,10 +149,10 @@ abstract class LogcatReaderDatabase : RoomDatabase() {
         db.execSQL(
           """
             INSERT OR IGNORE INTO `filters_new` (
-              `id`, `tag`, `message`, `package_name`, `pid`, `tid`, `log_levels`, `exclude`, 
+              `id`, `tag`, `message`, `package_name`, `pid`, `tid`, `log_levels`, `exclude`,
               `enabled`, `regex_enabled_filter_types`
-            ) 
-            SELECT `id`, `tag`, `message`, null, `pid`, `tid`, `log_levels`, `exclude`, true, null
+            )
+            SELECT `id`, `tag`, `message`, null, `pid`, `tid`, `log_levels`, `exclude`, 1, null
             FROM `filters`
           """.trimIndent()
         )
