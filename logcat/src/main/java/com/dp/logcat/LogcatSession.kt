@@ -350,23 +350,27 @@ class LogcatSession(
     ): Boolean {
       check(options.isNotEmpty())
       return try {
-        // Dump the log with `-v uid` cmdline option to see if it works.
+        // Using brief outputs less lines, which improves the speed of consumption. Nevertheless,
+        // it will still exit with non-zero value if the given options are not valid.
         val process = ProcessBuilder(
-          "logcat", "-v", "long", *options, "-d",
-        ).start()
+          "logcat", "-v", "brief", *options, "-d",
+        ).let { builder ->
+          builder.redirectErrorStream(true)
+          builder.start()
+        }
         val stdoutReaderThread = thread {
           try {
             // Consume stdout. Without this, the process waits forever on some
             // devices/os versions.
-            process.inputStream.bufferedReader().use {
-              it.lineSequence().forEach { }
+            process.inputStream.bufferedReader().use { reader ->
+              reader.readLines()
             }
-          } catch (_: Exception) {
+          } catch (_: Throwable) {
           }
         }
-        val result = process.waitFor() == 0
+        val exitValue = process.waitFor()
         stdoutReaderThread.join(THREAD_JOIN_TIMEOUT)
-        result
+        exitValue == 0
       } catch (_: Exception) {
         false
       }
