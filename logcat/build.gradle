@@ -4,8 +4,8 @@ apply plugin: 'kotlin-parcelize'
 
 android {
   defaultConfig {
-    compileSdk 36
-    minSdkVersion 21
+    compileSdk = 36
+    minSdkVersion 23
   }
 
   compileOptions {

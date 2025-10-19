@@ -11,9 +11,9 @@ def fileProvider = "file_provider"
 android {
   defaultConfig {
     applicationId "com.dp.logcatapp"
-    compileSdk 36
+    compileSdk = 36
     targetSdkVersion 36
-    minSdkVersion 21
+    minSdkVersion 23
     versionCode 41
     versionName "2.3.0"
     testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
