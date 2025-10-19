@@ -8,6 +8,7 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import com.dp.logcatapp.util.SettingsPrefKeys
@@ -101,15 +102,15 @@ fun LogcatReaderTheme(
 ) {
 
   val context = LocalContext.current
-  val appThemeSetting = rememberStringSharedPreference(
+  val appThemeSetting by rememberStringSharedPreference(
     key = SettingsPrefKeys.Appearance.KEY_THEME,
     default = SettingsPrefKeys.Appearance.Default.THEME,
-  ).value
+  )
 
-  val dynamicColor = rememberBooleanSharedPreference(
+  val dynamicColor by rememberBooleanSharedPreference(
     key = SettingsPrefKeys.Appearance.KEY_DYNAMIC_COLOR,
     default = SettingsPrefKeys.Appearance.Default.DYNAMIC_COLOR
-  ).value
+  )
 
   val colorScheme = when (appThemeSetting) {
     Theme.AUTO -> {

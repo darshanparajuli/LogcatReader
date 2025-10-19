@@ -6,8 +6,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.edit
@@ -88,10 +90,11 @@ private fun <T> rememberSharedPreference(
   val currentValue = remember(sharedPreferences, key) {
     mutableStateOf(getter(sharedPreferences))
   }
+  val currentGetter by rememberUpdatedState(getter)
   DisposableEffect(sharedPreferences, key) {
     val listener = OnSharedPreferenceChangeListener { prefs, k ->
       if (k == key) {
-        currentValue.value = getter(prefs)
+        currentValue.value = currentGetter(prefs)
       }
     }
     sharedPreferences.registerOnSharedPreferenceChangeListener(listener)
@@ -99,11 +102,12 @@ private fun <T> rememberSharedPreference(
       sharedPreferences.unregisterOnSharedPreferenceChangeListener(listener)
     }
   }
+  val currentSetter by rememberUpdatedState(setter)
   LaunchedEffect(key, sharedPreferences) {
     snapshotFlow { currentValue.value }
       .drop(1)
       .collect { newValue ->
-        setter(sharedPreferences, newValue)
+        currentSetter(sharedPreferences, newValue)
       }
   }
   return currentValue
