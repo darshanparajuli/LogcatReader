@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.safeDrawing
@@ -31,7 +30,6 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
@@ -95,12 +93,7 @@ fun SearchLogsTopBar(
         singleLine = true,
         isError = regexError,
         placeholder = {
-          Row(modifier = Modifier.fillMaxHeight()) {
-            Text(
-              modifier = Modifier.align(Alignment.CenterVertically),
-              text = stringResource(R.string.search),
-            )
-          }
+          Text(text = stringResource(R.string.search))
         },
         colors = TextFieldDefaults.colors(
           focusedContainerColor = Color.Transparent,
