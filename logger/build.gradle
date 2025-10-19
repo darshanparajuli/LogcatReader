@@ -15,7 +15,7 @@ android {
     jvmTarget = JavaVersion.VERSION_17
   }
 
-  namespace 'com.dp.logger'
+  namespace =  'com.dp.logger'
 }
 
 dependencies {

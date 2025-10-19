@@ -15,7 +15,7 @@ android {
   kotlinOptions {
     jvmTarget = JavaVersion.VERSION_17
   }
-  namespace 'com.logcat.collections'
+  namespace =  'com.logcat.collections'
 }
 
 dependencies {

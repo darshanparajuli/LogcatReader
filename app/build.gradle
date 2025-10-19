@@ -18,12 +18,12 @@ android {
     versionName "2.3.0"
     testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     vectorDrawables.useSupportLibrary = true
-    multiDexEnabled true
+    multiDexEnabled = true
   }
 
   buildFeatures {
-    compose true
-    buildConfig true
+    compose = true
+    buildConfig = true
   }
 
   signingConfigs {
@@ -42,7 +42,7 @@ android {
   }
 
   lintOptions {
-    abortOnError false
+    abortOnError = false
     disable 'MissingTranslation'
   }
 
@@ -61,13 +61,13 @@ android {
       it.addManifestPlaceholders(["fileProvider": fileProvider])
     }
     release {
-      signingConfig signingConfigs.release
+      signingConfig = signingConfigs.release
       minifyEnabled true
-      shrinkResources true
+      shrinkResources = true
       proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
     }
   }
-  namespace 'com.dp.logcatapp'
+  namespace = 'com.dp.logcatapp'
 }
 
 dependencies {

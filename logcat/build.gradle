@@ -16,7 +16,7 @@ android {
     jvmTarget = JavaVersion.VERSION_17
   }
 
-  namespace 'com.dp.logcat'
+  namespace =  'com.dp.logcat'
 }
 
 dependencies {

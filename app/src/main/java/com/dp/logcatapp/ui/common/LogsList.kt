@@ -46,7 +46,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.text.isDigitsOnly
 import com.dp.logcat.Log
 import com.dp.logcat.LogPriority
 import com.dp.logcatapp.R
@@ -548,7 +547,7 @@ enum class LogsListStyle {
   Compact,
 }
 
-enum class ToggleableLogItem(@StringRes val labelRes: Int) {
+enum class ToggleableLogItem(@param:StringRes val labelRes: Int) {
   Tag(R.string.tag),
   Date(R.string.date),
   Time(R.string.time),
