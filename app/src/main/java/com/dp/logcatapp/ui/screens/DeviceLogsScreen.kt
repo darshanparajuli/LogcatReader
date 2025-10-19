@@ -87,7 +87,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -1455,43 +1454,6 @@ private fun AppBar(
       }
     }
   )
-}
-
-@Composable
-private fun rememberLogcatServiceConnection(): LogcatService? {
-  var logcatService by remember { mutableStateOf<LogcatService?>(null) }
-  val context = LocalContext.current
-  DisposableEffect(context) {
-    val serviceConnection = object : ServiceConnection {
-      override fun onServiceConnected(
-        name: ComponentName?,
-        service: IBinder,
-      ) {
-        Logger.debug(TAG, "LogcatService - onServiceConnected")
-        logcatService = service.getService()
-      }
-
-      override fun onServiceDisconnected(name: ComponentName) {
-        Logger.debug(TAG, "LogcatService - onServiceDisconnected")
-        logcatService = null
-      }
-    }
-
-    Logger.debug(TAG, "LogcatService - bind")
-    context.bindService(
-      Intent(context, LogcatService::class.java),
-      serviceConnection,
-      Context.BIND_ABOVE_CLIENT,
-    )
-
-    onDispose {
-      Logger.debug(TAG, "LogcatService - unbind")
-      context.unbindService(serviceConnection)
-      logcatService = null
-    }
-  }
-
-  return logcatService
 }
 
 data class SnapScrollInfo(
