@@ -400,7 +400,8 @@ fun DeviceLogsScreen(
         }
       }
 
-      LaunchedEffect(logcatService, viewModel) {
+      val errorText = stringResource(R.string.error)
+      LaunchedEffect(logcatService, viewModel, context) {
         var lastShownSnackBar: Job? = null
         snapshotFlow { viewModel.recordStatus }
           .collect { status ->
@@ -416,14 +417,14 @@ fun DeviceLogsScreen(
                 if (!logcatSession.isRecording) {
                   val recordingFileInfo = createFileToStartRecording(context)
                   if (recordingFileInfo == null) {
-                    context.showToast(context.getString(R.string.error))
+                    context.showToast(errorText)
                     viewModel.recordStatus = RecordStatus.Idle
                     return@collect
                   }
 
                   val writer = recordingFileInfo.createBufferedWriter(context)
                   if (writer == null) {
-                    context.showToast(context.getString(R.string.error))
+                    context.showToast(errorText)
                     viewModel.recordStatus = RecordStatus.Idle
                     return@collect
                   }
