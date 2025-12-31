@@ -71,6 +71,8 @@ object LogcatUtil {
         .asSequence().count().toLong()
     } catch (_: IOException) {
       0L
+    } catch (_: SecurityException) {
+      0L
     }
   }
 
@@ -83,6 +85,8 @@ object LogcatUtil {
       val reader = LogcatStreamReader(inputStream!!)
       reader.asSequence().count().toLong()
     } catch (_: IOException) {
+      0L
+    } catch (_: SecurityException) {
       0L
     }
   }
