@@ -45,8 +45,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ViewList
-import androidx.compose.material.icons.filled.ArrowDownward
-import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.DisplaySettings
 import androidx.compose.material.icons.filled.Error
@@ -54,6 +52,8 @@ import androidx.compose.material.icons.filled.FiberManualRecord
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
@@ -1193,7 +1193,7 @@ private fun FloatingActionButtons(
         interactionSource = scrollToTopInteractionSource,
       ) {
         Icon(
-          imageVector = Icons.Filled.ArrowUpward,
+          imageVector = Icons.Filled.KeyboardArrowUp,
           contentDescription = null
         )
       }
@@ -1204,7 +1204,7 @@ private fun FloatingActionButtons(
         interactionSource = scrollToBottomInteractionSource,
       ) {
         Icon(
-          imageVector = Icons.Filled.ArrowDownward,
+          imageVector = Icons.Filled.KeyboardArrowDown,
           contentDescription = null
         )
       }
