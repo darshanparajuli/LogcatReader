@@ -1537,7 +1537,7 @@ private fun rememberSnapScrollInfo(
             shouldSnapScrollDown = false
             shouldSnapScrollUp = canScrollUp
           }
-          var isScrollSnapperVisible = shouldSnapScrollUp || shouldSnapScrollDown
+          val isScrollSnapperVisible = shouldSnapScrollUp || shouldSnapScrollDown
           snapScrollInfo = snapScrollInfo.copy(
             isScrollSnapperVisible = isScrollSnapperVisible,
           )
