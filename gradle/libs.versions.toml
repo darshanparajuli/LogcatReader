@@ -3,7 +3,6 @@ activityComposeVersion = "1.12.2"
 appcompatVersion = "1.7.1"
 coilComposeVersion = "3.3.0"
 composeBomVersion = "2025.12.01"
-constraintLayoutVersion = "2.2.1"
 coreKtxVersion = "1.17.0"
 coreSplashscreenVersion = "1.2.0"
 documentFileVersion = "1.1.0"
@@ -28,7 +27,6 @@ adaptive = { module = "androidx.compose.material3.adaptive:adaptive" }
 appcompat = { module = "androidx.appcompat:appcompat", version.ref = "appcompatVersion" }
 coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coilComposeVersion" }
 compose-bom = { module = "androidx.compose:compose-bom", version.ref = "composeBomVersion" }
-constraintlayout = { module = "androidx.constraintlayout:constraintlayout", version.ref = "constraintLayoutVersion" }
 core-ktx = { module = "androidx.core:core-ktx", version.ref = "coreKtxVersion" }
 core-splashscreen = { module = "androidx.core:core-splashscreen", version.ref = "coreSplashscreenVersion" }
 documentfile = { module = "androidx.documentfile:documentfile", version.ref = "documentFileVersion" }
