@@ -2,7 +2,7 @@
 activityComposeVersion = "1.12.2"
 appcompatVersion = "1.7.1"
 coilComposeVersion = "3.3.0"
-composeBomVersion = "2025.12.01"
+composeBomVersion = "2026.01.00"
 coreKtxVersion = "1.17.0"
 coreSplashscreenVersion = "1.2.0"
 documentFileVersion = "1.1.0"
