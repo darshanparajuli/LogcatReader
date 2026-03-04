@@ -812,9 +812,12 @@ fun DeviceLogsScreen(
 
         if (snapToBottom) {
           LaunchedEffect(lazyListState, compactViewPreference) {
-            if (lazyListState.layoutInfo.totalItemsCount > 0) {
-              lazyListState.scrollToItem(lazyListState.layoutInfo.totalItemsCount)
-            }
+            snapshotFlow { logsState.size }
+              .collect { count ->
+                if (count > 0) {
+                  lazyListState.scrollToItem(count)
+                }
+              }
           }
         }
 
