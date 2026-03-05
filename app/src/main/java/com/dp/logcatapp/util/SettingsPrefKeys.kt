@@ -42,7 +42,7 @@ object SettingsPrefKeys {
     object Default {
       const val POLL_INTERVAL = 250
       val BUFFERS: Set<String> = getDefaultBufferValues()
-      const val MAX_LOGS = 300_000
+      const val MAX_LOGS = 100_000
       const val SAVE_LOCATION = ""
 
       private fun getDefaultBufferValues(): Set<String> {
