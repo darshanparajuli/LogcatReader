@@ -505,7 +505,11 @@ fun DeviceLogsScreen(
 
       AppBar(
         title = stringResource(R.string.device_logs),
-        subtitle = logsState.size.toString(),
+        subtitle = if (logsState.isFull()) {
+          "${logsState.size} [${stringResource(R.string.buffer_full)}]"
+        } else {
+          logsState.size.toString()
+        },
         filtered = appliedFilters,
         isPaused = logcatPaused,
         pauseEnabled = viewModel.recordStatus.isIdle() &&

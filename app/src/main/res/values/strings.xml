@@ -2,6 +2,7 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
   <string name="app_name">Logcat Reader</string>
   <string name="device_logs">Device Logs</string>
+  <string name="buffer_full">buffer full</string>
   <string name="saved_logs">Saved Logs</string>
   <string name="saved_logs_action">Saved logs</string>
   <string name="settings">Settings</string>

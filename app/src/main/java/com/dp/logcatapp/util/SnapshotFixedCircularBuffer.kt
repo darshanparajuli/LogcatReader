@@ -103,6 +103,8 @@ class SnapshotFixedCircularBuffer<T> internal constructor(
 
   override fun isEmpty() = size == 0
 
+  fun isFull() = readable.isFull()
+
   override fun contains(element: T): Boolean {
     return readable.contains(element)
   }
