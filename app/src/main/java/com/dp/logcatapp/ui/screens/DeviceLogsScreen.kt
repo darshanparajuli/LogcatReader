@@ -358,9 +358,7 @@ fun DeviceLogsScreen(
                           .collectLatest {
                             logsState.clear()
                             logcatSession.logs.collect { logs ->
-                              if (logsState.size < 200) {
-                                logsState += logs.take(200)
-                              }
+                              logsState += logs
                             }
                           }
                       }
