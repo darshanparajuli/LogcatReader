@@ -91,7 +91,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -152,8 +151,10 @@ import com.dp.logcatapp.util.SearchResult.SearchHit
 import com.dp.logcatapp.util.SettingsPrefKeys
 import com.dp.logcatapp.util.ShareUtils
 import com.dp.logcatapp.util.getDefaultSharedPreferences
+import com.dp.logcatapp.util.mutableFixedCircularBuffer
 import com.dp.logcatapp.util.rememberAppInfoByUidMap
 import com.dp.logcatapp.util.rememberBooleanSharedPreference
+import com.dp.logcatapp.util.rememberIntSharedPreference
 import com.dp.logcatapp.util.rememberStringSetSharedPreference
 import com.dp.logcatapp.util.searchLogs
 import com.dp.logcatapp.util.showToast
@@ -169,6 +170,7 @@ import kotlinx.coroutines.flow.SharingStarted.Companion.Eagerly
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChangedBy
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.filterNotNull
@@ -233,7 +235,23 @@ fun DeviceLogsScreen(
     default = SettingsPrefKeys.General.Default.KEY_FILTER_ON_SEARCH,
   )
 
-  val logsState = remember { mutableStateListOf<Log>() }
+  val maxLogs by rememberIntSharedPreference(
+    key = SettingsPrefKeys.Logcat.KEY_MAX_LOGS,
+    default = SettingsPrefKeys.Logcat.Default.MAX_LOGS,
+  )
+
+  val logsState = remember {
+    mutableFixedCircularBuffer<Log>(capacity = maxLogs)
+  }
+
+  LaunchedEffect(Unit) {
+    snapshotFlow { maxLogs }
+      .drop(1)
+      .collect { newCapacity ->
+        logsState.changeCapacity(newCapacity)
+      }
+  }
+
   var logcatPaused by remember { mutableStateOf(false) }
   var showDropDownMenu by remember { mutableStateOf(false) }
 
@@ -352,7 +370,13 @@ fun DeviceLogsScreen(
                           )
                         }
 
-                        isLogcatSessionLoading = false
+                        launch {
+                          // Give it a moment to collect initial logs while
+                          // showing the loading indicator.
+                          delay(400)
+                          isLogcatSessionLoading = false
+                        }
+
                         restartLogCollectionTrigger.receiveAsFlow()
                           .onStart { emit(Unit) }
                           .collectLatest {
@@ -630,11 +654,11 @@ fun DeviceLogsScreen(
         },
         onClickScrollToBottom = {
           coroutineScope.launch {
-            if (lazyListState.layoutInfo.totalItemsCount > 0) {
+            if (logsState.isNotEmpty()) {
               if (!showSearchBar || searchQuery.isEmpty()) {
                 snapToBottom = true
               }
-              lazyListState.scrollToItem(lazyListState.layoutInfo.totalItemsCount - 1)
+              lazyListState.scrollToItem(logsState.size)
             }
           }
         },
@@ -812,8 +836,13 @@ fun DeviceLogsScreen(
 
         if (snapToBottom) {
           LaunchedEffect(lazyListState, compactViewPreference) {
-            snapshotFlow { logsState.size }
-              .collect { count ->
+            snapshotFlow {
+              // The reason for reading the last value is to ensure we get an emission once
+              // the size gets capped to the capacity since the recently added value is always
+              // different.
+              logsState.size to logsState.lastOrNull()
+            }
+              .collect { (count) ->
                 if (count > 0) {
                   lazyListState.scrollToItem(count)
                 }
