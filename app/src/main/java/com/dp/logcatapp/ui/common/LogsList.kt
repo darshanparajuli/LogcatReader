@@ -1,7 +1,11 @@
 package com.dp.logcatapp.ui.common
 
 import androidx.annotation.StringRes
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.ScrollIndicatorState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
@@ -13,6 +17,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -27,15 +33,23 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.text.selection.LocalTextSelectionColors
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
@@ -44,6 +58,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.dp.logcat.Log
@@ -59,6 +74,10 @@ import com.dp.logcatapp.util.HitIndex
 import com.dp.logcatapp.util.SearchHitKey
 import com.dp.logcatapp.util.SearchHitKey.LogComponent
 import com.dp.logcatapp.util.SearchResult.SearchHit
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlin.time.Duration.Companion.seconds
 
 private val DEFAULT_ENABLED_LIST_ITEMS = ToggleableLogItem.entries.toSet()
 
@@ -81,8 +100,52 @@ fun LogsList(
 ) {
   val textSelectionColors = LocalTextSelectionColors.current
   val currentSearchHitColor = currentSearchHitColor()
+  val safeDrawingInsetsHorizontal = WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal)
+  val scrollIndicatorState = state.scrollIndicatorState
+
+  var scrollBarVisible by remember { mutableStateOf(false) }
+  val scrollBarOpacity = remember { Animatable(initialValue = 0f) }
+  LaunchedEffect(scrollIndicatorState) {
+    snapshotFlow { state.isScrollInProgress }
+      .distinctUntilChanged()
+      .collectLatest { scrollInProgress ->
+        if (scrollInProgress) {
+          scrollBarVisible = true
+          scrollBarOpacity.animateTo(
+            targetValue = 0.5f,
+            animationSpec = spring()
+          )
+        } else {
+          delay(2.seconds)
+          scrollBarOpacity.animateTo(
+            targetValue = 0.0f,
+            animationSpec = spring(stiffness = Spring.StiffnessLow)
+          )
+          scrollBarVisible = false
+        }
+      }
+  }
+
   LazyColumn(
-    modifier = modifier,
+    modifier = modifier
+      .then(
+        if (scrollBarVisible && scrollIndicatorState != null) {
+          val color = MaterialTheme.colorScheme.onSurface
+          Modifier.drawVerticalScrollBar(
+            scrollIndicatorState = scrollIndicatorState,
+            scrollBarColor = { color.copy(alpha = scrollBarOpacity.value) },
+            padding = PaddingValues(
+              top = contentPadding.calculateTopPadding(),
+              bottom = contentPadding.calculateBottomPadding(),
+              end = with(LocalLayoutDirection.current) {
+                contentPadding.calculateEndPadding(this) +
+                  safeDrawingInsetsHorizontal.asPaddingValues()
+                    .calculateEndPadding(this)
+              }
+            )
+          )
+        } else Modifier
+      ),
     state = state,
     contentPadding = contentPadding,
   ) {
@@ -140,7 +203,7 @@ fun LogsList(
               onClick = { expanded = !expanded },
             )
             .windowInsetsPadding(
-              WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal)
+              safeDrawingInsetsHorizontal
             )
             .wrapContentHeight(),
           priority = item.priority,
@@ -197,7 +260,7 @@ fun LogsList(
               onClick = { onClick?.invoke(index) },
             )
             .windowInsetsPadding(
-              WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal)
+              safeDrawingInsetsHorizontal
             )
             .wrapContentHeight(),
           priority = item.priority,
@@ -267,6 +330,51 @@ fun LogsList(
       }
     }
   }
+}
+
+private fun Modifier.drawVerticalScrollBar(
+  scrollIndicatorState: ScrollIndicatorState,
+  scrollBarColor: () -> Color,
+  scrollBarWidth: Dp = 4.dp,
+  minScrollbarHeight: Dp = 36.dp,
+  padding: PaddingValues = PaddingValues.Zero,
+): Modifier {
+  return drawWithContent {
+    drawContent()
+    if (scrollIndicatorState.isValid()) {
+      val topPadding = padding.calculateTopPadding().toPx()
+      val bottomPadding = padding.calculateBottomPadding().toPx()
+      val rightPadding = padding.calculateRightPadding(layoutDirection)
+        .toPx()
+
+      val scrollBarWidthPx = scrollBarWidth.toPx()
+      val scrollBarHeight = (scrollIndicatorState.viewportSize.toFloat() *
+        (scrollIndicatorState.viewportSize.toFloat() / scrollIndicatorState.contentSize.toFloat()))
+        .coerceAtLeast(minScrollbarHeight.toPx())
+
+      val scrollPercentage =
+        scrollIndicatorState.scrollOffset.toFloat() /
+          (scrollIndicatorState.contentSize - scrollIndicatorState.viewportSize).toFloat()
+
+      drawRoundRect(
+        color = scrollBarColor(),
+        topLeft = Offset(
+          x = size.width - scrollBarWidthPx - rightPadding,
+          y = topPadding + scrollPercentage * (scrollIndicatorState.viewportSize.toFloat() -
+            topPadding - bottomPadding - scrollBarHeight),
+        ),
+        size = Size(
+          width = scrollBarWidthPx,
+          height = scrollBarHeight,
+        ),
+        cornerRadius = CornerRadius(scrollBarWidthPx)
+      )
+    }
+  }
+}
+
+private fun ScrollIndicatorState.isValid(): Boolean {
+  return scrollOffset != Int.MAX_VALUE && contentSize > viewportSize
 }
 
 @Composable
