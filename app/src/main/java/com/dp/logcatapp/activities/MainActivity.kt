@@ -5,9 +5,7 @@ import android.app.ComponentCaller
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.remember
@@ -24,7 +22,7 @@ import kotlinx.coroutines.channels.BufferOverflow.DROP_OLDEST
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.receiveAsFlow
 
-class MainActivity : ComponentActivity() {
+class MainActivity : BaseActivity() {
 
   private var stopRecordingSignal = Channel<Unit>(
     capacity = 1,
@@ -35,7 +33,6 @@ class MainActivity : ComponentActivity() {
     installSplashScreen()
 
     super.onCreate(savedInstanceState)
-    enableEdgeToEdge()
 
     if (handleExitNotificationAction(intent)) {
       return
