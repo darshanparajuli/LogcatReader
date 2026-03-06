@@ -15,7 +15,6 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.InteractionSource
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction.Press
 import androidx.compose.foundation.layout.Arrangement
@@ -39,7 +38,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -213,14 +211,9 @@ fun DeviceLogsScreen(
   val updatedStopRecordingSignal by rememberUpdatedState(stopRecordingSignal)
   var snapToBottom by rememberSaveable { mutableStateOf(true) }
 
-  val scrollToTopInteractionSource = remember { MutableInteractionSource() }
-  val scrollToBottomInteractionSource = remember { MutableInteractionSource() }
-  val snapScrollInfo = rememberSnapScrollInfo(
-    lazyListState = lazyListState,
-    snapToBottom = snapToBottom,
-    snapUpInteractionSource = scrollToTopInteractionSource,
-    snapDownInteractionSource = scrollToBottomInteractionSource,
-  )
+  val snapToTopInteractionSource = remember { MutableInteractionSource() }
+  val snapToBottomInteractionSource = remember { MutableInteractionSource() }
+  var showScrollSnapperFabs by remember { mutableStateOf(false) }
 
   var compactViewPreference by rememberBooleanSharedPreference(
     key = COMPACT_VIEW_KEY,
@@ -648,9 +641,9 @@ fun DeviceLogsScreen(
     },
     floatingActionButton = {
       FloatingActionButtons(
-        visible = snapScrollInfo.isScrollSnapperVisible,
-        scrollToTopInteractionSource = scrollToTopInteractionSource,
-        scrollToBottomInteractionSource = scrollToBottomInteractionSource,
+        visible = showScrollSnapperFabs,
+        scrollToTopInteractionSource = snapToTopInteractionSource,
+        scrollToBottomInteractionSource = snapToBottomInteractionSource,
         onClickScrollToTop = {
           coroutineScope.launch {
             lazyListState.scrollToItem(0)
@@ -840,6 +833,7 @@ fun DeviceLogsScreen(
 
         if (snapToBottom) {
           LaunchedEffect(lazyListState, compactViewPreference) {
+            showScrollSnapperFabs = false
             snapshotFlow {
               // The reason for reading the last value is to ensure we get an emission once
               // the size gets capped to the capacity since the recently added value is always
@@ -849,6 +843,30 @@ fun DeviceLogsScreen(
               .collect { (count) ->
                 if (count > 0) {
                   lazyListState.scrollToItem(count)
+                }
+              }
+          }
+        } else {
+          LaunchedEffect(lazyListState, compactViewPreference) {
+            combine(
+              snapshotFlow { lazyListState.isScrollInProgress },
+              snapToTopInteractionSource.interactions.stateIn(this, Eagerly, null),
+              snapToBottomInteractionSource.interactions.stateIn(this, Eagerly, null),
+            ) { isScrollInProgress, snapUpInteraction, snapDownInteraction ->
+              Triple(isScrollInProgress, snapUpInteraction, snapDownInteraction)
+            }
+              .onStart {
+                Triple(true, null, null)
+              }
+              .collectLatest { (isScrollInProgress, snapUpInteraction, snapDownInteraction) ->
+                val isFabPressed = snapUpInteraction is Press || snapDownInteraction is Press
+                if (isScrollInProgress) {
+                  showScrollSnapperFabs = true
+                } else {
+                  if (!isFabPressed) {
+                    delay(SNAP_SCROLL_HIDE_DELAY_MS)
+                    showScrollSnapperFabs = false
+                  }
                 }
               }
           }
@@ -871,7 +889,7 @@ fun DeviceLogsScreen(
                     while (true) {
                       val event = awaitPointerEvent()
                       when (event.type) {
-                        PointerEventType.Press -> {
+                        PointerEventType.Press, PointerEventType.Move -> {
                           snapToBottom = false
                           focusManager.clearFocus()
                         }
@@ -1491,107 +1509,6 @@ private fun AppBar(
       }
     }
   )
-}
-
-data class SnapScrollInfo(
-  val isScrollSnapperVisible: Boolean = false,
-)
-
-@Composable
-private fun rememberSnapScrollInfo(
-  lazyListState: LazyListState,
-  snapToBottom: Boolean,
-  snapUpInteractionSource: InteractionSource,
-  snapDownInteractionSource: InteractionSource,
-): SnapScrollInfo {
-  var snapScrollInfo by remember { mutableStateOf(SnapScrollInfo()) }
-
-  if (snapToBottom) {
-    LaunchedEffect(lazyListState) {
-      snapScrollInfo = SnapScrollInfo()
-      snapshotFlow { lazyListState.layoutInfo.totalItemsCount }
-        .filter { lastIndex -> lastIndex > 0 }
-        .collect { lastIndex ->
-          lazyListState.scrollToItem(lastIndex)
-        }
-    }
-  } else {
-    LaunchedEffect(lazyListState, snapUpInteractionSource, snapDownInteractionSource) {
-      data class LastItemOffsetInfo(
-        val lastItem: Boolean,
-        val lastItemSize: Int,
-        val lastVisibleOffset: Int,
-      )
-
-      data class ItemOffsetInfo(
-        val viewportEndOffset: Int,
-        val firstVisibleIndex: Int,
-        val firstVisibleOffset: Int,
-        val lastItemInfo: LastItemOffsetInfo?,
-        val lastScrolledForward: Boolean,
-        val lastScrolledBackward: Boolean,
-      )
-
-      launch {
-        combine(
-          snapshotFlow {
-            val layoutInfo = lazyListState.layoutInfo
-            ItemOffsetInfo(
-              viewportEndOffset = layoutInfo.viewportEndOffset,
-              firstVisibleIndex = lazyListState.firstVisibleItemIndex,
-              firstVisibleOffset = lazyListState.firstVisibleItemScrollOffset,
-              lastItemInfo = layoutInfo.visibleItemsInfo.lastOrNull()?.let { info ->
-                LastItemOffsetInfo(
-                  lastItem = info.index == layoutInfo.totalItemsCount - 1,
-                  lastItemSize = info.size,
-                  lastVisibleOffset = info.offset,
-                )
-              },
-              lastScrolledForward = lazyListState.lastScrolledForward,
-              lastScrolledBackward = lazyListState.lastScrolledBackward,
-            )
-          },
-          snapUpInteractionSource.interactions.stateIn(this, Eagerly, null),
-          snapDownInteractionSource.interactions.stateIn(this, Eagerly, null),
-        ) { offsetInfo, snapUpInteraction, snapDownInteraction ->
-          Triple(offsetInfo, snapUpInteraction, snapDownInteraction)
-        }.collectLatest { (offsetInfo, snapUpInteraction, snapDownInteraction) ->
-          var shouldSnapScrollUp = false
-          var shouldSnapScrollDown = false
-          if (offsetInfo.lastScrolledForward) {
-            val lastItemInfo = offsetInfo.lastItemInfo
-            if (lastItemInfo != null) {
-              val canScrollDown = !lastItemInfo.lastItem ||
-                (lastItemInfo.lastVisibleOffset + lastItemInfo.lastItemSize) > offsetInfo.viewportEndOffset
-              shouldSnapScrollUp = false
-              shouldSnapScrollDown = canScrollDown
-            } else {
-              shouldSnapScrollDown = false
-            }
-          } else if (offsetInfo.lastScrolledBackward) {
-            val canScrollUp =
-              offsetInfo.firstVisibleIndex != 0 || offsetInfo.firstVisibleOffset > 0
-            shouldSnapScrollDown = false
-            shouldSnapScrollUp = canScrollUp
-          }
-          val isScrollSnapperVisible = shouldSnapScrollUp || shouldSnapScrollDown
-          snapScrollInfo = snapScrollInfo.copy(
-            isScrollSnapperVisible = isScrollSnapperVisible,
-          )
-
-          // Do not hide while the FABs are being pressed.
-          val isFabPressed = snapUpInteraction is Press || snapDownInteraction is Press
-          if (isScrollSnapperVisible && !isFabPressed) {
-            delay(SNAP_SCROLL_HIDE_DELAY_MS)
-            snapScrollInfo = snapScrollInfo.copy(
-              isScrollSnapperVisible = false,
-            )
-          }
-        }
-      }
-    }
-  }
-  return snapScrollInfo
 }
 
 sealed interface SaveResult {
