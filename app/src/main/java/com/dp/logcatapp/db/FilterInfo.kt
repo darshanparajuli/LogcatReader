@@ -114,9 +114,7 @@ class DateRangeTypeConverter {
 
 class LogLevelsTypeConverter {
   companion object {
-    private val logLevelsMap = LogLevel.entries.associate {
-      Pair(it.label.first().toString(), it)
-    }
+    private val logLevelsMap = LogLevel.entries.associateBy { it.label.first().toString() }
   }
 
   @TypeConverter
