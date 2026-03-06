@@ -565,8 +565,7 @@ fun DeviceLogsScreen(
           coroutineScope.launch {
             val logs = logsState.toList() // Create a copy
             if (logs.isNotEmpty()) {
-              val result = saveLogsToFile(context, logs)
-              when (result) {
+              when (val result = saveLogsToFile(context, logs)) {
                 is SaveResult.Failure -> {
                   context.showToast(saveFailedMessage)
                   saveLogsInProgress = false
