@@ -28,3 +28,17 @@ When opening a pull request, include the following information:
 <any demo or screenshots showcasing the change, if applicable>
 
 ```
+
+# Release
+
+1. Suggest a version name based on recent changes (use semantics versioning) and confirm with the user
+2. Create a new release branch with name `release-<version>`
+3. Bump the version and versioncode numbers
+4. Commit the change once the user either provides or agrees with the new version name
+5. Run `./gradlew assembleRelease`
+6. A release apk should've been generated in `app/build/outputs/apk/release`
+7. Add a release tag in format `vX.X.X`
+8. Push the changes (including the tag)
+9. Create a new Github release with version name as the title
+    * Add a brief summary of changes, any new contributors, and a link to the full changelog (commits range) in the release notes
+    * Upload the apk to this release
