@@ -123,6 +123,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -160,7 +161,7 @@ fun SavedLogsScreen(
   val db = remember(context) { LogcatReaderDatabase.getInstance(context) }
   LaunchedEffect(context, db) {
     updateDbWithExistingInternalLogFiles(context, db)
-    savedLogs(context, db).collect { result ->
+    savedLogs(context, db).collectLatest { result ->
       snapshotFlow {
         Pair(SortBy.entries[sortByPref], SortOrder.entries[sortOrderPref])
       }.collect { (sortBy, sortOrder) ->
