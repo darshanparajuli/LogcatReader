@@ -416,11 +416,7 @@ fun FiltersScreen(
             pid = pid.takeIf { it.isNotEmpty() }?.toIntOrNull(),
             tid = tid.takeIf { it.isNotEmpty() }?.toIntOrNull(),
             packageName = packageName.takeIf { it.isNotEmpty() },
-            logLevels = if (selectedLogLevels.isEmpty()) {
-              null
-            } else {
-              selectedLogLevels
-            },
+            logLevels = selectedLogLevels.ifEmpty { null },
             exclude = exclude,
             regexEnabledFilterTypes = regexEnabledTypes,
             dateRange = data.dateRange,
