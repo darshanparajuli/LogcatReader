@@ -123,6 +123,12 @@ class FixedCircularArray<E>(
 
   operator fun plusAssign(list: FixedCircularArray<E>) = add(list)
 
+  fun removeAll(): List<E> {
+    val list = toList()
+    clear()
+    return list
+  }
+
   fun clear() {
     resetHead()
     array.fill(null)

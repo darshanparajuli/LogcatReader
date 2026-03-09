@@ -9,6 +9,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -20,12 +21,14 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import java.io.BufferedWriter
 import java.io.IOException
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.thread
 import kotlin.concurrent.withLock
+import kotlin.time.Duration.Companion.seconds
 
 private const val THREAD_JOIN_TIMEOUT = 5_000L // 5 seconds
 
@@ -46,13 +49,16 @@ class LogcatSession(
     capacity = capacity,
     initialSize = 10_000,
   )
+  private var onNewLog: ((List<Log>) -> Unit)? = null
+  private val filters = mutableListOf<Filter>()
+  private val exclusions = mutableListOf<Filter>()
+  // }
+
+  private val pendingLogsLock = Any() // locks {
   private val pendingLogs = FixedCircularArray<Log>(
     capacity = capacity,
     initialSize = 1000,
   )
-  private var onNewLog: ((List<Log>) -> Unit)? = null
-  private val filters = mutableListOf<Filter>()
-  private val exclusions = mutableListOf<Filter>()
   // }
 
   @Volatile private var active = false
@@ -163,14 +169,34 @@ class LogcatSession(
       val inputStream = process.inputStream
       val stdoutReaderThread = thread {
         try {
-          LogcatStreamReader(inputStream).use { logs ->
-            logs.forEach { log ->
-              lock.withLock {
-                pendingLogs += log
+          runBlocking {
+            try {
+              LogcatStreamReader(inputStream).use { reader ->
+                val initialLogs = mutableListOf<Log>()
+                // Collect initial logs for about a second in order to not peg consumer.
+                withTimeoutOrNull(1.seconds) {
+                  while (reader.hasNext()) {
+                    initialLogs += reader.next()
+                    ensureActive()
+                  }
+                }
+
+                synchronized(pendingLogsLock) {
+                  pendingLogs += initialLogs
+                }
+
+                reader.forEach { log ->
+                  synchronized(pendingLogsLock) {
+                    pendingLogs += log
+                  }
+                }
               }
+            } catch (_: Exception) {
+              // Do nothing.
             }
           }
-        } catch (_: Exception) {
+        } catch (_: InterruptedException) {
+          // Do nothing.
         }
         Logger.debug(LogcatSession::class, "stopped logcat reader thread")
       }
@@ -207,17 +233,21 @@ class LogcatSession(
 
   private fun pollOnce() {
     lock.withLock {
-      val pending = pendingLogs.toList()
-      pendingLogs.clear()
+      val pending = synchronized(pendingLogsLock) {
+        pendingLogs.removeAll()
+      }
 
       allLogs += pending
 
       // If recording is enabled, then add to record buffer.
+      val filtered = pending.filtered()
       if (record) {
-        recordBuffer += pending.filtered()
+        recordBuffer += filtered
       }
 
-      onNewLog?.invoke(pending.filtered())
+      if (filtered.isNotEmpty()) {
+        onNewLog?.invoke(filtered)
+      }
     }
   }
 
@@ -250,7 +280,9 @@ class LogcatSession(
 
     lock.withLock {
       allLogs.clear()
-      pendingLogs.clear()
+      synchronized(pendingLogsLock) {
+        pendingLogs.clear()
+      }
       recordBuffer.clear()
       recordingFileInfo = null
     }
@@ -325,7 +357,9 @@ class LogcatSession(
   fun clearLogs() {
     lock.withLock {
       allLogs.clear()
-      pendingLogs.clear()
+      synchronized(pendingLogsLock) {
+        pendingLogs.clear()
+      }
     }
   }
 

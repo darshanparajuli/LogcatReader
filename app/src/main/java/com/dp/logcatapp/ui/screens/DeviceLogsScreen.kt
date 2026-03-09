@@ -373,13 +373,7 @@ fun DeviceLogsScreen(
                           )
                         }
 
-                        launch {
-                          // Give it a moment to collect initial logs while
-                          // showing the loading indicator.
-                          delay(400)
-                          isLogcatSessionLoading = false
-                        }
-
+                        isLogcatSessionLoading = false
                         restartLogCollectionTrigger.receiveAsFlow()
                           .onStart { emit(Unit) }
                           .collectLatest {
