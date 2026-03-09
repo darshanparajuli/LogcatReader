@@ -11,17 +11,11 @@ class SavedLogsViewerActivity : BaseActivity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-
-    if (intent.data == null) {
-      finish()
-      return
-    }
-
     setContent {
       LogcatReaderTheme {
         SavedLogsViewerScreen(
           modifier = Modifier.fillMaxSize(),
-          uri = requireNotNull(intent.data),
+          uri = intent.data,
         )
       }
     }

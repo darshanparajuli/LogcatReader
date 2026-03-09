@@ -106,19 +106,24 @@ private const val COMPACT_VIEW_KEY = "saved_logs_viewer_compact_view_key"
 @Composable
 fun SavedLogsViewerScreen(
   modifier: Modifier,
-  uri: Uri,
+  uri: Uri?,
 ) {
   val context = LocalContext.current
   var logs by remember { mutableStateOf<LoadLogsState>(LoadLogsState.Loading) }
   LaunchedEffect(uri, context) {
-    logs = loadLogs(context = context, uri = uri)
-
-    if (logs is LoadLogsState.FileOpenError) {
+    if (uri == null) {
       context.showToast(context.getString(R.string.error_opening_source))
       context.findActivity()?.finish()
-    } else if (logs is LoadLogsState.LogsParseError) {
-      context.showToast(context.getString(R.string.unsupported_source))
-      context.findActivity()?.finish()
+    } else {
+      logs = loadLogs(context = context, uri = uri)
+
+      if (logs is LoadLogsState.FileOpenError) {
+        context.showToast(context.getString(R.string.error_opening_source))
+        context.findActivity()?.finish()
+      } else if (logs is LoadLogsState.LogsParseError) {
+        context.showToast(context.getString(R.string.unsupported_source))
+        context.findActivity()?.finish()
+      }
     }
   }
 
@@ -191,7 +196,7 @@ fun SavedLogsViewerScreen(
     contentWindowInsets = WindowInsets.safeDrawing.only(WindowInsetsSides.Vertical),
     topBar = {
       val fileName = remember(uri) {
-        context.getFileNameFromUri(uri) ?: "n/a"
+        (uri?.let { context.getFileNameFromUri(uri) }) ?: "n/a"
       }
       var showDropDownMenu by remember { mutableStateOf(false) }
       AppBar(
