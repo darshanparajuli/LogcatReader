@@ -508,10 +508,14 @@ fun DeviceLogsScreen(
 
       AppBar(
         title = stringResource(R.string.device_logs),
-        subtitle = if (logsState.isFull()) {
-          "${logsState.size} [${stringResource(R.string.buffer_full)}]"
+        subtitle = if (logsState.isEmpty()) {
+          null
         } else {
-          logsState.size.toString()
+          if (logsState.isFull()) {
+            "${logsState.size} [${stringResource(R.string.buffer_full)}]"
+          } else {
+            logsState.size.toString()
+          }
         },
         filtered = appliedFilters,
         isPaused = logcatPaused,
@@ -1280,7 +1284,7 @@ private fun FloatingActionButtons(
 @Composable
 private fun AppBar(
   title: String,
-  subtitle: String,
+  subtitle: String?,
   filtered: Boolean,
   isPaused: Boolean,
   pauseEnabled: Boolean,
@@ -1323,12 +1327,14 @@ private fun AppBar(
             )
             Spacer(modifier = Modifier.width(4.dp))
           }
-          Text(
-            text = subtitle,
-            style = AppTypography.titleSmall,
-            overflow = TextOverflow.Ellipsis,
-            maxLines = 1,
-          )
+          subtitle?.let {
+            Text(
+              text = it,
+              style = AppTypography.titleSmall,
+              overflow = TextOverflow.Ellipsis,
+              maxLines = 1,
+            )
+          }
         }
       }
     },
