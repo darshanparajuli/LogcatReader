@@ -1,6 +1,7 @@
 package com.dp.logcatapp.ui.theme
 
 import android.os.Build
+import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
@@ -8,9 +9,12 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
+import androidx.core.view.WindowInsetsControllerCompat
 import com.dp.logcatapp.util.SettingsPrefKeys
 import com.dp.logcatapp.util.SettingsPrefKeys.Appearance.Theme
 import com.dp.logcatapp.util.rememberBooleanSharedPreference
@@ -132,6 +136,27 @@ fun LogcatReaderTheme(
       dynamicLightColorScheme(context)
     } else {
       lightScheme
+    }
+  }
+
+  val view = LocalView.current
+  val window = LocalActivity.current?.window
+  if (window != null) {
+    LaunchedEffect(view, window, appThemeSetting, darkTheme, dynamicColor) {
+      val isLight = when (appThemeSetting) {
+        Theme.LIGHT -> true
+        Theme.DARK -> false
+        else -> !darkTheme
+      }
+      WindowInsetsControllerCompat(window, view).run {
+        isAppearanceLightStatusBars = if (dynamicColor) {
+          isLight
+        } else {
+          // Dark status bar colors work nicer with non-dynamic app theme (even in light mode).
+          false
+        }
+        isAppearanceLightNavigationBars = isLight
+      }
     }
   }
 
