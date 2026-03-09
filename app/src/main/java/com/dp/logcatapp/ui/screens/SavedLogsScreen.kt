@@ -6,6 +6,7 @@ import android.icu.text.SimpleDateFormat
 import android.os.Build
 import android.text.format.DateFormat
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts.CreateDocument
 import androidx.compose.animation.AnimatedVisibility
@@ -115,7 +116,6 @@ import com.dp.logcatapp.ui.theme.Shapes
 import com.dp.logcatapp.util.ShareUtils
 import com.dp.logcatapp.util.Utils
 import com.dp.logcatapp.util.closeQuietly
-import com.dp.logcatapp.util.findActivity
 import com.dp.logcatapp.util.rememberIntSharedPreference
 import com.dp.logcatapp.util.showToast
 import kotlinx.coroutines.Dispatchers
@@ -427,7 +427,6 @@ private fun AppBar(
   sortEnabled: Boolean,
   onClickSort: () -> Unit,
 ) {
-  val context = LocalContext.current
   TopAppBar(
     navigationIcon = {
       WithTooltip(
@@ -437,9 +436,10 @@ private fun AppBar(
         ),
         text = stringResource(R.string.navigate_up),
       ) {
+        val activity = LocalActivity.current
         IconButton(
           onClick = {
-            context.findActivity()?.finish()
+            activity?.finish()
           },
           colors = IconButtonDefaults.iconButtonColors(
             contentColor = MaterialTheme.colorScheme.onPrimaryContainer,

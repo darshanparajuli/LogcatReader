@@ -3,6 +3,7 @@ package com.dp.logcatapp.ui.screens
 import android.content.Context
 import android.net.Uri
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -79,7 +80,6 @@ import com.dp.logcatapp.util.SearchHitKey
 import com.dp.logcatapp.util.SearchResult
 import com.dp.logcatapp.util.SearchResult.SearchHit
 import com.dp.logcatapp.util.closeQuietly
-import com.dp.logcatapp.util.findActivity
 import com.dp.logcatapp.util.getFileNameFromUri
 import com.dp.logcatapp.util.rememberAppInfoByUidMap
 import com.dp.logcatapp.util.rememberBooleanSharedPreference
@@ -109,20 +109,21 @@ fun SavedLogsViewerScreen(
   uri: Uri?,
 ) {
   val context = LocalContext.current
+  val activity = LocalActivity.current
   var logs by remember { mutableStateOf<LoadLogsState>(LoadLogsState.Loading) }
-  LaunchedEffect(uri, context) {
+  LaunchedEffect(uri, context, activity) {
     if (uri == null) {
       context.showToast(context.getString(R.string.error_opening_source))
-      context.findActivity()?.finish()
+      activity?.finish()
     } else {
       logs = loadLogs(context = context, uri = uri)
 
       if (logs is LoadLogsState.FileOpenError) {
         context.showToast(context.getString(R.string.error_opening_source))
-        context.findActivity()?.finish()
+        activity?.finish()
       } else if (logs is LoadLogsState.LogsParseError) {
         context.showToast(context.getString(R.string.unsupported_source))
-        context.findActivity()?.finish()
+        activity?.finish()
       }
     }
   }
@@ -413,7 +414,7 @@ private fun AppBar(
   onDismissDropdownMenu: () -> Unit,
   onClickCompactView: () -> Unit,
 ) {
-  val context = LocalContext.current
+  val activity = LocalActivity.current
   TopAppBar(
     navigationIcon = {
       WithTooltip(
@@ -425,7 +426,7 @@ private fun AppBar(
       ) {
         IconButton(
           onClick = {
-            context.findActivity()?.finish()
+            activity?.finish()
           },
           colors = IconButtonDefaults.iconButtonColors(
             contentColor = MaterialTheme.colorScheme.onPrimaryContainer,

@@ -1,6 +1,7 @@
 package com.dp.logcatapp.ui.screens
 
 import android.content.Intent
+import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts.OpenDocumentTree
 import androidx.compose.foundation.clickable
@@ -89,7 +90,6 @@ import com.dp.logcatapp.ui.theme.AppTypography
 import com.dp.logcatapp.ui.theme.Shapes
 import com.dp.logcatapp.ui.theme.isDynamicThemeAvailable
 import com.dp.logcatapp.util.SettingsPrefKeys
-import com.dp.logcatapp.util.findActivity
 import com.dp.logcatapp.util.isReadLogsPermissionGranted
 import com.dp.logcatapp.util.rememberBooleanSharedPreference
 import com.dp.logcatapp.util.rememberIntSharedPreference
@@ -111,6 +111,7 @@ fun SettingsScreen(
     modifier = modifier,
     contentWindowInsets = WindowInsets.safeDrawing.only(WindowInsetsSides.Vertical),
     topBar = {
+      val activity = LocalActivity.current
       TopAppBar(
         navigationIcon = {
           WithTooltip(
@@ -122,7 +123,7 @@ fun SettingsScreen(
           ) {
             IconButton(
               onClick = {
-                context.findActivity()?.finish()
+                activity?.finish()
               },
               colors = IconButtonDefaults.iconButtonColors(
                 contentColor = MaterialTheme.colorScheme.onPrimaryContainer,

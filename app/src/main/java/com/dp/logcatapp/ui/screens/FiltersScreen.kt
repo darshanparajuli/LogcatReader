@@ -1,6 +1,7 @@
 package com.dp.logcatapp.ui.screens
 
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -121,7 +122,6 @@ import com.dp.logcatapp.ui.common.WithTooltip
 import com.dp.logcatapp.ui.theme.AppTypography
 import com.dp.logcatapp.ui.theme.Shapes
 import com.dp.logcatapp.util.AppInfo
-import com.dp.logcatapp.util.findActivity
 import com.dp.logcatapp.util.rememberAppInfoByUidMap
 import com.dp.logcatapp.util.showToast
 import com.dp.logcatapp.util.toRegexOrNull
@@ -164,6 +164,7 @@ fun FiltersScreen(
     BackHandler { viewModel.selectedFilters = emptySet() }
   }
 
+  val activity = LocalActivity.current
   Scaffold(
     modifier = modifier,
     contentWindowInsets = WindowInsets.safeDrawing.only(WindowInsetsSides.Vertical),
@@ -180,7 +181,7 @@ fun FiltersScreen(
           ) {
             IconButton(
               onClick = {
-                context.findActivity()?.finish()
+                activity?.finish()
               },
               colors = IconButtonDefaults.iconButtonColors(
                 contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
