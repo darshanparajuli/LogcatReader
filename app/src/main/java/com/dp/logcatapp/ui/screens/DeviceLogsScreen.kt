@@ -8,6 +8,7 @@ import android.content.ServiceConnection
 import android.net.Uri
 import android.os.IBinder
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.LocalActivity
 import androidx.annotation.WorkerThread
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
@@ -274,8 +275,17 @@ fun DeviceLogsScreen(
     searchQuery = ""
   }
 
-  if (showSearchBar) {
-    BackHandler { closeSearchBar() }
+  val activity = LocalActivity.current
+  BackHandler(
+    enabled = showSearchBar || viewModel.recordStatus.isIdle(),
+  ) {
+    // Close the search bar if it was open, otherwise close the app.
+    if (showSearchBar) {
+      closeSearchBar()
+    } else {
+      // Logcat service should get stopped automatically as the view model is cleared.
+      activity?.finish()
+    }
   }
 
   val restartLogCollectionTrigger = remember { Channel<Unit>(capacity = 1) }
