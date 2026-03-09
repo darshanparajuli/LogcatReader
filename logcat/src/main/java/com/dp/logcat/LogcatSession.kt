@@ -195,20 +195,29 @@ class LogcatSession(
         }
       }
 
-      lock.withLock {
-        val pending = pendingLogs.toList()
-        pendingLogs.clear()
+      pollOnce()
 
-        allLogs += pending
-
-        // If recording is enabled, then add to record buffer.
-        if (record) {
-          recordBuffer += pending.filtered()
-        }
-
-        onNewLog?.invoke(pending.filtered())
+      try {
+        Thread.sleep(pollIntervalMs)
+      } catch (_: InterruptedException) {
+        // Do nothing
       }
-      Thread.sleep(pollIntervalMs)
+    }
+  }
+
+  private fun pollOnce() {
+    lock.withLock {
+      val pending = pendingLogs.toList()
+      pendingLogs.clear()
+
+      allLogs += pending
+
+      // If recording is enabled, then add to record buffer.
+      if (record) {
+        recordBuffer += pending.filtered()
+      }
+
+      onNewLog?.invoke(pending.filtered())
     }
   }
 
@@ -226,13 +235,19 @@ class LogcatSession(
     logcatProcess = null
     logcatThread?.join(THREAD_JOIN_TIMEOUT)
     logcatThread = null
-    pollerThread?.join(THREAD_JOIN_TIMEOUT)
+
+    pollerThread?.let { thread ->
+      thread.interrupt()
+      thread.join(THREAD_JOIN_TIMEOUT)
+    }
     pollerThread = null
+
     recordThread?.let { thread ->
       thread.interrupt()
       thread.join(THREAD_JOIN_TIMEOUT)
     }
     recordThread = null
+
     lock.withLock {
       allLogs.clear()
       pendingLogs.clear()
