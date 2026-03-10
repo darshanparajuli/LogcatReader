@@ -18,10 +18,11 @@ multidexVersion = "2.0.1"
 preferenceKtxVersion = "1.2.1"
 roomVersion = "2.8.4"
 testRunnerVersion = "1.7.0"
-kotlinVersion = "2.2.21"
+kotlinVersion = "2.3.10"
 
 # https://github.com/google/ksp/releases
-kspVersion = "2.2.21-2.0.5"
+# KSP2 (2.3.0+) is no longer tied to a specific Kotlin version.
+kspVersion = "2.3.6"
 
 [libraries]
 activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activityComposeVersion" }
