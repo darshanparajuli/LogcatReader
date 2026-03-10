@@ -132,6 +132,7 @@
   <string name="unsupported_source">Unsupported source</string>
   <string name="version_fmt">Version %s</string>
   <string name="unable_to_start_logcat_error_msg">Unable to start logcat process and read logs</string>
+  <string name="starting_logcat_session">Starting logcat session</string>
   <string name="compact_view">Compact view</string>
   <string name="name">Name</string>
   <string name="timestamp">Timestamp</string>

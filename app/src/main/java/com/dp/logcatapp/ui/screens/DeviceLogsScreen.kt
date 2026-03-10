@@ -10,11 +10,13 @@ import android.os.IBinder
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalActivity
 import androidx.annotation.WorkerThread
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction.Press
@@ -50,7 +52,6 @@ import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.FiberManualRecord
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Folder
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.MoreVert
@@ -105,6 +106,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
@@ -262,8 +264,9 @@ fun DeviceLogsScreen(
   var showHitCount by remember { mutableStateOf(false) }
   val snackbarHostState = remember { SnackbarHostState() }
   var appliedFilters by remember { mutableStateOf(false) }
-  var isLogcatSessionLoading by remember { mutableStateOf(true) }
-  var errorStartingLogcat by remember { mutableStateOf(false) }
+  var logcatSessionStatus by remember {
+    mutableStateOf<LogcatSessionStatusType>(LogcatSessionStatusType.Starting)
+  }
   var showDisplayOptions by rememberSaveable { mutableStateOf(false) }
 
   fun closeSearchBar() {
@@ -373,7 +376,7 @@ fun DeviceLogsScreen(
                           )
                         }
 
-                        isLogcatSessionLoading = false
+                        logcatSessionStatus = LogcatSessionStatusType.Started
                         restartLogCollectionTrigger.receiveAsFlow()
                           .onStart { emit(Unit) }
                           .collectLatest {
@@ -397,8 +400,7 @@ fun DeviceLogsScreen(
                 }
             }
           } else {
-            errorStartingLogcat = true
-            isLogcatSessionLoading = false
+            logcatSessionStatus = LogcatSessionStatusType.FailedToStart
           }
         }
     }
@@ -500,6 +502,7 @@ fun DeviceLogsScreen(
 
       var saveLogsInProgress by remember { mutableStateOf(false) }
 
+      val logcatSessionStarted = logcatSessionStatus == LogcatSessionStatusType.Started
       AppBar(
         title = stringResource(R.string.device_logs),
         subtitle = if (logsState.isEmpty()) {
@@ -513,14 +516,12 @@ fun DeviceLogsScreen(
         },
         filtered = appliedFilters,
         isPaused = logcatPaused,
-        pauseEnabled = viewModel.recordStatus.isIdle() &&
-          !isLogcatSessionLoading && !errorStartingLogcat,
+        pauseEnabled = viewModel.recordStatus.isIdle() && logcatSessionStarted,
         recordEnabled = !logcatPaused && logcatService != null &&
-          viewModel.recordStatus != RecordStatus.SaveRecordedLogs &&
-          !isLogcatSessionLoading && !errorStartingLogcat,
+          viewModel.recordStatus != RecordStatus.SaveRecordedLogs && logcatSessionStarted,
         recordStatus = viewModel.recordStatus,
         showDropDownMenu = showDropDownMenu,
-        saveEnabled = logcatService != null && !isLogcatSessionLoading && !errorStartingLogcat
+        saveEnabled = logcatService != null && logcatSessionStarted
           && logsState.isNotEmpty(),
         saveLogsInProgress = saveLogsInProgress,
         restartLogcatEnabled = logcatService != null && viewModel.recordStatus.isIdle(),
@@ -599,7 +600,7 @@ fun DeviceLogsScreen(
         onClickRestartLogcat = {
           showDropDownMenu = false
           if (logcatService != null) {
-            isLogcatSessionLoading = true
+            logcatSessionStatus = LogcatSessionStatusType.Starting
             logcatService.restartLogcatSession()
           }
         },
@@ -769,7 +770,24 @@ fun DeviceLogsScreen(
 
     MaybeShowPermissionRequiredDialog()
 
-    if (isLogcatSessionLoading) {
+    if (logcatSessionStatus != LogcatSessionStatusType.Started || logsState.isEmpty()) {
+      val message = when (logcatSessionStatus) {
+        LogcatSessionStatusType.Starting -> {
+          stringResource(R.string.starting_logcat_session)
+        }
+        LogcatSessionStatusType.FailedToStart -> {
+          stringResource(R.string.unable_to_start_logcat_error_msg)
+        }
+        LogcatSessionStatusType.Started -> {
+          // The logs must be empty at this point.
+          stringResource(R.string.waiting_for_logs)
+        }
+      }
+      val statusType = if (logcatSessionStatus == LogcatSessionStatusType.FailedToStart) {
+        StatusType.Error
+      } else {
+        StatusType.Loading
+      }
       Box(
         modifier = Modifier
           .fillMaxSize()
@@ -777,220 +795,227 @@ fun DeviceLogsScreen(
           .safeDrawingPadding(),
         contentAlignment = Alignment.Center,
       ) {
-        CircularProgressIndicator(
-          modifier = Modifier.size(48.dp),
+        StatusMessage(
+          message = message,
+          type = statusType,
+          modifier = Modifier.fillMaxWidth(),
         )
       }
-    } else if (errorStartingLogcat) {
-      Box(
+    } else {
+      val lifecycle = LocalLifecycleOwner.current.lifecycle
+
+      if (snapToBottom) {
+        LaunchedEffect(lazyListState, compactViewPreference) {
+          showScrollSnapperFabs = false
+          snapshotFlow {
+            // The reason for reading the last value is to ensure we get an emission once
+            // the size gets capped to the capacity since the recently added value is always
+            // different.
+            logsState.size to logsState.lastOrNull()
+          }
+            .collect { (count) ->
+              if (count > 0) {
+                lazyListState.scrollToItem(count)
+              }
+            }
+        }
+      } else {
+        LaunchedEffect(lazyListState, compactViewPreference) {
+          combine(
+            snapshotFlow { lazyListState.isScrollInProgress },
+            snapToTopInteractionSource.interactions.stateIn(this, Eagerly, null),
+            snapToBottomInteractionSource.interactions.stateIn(this, Eagerly, null),
+          ) { isScrollInProgress, snapUpInteraction, snapDownInteraction ->
+            Triple(isScrollInProgress, snapUpInteraction, snapDownInteraction)
+          }
+            .onStart {
+              Triple(true, null, null)
+            }
+            .collectLatest { (isScrollInProgress, snapUpInteraction, snapDownInteraction) ->
+              val isFabPressed = snapUpInteraction is Press || snapDownInteraction is Press
+              if (isScrollInProgress) {
+                showScrollSnapperFabs = true
+              } else {
+                if (!isFabPressed) {
+                  delay(SNAP_SCROLL_HIDE_DELAY_MS)
+                  showScrollSnapperFabs = false
+                }
+              }
+            }
+        }
+      }
+
+      val enabledLogItems = remember(toggleableLogItemsPref) {
+        toggleableLogItemsPref.orEmpty().map {
+          ToggleableLogItem.entries[it.toInt()]
+        }.toSet()
+      }
+
+      LogsList(
         modifier = Modifier
           .fillMaxSize()
           .consumeWindowInsets(innerPadding)
-          .safeDrawingPadding(),
-        contentAlignment = Alignment.Center,
-      ) {
-        Column(
-          modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp),
-          horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-          Icon(
-            modifier = Modifier.size(32.dp),
-            imageVector = Icons.Default.Error,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.error,
-          )
-          Spacer(Modifier.height(8.dp))
-          Text(
-            text = stringResource(R.string.unable_to_start_logcat_error_msg),
-            style = AppTypography.bodyMedium,
-          )
-        }
-      }
-    } else {
-      if (logsState.isEmpty()) {
-        Box(
-          modifier = Modifier
-            .fillMaxSize()
-            .consumeWindowInsets(innerPadding)
-            .safeDrawingPadding(),
-          contentAlignment = Alignment.Center,
-        ) {
-          Column(
-            modifier = Modifier
-              .fillMaxWidth()
-              .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-          ) {
-            Icon(
-              modifier = Modifier.size(32.dp),
-              imageVector = Icons.Default.Info,
-              contentDescription = null,
-            )
-            Spacer(Modifier.height(8.dp))
-            Text(
-              text = stringResource(R.string.waiting_for_logs),
-              style = AppTypography.bodyMedium,
-            )
-          }
-        }
-      } else {
-        val lifecycle = LocalLifecycleOwner.current.lifecycle
-
-        if (snapToBottom) {
-          LaunchedEffect(lazyListState, compactViewPreference) {
-            showScrollSnapperFabs = false
-            snapshotFlow {
-              // The reason for reading the last value is to ensure we get an emission once
-              // the size gets capped to the capacity since the recently added value is always
-              // different.
-              logsState.size to logsState.lastOrNull()
-            }
-              .collect { (count) ->
-                if (count > 0) {
-                  lazyListState.scrollToItem(count)
-                }
-              }
-          }
-        } else {
-          LaunchedEffect(lazyListState, compactViewPreference) {
-            combine(
-              snapshotFlow { lazyListState.isScrollInProgress },
-              snapToTopInteractionSource.interactions.stateIn(this, Eagerly, null),
-              snapToBottomInteractionSource.interactions.stateIn(this, Eagerly, null),
-            ) { isScrollInProgress, snapUpInteraction, snapDownInteraction ->
-              Triple(isScrollInProgress, snapUpInteraction, snapDownInteraction)
-            }
-              .onStart {
-                Triple(true, null, null)
-              }
-              .collectLatest { (isScrollInProgress, snapUpInteraction, snapDownInteraction) ->
-                val isFabPressed = snapUpInteraction is Press || snapDownInteraction is Press
-                if (isScrollInProgress) {
-                  showScrollSnapperFabs = true
-                } else {
-                  if (!isFabPressed) {
-                    delay(SNAP_SCROLL_HIDE_DELAY_MS)
-                    showScrollSnapperFabs = false
-                  }
-                }
-              }
-          }
-        }
-
-        val enabledLogItems = remember(toggleableLogItemsPref) {
-          toggleableLogItemsPref.orEmpty().map {
-            ToggleableLogItem.entries[it.toInt()]
-          }.toSet()
-        }
-
-        LogsList(
-          modifier = Modifier
-            .fillMaxSize()
-            .consumeWindowInsets(innerPadding)
-            .pointerInput(Unit) {
-              lifecycle.currentStateFlow.collectLatest { state ->
-                if (state.isAtLeast(Lifecycle.State.RESUMED)) {
-                  awaitPointerEventScope {
-                    while (true) {
-                      val event = awaitPointerEvent()
-                      when (event.type) {
-                        PointerEventType.Press, PointerEventType.Move -> {
-                          snapToBottom = false
-                          focusManager.clearFocus()
-                        }
+          .pointerInput(Unit) {
+            lifecycle.currentStateFlow.collectLatest { state ->
+              if (state.isAtLeast(Lifecycle.State.RESUMED)) {
+                awaitPointerEventScope {
+                  while (true) {
+                    val event = awaitPointerEvent()
+                    when (event.type) {
+                      PointerEventType.Press, PointerEventType.Move -> {
+                        snapToBottom = false
+                        focusManager.clearFocus()
                       }
                     }
                   }
                 }
               }
-            },
-          contentPadding = innerPadding,
-          listStyle = if (!showSearchBar && compactViewPreference) {
-            LogsListStyle.Compact
-          } else {
-            LogsListStyle.Default
-          },
-          enabledLogItems = enabledLogItems,
-          logs = logsState,
-          appInfoMap = appInfoMap.orEmpty(),
-          searchHitIndexMap = searchHitIndexMap,
-          searchHits = searchHits,
-          onClick = if (!compactViewPreference) {
-            { index ->
-              viewModel.showCopyToClipboardSheet = logsState[index]
-              snapToBottom = false
             }
-          } else null,
-          onLongClick = { index ->
-            viewModel.showLongClickOptionsSheet = logsState[index]
-            snapToBottom = false
           },
-          state = lazyListState,
-          currentSearchHitIndex = currentSearchHitIndex,
-        )
+        contentPadding = innerPadding,
+        listStyle = if (!showSearchBar && compactViewPreference) {
+          LogsListStyle.Compact
+        } else {
+          LogsListStyle.Default
+        },
+        enabledLogItems = enabledLogItems,
+        logs = logsState,
+        appInfoMap = appInfoMap.orEmpty(),
+        searchHitIndexMap = searchHitIndexMap,
+        searchHits = searchHits,
+        onClick = if (!compactViewPreference) {
+          { index ->
+            viewModel.showCopyToClipboardSheet = logsState[index]
+            snapToBottom = false
+          }
+        } else null,
+        onLongClick = { index ->
+          viewModel.showLongClickOptionsSheet = logsState[index]
+          snapToBottom = false
+        },
+        state = lazyListState,
+        currentSearchHitIndex = currentSearchHitIndex,
+      )
 
-        viewModel.showCopyToClipboardSheet?.let { log ->
-          CopyLogClipboardBottomSheet(
-            log = log,
-            onDismiss = { viewModel.showCopyToClipboardSheet = null },
+      viewModel.showCopyToClipboardSheet?.let { log ->
+        CopyLogClipboardBottomSheet(
+          log = log,
+          onDismiss = { viewModel.showCopyToClipboardSheet = null },
+        )
+      }
+    }
+
+    viewModel.showLongClickOptionsSheet?.let { log ->
+      val packageName = log.uid?.let { uid ->
+        if (uid.isNum) {
+          appInfoMap.orEmpty()[uid.value]?.packageName
+        } else {
+          uid.value
+        }
+      }
+      LongClickOptionsSheet(
+        showCopyToClipboard = compactViewPreference,
+        onDismiss = { viewModel.showLongClickOptionsSheet = null },
+        onClickFilter = {
+          val intent = Intent(context, FiltersActivity::class.java)
+          intent.putExtra(FiltersActivity.EXTRA_LOG, log)
+          intent.putExtra(FiltersActivity.EXTRA_PACKAGE_NAME, packageName)
+          intent.putExtra(FiltersActivity.EXTRA_EXCLUDE, false)
+          context.startActivity(intent)
+          viewModel.showLongClickOptionsSheet = null
+        },
+        onClickExclude = {
+          val intent = Intent(context, FiltersActivity::class.java)
+          intent.putExtra(FiltersActivity.EXTRA_LOG, log)
+          intent.putExtra(FiltersActivity.EXTRA_PACKAGE_NAME, packageName)
+          intent.putExtra(FiltersActivity.EXTRA_EXCLUDE, true)
+          context.startActivity(intent)
+          viewModel.showLongClickOptionsSheet = null
+        },
+        onClickCopyToClipboard = {
+          viewModel.showCopyToClipboardSheet = log
+          viewModel.showLongClickOptionsSheet = null
+        }
+      )
+    }
+
+    if (showDisplayOptions) {
+      DisplayOptionsSheet(
+        initialEnabledLogcatItems = toggleableLogItemsPref.orEmpty().map {
+          ToggleableLogItem.entries[it.toInt()]
+        }.toSet(),
+        initialCompactView = compactViewPreference,
+        onSave = { enabledLogItems, compactView ->
+          showDisplayOptions = false
+          compactViewPreference = compactView
+          toggleableLogItemsPref = enabledLogItems.map {
+            it.ordinal.toString()
+          }.toSet()
+        },
+        onDismiss = {
+          showDisplayOptions = false
+        }
+      )
+    }
+  }
+}
+
+private sealed interface LogcatSessionStatusType {
+  data object Starting : LogcatSessionStatusType
+  data object Started : LogcatSessionStatusType
+  data object FailedToStart : LogcatSessionStatusType
+}
+
+private sealed interface StatusType {
+  data object Loading : StatusType
+  data object Error : StatusType
+}
+
+@Composable
+private fun StatusMessage(
+  message: String,
+  type: StatusType,
+  modifier: Modifier = Modifier,
+) {
+  Column(
+    modifier = modifier
+      .fillMaxWidth()
+      .padding(16.dp),
+    horizontalAlignment = Alignment.CenterHorizontally
+  ) {
+    AnimatedContent(
+      type,
+      modifier = Modifier.size(48.dp),
+      transitionSpec = { fadeIn() togetherWith fadeOut() }
+    ) { target ->
+      when (target) {
+        StatusType.Error -> {
+          Icon(
+            modifier = Modifier.fillMaxSize(),
+            imageVector = Icons.Default.Error,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.error,
+          )
+        }
+        StatusType.Loading -> {
+          CircularProgressIndicator(
+            modifier = Modifier.fillMaxSize(),
+            strokeWidth = 4.dp,
           )
         }
       }
+    }
 
-      viewModel.showLongClickOptionsSheet?.let { log ->
-        val packageName = log.uid?.let { uid ->
-          if (uid.isNum) {
-            appInfoMap.orEmpty()[uid.value]?.packageName
-          } else {
-            uid.value
-          }
-        }
-        LongClickOptionsSheet(
-          showCopyToClipboard = compactViewPreference,
-          onDismiss = { viewModel.showLongClickOptionsSheet = null },
-          onClickFilter = {
-            val intent = Intent(context, FiltersActivity::class.java)
-            intent.putExtra(FiltersActivity.EXTRA_LOG, log)
-            intent.putExtra(FiltersActivity.EXTRA_PACKAGE_NAME, packageName)
-            intent.putExtra(FiltersActivity.EXTRA_EXCLUDE, false)
-            context.startActivity(intent)
-            viewModel.showLongClickOptionsSheet = null
-          },
-          onClickExclude = {
-            val intent = Intent(context, FiltersActivity::class.java)
-            intent.putExtra(FiltersActivity.EXTRA_LOG, log)
-            intent.putExtra(FiltersActivity.EXTRA_PACKAGE_NAME, packageName)
-            intent.putExtra(FiltersActivity.EXTRA_EXCLUDE, true)
-            context.startActivity(intent)
-            viewModel.showLongClickOptionsSheet = null
-          },
-          onClickCopyToClipboard = {
-            viewModel.showCopyToClipboardSheet = log
-            viewModel.showLongClickOptionsSheet = null
-          }
-        )
-      }
-
-      if (showDisplayOptions) {
-        DisplayOptionsSheet(
-          initialEnabledLogcatItems = toggleableLogItemsPref.orEmpty().map {
-            ToggleableLogItem.entries[it.toInt()]
-          }.toSet(),
-          initialCompactView = compactViewPreference,
-          onSave = { enabledLogItems, compactView ->
-            showDisplayOptions = false
-            compactViewPreference = compactView
-            toggleableLogItemsPref = enabledLogItems.map {
-              it.ordinal.toString()
-            }.toSet()
-          },
-          onDismiss = {
-            showDisplayOptions = false
-          }
-        )
-      }
+    Spacer(Modifier.height(8.dp))
+    AnimatedContent(
+      message,
+      transitionSpec = { fadeIn() togetherWith fadeOut() }
+    ) { targetMessage ->
+      Text(
+        text = targetMessage,
+        textAlign = TextAlign.Center,
+        style = AppTypography.bodyLarge,
+      )
     }
   }
 }
