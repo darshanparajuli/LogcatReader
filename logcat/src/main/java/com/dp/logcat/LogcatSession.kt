@@ -7,8 +7,11 @@ import com.logcat.collections.FixedCircularArray
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -109,11 +112,10 @@ class LogcatSession(
     logcatThread = thread {
       // calling runBlocking is fine here since this function runs a separate non-ui thread, and not
       // in a coroutine.
-      val uidSupported = runBlocking { isUidOptionSupported() }
-      val yearSupported = runBlocking { isYearOptionSupported() }
+      val capabilities = runBlocking { logcatCapabilities() }
       val process = startLogcatProcess(
-        uidSupported = uidSupported,
-        yearSupported = yearSupported,
+        uidSupported = capabilities.uidSupported,
+        yearSupported = capabilities.yearSupported,
       )
       status.trySend(Status(process != null))
       if (process != null) {
@@ -370,28 +372,40 @@ class LogcatSession(
   )
 
   companion object {
-    private val _uidOptionSupported = MutableStateFlow<Boolean?>(null)
-    val uidOptionSupported = _uidOptionSupported.asStateFlow()
 
-    private val _yearOptionSupported = MutableStateFlow<Boolean?>(null)
-    val yearOptionSupported = _uidOptionSupported.asStateFlow()
+    data class LogcatCapabilities(
+      val uidSupported: Boolean,
+      val yearSupported: Boolean,
+    )
+
+    private val _capabilities = MutableStateFlow<LogcatCapabilities?>(null)
+    val capabilities = _capabilities.asStateFlow()
 
     init {
       // This is ok since we are simply executing a `logcat` process and getting the result from
       // it without accessing any Android APIs.
       @OptIn(DelicateCoroutinesApi::class)
-      GlobalScope.launch(Dispatchers.IO) {
-        _uidOptionSupported.value = dumpLogcatLogWithOptions("-v", "uid")
-        _yearOptionSupported.value = dumpLogcatLogWithOptions("-v", "year")
+      GlobalScope.launch {
+        Logger.debug(LogcatSession::class, "initialize logcat capabilities")
+        _capabilities.value = getLogcatCapabilities().also {
+          Logger.debug(LogcatSession::class, "logcat capabilities: $it")
+        }
       }
     }
 
-    suspend fun isUidOptionSupported(): Boolean {
-      return uidOptionSupported.filterNotNull().first()
+    private suspend fun getLogcatCapabilities() = coroutineScope {
+      // Try to dump logcat logs on separate threads.
+      val uidSupportedDeferred = async(Dispatchers.IO) { dumpLogcatLogWithOptions("-v", "uid") }
+      val yearSupportedDeferred = async(Dispatchers.IO) { dumpLogcatLogWithOptions("-v", "year") }
+      val (uidSupported, yearSupported) = awaitAll(uidSupportedDeferred, yearSupportedDeferred)
+      LogcatCapabilities(
+        uidSupported = uidSupported,
+        yearSupported = yearSupported,
+      )
     }
 
-    suspend fun isYearOptionSupported(): Boolean {
-      return yearOptionSupported.filterNotNull().first()
+    suspend fun logcatCapabilities(): LogcatCapabilities {
+      return capabilities.filterNotNull().first()
     }
 
     private fun dumpLogcatLogWithOptions(

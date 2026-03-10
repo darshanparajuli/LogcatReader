@@ -333,7 +333,7 @@ fun DeviceLogsScreen(
                     .collectLatest { filters ->
                       appliedFilters = filters.isNotEmpty()
 
-                      val infoMap = if (LogcatSession.isUidOptionSupported()) {
+                      val infoMap = if (LogcatSession.logcatCapabilities().uidSupported) {
                         snapshotFlow { appInfoMap }.filterNotNull().first()
                       } else {
                         null
@@ -1042,7 +1042,7 @@ private fun DisplayOptionsSheet(
         }
       }
       Spacer(modifier = Modifier.height(16.dp))
-      val uidSupported by LogcatSession.uidOptionSupported.collectAsState()
+      val logcatCapabilities by LogcatSession.capabilities.collectAsState()
       FlowRow(
         modifier = Modifier
           .fillMaxWidth()
@@ -1052,7 +1052,7 @@ private fun DisplayOptionsSheet(
       ) {
         ToggleableLogItem.entries
           .filter { item ->
-            if (uidSupported == true) {
+            if (logcatCapabilities?.uidSupported == true) {
               true
             } else {
               item != ToggleableLogItem.PackageName

@@ -205,8 +205,8 @@ fun FiltersScreen(
           Row(
             modifier = Modifier.padding(insetPadding)
           ) {
-            val uidOptionSupported by LogcatSession.uidOptionSupported.collectAsState()
-            if (uidOptionSupported == true) {
+            val logcatCapabilities by LogcatSession.capabilities.collectAsState()
+            if (logcatCapabilities?.uidSupported == true) {
               WithTooltip(
                 text = stringResource(R.string.filter_by_apps)
               ) {
@@ -367,11 +367,7 @@ fun FiltersScreen(
             pid = pid.takeIf { it.isNotEmpty() }?.toIntOrNull(),
             tid = tid.takeIf { it.isNotEmpty() }?.toIntOrNull(),
             packageName = packageName.takeIf { it.isNotEmpty() },
-            logLevels = if (selectedLogLevels.isEmpty()) {
-              null
-            } else {
-              selectedLogLevels
-            },
+            logLevels = selectedLogLevels.ifEmpty { null },
             exclude = exclude,
             enabled = enabled ?: filterInfo.enabled,
             regexEnabledFilterTypes = regexEnabledTypes,
@@ -820,8 +816,8 @@ private fun AddOrEditFilterSheet(
         isError = tagRegexError,
       )
       Spacer(modifier = Modifier.height(16.dp))
-      val uidSupported by LogcatSession.uidOptionSupported.collectAsState()
-      if (uidSupported == true) {
+      val logcatCapabilities by LogcatSession.capabilities.collectAsState()
+      if (logcatCapabilities?.uidSupported == true) {
         val packageNameRegexEnabled = RegexEnabledFilterType.PackageName in regexEnabledTypes
         InputField(
           modifier = Modifier
