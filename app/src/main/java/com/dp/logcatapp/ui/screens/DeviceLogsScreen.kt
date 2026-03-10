@@ -116,6 +116,7 @@ import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.dp.logcat.Filter
 import com.dp.logcat.Log
@@ -267,6 +268,7 @@ fun DeviceLogsScreen(
   var logcatSessionStatus by remember {
     mutableStateOf<LogcatSessionStatusType>(LogcatSessionStatusType.Starting)
   }
+  val lifecycleOwner = LocalLifecycleOwner.current
   var showDisplayOptions by rememberSaveable { mutableStateOf(false) }
 
   fun closeSearchBar() {
@@ -296,7 +298,7 @@ fun DeviceLogsScreen(
   val logcatService = viewModel.logcatService
   if (logcatService != null) {
     val db = remember(context) { LogcatReaderDatabase.getInstance(context) }
-    LaunchedEffect(logcatService, viewModel) {
+    LaunchedEffect(logcatService, viewModel, lifecycleOwner) {
       logcatService.logcatSessionStatus
         .filterNotNull()
         .collectLatest { status ->
@@ -377,12 +379,16 @@ fun DeviceLogsScreen(
                         }
 
                         logcatSessionStatus = LogcatSessionStatusType.Started
+
                         restartLogCollectionTrigger.receiveAsFlow()
                           .onStart { emit(Unit) }
                           .collectLatest {
-                            logsState.clear()
-                            logcatSession.logs.collect { logs ->
-                              logsState += logs
+                            lifecycleOwner.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+                              logsState.clear()
+                              logcatSession.logs
+                                .collect { logs ->
+                                  logsState += logs
+                                }
                             }
                           }
                       }
