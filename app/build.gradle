@@ -20,7 +20,7 @@ android {
     versionName "2.4.1"
     testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     vectorDrawables.useSupportLibrary = true
-    multiDexEnabled = true
+
   }
 
   buildFeatures {
@@ -68,7 +68,7 @@ android {
       signingConfig = signingConfigs.release
       minifyEnabled true
       shrinkResources = true
-      proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+      proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
     }
   }
   namespace = 'com.dp.logcatapp'
@@ -89,7 +89,7 @@ dependencies {
   implementation libs.room.ktx
   implementation libs.documentfile
   implementation libs.kotlinx.coroutines.android
-  implementation libs.multidex
+
   ksp libs.room.compiler
   implementation(libs.coil.compose)
   implementation libs.core.splashscreen
