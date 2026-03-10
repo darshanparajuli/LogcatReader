@@ -2,6 +2,7 @@
 <resources>
   <string name="app_name">Logcat Reader</string>
   <string name="device_logs">Журналы</string>
+  <string name="buffer_full">буфер заполнен</string>
   <string name="saved_logs">Сохранённые журналы</string>
   <string name="saved_logs_action">Сохранённые журналы</string>
   <string name="settings">Настройки</string>
@@ -129,6 +130,7 @@
   <string name="unsupported_source">Неподдерживаемый источник</string>
   <string name="version_fmt">Версия %s</string>
   <string name="unable_to_start_logcat_error_msg">Невозможно запустить процесс logcat и прочитать журналы</string>
+  <string name="starting_logcat_session">Запуск сеанса logcat</string>
   <string name="compact_view">Компактный вид</string>
   <string name="name">Имя</string>
   <string name="timestamp">Время</string>

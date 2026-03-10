@@ -2,6 +2,7 @@
 <resources>
   <string name="app_name">Logcat Reader</string>
   <string name="device_logs">设备日志</string>
+  <string name="buffer_full">缓冲区已满</string>
   <string name="saved_logs">已保存日志</string>
   <string name="saved_logs_action">已保存日志</string>
   <string name="settings">设置</string>
@@ -124,6 +125,7 @@
   <string name="unsupported_source">不支持的来源</string>
   <string name="version_fmt">" 版本 %s"</string>
   <string name="unable_to_start_logcat_error_msg">无法启动 logcat 进程并读取日志</string>
+  <string name="starting_logcat_session">正在启动 logcat 会话</string>
   <string name="compact_view">紧凑视图</string>
   <string name="sort_by">排序方式</string>
   <string name="name">姓名</string>
