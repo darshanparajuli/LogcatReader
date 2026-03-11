@@ -117,6 +117,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.dp.logcat.Filter
 import com.dp.logcat.Log
@@ -168,7 +169,9 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted.Companion.Eagerly
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChangedBy
@@ -178,7 +181,6 @@ import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
@@ -295,121 +297,121 @@ fun DeviceLogsScreen(
 
   val restartLogCollectionTrigger = remember { Channel<Unit>(capacity = 1) }
 
-  val logcatService = viewModel.logcatService
-  if (logcatService != null) {
-    val db = remember(context) { LogcatReaderDatabase.getInstance(context) }
-    LaunchedEffect(logcatService, viewModel, lifecycleOwner) {
-      logcatService.logcatSessionStatus
-        .filterNotNull()
-        .collectLatest { status ->
-          if (status is LogcatSessionStatus.Started) {
-            coroutineScope {
-              val logcatSession = status.session
-              logcatPaused = logcatSession.isPaused
+  val db = remember(context) { LogcatReaderDatabase.getInstance(context) }
+  LaunchedEffect(viewModel, lifecycleOwner) {
+    viewModel.logcatSessionStatus
+      .collectLatest { status ->
+        when (status) {
+          is LogcatSessionStatus.Started -> coroutineScope {
+            val logcatSession = status.session
+            logcatPaused = logcatSession.isPaused
 
-              // Listen for changes to `logcatPaused` and pause/resume LogcatSession accordingly.
-              launch {
-                snapshotFlow { logcatPaused }
-                  .collect {
-                    logcatSession.isPaused = it
-                  }
-              }
+            // Listen for changes to `logcatPaused` and pause/resume LogcatSession accordingly.
+            launch {
+              snapshotFlow { logcatPaused }
+                .collect {
+                  logcatSession.isPaused = it
+                }
+            }
 
-              if (logcatSession.isRecording) {
-                viewModel.recordStatus = RecordStatus.RecordingInProgress
-              }
+            if (logcatSession.isRecording) {
+              viewModel.recordStatus = RecordStatus.RecordingInProgress
+            }
 
-              launch {
-                updatedStopRecordingSignal.collect {
-                  if (viewModel.recordStatus == RecordStatus.RecordingInProgress) {
-                    if (logcatSession.isRecording) {
-                      viewModel.recordStatus = RecordStatus.SaveRecordedLogs
-                    } else {
-                      viewModel.recordStatus = RecordStatus.Idle
-                    }
+            launch {
+              updatedStopRecordingSignal.collect {
+                if (viewModel.recordStatus == RecordStatus.RecordingInProgress) {
+                  if (logcatSession.isRecording) {
+                    viewModel.recordStatus = RecordStatus.SaveRecordedLogs
+                  } else {
+                    viewModel.recordStatus = RecordStatus.Idle
                   }
                 }
               }
+            }
 
-              snapshotFlow { filterOnSearch }
-                .collectLatest { filterOnSearch ->
-                  db.filterDao().filters()
-                    .map { filters -> filters.filter { it.enabled } }
-                    .collectLatest { filters ->
-                      appliedFilters = filters.isNotEmpty()
+            snapshotFlow { filterOnSearch }
+              .collectLatest { filterOnSearch ->
+                db.filterDao().filters()
+                  .map { filters -> filters.filter { it.enabled } }
+                  .collectLatest { filters ->
+                    appliedFilters = filters.isNotEmpty()
 
-                      val infoMap = if (LogcatSession.logcatCapabilities().uidSupported) {
-                        snapshotFlow { appInfoMap }.filterNotNull().first()
-                      } else {
-                        null
+                    val infoMap = if (LogcatSession.logcatCapabilities().uidSupported) {
+                      snapshotFlow { appInfoMap }.filterNotNull().first()
+                    } else {
+                      null
+                    }
+
+                    val excludeFilters = filters.filter { it.exclude }
+                      .map { filterInfo ->
+                        LogFilter(
+                          filterInfo = filterInfo,
+                          appInfoMap = infoMap,
+                        )
                       }
 
-                      val excludeFilters = filters.filter { it.exclude }
+                    suspend fun collectLogs(searchQuery: String? = null) {
+                      val includeFilters = filters.filter { !it.exclude }
                         .map { filterInfo ->
                           LogFilter(
                             filterInfo = filterInfo,
                             appInfoMap = infoMap,
                           )
                         }
-
-                      suspend fun collectLogs(searchQuery: String? = null) {
-                        val includeFilters = filters.filter { !it.exclude }
-                          .map { filterInfo ->
-                            LogFilter(
-                              filterInfo = filterInfo,
-                              appInfoMap = infoMap,
-                            )
-                          }
-                          .toMutableList<Filter>()
-                        if (searchQuery != null) {
-                          includeFilters += SearchFilter(
-                            query = searchQuery,
-                            appInfoMap = infoMap,
-                          )
-                        }
-                        withContext(Dispatchers.Default) {
-                          logcatSession.setFilters(
-                            filters = includeFilters,
-                            exclusion = false
-                          )
-                          logcatSession.setFilters(
-                            filters = excludeFilters,
-                            exclusion = true
-                          )
-                        }
-
-                        logcatSessionStatus = LogcatSessionStatusType.Started
-
-                        restartLogCollectionTrigger.receiveAsFlow()
-                          .onStart { emit(Unit) }
-                          .collectLatest {
-                            lifecycleOwner.repeatOnLifecycle(Lifecycle.State.RESUMED) {
-                              logsState.clear()
-                              logcatSession.logs
-                                .collect { logs ->
-                                  logsState += logs
-                                }
-                            }
-                          }
+                        .toMutableList<Filter>()
+                      if (searchQuery != null) {
+                        includeFilters += SearchFilter(
+                          query = searchQuery,
+                          appInfoMap = infoMap,
+                        )
+                      }
+                      withContext(Dispatchers.Default) {
+                        logcatSession.setFilters(
+                          filters = includeFilters,
+                          exclusion = false
+                        )
+                        logcatSession.setFilters(
+                          filters = excludeFilters,
+                          exclusion = true
+                        )
                       }
 
-                      if (filterOnSearch) {
-                        snapshotFlow { searchQuery }
-                          .collectLatest { searchQuery ->
-                            delay(100)
-                            collectLogs(searchQuery.takeIf { it.isNotEmpty() })
+                      logcatSessionStatus = LogcatSessionStatusType.Started
+
+                      restartLogCollectionTrigger.receiveAsFlow()
+                        .onStart { emit(Unit) }
+                        .collectLatest {
+                          lifecycleOwner.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+                            logsState.clear()
+                            logcatSession.logs
+                              .collect { logs ->
+                                logsState += logs
+                              }
                           }
-                      } else {
-                        collectLogs()
-                      }
+                        }
                     }
-                }
-            }
-          } else {
+
+                    if (filterOnSearch) {
+                      snapshotFlow { searchQuery }
+                        .collectLatest { searchQuery ->
+                          delay(100)
+                          collectLogs(searchQuery.takeIf { it.isNotEmpty() })
+                        }
+                    } else {
+                      collectLogs()
+                    }
+                  }
+              }
+          }
+          LogcatSessionStatus.FailedToStart -> {
             logcatSessionStatus = LogcatSessionStatusType.FailedToStart
           }
+          null -> {
+            // Do nothing.
+          }
         }
-    }
+      }
   }
 
   Scaffold(
@@ -419,29 +421,23 @@ fun DeviceLogsScreen(
       val startedRecordingMessage = stringResource(R.string.started_recording)
       val saveFailedMessage = stringResource(R.string.failed_to_save_logs)
 
-      if (logcatService != null) {
-        LaunchedEffect(logcatService, viewModel) {
-          snapshotFlow { viewModel.recordStatus }
-            .map { it == RecordStatus.RecordingInProgress }
-            .collect { isRecording ->
-              logcatService.updateNotification(showStopRecording = isRecording)
-            }
-        }
+      LaunchedEffect(viewModel) {
+        snapshotFlow { viewModel.recordStatus }
+          .map { it == RecordStatus.RecordingInProgress }
+          .collect { isRecording ->
+            viewModel.updateNotification(showStopRecording = isRecording)
+          }
       }
 
       val errorText = stringResource(R.string.error)
-      LaunchedEffect(logcatService, viewModel, context) {
+      LaunchedEffect(viewModel, context) {
         var lastShownSnackBar: Job? = null
         snapshotFlow { viewModel.recordStatus }
           .collect { status ->
             when (status) {
               RecordStatus.Idle -> Unit
               RecordStatus.RecordingInProgress -> {
-                val logcatSession = snapshotFlow { logcatService }.filterNotNull()
-                  .mapNotNull { it.logcatSessionStatus.filterNotNull().first() }
-                  .filterIsInstance<LogcatSessionStatus.Started>()
-                  .map { it.session }
-                  .first()
+                val logcatSession = viewModel.awaitLogcatSession()
 
                 if (!logcatSession.isRecording) {
                   val recordingFileInfo = createFileToStartRecording(context)
@@ -474,11 +470,7 @@ fun DeviceLogsScreen(
                 }
               }
               RecordStatus.SaveRecordedLogs -> {
-                val logcatSession = snapshotFlow { logcatService }.filterNotNull()
-                  .mapNotNull { it.logcatSessionStatus.filterNotNull().first() }
-                  .filterIsInstance<LogcatSessionStatus.Started>()
-                  .map { it.session }
-                  .first()
+                val logcatSession = viewModel.awaitLogcatSession()
                 val info = withContext(Dispatchers.IO) { logcatSession.stopRecording() }
 
                 if (info != null) {
@@ -523,14 +515,13 @@ fun DeviceLogsScreen(
         filtered = appliedFilters,
         isPaused = logcatPaused,
         pauseEnabled = viewModel.recordStatus.isIdle() && logcatSessionStarted,
-        recordEnabled = !logcatPaused && logcatService != null &&
+        recordEnabled = !logcatPaused &&
           viewModel.recordStatus != RecordStatus.SaveRecordedLogs && logcatSessionStarted,
         recordStatus = viewModel.recordStatus,
         showDropDownMenu = showDropDownMenu,
-        saveEnabled = logcatService != null && logcatSessionStarted
-          && logsState.isNotEmpty(),
+        saveEnabled = logcatSessionStarted && logsState.isNotEmpty(),
         saveLogsInProgress = saveLogsInProgress,
-        restartLogcatEnabled = logcatService != null && viewModel.recordStatus.isIdle(),
+        restartLogcatEnabled = viewModel.recordStatus.isIdle(),
         onClickSearch = {
           showSearchBar = true
         },
@@ -556,11 +547,7 @@ fun DeviceLogsScreen(
         },
         onClickClear = {
           coroutineScope.launch {
-            val logcatSession = snapshotFlow { logcatService }.filterNotNull()
-              .mapNotNull { it.logcatSessionStatus.filterNotNull().first() }
-              .filterIsInstance<LogcatSessionStatus.Started>()
-              .map { it.session }
-              .first()
+            val logcatSession = viewModel.awaitLogcatSession()
             withContext(Dispatchers.Default) { logcatSession.clearLogs() }
             restartLogCollectionTrigger.send(Unit)
           }
@@ -605,9 +592,8 @@ fun DeviceLogsScreen(
         },
         onClickRestartLogcat = {
           showDropDownMenu = false
-          if (logcatService != null) {
+          if (viewModel.restartLogcatSession()) {
             logcatSessionStatus = LogcatSessionStatusType.Starting
-            logcatService.restartLogcatSession()
           }
         },
         onClickSettings = {
@@ -1950,10 +1936,11 @@ class DeviceLogsViewModel(
   private val context: Context
     get() = getApplication<LogcatApp>().applicationContext
 
-  private val _logcatService = mutableStateOf<LogcatService?>(null)
-  val logcatService by _logcatService
+  private val logcatService = MutableStateFlow<LogcatService?>(null)
+  private val _logcatSessionStatus = MutableStateFlow<LogcatSessionStatus?>(null)
+  val logcatSessionStatus = _logcatSessionStatus.asStateFlow()
 
-  var recordStatus by mutableStateOf<RecordStatus>(RecordStatus.Idle)
+  var recordStatus by mutableStateOf(RecordStatus.Idle)
   var savedLogsSheetState by mutableStateOf<SavedLogsBottomSheetState>(
     SavedLogsBottomSheetState.Hide
   )
@@ -1966,21 +1953,55 @@ class DeviceLogsViewModel(
       service: IBinder,
     ) {
       Logger.debug(TAG, "LogcatService - onServiceConnected")
-      _logcatService.value = service.getService()
+      logcatService.value = service.getService()
     }
 
     override fun onServiceDisconnected(name: ComponentName) {
       Logger.debug(TAG, "LogcatService - onServiceDisconnected")
-      _logcatService.value = null
+      logcatService.value = null
     }
   }
 
   init {
+    viewModelScope.launch { awaitLogcatSessionStatus() }
     application.bindService(
       Intent(application, LogcatService::class.java),
       serviceConnection,
       Context.BIND_ABOVE_CLIENT,
     )
+  }
+
+  private suspend fun awaitLogcatSessionStatus() {
+    logcatService
+      .collectLatest { service ->
+        if (service != null) {
+          service.logcatSessionStatus
+            .filterNotNull()
+            .collectLatest { status ->
+              _logcatSessionStatus.value = status
+            }
+        } else {
+          _logcatSessionStatus.value = null
+        }
+      }
+  }
+
+  fun updateNotification(showStopRecording: Boolean) {
+    logcatService.value?.updateNotification(showStopRecording)
+  }
+
+  suspend fun awaitLogcatSession(): LogcatSession {
+    return _logcatSessionStatus.filterNotNull()
+      .filterIsInstance<LogcatSessionStatus.Started>()
+      .map { it.session }
+      .first()
+  }
+
+  fun restartLogcatSession(): Boolean {
+    return logcatService.value?.let { service ->
+      service.restartLogcatSession()
+      true
+    } ?: false
   }
 
   override fun onCleared() {
