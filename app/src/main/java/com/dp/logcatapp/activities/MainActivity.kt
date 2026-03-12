@@ -1,7 +1,6 @@
 package com.dp.logcatapp.activities
 
 import android.Manifest
-import android.app.ComponentCaller
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
@@ -82,7 +81,7 @@ class MainActivity : BaseActivity() {
     )
   }
 
-  override fun onNewIntent(intent: Intent, caller: ComponentCaller) {
+  override fun onNewIntent(intent: Intent) {
     super.onNewIntent(intent)
     if (handleExitNotificationAction(intent)) {
       return
