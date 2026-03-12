@@ -1937,6 +1937,7 @@ class DeviceLogsViewModel(
   )
   var showCopyToClipboardSheet by mutableStateOf<Log?>(null)
   var showLongClickOptionsSheet by mutableStateOf<Log?>(null)
+  private var logcatSessionStatusJob: Job? = null
 
   private val serviceConnection = object : ServiceConnection {
     override fun onServiceConnected(
@@ -1954,12 +1955,30 @@ class DeviceLogsViewModel(
   }
 
   init {
-    viewModelScope.launch { awaitLogcatSessionStatus() }
-    application.bindService(
-      Intent(application, LogcatService::class.java),
+    bindLogcatService()
+  }
+
+  private fun bindLogcatService() {
+    Logger.debug(TAG, "LogcatService - bind service: [${this}]")
+    logcatSessionStatusJob?.cancel()
+    logcatSessionStatusJob = viewModelScope.launch {
+      awaitLogcatSessionStatus()
+    }
+    context.bindService(
+      Intent(context, LogcatService::class.java),
       serviceConnection,
       Context.BIND_ABOVE_CLIENT,
     )
+  }
+
+  private fun stopLogcatService() {
+    // Stop the service if recording is not active.
+    if (recordStatus.isIdle()) {
+      Logger.debug(TAG, "LogcatService - stop service")
+      context.stopService(Intent(context, LogcatService::class.java))
+    } else {
+      Logger.debug(TAG, "LogcatService - recording is active, not stopping service")
+    }
   }
 
   private suspend fun awaitLogcatSessionStatus() {
@@ -1996,10 +2015,6 @@ class DeviceLogsViewModel(
   }
 
   override fun onCleared() {
-    // Stop the service if recording is not active.
-    if (recordStatus.isIdle()) {
-      Logger.debug(TAG, "LogcatService - stopping service")
-      context.stopService(Intent(context, LogcatService::class.java))
-    }
+    stopLogcatService()
   }
 }
