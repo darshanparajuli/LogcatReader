@@ -128,12 +128,6 @@ class LogcatService : BaseService() {
       FLAG_UPDATE_CURRENT or FLAG_IMMUTABLE
     )
 
-    val exitAction = NotificationCompat.Action.Builder(
-      R.drawable.ic_clear_white_24dp,
-      getString(R.string.exit), exitPendingIntent
-    )
-      .build()
-
     val builder = NotificationCompat.Builder(this, NOTIFICATION_CHANNEL)
       .setSmallIcon(R.drawable.ic_perm_device_information_white_24dp)
       .setColor(ContextCompat.getColor(applicationContext, R.color.color_primary))
@@ -145,7 +139,6 @@ class LogcatService : BaseService() {
       .setPriority(NotificationCompat.PRIORITY_HIGH)
       .setCategory(NotificationCompat.CATEGORY_SERVICE)
       .setAutoCancel(false)
-      .addAction(exitAction)
 
     if (addStopRecordingAction) {
       val stopRecordingIntent = Intent(this, MainActivity::class.java)
@@ -163,6 +156,13 @@ class LogcatService : BaseService() {
         .build()
 
       builder.addAction(stopRecordingAction)
+    } else {
+      val exitAction = NotificationCompat.Action.Builder(
+        R.drawable.ic_clear_white_24dp,
+        getString(R.string.exit), exitPendingIntent
+      )
+        .build()
+      builder.addAction(exitAction)
     }
 
     builder.setLargeIcon(BitmapFactory.decodeResource(resources, R.mipmap.ic_launcher))
