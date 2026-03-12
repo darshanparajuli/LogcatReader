@@ -205,6 +205,7 @@ private const val ENABLED_LOG_ITEMS_KEY = "toggleable_log_items_pref_key"
 fun DeviceLogsScreen(
   modifier: Modifier,
   stopRecordingSignal: Flow<Unit>,
+  onRecordingStatusChanged: (isRecording: Boolean) -> Unit,
   viewModel: DeviceLogsViewModel = viewModel(),
 ) {
   val context = LocalContext.current
@@ -298,7 +299,7 @@ fun DeviceLogsScreen(
   val restartLogCollectionTrigger = remember { Channel<Unit>(capacity = 1) }
 
   val db = remember(context) { LogcatReaderDatabase.getInstance(context) }
-  LaunchedEffect(viewModel, lifecycleOwner) {
+  LaunchedEffect(viewModel, db, lifecycleOwner) {
     viewModel.logcatSessionStatus
       .collectLatest { status ->
         when (status) {
@@ -421,10 +422,12 @@ fun DeviceLogsScreen(
       val startedRecordingMessage = stringResource(R.string.started_recording)
       val saveFailedMessage = stringResource(R.string.failed_to_save_logs)
 
+      val updatedOnRecordingStatusChanged by rememberUpdatedState(onRecordingStatusChanged)
       LaunchedEffect(viewModel) {
         snapshotFlow { viewModel.recordStatus }
           .map { it == RecordStatus.RecordingInProgress }
           .collect { isRecording ->
+            updatedOnRecordingStatusChanged(isRecording)
             viewModel.updateNotification(showStopRecording = isRecording)
           }
       }
@@ -1937,7 +1940,6 @@ class DeviceLogsViewModel(
   )
   var showCopyToClipboardSheet by mutableStateOf<Log?>(null)
   var showLongClickOptionsSheet by mutableStateOf<Log?>(null)
-  private var logcatSessionStatusJob: Job? = null
 
   private val serviceConnection = object : ServiceConnection {
     override fun onServiceConnected(
@@ -1955,15 +1957,18 @@ class DeviceLogsViewModel(
   }
 
   init {
-    bindLogcatService()
+    bindAndWatchLogcatService()
+  }
+
+  private fun bindAndWatchLogcatService() {
+    viewModelScope.launch {
+      bindLogcatService()
+      watchLogcatService()
+    }
   }
 
   private fun bindLogcatService() {
-    Logger.debug(TAG, "LogcatService - bind service: [${this}]")
-    logcatSessionStatusJob?.cancel()
-    logcatSessionStatusJob = viewModelScope.launch {
-      awaitLogcatSessionStatus()
-    }
+    Logger.debug(TAG, "LogcatService - bind service")
     context.bindService(
       Intent(context, LogcatService::class.java),
       serviceConnection,
@@ -1971,17 +1976,12 @@ class DeviceLogsViewModel(
     )
   }
 
-  private fun stopLogcatService() {
-    // Stop the service if recording is not active.
-    if (recordStatus.isIdle()) {
-      Logger.debug(TAG, "LogcatService - stop service")
-      context.stopService(Intent(context, LogcatService::class.java))
-    } else {
-      Logger.debug(TAG, "LogcatService - recording is active, not stopping service")
-    }
+  private fun unbindLogcatService() {
+    Logger.debug(TAG, "LogcatService - unbind service")
+    context.unbindService(serviceConnection)
   }
 
-  private suspend fun awaitLogcatSessionStatus() {
+  private suspend fun watchLogcatService() {
     logcatService
       .collectLatest { service ->
         if (service != null) {
@@ -2015,6 +2015,6 @@ class DeviceLogsViewModel(
   }
 
   override fun onCleared() {
-    stopLogcatService()
+    unbindLogcatService()
   }
 }

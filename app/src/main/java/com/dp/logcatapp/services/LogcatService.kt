@@ -6,10 +6,11 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.PendingIntent.FLAG_IMMUTABLE
 import android.app.PendingIntent.FLAG_UPDATE_CURRENT
+import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.graphics.BitmapFactory
-import android.os.Build.VERSION
+import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
@@ -36,11 +37,6 @@ import java.util.Locale
 
 class LogcatService : BaseService() {
 
-  companion object {
-    private const val NOTIFICATION_CHANNEL = "logcat_channel_01"
-    private const val NOTIFICATION_ID = 1
-  }
-
   sealed interface LogcatSessionStatus {
     data class Started(val session: LogcatSession) : LogcatSessionStatus
     data object FailedToStart : LogcatSessionStatus
@@ -56,7 +52,7 @@ class LogcatService : BaseService() {
 
   override fun onCreate() {
     super.onCreate()
-    if (VERSION.SDK_INT >= 26) {
+    if (Build.VERSION.SDK_INT >= 26) {
       createNotificationChannel()
     }
 
@@ -199,7 +195,7 @@ class LogcatService : BaseService() {
       null
     }
 
-    if (VERSION.SDK_INT >= 26) {
+    if (Build.VERSION.SDK_INT >= 26) {
       deleteNotificationChannel()
     }
   }
@@ -258,5 +254,20 @@ class LogcatService : BaseService() {
       buffers = logcatBuffers,
       pollIntervalMs = pollInterval.toLong()
     )
+  }
+
+  companion object {
+    private const val NOTIFICATION_CHANNEL = "logcat_channel_01"
+    private const val NOTIFICATION_ID = 1
+
+    fun start(context: Context) {
+      val intent = Intent(context, LogcatService::class.java)
+      ContextCompat.startForegroundService(context, intent)
+    }
+
+    fun stop(context: Context) {
+      val intent = Intent(context, LogcatService::class.java)
+      context.stopService(intent)
+    }
   }
 }

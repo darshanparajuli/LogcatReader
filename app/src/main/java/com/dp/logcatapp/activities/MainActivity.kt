@@ -27,6 +27,7 @@ class MainActivity : BaseActivity() {
     capacity = 1,
     onBufferOverflow = DROP_OLDEST,
   )
+  private var isRecording = false
 
   override fun onCreate(savedInstanceState: Bundle?) {
     installSplashScreen()
@@ -41,21 +42,16 @@ class MainActivity : BaseActivity() {
       stopRecordingSignal.trySend(Unit)
     }
 
+    serviceStarterRefHashcode = System.identityHashCode(this)
     if (Build.VERSION.SDK_INT >= 33) {
       registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         if (!granted) {
           // TODO: show help text regarding why we need notifications permission.
         }
-        val logcatServiceIntent = Intent(this, LogcatService::class.java)
-        startForegroundService(logcatServiceIntent)
+        LogcatService.start(this@MainActivity)
       }.launch(Manifest.permission.POST_NOTIFICATIONS)
     } else {
-      val logcatServiceIntent = Intent(this, LogcatService::class.java)
-      if (Build.VERSION.SDK_INT >= 26) {
-        startForegroundService(logcatServiceIntent)
-      } else {
-        startService(logcatServiceIntent)
-      }
+      LogcatService.start(this@MainActivity)
     }
 
     setContent {
@@ -65,6 +61,7 @@ class MainActivity : BaseActivity() {
       LogcatReaderTheme {
         DeviceLogsScreen(
           modifier = Modifier.fillMaxSize(),
+          onRecordingStatusChanged = { isRecording = it },
           stopRecordingSignal = stopRecordingSignalFlow,
         )
       }
@@ -106,15 +103,34 @@ class MainActivity : BaseActivity() {
   private fun handleExitNotificationAction(intent: Intent?): Boolean =
     if (intent.shouldExit()) {
       // Stop logcat service first.
-      stopService(Intent(this, LogcatService::class.java))
+      LogcatService.stop(this)
       ActivityCompat.finishAfterTransition(this)
       true
     } else {
       false
     }
 
+  override fun onStop() {
+    super.onStop()
+    if (isFinishing) {
+      // Do not stop the service if recording is active!
+      if (!isRecording) {
+        // In cases where the app is closed and opened really quickly, `onStop` gets called on the
+        // finishing activity _after_ current activity's `onCreate` function, which leads to
+        // LogcatService ultimately getting stopped. To work around this, we check to see if the
+        // stopping activity is the same as the one that started the service, and stop the service
+        // accordingly.
+        if (serviceStarterRefHashcode == System.identityHashCode(this)) {
+          LogcatService.stop(this)
+        }
+      }
+    }
+  }
+
   companion object {
     const val EXIT_EXTRA = "exit_extra"
     const val STOP_RECORDING_EXTRA = "stop_recording_extra"
+
+    private var serviceStarterRefHashcode = -1
   }
 }

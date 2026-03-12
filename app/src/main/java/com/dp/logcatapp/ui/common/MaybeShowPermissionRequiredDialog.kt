@@ -4,7 +4,6 @@ import android.Manifest
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
-import android.content.Intent
 import android.os.Process
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
@@ -154,7 +153,7 @@ fun MaybeShowPermissionRequiredDialog(
       primaryButton = DialogButton(
         text = stringResource(android.R.string.ok),
         onClick = {
-          context.stopService(Intent(context, LogcatService::class.java))
+          LogcatService.stop(context)
           Process.killProcess(Process.myPid())
         }
       )
