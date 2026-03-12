@@ -90,7 +90,7 @@ class LogcatService : BaseService() {
     if (defaultBuffers.isNotEmpty() && LogcatUtil.AVAILABLE_BUFFERS.isNotEmpty()) {
       val buffers = getDefaultSharedPreferences()
         .getStringSet(SettingsPrefKeys.Logcat.KEY_BUFFERS, emptySet())
-      if (buffers == null || buffers.isEmpty()) {
+      if (buffers.isNullOrEmpty()) {
         getDefaultSharedPreferences().edit {
           putStringSet(SettingsPrefKeys.Logcat.KEY_BUFFERS, defaultBuffers)
         }

@@ -1782,10 +1782,7 @@ private class LogFilter(
 
   private fun inDateRange(log: Log): Boolean {
 
-    val dateRange = filterInfo.dateRange
-    if (dateRange == null) {
-      return true
-    }
+    val dateRange = filterInfo.dateRange ?: return true
 
     val date = log.parseDate() ?: run {
       // Error parsing date time, let it through anyway?
@@ -1852,15 +1849,9 @@ private class LogFilter(
       return true
     }
 
-    val packageName = filterInfo.packageName
-    if (packageName == null) {
-      return true
-    }
+    val packageName = filterInfo.packageName ?: return true
 
-    val uid = log.uid
-    if (uid == null) {
-      return false
-    }
+    val uid = log.uid ?: return false
 
     if (!uid.isNum) {
       if (packageNameRegex != null) {
