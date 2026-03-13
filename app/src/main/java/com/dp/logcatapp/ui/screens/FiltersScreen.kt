@@ -687,10 +687,8 @@ private fun AddOrEditFilterSheet(
   initialRegexEnabledTypes: Set<RegexEnabledFilterType> = emptySet(),
 ) {
   var selectedLogLevels by rememberSaveable {
-    mutableStateOf<Map<LogLevel, Boolean>>(
-      LogLevel.entries.filter { it in initialLogLevels }.associate { level ->
-        Pair(level, true)
-      }
+    mutableStateOf(
+      LogLevel.entries.filter { it in initialLogLevels }.associateWith { true }
     )
   }
 

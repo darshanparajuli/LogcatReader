@@ -908,7 +908,7 @@ private fun MultiSelectDialog(
   )
 }
 
-private val settingRows = listOfNotNull<Preference>(
+private val settingRows = listOfNotNull(
   SectionName(R.string.pref_cat_general),
   PreferenceRow(PreferenceType.KeepScreenOn),
   PreferenceRow(PreferenceType.FilterOnSearch),
