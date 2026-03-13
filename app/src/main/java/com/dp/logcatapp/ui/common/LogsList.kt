@@ -1,9 +1,16 @@
 package com.dp.logcatapp.ui.common
 
 import androidx.annotation.StringRes
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.ContentTransform
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideIn
+import androidx.compose.animation.slideOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.ScrollIndicatorState
 import androidx.compose.foundation.background
@@ -59,6 +66,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.dp.logcat.Log
@@ -195,62 +203,84 @@ fun LogsList(
 
       if (listStyle == LogsListStyle.Compact) {
         var expanded by remember { mutableStateOf(false) }
-        LogItemCompact(
+        AnimatedContent(
           modifier = Modifier
-            .fillMaxWidth()
-            .combinedClickable(
-              onLongClick = { onLongClick?.invoke(index) },
-              onClick = { expanded = !expanded },
-            )
-            .windowInsetsPadding(
-              safeDrawingInsetsHorizontal
-            )
-            .wrapContentHeight(),
-          priority = item.priority,
-          tag = if (expanded || ToggleableLogItem.Tag in enabledLogItems) {
-            maybeHighlightSearchHit(
-              target = item.tag,
-              searchHitKey = SearchHitKey(logId = item.id, component = LogComponent.Tag),
-            )
-          } else null,
-          message = maybeHighlightSearchHit(
-            target = item.msg,
-            searchHitKey = SearchHitKey(logId = item.id, component = LogComponent.Message),
-          ),
-          packageName = if (ToggleableLogItem.PackageName in enabledLogItems) {
-            item.uid?.let { uid ->
-              val packageName = if (uid.isNum) {
-                appInfoMap[uid.value]?.packageName
-              } else {
-                uid.value
-              }
-              packageName?.let {
-                maybeHighlightSearchHit(
-                  target = it,
-                  searchHitKey = SearchHitKey(
-                    logId = item.id,
-                    component = LogComponent.PackageName
-                  ),
-                )
-              }
+            .fillMaxWidth(),
+          targetState = expanded,
+          transitionSpec = {
+            if (targetState) {
+              // expanded in, collapsed out
+              slideIn { IntOffset(x = 0, y = -it.height) } + fadeIn() togetherWith
+                fadeOut()
+            } else {
+              // collapsed in, expanded out
+              ContentTransform(
+                targetContentEnter = fadeIn(),
+                initialContentExit = slideOut { IntOffset(x = 0, y = -it.height) } + fadeOut(),
+                // Render expanded one on top.
+                targetContentZIndex = -1f
+              )
             }
-          } else null,
-          date = item.date,
-          time = item.time,
-          pid = item.pid,
-          tid = item.tid,
-          priorityColor = when (item.priority) {
-            LogPriority.ASSERT -> LogPriorityColors.priorityAssert
-            LogPriority.DEBUG -> LogPriorityColors.priorityDebug
-            LogPriority.ERROR -> LogPriorityColors.priorityError
-            LogPriority.FATAL -> LogPriorityColors.priorityFatal
-            LogPriority.INFO -> LogPriorityColors.priorityInfo
-            LogPriority.VERBOSE -> LogPriorityColors.priorityVerbose
-            LogPriority.WARNING -> LogPriorityColors.priorityWarning
-            else -> LogPriorityColors.prioritySilent
-          },
-          expanded = expanded,
-        )
+          }
+        ) { targetExpandedState ->
+          LogItemCompact(
+            modifier = Modifier
+              .fillMaxWidth()
+              .background(color = MaterialTheme.colorScheme.background)
+              .combinedClickable(
+                onLongClick = { onLongClick?.invoke(index) },
+                onClick = { expanded = !expanded },
+              )
+              .windowInsetsPadding(
+                safeDrawingInsetsHorizontal
+              )
+              .wrapContentHeight(),
+            priority = item.priority,
+            tag = if (targetExpandedState || ToggleableLogItem.Tag in enabledLogItems) {
+              maybeHighlightSearchHit(
+                target = item.tag,
+                searchHitKey = SearchHitKey(logId = item.id, component = LogComponent.Tag),
+              )
+            } else null,
+            message = maybeHighlightSearchHit(
+              target = item.msg,
+              searchHitKey = SearchHitKey(logId = item.id, component = LogComponent.Message),
+            ),
+            packageName = if (ToggleableLogItem.PackageName in enabledLogItems) {
+              item.uid?.let { uid ->
+                val packageName = if (uid.isNum) {
+                  appInfoMap[uid.value]?.packageName
+                } else {
+                  uid.value
+                }
+                packageName?.let {
+                  maybeHighlightSearchHit(
+                    target = it,
+                    searchHitKey = SearchHitKey(
+                      logId = item.id,
+                      component = LogComponent.PackageName
+                    ),
+                  )
+                }
+              }
+            } else null,
+            date = item.date,
+            time = item.time,
+            pid = item.pid,
+            tid = item.tid,
+            priorityColor = when (item.priority) {
+              LogPriority.ASSERT -> LogPriorityColors.priorityAssert
+              LogPriority.DEBUG -> LogPriorityColors.priorityDebug
+              LogPriority.ERROR -> LogPriorityColors.priorityError
+              LogPriority.FATAL -> LogPriorityColors.priorityFatal
+              LogPriority.INFO -> LogPriorityColors.priorityInfo
+              LogPriority.VERBOSE -> LogPriorityColors.priorityVerbose
+              LogPriority.WARNING -> LogPriorityColors.priorityWarning
+              else -> LogPriorityColors.prioritySilent
+            },
+            expanded = targetExpandedState,
+          )
+        }
       } else {
         LogItem(
           modifier = Modifier
