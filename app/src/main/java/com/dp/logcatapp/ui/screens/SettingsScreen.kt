@@ -503,7 +503,7 @@ private fun PollInterval(
       Text(stringResource(R.string.pref_poll_interval_title))
     },
     supportingContent = {
-      Text("${preference} ms")
+      Text("$preference ms")
     },
   )
   if (showInputDialog) {
