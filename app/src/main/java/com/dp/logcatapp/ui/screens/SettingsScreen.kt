@@ -107,7 +107,6 @@ private const val PLAY_URL = "https://play.google.com/store/apps/details?id=%s"
 fun SettingsScreen(
   modifier: Modifier,
 ) {
-  val context = LocalContext.current
   Scaffold(
     modifier = modifier,
     contentWindowInsets = WindowInsets.safeDrawing.only(WindowInsetsSides.Vertical),
