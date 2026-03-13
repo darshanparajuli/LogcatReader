@@ -27,6 +27,7 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Checklist
 import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.ColorLens
+import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.Memory
 import androidx.compose.material.icons.filled.Poll
@@ -391,7 +392,7 @@ private fun FilterOnSearch(
         preference = !preference
       },
     leadingContent = {
-      Icon(Icons.Default.Visibility, contentDescription = null)
+      Icon(Icons.Default.FilterList, contentDescription = null)
     },
     headlineContent = {
       Text(stringResource(R.string.pref_general_filter_on_search))
