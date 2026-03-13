@@ -1185,8 +1185,8 @@ private fun PackageSelectorSheet(
   onSelected: (Set<String>) -> Unit,
   modifier: Modifier = Modifier,
   savingInProgress: Boolean = false,
-  viewModel: FiltersScreenViewModel = viewModel(),
 ) {
+  var selectedPackageNames by remember { mutableStateOf<Set<String>>(emptySet()) }
   ModalBottomSheet(
     modifier = modifier.statusBarsPadding(),
     sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
@@ -1196,7 +1196,7 @@ private fun PackageSelectorSheet(
     var searchQuery by rememberSaveable { mutableStateOf("") }
     var filteredApps by remember { mutableStateOf<List<AppInfo>>(emptyList()) }
 
-    LaunchedEffect(installedApps, viewModel) {
+    LaunchedEffect(installedApps) {
       snapshotFlow { searchQuery }
         .collect { query ->
           if (query.isEmpty()) {
@@ -1226,9 +1226,9 @@ private fun PackageSelectorSheet(
       )
       Button(
         onClick = {
-          onSelected(viewModel.selectedPackageNames)
+          onSelected(selectedPackageNames)
         },
-        enabled = viewModel.selectedPackageNames.isNotEmpty() && !savingInProgress,
+        enabled = selectedPackageNames.isNotEmpty() && !savingInProgress,
       ) {
         if (savingInProgress) {
           CircularProgressIndicator(
@@ -1268,10 +1268,10 @@ private fun PackageSelectorSheet(
           modifier = Modifier
             .fillMaxWidth()
             .clickable {
-              if (app.packageName in viewModel.selectedPackageNames) {
-                viewModel.selectedPackageNames -= app.packageName
+              if (app.packageName in selectedPackageNames) {
+                selectedPackageNames -= app.packageName
               } else {
-                viewModel.selectedPackageNames += app.packageName
+                selectedPackageNames += app.packageName
               }
             },
           overlineContent = if (app.isSystem) {
@@ -1296,7 +1296,7 @@ private fun PackageSelectorSheet(
           } else null,
           trailingContent = {
             Checkbox(
-              checked = app.packageName in viewModel.selectedPackageNames,
+              checked = app.packageName in selectedPackageNames,
               onCheckedChange = null,
             )
           },
@@ -1552,5 +1552,4 @@ data class PrepopulateFilterInfo(
 class FiltersScreenViewModel : ViewModel() {
   var selectedFilters by mutableStateOf<Set<FilterInfo>>(emptySet())
   var showEditFilterDialog by mutableStateOf<FilterInfo?>(null)
-  var selectedPackageNames by mutableStateOf<Set<String>>(emptySet())
 }
