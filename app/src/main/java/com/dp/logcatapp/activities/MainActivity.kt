@@ -1,11 +1,8 @@
 package com.dp.logcatapp.activities
 
-import android.Manifest
 import android.content.Intent
-import android.os.Build
 import android.os.Bundle
 import androidx.activity.compose.setContent
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -40,18 +37,6 @@ class MainActivity : BaseActivity() {
 
     if (intent.shouldStopRecording()) {
       stopRecordingSignal.trySend(Unit)
-    }
-
-    serviceStarterRefHashcode = System.identityHashCode(this)
-    if (Build.VERSION.SDK_INT >= 33) {
-      registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-        if (!granted) {
-          // TODO: show help text regarding why we need notifications permission.
-        }
-        LogcatService.start(this@MainActivity)
-      }.launch(Manifest.permission.POST_NOTIFICATIONS)
-    } else {
-      LogcatService.start(this@MainActivity)
     }
 
     setContent {
@@ -110,25 +95,8 @@ class MainActivity : BaseActivity() {
       false
     }
 
-  override fun onDestroy() {
-    super.onDestroy()
-    // Do not stop the service if recording is active!
-    if (!isRecording) {
-      // In cases where the app is closed and opened really quickly, `onDestroy` gets called on the
-      // finishing activity _after_ current activity's `onCreate` function, which leads to
-      // LogcatService ultimately getting stopped. To work around this, we check to see if the
-      // destroying activity is the same as the one that started the service, and stop the service
-      // accordingly.
-      if (serviceStarterRefHashcode == System.identityHashCode(this)) {
-        LogcatService.stop(this)
-      }
-    }
-  }
-
   companion object {
     const val EXIT_EXTRA = "exit_extra"
     const val STOP_RECORDING_EXTRA = "stop_recording_extra"
-
-    private var serviceStarterRefHashcode = -1
   }
 }

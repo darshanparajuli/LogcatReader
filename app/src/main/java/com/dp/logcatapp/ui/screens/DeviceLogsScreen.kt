@@ -1,14 +1,18 @@
 package com.dp.logcatapp.ui.screens
 
+import android.Manifest
 import android.app.Application
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
 import android.net.Uri
+import android.os.Build
 import android.os.IBinder
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.WorkerThread
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
@@ -242,6 +246,23 @@ fun DeviceLogsScreen(
 
   val logsState = remember {
     mutableFixedCircularBuffer<Log>(capacity = maxLogs)
+  }
+
+  val launcher = rememberLauncherForActivityResult(
+    contract = ActivityResultContracts.RequestPermission()
+  ) { granted ->
+    if (!granted) {
+      // TODO: show help text regarding why we need notifications permission.
+    }
+    viewModel.startService()
+  }
+
+  LaunchedEffect(viewModel, launcher) {
+    if (Build.VERSION.SDK_INT >= 33) {
+      launcher.launch(Manifest.permission.POST_NOTIFICATIONS)
+    } else {
+      viewModel.startService()
+    }
   }
 
   LaunchedEffect(Unit) {
@@ -1957,14 +1978,16 @@ class DeviceLogsViewModel(
   }
 
   init {
-    bindAndWatchLogcatService()
-  }
-
-  private fun bindAndWatchLogcatService() {
+    serviceBinderVmRefHashcode = System.identityHashCode(this)
     viewModelScope.launch {
-      bindLogcatService()
       watchLogcatService()
     }
+  }
+
+  fun startService() {
+    Logger.debug(TAG, "LogcatService - start service")
+    LogcatService.start(context)
+    bindLogcatService()
   }
 
   private fun bindLogcatService() {
@@ -2016,5 +2039,21 @@ class DeviceLogsViewModel(
 
   override fun onCleared() {
     unbindLogcatService()
+    // Do not stop the service if recording is active!
+    if (recordStatus.isIdle()) {
+      // In cases where the app is closed and opened really quickly, `onCleared` gets called on the
+      // outgoing instance of this VM _after_ new VM has been instantiated, which leads to
+      // LogcatService ultimately getting stopped. To work around this, we check to see if the
+      // clearing VM is the same as the one that bound to the service, and stop the service
+      // accordingly.
+      if (serviceBinderVmRefHashcode == System.identityHashCode(this)) {
+        Logger.debug(TAG, "LogcatService - stop service")
+        LogcatService.stop(context)
+      }
+    }
+  }
+
+  companion object {
+    private var serviceBinderVmRefHashcode = -1
   }
 }
