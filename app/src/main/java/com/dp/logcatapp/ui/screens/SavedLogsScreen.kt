@@ -224,7 +224,7 @@ fun SavedLogsScreen(
             viewModel.exportLog = viewModel.selected.first()
           },
           onClickShare = {
-            val fileInfo = requireNotNull(savedLogs).logFiles.first()
+            val fileInfo = viewModel.selected.first()
             ShareUtils.shareSavedLogs(
               context = context,
               uri = fileInfo.info.path.toUri(),
