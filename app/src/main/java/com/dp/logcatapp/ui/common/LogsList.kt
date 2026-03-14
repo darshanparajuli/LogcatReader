@@ -268,16 +268,7 @@ fun LogsList(
             time = item.time,
             pid = item.pid,
             tid = item.tid,
-            priorityColor = when (item.priority) {
-              LogPriority.ASSERT -> LogPriorityColors.priorityAssert
-              LogPriority.DEBUG -> LogPriorityColors.priorityDebug
-              LogPriority.ERROR -> LogPriorityColors.priorityError
-              LogPriority.FATAL -> LogPriorityColors.priorityFatal
-              LogPriority.INFO -> LogPriorityColors.priorityInfo
-              LogPriority.VERBOSE -> LogPriorityColors.priorityVerbose
-              LogPriority.WARNING -> LogPriorityColors.priorityWarning
-              else -> LogPriorityColors.prioritySilent
-            },
+            priorityColor = logPriorityToColor(item.priority),
             expanded = targetExpandedState,
           )
         }
@@ -346,19 +337,23 @@ fun LogsList(
               searchHitKey = SearchHitKey(logId = item.id, component = LogComponent.Tid),
             )
           },
-          priorityColor = when (item.priority) {
-            LogPriority.ASSERT -> LogPriorityColors.priorityAssert
-            LogPriority.DEBUG -> LogPriorityColors.priorityDebug
-            LogPriority.ERROR -> LogPriorityColors.priorityError
-            LogPriority.FATAL -> LogPriorityColors.priorityFatal
-            LogPriority.INFO -> LogPriorityColors.priorityInfo
-            LogPriority.VERBOSE -> LogPriorityColors.priorityVerbose
-            LogPriority.WARNING -> LogPriorityColors.priorityWarning
-            else -> LogPriorityColors.prioritySilent
-          },
+          priorityColor = logPriorityToColor(item.priority),
         )
       }
     }
+  }
+}
+
+private fun logPriorityToColor(priority: String): Color {
+  return when (priority) {
+    LogPriority.ASSERT -> LogPriorityColors.priorityAssert
+    LogPriority.DEBUG -> LogPriorityColors.priorityDebug
+    LogPriority.ERROR -> LogPriorityColors.priorityError
+    LogPriority.FATAL -> LogPriorityColors.priorityFatal
+    LogPriority.INFO -> LogPriorityColors.priorityInfo
+    LogPriority.VERBOSE -> LogPriorityColors.priorityVerbose
+    LogPriority.WARNING -> LogPriorityColors.priorityWarning
+    else -> LogPriorityColors.prioritySilent
   }
 }
 
