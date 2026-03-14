@@ -13,7 +13,7 @@ data class Log(
   val uid: Uid?,
   val pid: String,
   val tid: String,
-  val priority: String,
+  val priority: LogPriority,
   val tag: String,
   val msg: String,
 ) : Parcelable {
@@ -103,7 +103,9 @@ data class Log(
         uid = uid?.let { Uid(it) },
         pid = pid,
         tid = tid,
-        priority = priority,
+        priority = LogPriority.entries.find {
+          it.value.equals(priority, ignoreCase = true)
+        }!!,
         tag = tag,
         msg = msg
       )
@@ -111,12 +113,17 @@ data class Log(
   }
 }
 
-object LogPriority {
-  const val ASSERT = "A"
-  const val DEBUG = "D"
-  const val ERROR = "E"
-  const val FATAL = "F"
-  const val INFO = "I"
-  const val VERBOSE = "V"
-  const val WARNING = "W"
+enum class LogPriority(val value: String) {
+  ASSERT("A"),
+  DEBUG("D"),
+  ERROR("E"),
+  FATAL("F"),
+  INFO("I"),
+  VERBOSE("V"),
+  WARNING("W"),
+  ;
+
+  override fun toString(): String {
+    return value
+  }
 }

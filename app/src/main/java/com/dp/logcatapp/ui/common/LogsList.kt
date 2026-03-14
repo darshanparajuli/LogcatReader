@@ -268,7 +268,7 @@ fun LogsList(
             time = item.time,
             pid = item.pid,
             tid = item.tid,
-            priorityColor = logPriorityToColor(item.priority),
+            priorityColor = item.priority.toColor(),
             expanded = targetExpandedState,
           )
         }
@@ -337,15 +337,15 @@ fun LogsList(
               searchHitKey = SearchHitKey(logId = item.id, component = LogComponent.Tid),
             )
           },
-          priorityColor = logPriorityToColor(item.priority),
+          priorityColor = item.priority.toColor(),
         )
       }
     }
   }
 }
 
-private fun logPriorityToColor(priority: String): Color {
-  return when (priority) {
+private fun LogPriority.toColor(): Color {
+  return when (this) {
     LogPriority.ASSERT -> LogPriorityColors.priorityAssert
     LogPriority.DEBUG -> LogPriorityColors.priorityDebug
     LogPriority.ERROR -> LogPriorityColors.priorityError
@@ -405,7 +405,7 @@ private fun ScrollIndicatorState.isValid(): Boolean {
 @Composable
 private fun LogItem(
   modifier: Modifier,
-  priority: String,
+  priority: LogPriority,
   tag: AnnotatedString?,
   message: AnnotatedString,
   packageName: AnnotatedString?,
@@ -429,7 +429,7 @@ private fun LogItem(
     ) {
       Text(
         modifier = Modifier.align(Alignment.Center),
-        text = priority,
+        text = priority.value,
         style = TextStyle.Default.copy(
           fontSize = 12.sp,
           fontFamily = RobotoMonoFontFamily,
@@ -531,7 +531,7 @@ private fun LogItem(
 @Composable
 private fun LogItemCompact(
   modifier: Modifier,
-  priority: String,
+  priority: LogPriority,
   tag: AnnotatedString?,
   message: AnnotatedString,
   packageName: AnnotatedString?,
@@ -555,7 +555,7 @@ private fun LogItemCompact(
     ) {
       Text(
         modifier = Modifier.align(Alignment.Center),
-        text = priority,
+        text = priority.value,
         style = TextStyle.Default.copy(
           fontSize = 12.sp,
           fontFamily = RobotoMonoFontFamily,
@@ -697,7 +697,7 @@ private fun LogItemPreview() {
       modifier = Modifier
         .fillMaxWidth()
         .wrapContentHeight(),
-      priority = "D",
+      priority = LogPriority.DEBUG,
       tag = AnnotatedString("Tag"),
       message = AnnotatedString("This is a log"),
       date = AnnotatedString("01-12"),
@@ -718,7 +718,7 @@ private fun LogItemCompactPreview() {
       modifier = Modifier
         .fillMaxWidth()
         .wrapContentHeight(),
-      priority = "D",
+      priority = LogPriority.DEBUG,
       tag = AnnotatedString("FooBarFooBarFooBar"),
       message = AnnotatedString("This is a long log this is a long log this is a long log"),
       date = "01-12",

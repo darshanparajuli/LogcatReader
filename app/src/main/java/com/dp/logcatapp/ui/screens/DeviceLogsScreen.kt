@@ -1864,7 +1864,7 @@ private class LogFilter(
     return if (priorities.isEmpty()) {
       true
     } else {
-      log.priority in priorities
+      log.priority.value in priorities
     }
   }
 

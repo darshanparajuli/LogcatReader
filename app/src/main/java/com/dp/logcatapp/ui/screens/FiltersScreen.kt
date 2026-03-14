@@ -390,7 +390,7 @@ fun FiltersScreen(
         initialTid = prepopulateFilterInfo?.log?.tid,
         initialExclude = prepopulateFilterInfo?.exclude,
         initialLogLevels = prepopulateFilterInfo?.log?.priority?.let { p ->
-          LogLevel.entries.find { it.label.startsWith(p) }?.let { level ->
+          LogLevel.entries.find { it.label.startsWith(p.value) }?.let { level ->
             setOf(level)
           }
         }.orEmpty(),
