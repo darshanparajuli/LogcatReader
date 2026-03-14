@@ -67,6 +67,7 @@ class LogcatSession(
   @Volatile private var active = false
   @Volatile private var paused = false
   private var stopped = false
+  @Suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN")
   private val pauseWaiter = Object()
 
   var isPaused: Boolean
