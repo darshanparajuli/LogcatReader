@@ -110,19 +110,17 @@ class MainActivity : BaseActivity() {
       false
     }
 
-  override fun onStop() {
-    super.onStop()
-    if (isFinishing) {
-      // Do not stop the service if recording is active!
-      if (!isRecording) {
-        // In cases where the app is closed and opened really quickly, `onStop` gets called on the
-        // finishing activity _after_ current activity's `onCreate` function, which leads to
-        // LogcatService ultimately getting stopped. To work around this, we check to see if the
-        // stopping activity is the same as the one that started the service, and stop the service
-        // accordingly.
-        if (serviceStarterRefHashcode == System.identityHashCode(this)) {
-          LogcatService.stop(this)
-        }
+  override fun onDestroy() {
+    super.onDestroy()
+    // Do not stop the service if recording is active!
+    if (!isRecording) {
+      // In cases where the app is closed and opened really quickly, `onDestroy` gets called on the
+      // finishing activity _after_ current activity's `onCreate` function, which leads to
+      // LogcatService ultimately getting stopped. To work around this, we check to see if the
+      // destroying activity is the same as the one that started the service, and stop the service
+      // accordingly.
+      if (serviceStarterRefHashcode == System.identityHashCode(this)) {
+        LogcatService.stop(this)
       }
     }
   }
