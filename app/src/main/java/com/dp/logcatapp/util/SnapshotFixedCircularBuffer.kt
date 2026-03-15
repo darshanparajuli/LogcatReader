@@ -126,7 +126,7 @@ class SnapshotFixedCircularBuffer<E> internal constructor(
     return readableBuffer.indexOf(element)
   }
 
-  fun buffer(): FixedCircularBuffer<E> = readable.buffer
+  fun buffer(): List<E> = readable.buffer
 
   private inner class Record<T>(
     var buffer: FixedCircularBuffer<T>,
