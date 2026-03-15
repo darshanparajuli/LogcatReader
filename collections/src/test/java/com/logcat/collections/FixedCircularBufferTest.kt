@@ -5,11 +5,11 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-class FixedCircularArrayTest {
+class FixedCircularBufferTest {
 
   @Test
   fun testAdd() {
-    val array = FixedCircularArray<Int>(12)
+    val array = FixedCircularBuffer<Int>(12)
     assertTrue(array.isEmpty())
 
     array.add(1)
@@ -31,7 +31,7 @@ class FixedCircularArrayTest {
 
   @Test
   fun testRemove() {
-    val array = FixedCircularArray<Int>(10)
+    val array = FixedCircularBuffer<Int>(10)
     array.add(5)
     assertEquals(5, array.remove(5))
     assertTrue(array.isEmpty())
@@ -67,7 +67,7 @@ class FixedCircularArrayTest {
 
   @Test
   fun testIndexOf() {
-    val array = FixedCircularArray<Int>(10)
+    val array = FixedCircularBuffer<Int>(10)
     assertEquals(-1, array.indexOf(12))
 
     for (i in 0..1000) {
@@ -87,12 +87,12 @@ class FixedCircularArrayTest {
 
   @Test(expected = IllegalStateException::class)
   fun testCapacityZero() {
-    FixedCircularArray<Int>(0)
+    FixedCircularBuffer<Int>(0)
   }
 
   @Test
   fun testGet() {
-    val array = FixedCircularArray<Int>(10)
+    val array = FixedCircularBuffer<Int>(10)
 
     array += 3
     array += 5
@@ -110,7 +110,7 @@ class FixedCircularArrayTest {
 
   @Test
   fun testIsFull() {
-    val array = FixedCircularArray<Int>(100)
+    val array = FixedCircularBuffer<Int>(100)
     assertTrue(array.isEmpty())
     assertFalse(array.isFull())
 
@@ -127,7 +127,7 @@ class FixedCircularArrayTest {
 
   @Test
   fun testIterator() {
-    val array = FixedCircularArray<Int>(10)
+    val array = FixedCircularBuffer<Int>(10)
     val expected = mutableListOf<Int>()
     for (i in 0 until array.size) {
       array += i * i
@@ -144,7 +144,7 @@ class FixedCircularArrayTest {
 
   @Test
   fun testContains() {
-    val array = FixedCircularArray<Int>(100)
+    val array = FixedCircularBuffer<Int>(100)
     array += 10
     array += 20
 
@@ -163,7 +163,7 @@ class FixedCircularArrayTest {
 
   @Test
   fun testAddAfterRemove() {
-    val array = FixedCircularArray<Int>(5)
+    val array = FixedCircularBuffer<Int>(5)
 
     for (i in 1..5) {
       array += i

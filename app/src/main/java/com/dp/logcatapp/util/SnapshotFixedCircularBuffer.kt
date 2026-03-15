@@ -4,169 +4,140 @@ import androidx.compose.runtime.snapshots.StateObject
 import androidx.compose.runtime.snapshots.StateRecord
 import androidx.compose.runtime.snapshots.readable
 import androidx.compose.runtime.snapshots.writable
-import com.logcat.collections.FixedCircularArray
+import com.logcat.collections.FixedCircularBuffer
 
-class SnapshotFixedCircularBuffer<T> internal constructor(
-  array: FixedCircularArray<T>,
-) : StateObject, Iterable<T>, List<T> {
+class SnapshotFixedCircularBuffer<E> internal constructor(
+  buffer: FixedCircularBuffer<E>,
+) : StateObject, List<E> {
 
-  override var firstStateRecord: StateRecord = Record(array)
+  override var firstStateRecord: StateRecord = Record(buffer)
 
   override fun prependStateRecord(value: StateRecord) {
     @Suppress("UNCHECKED_CAST")
-    firstStateRecord = value as Record<T>
+    firstStateRecord = value as Record<E>
   }
 
-  private val readable: FixedCircularArray<T>
+  private val readable: Record<E>
     get() {
       @Suppress("UNCHECKED_CAST")
-      return (firstStateRecord as Record<T>).readable(this).array
+      return (firstStateRecord as Record<E>).readable(this)
     }
 
-  private fun <R> writable(block: FixedCircularArray<T>.() -> R): R {
+  private val readableBuffer: FixedCircularBuffer<E>
+    get() = readable.buffer
+
+  private fun <R> writable(block: SnapshotFixedCircularBuffer<E>.Record<E>.() -> R): R {
     @Suppress("UNCHECKED_CAST")
-    return (firstStateRecord as Record<T>).writable(this) {
-      block(array)
-    }
+    return (firstStateRecord as Record<E>).writable(this, block)
+  }
+
+  private fun <R> writableBuffer(block: FixedCircularBuffer<E>.() -> R): R {
+    return writable { buffer.block() }
   }
 
   // Note: do not solely rely on observing this value for whatever logic as it won't change after
   // it reaches the capacity.
   override val size: Int
-    get() = readable.size
+    get() = readableBuffer.size
 
-  fun add(e: T) {
-    writable {
+  fun add(e: E) {
+    writableBuffer {
       add(e)
     }
   }
 
-  fun add(list: Iterable<T>) {
-    writable {
+  fun add(list: Iterable<E>) {
+    writableBuffer {
       add(list)
     }
   }
 
-  fun remove(e: T): T? {
-    return writable {
+  fun remove(e: E): E? {
+    return writableBuffer {
       remove(e)
     }
   }
 
-  fun removeAt(index: Int): T {
-    return writable {
+  fun removeAt(index: Int): E {
+    return writableBuffer {
       removeAt(index)
     }
   }
 
   fun changeCapacity(newCapacity: Int) {
     @Suppress("UNCHECKED_CAST")
-    (firstStateRecord as Record<T>).writable(this) {
-      val newArray = FixedCircularArray<T>(capacity = newCapacity)
-      newArray.add(array.toList())
-      array = newArray
+    writable {
+      val newBuffer = FixedCircularBuffer<E>(
+        capacity = newCapacity,
+        initialSize = buffer.size,
+      )
+      newBuffer += buffer
+      buffer = newBuffer
     }
   }
 
-  override fun lastIndexOf(element: T): Int {
-    val array = readable
-    var i = array.size - 1
-    while (i >= 0 && array[i] != element) {
-      i--
-    }
-    return i
+  override fun lastIndexOf(element: E): Int {
+    return readableBuffer.lastIndexOf(element)
   }
 
-  override fun listIterator(): ListIterator<T> {
-    return SnapshotFixedCircularArrayIterator(array = readable)
+  override fun listIterator(): ListIterator<E> {
+    return readableBuffer.listIterator()
   }
 
-  override fun listIterator(index: Int): ListIterator<T> {
-    return SnapshotFixedCircularArrayIterator(array = readable, index = index)
+  override fun listIterator(index: Int): ListIterator<E> {
+    return readableBuffer.listIterator(index)
   }
 
-  override fun subList(fromIndex: Int, toIndex: Int): List<T> {
-    throw UnsupportedOperationException("subList is not supported")
+  override fun subList(fromIndex: Int, toIndex: Int): List<E> {
+    return readableBuffer.subList(fromIndex = fromIndex, toIndex = toIndex)
   }
 
-  operator fun plusAssign(e: T) = add(e)
+  operator fun plusAssign(e: E) = add(e)
 
-  operator fun plusAssign(list: List<T>) = add(list)
+  operator fun plusAssign(list: List<E>) = add(list)
 
-  operator fun plusAssign(list: FixedCircularArray<T>) = add(list)
+  operator fun plusAssign(list: FixedCircularBuffer<E>) = add(list)
 
   fun clear() {
-    writable {
+    writableBuffer {
       clear()
     }
   }
 
-  override fun isEmpty() = size == 0
+  override fun isEmpty() = readableBuffer.isEmpty()
 
-  fun isFull() = readable.isFull()
+  fun isFull() = readableBuffer.isFull()
 
-  override fun contains(element: T): Boolean {
-    return readable.contains(element)
+  override fun contains(element: E): Boolean {
+    return readableBuffer.contains(element)
   }
 
-  override fun iterator(): Iterator<T> =
-    SnapshotFixedCircularArrayIterator(readable)
+  override fun iterator(): Iterator<E> = readableBuffer.iterator()
 
-  override fun containsAll(elements: Collection<T>): Boolean {
-    return readable.let { array ->
-      elements.all { array.contains(it) }
-    }
+  override fun containsAll(elements: Collection<E>): Boolean {
+    return readableBuffer.containsAll(elements)
   }
 
-  override fun get(index: Int): T {
-    return readable[index]
+  override fun get(index: Int): E {
+    return readableBuffer[index]
   }
 
-  override fun indexOf(element: T): Int {
-    return readable.indexOf(element)
+  override fun indexOf(element: E): Int {
+    return readableBuffer.indexOf(element)
   }
 
-  private class SnapshotFixedCircularArrayIterator<T>(
-    private val array: FixedCircularArray<T>,
-    var index: Int = 0
-  ) : ListIterator<T> {
-
-    override fun hasNext(): Boolean = index < array.size
-
-    override fun hasPrevious(): Boolean {
-      return index > 0
-    }
-
-    override fun previous(): T {
-      if (index == 0) {
-        throw NoSuchElementException()
-      }
-      return array[index--]
-    }
-
-    override fun nextIndex(): Int {
-      if (index >= array.size) return index
-      return index + 1
-    }
-
-    override fun previousIndex(): Int {
-      if (index == 0) return -1
-      return index - 1
-    }
-
-    override fun next(): T = array[index++]
-  }
+  fun buffer(): FixedCircularBuffer<E> = readable.buffer
 
   private inner class Record<T>(
-    var array: FixedCircularArray<T>,
+    var buffer: FixedCircularBuffer<T>,
   ) : StateRecord() {
     override fun create(): StateRecord {
-      return Record(array)
+      return Record(buffer)
     }
 
     override fun assign(value: StateRecord) {
       value as Record<T>
-      array = value.array
+      buffer = value.buffer
     }
   }
 }
@@ -174,5 +145,5 @@ class SnapshotFixedCircularBuffer<T> internal constructor(
 fun <T> mutableFixedCircularBuffer(
   capacity: Int
 ): SnapshotFixedCircularBuffer<T> {
-  return SnapshotFixedCircularBuffer(FixedCircularArray(capacity))
+  return SnapshotFixedCircularBuffer(FixedCircularBuffer(capacity))
 }

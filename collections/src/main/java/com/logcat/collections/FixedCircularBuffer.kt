@@ -2,10 +2,10 @@ package com.logcat.collections
 
 import kotlin.math.min
 
-class FixedCircularArray<E>(
+class FixedCircularBuffer<E>(
   val capacity: Int,
   initialSize: Int = INITIAL_SIZE
-) : Iterable<E> {
+) : List<E> {
 
   companion object {
     private const val INITIAL_SIZE = 16
@@ -22,7 +22,7 @@ class FixedCircularArray<E>(
     }
   }
 
-  val size: Int
+  override val size: Int
     get() {
       return when {
         head == -1 -> 0
@@ -80,13 +80,13 @@ class FixedCircularArray<E>(
     return result
   }
 
-  fun indexOf(e: E): Int {
-    if (e == null) {
+  override fun indexOf(element: E): Int {
+    if (element == null) {
       return -1
     }
 
     for (i in 0 until size) {
-      if (array[(head + i) % capacity] == e) {
+      if (array[(head + i) % capacity] == element) {
         return i
       }
     }
@@ -94,14 +94,29 @@ class FixedCircularArray<E>(
     return -1
   }
 
-  @Suppress("unchecked_cast")
-  operator fun get(index: Int): E {
+  override fun lastIndexOf(element: E): Int {
+    var i = size - 1
+    while (i >= 0 && get(i) != element) {
+      i--
+    }
+    return i
+  }
+
+  override fun subList(fromIndex: Int, toIndex: Int): List<E> {
+    check(fromIndex < toIndex) {
+      "fromIndex ($fromIndex) must be less than toIndex ($toIndex)"
+    }
+    TODO("not implemented yet")
+  }
+
+  override operator fun get(index: Int): E {
     checkIOBAndThrow(index)
+    @Suppress("unchecked_cast")
     return array[(head + index) % capacity] as E
   }
 
   private fun checkIOBAndThrow(index: Int) {
-    if (index < 0 || index >= size) {
+    if (index !in 0..<size) {
       throw IndexOutOfBoundsException("index = $index, size = $size")
     }
   }
@@ -121,8 +136,6 @@ class FixedCircularArray<E>(
 
   operator fun plusAssign(list: List<E>) = add(list)
 
-  operator fun plusAssign(list: FixedCircularArray<E>) = add(list)
-
   fun removeAll(): List<E> {
     val list = toList()
     clear()
@@ -139,13 +152,11 @@ class FixedCircularArray<E>(
     next = 0
   }
 
-  fun isEmpty() = size == 0
-
-  fun isNotEmpty() = size != 0
+  override fun isEmpty() = size == 0
 
   fun isFull() = size == capacity
 
-  operator fun contains(element: E): Boolean {
+  override operator fun contains(element: E): Boolean {
     for (i in 0 until size) {
       if (element == array[(head + i) % capacity]) {
         return true
@@ -154,13 +165,48 @@ class FixedCircularArray<E>(
     return false
   }
 
-  override fun iterator(): Iterator<E> = FixedCircularArrayIterator()
+  override fun containsAll(elements: Collection<E>): Boolean {
+    return elements.all { contains(it) }
+  }
 
-  private inner class FixedCircularArrayIterator : Iterator<E> {
-    var index = 0
+  override fun listIterator(): ListIterator<E> {
+    return FixedCircularBufferIterator(buffer = this)
+  }
 
-    override fun hasNext(): Boolean = index < size
+  override fun listIterator(index: Int): ListIterator<E> {
+    return FixedCircularBufferIterator(buffer = this, index = index)
+  }
 
-    override fun next(): E = get(index++)
+  override fun iterator(): Iterator<E> = FixedCircularBufferIterator(buffer = this)
+
+  private class FixedCircularBufferIterator<T>(
+    private val buffer: FixedCircularBuffer<T>,
+    private var index: Int = 0
+  ) : ListIterator<T> {
+
+    override fun hasNext(): Boolean = index < buffer.size
+
+    override fun hasPrevious(): Boolean {
+      return index > 0
+    }
+
+    override fun previous(): T {
+      if (index == 0) {
+        throw NoSuchElementException()
+      }
+      return buffer[index--]
+    }
+
+    override fun nextIndex(): Int {
+      if (index >= buffer.size) return index
+      return index + 1
+    }
+
+    override fun previousIndex(): Int {
+      if (index == 0) return -1
+      return index - 1
+    }
+
+    override fun next(): T = buffer[index++]
   }
 }

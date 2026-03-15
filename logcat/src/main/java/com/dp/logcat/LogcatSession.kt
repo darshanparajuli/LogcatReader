@@ -3,7 +3,7 @@ package com.dp.logcat
 import android.net.Uri
 import android.os.Build
 import com.dp.logger.Logger
-import com.logcat.collections.FixedCircularArray
+import com.logcat.collections.FixedCircularBuffer
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -49,7 +49,7 @@ class LogcatSession(
   private val lock = ReentrantLock() // locks {
   private val recordBuffer = LinkedBlockingQueue<List<Log>>()
   private var recordingFileInfo: RecordingFileInfo? = null
-  private val allLogs = FixedCircularArray<Log>(
+  private val allLogs = FixedCircularBuffer<Log>(
     capacity = capacity,
     initialSize = 10_000,
   )
@@ -59,7 +59,7 @@ class LogcatSession(
   // }
 
   private val pendingLogsLock = Any() // locks {
-  private val pendingLogs = FixedCircularArray<Log>(
+  private val pendingLogs = FixedCircularBuffer<Log>(
     capacity = capacity,
     initialSize = 1000,
   )
