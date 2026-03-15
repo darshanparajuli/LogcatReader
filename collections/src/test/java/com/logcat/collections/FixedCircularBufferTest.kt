@@ -2,6 +2,7 @@ package com.logcat.collections
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -177,5 +178,301 @@ class FixedCircularBufferTest {
     for (i in 0 until array.size) {
       assertEquals(excepted[i], array[i])
     }
+  }
+
+  @Test(expected = NegativeArraySizeException::class)
+  fun testCapacityNegative() {
+    FixedCircularBuffer<Int>(-1)
+  }
+
+  @Test(expected = IndexOutOfBoundsException::class)
+  fun testGetOutOfBounds() {
+    val buffer = FixedCircularBuffer<Int>(5)
+    buffer.add(1)
+    buffer[5]
+  }
+
+  @Test(expected = IndexOutOfBoundsException::class)
+  fun testGetEmptyBuffer() {
+    val buffer = FixedCircularBuffer<Int>(5)
+    buffer[0]
+  }
+
+  @Test
+  fun testAddIterable() {
+    val buffer = FixedCircularBuffer<Int>(5)
+    buffer.add(listOf(1, 2, 3))
+    assertEquals(3, buffer.size)
+    assertEquals(1, buffer[0])
+    assertEquals(2, buffer[1])
+    assertEquals(3, buffer[2])
+
+    buffer.add(listOf(4, 5, 6, 7))
+    assertEquals(5, buffer.size)
+    assertEquals(3, buffer[0])
+    assertEquals(7, buffer[4])
+  }
+
+  @Test
+  fun testPlusAssignList() {
+    val buffer = FixedCircularBuffer<Int>(5)
+    buffer += listOf(1, 2, 3, 4, 5)
+    assertEquals(5, buffer.size)
+    for (i in 0 until 5) {
+      assertEquals(i + 1, buffer[i])
+    }
+  }
+
+  @Test
+  fun testLastIndexOf() {
+    val buffer = FixedCircularBuffer<Int>(10)
+    buffer.add(1)
+    buffer.add(2)
+    buffer.add(3)
+    buffer.add(2)
+    buffer.add(5)
+
+    assertEquals(3, buffer.lastIndexOf(2))
+    assertEquals(0, buffer.lastIndexOf(1))
+    assertEquals(4, buffer.lastIndexOf(5))
+    assertEquals(-1, buffer.lastIndexOf(99))
+  }
+
+  @Test
+  fun testContainsAll() {
+    val buffer = FixedCircularBuffer<Int>(10)
+    buffer.add(listOf(1, 2, 3, 4, 5))
+
+    assertTrue(buffer.containsAll(listOf(1, 3, 5)))
+    assertTrue(buffer.containsAll(listOf(1)))
+    assertFalse(buffer.containsAll(listOf(1, 6)))
+    assertFalse(buffer.containsAll(listOf(99)))
+    assertTrue(buffer.containsAll(emptyList()))
+  }
+
+  @Test
+  fun testRemoveAll() {
+    val buffer = FixedCircularBuffer<Int>(5)
+    buffer.add(listOf(1, 2, 3, 4, 5))
+
+    val removed = buffer.removeAll()
+    assertEquals(listOf(1, 2, 3, 4, 5), removed)
+    assertTrue(buffer.isEmpty())
+    assertEquals(0, buffer.size)
+  }
+
+  @Test
+  fun testRemoveNonExistent() {
+    val buffer = FixedCircularBuffer<Int>(5)
+    buffer.add(1)
+    assertNull(buffer.remove(99))
+    assertEquals(1, buffer.size)
+  }
+
+  @Test
+  fun testRemoveAtMiddle() {
+    val buffer = FixedCircularBuffer<Int>(5)
+    buffer.add(listOf(1, 2, 3, 4, 5))
+    assertEquals(3, buffer.removeAt(2))
+    assertEquals(4, buffer.size)
+    assertEquals(listOf(1, 2, 4, 5), buffer.toList())
+  }
+
+  @Test
+  fun testListIterator() {
+    val buffer = FixedCircularBuffer<Int>(5)
+    buffer.add(listOf(10, 20, 30))
+
+    val iter = buffer.listIterator()
+    assertTrue(iter.hasNext())
+    assertFalse(iter.hasPrevious())
+
+    assertEquals(10, iter.next())
+    assertTrue(iter.hasPrevious())
+    assertEquals(20, iter.next())
+    assertEquals(30, iter.next())
+    assertFalse(iter.hasNext())
+  }
+
+  @Test
+  fun testListIteratorWithIndex() {
+    val buffer = FixedCircularBuffer<Int>(5)
+    buffer.add(listOf(10, 20, 30, 40))
+
+    val iter = buffer.listIterator(2)
+    assertTrue(iter.hasNext())
+    assertEquals(30, iter.next())
+    assertEquals(40, iter.next())
+    assertFalse(iter.hasNext())
+  }
+
+  @Test
+  fun testListIteratorPrevious() {
+    val buffer = FixedCircularBuffer<Int>(5)
+    buffer.add(listOf(10, 20, 30))
+
+    val iter = buffer.listIterator()
+    iter.next()
+    iter.next()
+
+    assertTrue(iter.hasPrevious())
+    assertEquals(30, iter.previous())
+    assertEquals(20, iter.previous())
+    assertFalse(iter.hasPrevious())
+  }
+
+  @Test(expected = NoSuchElementException::class)
+  fun testListIteratorPreviousAtStart() {
+    val buffer = FixedCircularBuffer<Int>(5)
+    buffer.add(1)
+    val iter = buffer.listIterator()
+    iter.previous()
+  }
+
+  @Test
+  fun testListIteratorNextAndPreviousIndex() {
+    val buffer = FixedCircularBuffer<Int>(5)
+    buffer.add(listOf(10, 20, 30))
+
+    val iter = buffer.listIterator()
+    assertEquals(-1, iter.previousIndex())
+    assertEquals(1, iter.nextIndex())
+
+    iter.next()
+    assertEquals(0, iter.previousIndex())
+    assertEquals(2, iter.nextIndex())
+  }
+
+  @Test
+  fun testSubList() {
+    val buffer = FixedCircularBuffer<Int>(10)
+    buffer.add(listOf(0, 1, 2, 3, 4, 5, 6, 7, 8, 9))
+
+    val sub = buffer.subList(2, 6)
+    assertEquals(4, sub.size)
+    assertEquals(2, sub[0])
+    assertEquals(3, sub[1])
+    assertEquals(4, sub[2])
+    assertEquals(5, sub[3])
+    assertFalse(sub.isEmpty())
+  }
+
+  @Test
+  fun testSubListContains() {
+    val buffer = FixedCircularBuffer<Int>(10)
+    buffer.add(listOf(0, 1, 2, 3, 4))
+
+    val sub = buffer.subList(1, 4)
+    assertTrue(sub.contains(1))
+    assertTrue(sub.contains(3))
+    assertFalse(sub.contains(0))
+    assertFalse(sub.contains(4))
+  }
+
+  @Test
+  fun testSubListIndexOf() {
+    val buffer = FixedCircularBuffer<Int>(10)
+    buffer.add(listOf(10, 20, 30, 20, 50))
+
+    val sub = buffer.subList(1, 5)
+    assertEquals(0, sub.indexOf(20))
+    assertEquals(3, sub.indexOf(50))
+    assertEquals(-1, sub.indexOf(10))
+  }
+
+  @Test
+  fun testSubListLastIndexOf() {
+    val buffer = FixedCircularBuffer<Int>(10)
+    buffer.add(listOf(10, 20, 30, 20, 50))
+
+    val sub = buffer.subList(1, 5)
+    assertEquals(2, sub.lastIndexOf(20))
+    assertEquals(-1, sub.lastIndexOf(10))
+  }
+
+  @Test
+  fun testSubListContainsAll() {
+    val buffer = FixedCircularBuffer<Int>(10)
+    buffer.add(listOf(0, 1, 2, 3, 4))
+
+    val sub = buffer.subList(1, 4)
+    assertTrue(sub.containsAll(listOf(1, 2, 3)))
+    assertFalse(sub.containsAll(listOf(1, 4)))
+  }
+
+  @Test
+  fun testSubListIterator() {
+    val buffer = FixedCircularBuffer<Int>(10)
+    buffer.add(listOf(0, 1, 2, 3, 4))
+
+    val sub = buffer.subList(1, 4)
+    val items = mutableListOf<Int>()
+    for (item in sub) {
+      items += item
+    }
+    assertEquals(listOf(1, 2, 3), items)
+  }
+
+  @Test
+  fun testSubListListIterator() {
+    val buffer = FixedCircularBuffer<Int>(10)
+    buffer.add(listOf(0, 1, 2, 3, 4))
+
+    val sub = buffer.subList(1, 4)
+    val iter = sub.listIterator()
+    assertEquals(1, iter.next())
+    assertEquals(2, iter.next())
+    assertTrue(iter.hasPrevious())
+    assertEquals(3, iter.previous())
+  }
+
+  @Test
+  fun testSubListOfSubList() {
+    val buffer = FixedCircularBuffer<Int>(10)
+    buffer.add(listOf(0, 1, 2, 3, 4, 5))
+
+    val sub = buffer.subList(1, 5)
+    val subSub = sub.subList(1, 3)
+    assertEquals(2, subSub.size)
+    assertEquals(1, subSub[0])
+    assertEquals(2, subSub[1])
+  }
+
+  @Test(expected = IllegalStateException::class)
+  fun testSubListInvalidRange() {
+    val buffer = FixedCircularBuffer<Int>(10)
+    buffer.add(listOf(0, 1, 2))
+    buffer.subList(2, 1)
+  }
+
+  @Test(expected = IllegalStateException::class)
+  fun testSubListNegativeFromIndex() {
+    val buffer = FixedCircularBuffer<Int>(10)
+    buffer.add(listOf(0, 1, 2))
+    buffer.subList(-1, 2)
+  }
+
+  @Test(expected = IllegalStateException::class)
+  fun testSubListToIndexExceedsSize() {
+    val buffer = FixedCircularBuffer<Int>(10)
+    buffer.add(listOf(0, 1, 2))
+    buffer.subList(0, 10)
+  }
+
+  @Test
+  fun testAddWrapsAroundWithSmallInitialSize() {
+    val buffer = FixedCircularBuffer<Int>(capacity = 8, initialSize = 2)
+    for (i in 0 until 8) {
+      buffer.add(i)
+    }
+    assertEquals(8, buffer.size)
+    for (i in 0 until 8) {
+      assertEquals(i, buffer[i])
+    }
+
+    buffer.add(100)
+    assertEquals(8, buffer.size)
+    assertEquals(1, buffer[0])
+    assertEquals(100, buffer[7])
   }
 }
