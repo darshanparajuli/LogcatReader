@@ -86,7 +86,6 @@ object LogPriorityColors {
   val priorityError = Color(0xFFD32F2F)
   val priorityFatal = Color(0xFFC2185B)
   val priorityInfo = Color(0xFF388E3C)
-  val prioritySilent = Color(0xFF616161)
   val priorityWarning = Color(0xFFE65100)
   val priorityVerbose = Color(0xFF546E7A)
 }

@@ -335,7 +335,6 @@ private fun LogPriority.toColor(): Color {
     LogPriority.INFO -> LogPriorityColors.priorityInfo
     LogPriority.VERBOSE -> LogPriorityColors.priorityVerbose
     LogPriority.WARNING -> LogPriorityColors.priorityWarning
-    else -> LogPriorityColors.prioritySilent
   }
 }
 
