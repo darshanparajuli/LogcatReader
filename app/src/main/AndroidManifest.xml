@@ -41,6 +41,11 @@
       </intent-filter>
     </activity>
 
+    <profileable
+        android:shell="true"
+        android:enabled="true"
+        tools:targetApi="29" />
+
     <activity
         android:name=".activities.FiltersActivity"
         android:windowSoftInputMode="adjustResize"
