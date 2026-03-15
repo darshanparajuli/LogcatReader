@@ -106,7 +106,17 @@ class FixedCircularBuffer<E>(
     check(fromIndex < toIndex) {
       "fromIndex ($fromIndex) must be less than toIndex ($toIndex)"
     }
-    TODO("not implemented yet")
+    check(fromIndex >= 0) {
+      "fromIndex ($fromIndex) must be >= 0"
+    }
+    check(toIndex <= size) {
+      "toIndex ($toIndex) must be <= size ($size)"
+    }
+    return SubList(
+      buffer = this,
+      offset = fromIndex,
+      size = toIndex - fromIndex,
+    )
   }
 
   override operator fun get(index: Int): E {
@@ -179,10 +189,115 @@ class FixedCircularBuffer<E>(
 
   override fun iterator(): Iterator<E> = FixedCircularBufferIterator(buffer = this)
 
-  private class FixedCircularBufferIterator<T>(
-    private val buffer: FixedCircularBuffer<T>,
+  private data class SubList<E>(
+    private val buffer: FixedCircularBuffer<E>,
+    private val offset: Int,
+    override val size: Int,
+  ) : List<E> {
+
+    override fun isEmpty(): Boolean {
+      return size == 0
+    }
+
+    override fun contains(element: E): Boolean {
+      var i = 0
+      while (i < size) {
+        if (buffer[i + offset] == element) return true
+        i += 1
+      }
+      return false
+    }
+
+    override fun containsAll(elements: Collection<E>): Boolean {
+      return elements.all { contains(it) }
+    }
+
+    override fun get(index: Int): E {
+      return buffer[index + offset]
+    }
+
+    override fun indexOf(element: E): Int {
+      var i = 0
+      while (i < size) {
+        if (buffer[i + offset] == element) return i
+        i += 1
+      }
+      return -1
+    }
+
+    override fun lastIndexOf(element: E): Int {
+      var i = size - 1
+      while (i >= 0 && buffer[i + offset] != element) {
+        i--
+      }
+      return i
+    }
+
+    override fun listIterator(): ListIterator<E> {
+      return SubListIterator(subList = this)
+    }
+
+    override fun listIterator(index: Int): ListIterator<E> {
+      return SubListIterator(subList = this, index = index)
+    }
+
+    override fun iterator(): Iterator<E> {
+      return SubListIterator(subList = this)
+    }
+
+    override fun subList(fromIndex: Int, toIndex: Int): List<E> {
+      check(fromIndex < toIndex) {
+        "fromIndex ($fromIndex) must be less than toIndex ($toIndex)"
+      }
+      check(fromIndex >= 0) {
+        "fromIndex ($fromIndex) must be >= 0"
+      }
+      check(toIndex <= size) {
+        "toIndex ($toIndex) must be <= size ($size)"
+      }
+      return SubList(
+        buffer = buffer, offset = fromIndex, size = toIndex - fromIndex,
+      )
+    }
+
+    // TODO(darshan): add concurrent modification checks.
+    private class SubListIterator<E>(
+      private val subList: SubList<E>,
+      private var index: Int = 0
+    ) : ListIterator<E> {
+
+      override fun hasNext(): Boolean = index < subList.size
+
+      override fun hasPrevious(): Boolean {
+        return index > 0
+      }
+
+      override fun previous(): E {
+        if (index == 0) {
+          throw NoSuchElementException()
+        }
+        return subList[index--]
+      }
+
+      override fun nextIndex(): Int {
+        if (index >= subList.size) return index
+        return index + 1
+      }
+
+      override fun previousIndex(): Int {
+        if (index == 0) return -1
+        return index - 1
+      }
+
+      override fun next(): E = subList[index++]
+    }
+  }
+
+  // TODO(darshan): add concurrent modification checks.
+  private class FixedCircularBufferIterator<E>(
+    private val buffer: FixedCircularBuffer<E>,
     private var index: Int = 0
-  ) : ListIterator<T> {
+  ) : ListIterator<E> {
 
     override fun hasNext(): Boolean = index < buffer.size
 
@@ -190,7 +305,7 @@ class FixedCircularBuffer<E>(
       return index > 0
     }
 
-    override fun previous(): T {
+    override fun previous(): E {
       if (index == 0) {
         throw NoSuchElementException()
       }
@@ -207,6 +322,6 @@ class FixedCircularBuffer<E>(
       return index - 1
     }
 
-    override fun next(): T = buffer[index++]
+    override fun next(): E = buffer[index++]
   }
 }
