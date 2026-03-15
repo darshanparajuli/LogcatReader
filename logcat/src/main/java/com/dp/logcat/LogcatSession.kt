@@ -9,6 +9,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.channels.BufferOverflow.DROP_OLDEST
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.coroutineScope
@@ -67,6 +68,7 @@ class LogcatSession(
   @Volatile private var active = false
   @Volatile private var paused = false
   private var stopped = false
+
   @Suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN")
   private val pauseWaiter = Object()
 
@@ -99,7 +101,7 @@ class LogcatSession(
         onNewLog = null
       }
     }
-  }.buffer(capacity)
+  }.buffer(capacity, onBufferOverflow = DROP_OLDEST)
 
   @JvmInline
   value class Status(val success: Boolean)
