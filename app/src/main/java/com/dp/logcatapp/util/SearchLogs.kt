@@ -43,7 +43,8 @@ suspend fun searchLogs(
   appInfoMap: Map<String, AppInfo>,
   searchFunction: (String) -> Sequence<SearchHitSpan>,
 ): SearchResult = withContext(Dispatchers.Default) {
-  val map = mutableMapOf<SearchHitKey, List<HitIndex>>()
+  // Use HashMap since insertion-order does not matter and indexing is slightly faster.
+  val map = HashMap<SearchHitKey, List<HitIndex>>()
   val hits = mutableListOf<SearchHit>()
   logs.forEachIndexed { index, log ->
     val tagSearchResult = searchFunction(log.tag)
