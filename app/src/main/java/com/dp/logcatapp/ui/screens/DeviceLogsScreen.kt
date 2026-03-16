@@ -283,7 +283,7 @@ fun DeviceLogsScreen(
   var searchRegexError by remember { mutableStateOf(false) }
 
   // Value: tagIndex start and end.
-  val searchHitIndexMap = remember { mutableStateMapOf<SearchHitKey, List<HitIndex>>() }
+  var searchHitIndexMap by remember { mutableStateOf<Map<SearchHitKey, List<HitIndex>>>(emptyMap()) }
   var searchHits by remember { mutableStateOf<List<SearchHit>>(emptyList()) }
   var currentSearchHitIndex by remember { mutableIntStateOf(-1) }
   var showHitCount by remember { mutableStateOf(false) }
@@ -297,7 +297,7 @@ fun DeviceLogsScreen(
 
   fun closeSearchBar() {
     showSearchBar = false
-    searchHitIndexMap.clear()
+    searchHitIndexMap = emptyMap()
     searchHits = emptyList()
     currentSearchHitIndex = -1
     focusManager.clearFocus()
@@ -728,9 +728,9 @@ fun DeviceLogsScreen(
                       )
                     }
                   }
-                  searchHitIndexMap.clear()
+
+                  searchHitIndexMap = hitIndexMap
                   searchHits = hits
-                  searchHitIndexMap.putAll(hitIndexMap)
 
                   if (!scrolled) {
                     searchInProgress = false
@@ -749,7 +749,7 @@ fun DeviceLogsScreen(
             } else {
               searchRegexError = false
               searchInProgress = false
-              searchHitIndexMap.clear()
+              searchHitIndexMap = emptyMap()
               searchHits = emptyList()
               currentSearchHitIndex = -1
             }
