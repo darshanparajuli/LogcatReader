@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string-array name="pref_appearance_theme_entries">
+    <item>自動</item>
+    <item>淺色主題</item>
+    <item>深色主題</item>
+  </string-array>
+
+  <string-array name="pref_appearance_theme_values">
+    <item>0</item>
+    <item>1</item>
+    <item>2</item>
+  </string-array>
+</resources>
