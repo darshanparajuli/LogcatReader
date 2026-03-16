@@ -114,7 +114,7 @@
   <string name="success">成功</string>
   <string name="fail">失敗</string>
   <string name="manual_method">手動方式</string>
-  <string name="read_logs_permission_required_msg">"需要 READ_LOGS 權限。\n\n若您的裝置已取得 Root 權限，請選擇「Root 方式」；否則，請選擇「手動方式」以透過 ADB 手動授予權限。\n\n此步驟僅需執行一次！"</string>
+  <string name="read_logs_permission_required_msg">需要 READ_LOGS 權限。\n\n若您的裝置已取得 Root 權限，請選擇「Root 方式」；否則，請選擇「手動方式」以透過 ADB 手動授予權限。\n\n此步驟僅需執行一次！</string>
   <string name="root_method">Root 方式</string>
   <string name="asking_permission_for_root_access">正在請求 Root 存取權限…</string>
   <string name="app_restart_dialog_title">需要重啟應用程式</string>
