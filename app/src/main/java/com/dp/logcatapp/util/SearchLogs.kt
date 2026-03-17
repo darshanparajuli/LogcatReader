@@ -5,6 +5,7 @@ import com.dp.logcatapp.util.SearchHitKey.LogComponent
 import com.dp.logcatapp.util.SearchResult.SearchHit
 import com.dp.logcatapp.util.SearchResult.SearchHitSpan
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
 
 suspend fun searchLogs(
@@ -47,6 +48,7 @@ suspend fun searchLogs(
   val map = HashMap<SearchHitKey, List<HitIndex>>()
   val hits = mutableListOf<SearchHit>()
   logs.forEachIndexed { index, log ->
+    ensureActive()
     val tagSearchResult = searchFunction(log.tag)
     val msgSearchResult = searchFunction(log.msg)
     val packageNameSearchResult = log.uid?.let { uid ->
@@ -68,6 +70,7 @@ suspend fun searchLogs(
     ) {
       val hitIndices = mutableListOf<HitIndex>()
       spans.forEach { span ->
+        ensureActive()
         hitIndices += HitIndex(hits.size)
         hits += SearchHit(
           logId = log.id,
