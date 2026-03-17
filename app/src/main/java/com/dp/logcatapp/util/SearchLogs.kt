@@ -4,9 +4,14 @@ import com.dp.logcat.Log
 import com.dp.logcatapp.util.SearchHitKey.LogComponent
 import com.dp.logcatapp.util.SearchResult.SearchHit
 import com.dp.logcatapp.util.SearchResult.SearchHitSpan
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
+
+private const val CHUNKED_SEARCH_THRESHOLD = 1000
 
 suspend fun searchLogs(
   logs: List<Log>,
@@ -47,52 +52,98 @@ suspend fun searchLogs(
   // Use HashMap since insertion-order does not matter and indexing is slightly faster.
   val map = HashMap<SearchHitKey, List<HitIndex>>()
   val hits = mutableListOf<SearchHit>()
-  logs.forEachIndexed { index, log ->
-    ensureActive()
-    val tagSearchResult = searchFunction(log.tag)
-    val msgSearchResult = searchFunction(log.msg)
-    val packageNameSearchResult = log.uid?.let { uid ->
-      val packageName = if (uid.isNum) {
-        appInfoMap[uid.value]?.packageName
-      } else {
-        uid.value
+  val chunkSize = logs.size / (Runtime.getRuntime().availableProcessors() - 1)
+    .coerceAtLeast(1)
+  if (logs.size > CHUNKED_SEARCH_THRESHOLD) {
+    val deferred = mutableListOf<Deferred<Unit>>()
+    logs.asSequence()
+      .withIndex()
+      .chunked(chunkSize)
+      .forEach { logs ->
+        deferred += async {
+          logs.forEach { (index, log) ->
+            ensureActive()
+            performSearch(
+              index = index,
+              log = log,
+              appInfoMap = appInfoMap,
+              searchFunction = searchFunction,
+              hits = hits,
+              map = map,
+              ensureActive = { ensureActive() },
+            )
+          }
+        }
       }
-      packageName?.let { searchFunction(it) }.orEmpty()
-    } ?: emptySequence()
-    val dateSearchResult = searchFunction(log.date)
-    val timeSearchResult = searchFunction(log.time)
-    val pidSearchResult = searchFunction(log.pid)
-    val tidSearchResult = searchFunction(log.tid)
-
-    fun addSpans(
-      spans: Sequence<SearchHitSpan>,
-      component: LogComponent,
-    ) {
-      val hitIndices = mutableListOf<HitIndex>()
-      spans.forEach { span ->
-        ensureActive()
-        hitIndices += HitIndex(hits.size)
-        hits += SearchHit(
-          logId = log.id,
-          index = index,
-          span = span,
-        )
-      }
-      map[SearchHitKey(logId = log.id, component = component)] = hitIndices
+    deferred.awaitAll()
+  } else {
+    logs.forEachIndexed { index, log ->
+      ensureActive()
+      performSearch(
+        index = index,
+        log = log,
+        appInfoMap = appInfoMap,
+        searchFunction = searchFunction,
+        hits = hits,
+        map = map,
+        ensureActive = { ensureActive() },
+      )
     }
-
-    addSpans(tagSearchResult, LogComponent.Tag)
-    addSpans(msgSearchResult, LogComponent.Message)
-    addSpans(packageNameSearchResult, LogComponent.PackageName)
-    addSpans(dateSearchResult, LogComponent.Date)
-    addSpans(timeSearchResult, LogComponent.Time)
-    addSpans(pidSearchResult, LogComponent.Pid)
-    addSpans(tidSearchResult, LogComponent.Tid)
   }
   SearchResult(
     hitIndexMap = map,
     hits = hits,
   )
+}
+
+private fun performSearch(
+  index: Int,
+  log: Log,
+  appInfoMap: Map<String, AppInfo>,
+  searchFunction: (String) -> Sequence<SearchHitSpan>,
+  hits: MutableList<SearchHit>,
+  map: MutableMap<SearchHitKey, List<HitIndex>>,
+  ensureActive: () -> Unit,
+) {
+  val tagSearchResult = searchFunction(log.tag)
+  val msgSearchResult = searchFunction(log.msg)
+  val packageNameSearchResult = log.uid?.let { uid ->
+    val packageName = if (uid.isNum) {
+      appInfoMap[uid.value]?.packageName
+    } else {
+      uid.value
+    }
+    packageName?.let { searchFunction(it) }.orEmpty()
+  } ?: emptySequence()
+  val dateSearchResult = searchFunction(log.date)
+  val timeSearchResult = searchFunction(log.time)
+  val pidSearchResult = searchFunction(log.pid)
+  val tidSearchResult = searchFunction(log.tid)
+
+  fun addSpans(
+    spans: Sequence<SearchHitSpan>,
+    component: LogComponent,
+  ) {
+    val hitIndices = mutableListOf<HitIndex>()
+    spans.forEach { span ->
+      ensureActive()
+      hitIndices += HitIndex(hits.size)
+      hits += SearchHit(
+        logId = log.id,
+        index = index,
+        span = span,
+      )
+    }
+    map[SearchHitKey(logId = log.id, component = component)] = hitIndices
+  }
+
+  addSpans(tagSearchResult, LogComponent.Tag)
+  addSpans(msgSearchResult, LogComponent.Message)
+  addSpans(packageNameSearchResult, LogComponent.PackageName)
+  addSpans(dateSearchResult, LogComponent.Date)
+  addSpans(timeSearchResult, LogComponent.Time)
+  addSpans(pidSearchResult, LogComponent.Pid)
+  addSpans(tidSearchResult, LogComponent.Tid)
 }
 
 private fun search(
