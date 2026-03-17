@@ -189,6 +189,30 @@ class FixedCircularBuffer<E>(
 
   override fun iterator(): Iterator<E> = FixedCircularBufferIterator(buffer = this)
 
+  override fun equals(other: Any?): Boolean {
+    if (this === other) return true
+    if (javaClass != other?.javaClass) return false
+
+    other as FixedCircularBuffer<*>
+
+    if (capacity != other.capacity) return false
+    if (head != other.head) return false
+    if (next != other.next) return false
+    if (!array.contentEquals(other.array)) return false
+    if (size != other.size) return false
+
+    return true
+  }
+
+  override fun hashCode(): Int {
+    var result = capacity
+    result = 31 * result + head
+    result = 31 * result + next
+    result = 31 * result + array.contentHashCode()
+    result = 31 * result + size
+    return result
+  }
+
   private data class SubList<E>(
     private val buffer: FixedCircularBuffer<E>,
     private val offset: Int,
