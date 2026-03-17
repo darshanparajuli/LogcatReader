@@ -251,17 +251,6 @@ class FixedCircularBufferTest {
   }
 
   @Test
-  fun testRemoveAll() {
-    val buffer = FixedCircularBuffer<Int>(5)
-    buffer.add(listOf(1, 2, 3, 4, 5))
-
-    val removed = buffer.removeAll()
-    assertEquals(listOf(1, 2, 3, 4, 5), removed)
-    assertTrue(buffer.isEmpty())
-    assertEquals(0, buffer.size)
-  }
-
-  @Test
   fun testRemoveNonExistent() {
     val buffer = FixedCircularBuffer<Int>(5)
     buffer.add(1)

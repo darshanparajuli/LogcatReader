@@ -238,14 +238,14 @@ class LogcatSession(
 
   private fun pollOnce() {
     lock.withLock {
-      val pending = synchronized(pendingLogsLock) {
-        pendingLogs.removeAll()
+      val filtered = synchronized(pendingLogsLock) {
+        allLogs += pendingLogs
+        val filtered = pendingLogs.filtered()
+        pendingLogs.clear()
+        filtered
       }
 
-      allLogs += pending
-
       // If recording is enabled, then add to record buffer.
-      val filtered = pending.filtered()
       if (record) {
         recordBuffer += filtered
       }

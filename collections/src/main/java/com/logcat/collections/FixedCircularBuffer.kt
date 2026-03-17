@@ -146,12 +146,6 @@ class FixedCircularBuffer<E>(
 
   operator fun plusAssign(list: List<E>) = add(list)
 
-  fun removeAll(): List<E> {
-    val list = toList()
-    clear()
-    return list
-  }
-
   fun clear() {
     resetHead()
     array.fill(null)
