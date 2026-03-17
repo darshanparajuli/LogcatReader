@@ -10,25 +10,26 @@ class SnapshotFixedCircularBuffer<E> internal constructor(
   buffer: FixedCircularBuffer<E>,
 ) : StateObject, List<E> {
 
-  override var firstStateRecord: StateRecord = Record(buffer)
+  override var firstStateRecord: StateRecord = FixedCircularBufferStateRecord(buffer)
+    private set
 
   override fun prependStateRecord(value: StateRecord) {
     @Suppress("UNCHECKED_CAST")
-    firstStateRecord = value as Record<E>
+    firstStateRecord = value as FixedCircularBufferStateRecord<E>
   }
 
-  private val readable: Record<E>
+  private val readable: FixedCircularBufferStateRecord<E>
     get() {
       @Suppress("UNCHECKED_CAST")
-      return (firstStateRecord as Record<E>).readable(this)
+      return (firstStateRecord as FixedCircularBufferStateRecord<E>).readable(this)
     }
 
   private val readableBuffer: FixedCircularBuffer<E>
     get() = readable.buffer
 
-  private fun <R> writable(block: SnapshotFixedCircularBuffer<E>.Record<E>.() -> R): R {
+  private fun <R> writable(block: FixedCircularBufferStateRecord<E>.() -> R): R {
     @Suppress("UNCHECKED_CAST")
-    return (firstStateRecord as Record<E>).writable(this, block)
+    return (firstStateRecord as FixedCircularBufferStateRecord<E>).writable(this, block)
   }
 
   private fun <R> writableBuffer(block: FixedCircularBuffer<E>.() -> R): R {
@@ -41,8 +42,8 @@ class SnapshotFixedCircularBuffer<E> internal constructor(
     get() = readableBuffer.size
 
   fun add(e: E) {
-    writableBuffer {
-      add(e)
+    writable {
+      buffer.add(e)
     }
   }
 
@@ -126,17 +127,15 @@ class SnapshotFixedCircularBuffer<E> internal constructor(
     return readableBuffer.indexOf(element)
   }
 
-  fun buffer(): List<E> = readable.buffer
-
-  private inner class Record<T>(
+  private class FixedCircularBufferStateRecord<T>(
     var buffer: FixedCircularBuffer<T>,
   ) : StateRecord() {
     override fun create(): StateRecord {
-      return Record(buffer)
+      return FixedCircularBufferStateRecord(buffer)
     }
 
     override fun assign(value: StateRecord) {
-      value as Record<T>
+      value as FixedCircularBufferStateRecord<T>
       buffer = value.buffer
     }
   }
