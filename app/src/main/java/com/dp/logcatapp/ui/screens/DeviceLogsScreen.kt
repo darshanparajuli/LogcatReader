@@ -188,6 +188,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.BufferedWriter
@@ -198,6 +199,7 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
+import kotlin.time.Duration.Companion.seconds
 
 private const val TAG = "HomeScreen"
 private const val SNAP_SCROLL_HIDE_DELAY_MS = 2000L
@@ -707,45 +709,77 @@ fun DeviceLogsScreen(
               } else {
                 null
               }
-              snapshotFlow { logsState.toList() }
-                .collect { logs ->
-                  val (hitIndexMap, hits) = when {
-                    useRegex && searchRegex == null -> {
-                      SearchResult(hitIndexMap = emptyMap(), hits = emptyList())
-                    }
-                    searchRegex != null -> {
-                      searchLogs(
-                        logs = logs,
-                        appInfoMap = appInfoMap.orEmpty(),
-                        searchRegex = searchRegex,
-                      )
-                    }
-                    else -> {
-                      searchLogs(
-                        logs = logs,
-                        appInfoMap = appInfoMap.orEmpty(),
-                        searchQuery = searchQuery,
-                      )
-                    }
+
+              suspend fun performSearch(logs: List<Log>): SearchResult {
+                return when {
+                  useRegex && searchRegex == null -> {
+                    SearchResult(hitIndexMap = emptyMap(), hits = emptyList())
                   }
-
-                  searchHitIndexMap = hitIndexMap
-                  searchHits = hits
-
-                  if (!scrolled) {
-                    searchInProgress = false
-                    if (searchHits.isNotEmpty()) {
-                      snapToBottom = false
-                      // Give it some time to stop auto-scroll before trying to scroll to the
-                      // first hit.
-                      delay(50)
-                      currentSearchHitIndex = 0
-                      scrolled = true
-                    } else {
-                      currentSearchHitIndex = -1
-                    }
+                  searchRegex != null -> {
+                    searchLogs(
+                      logs = logs,
+                      appInfoMap = appInfoMap.orEmpty(),
+                      searchRegex = searchRegex,
+                    )
+                  }
+                  else -> {
+                    searchLogs(
+                      logs = logs,
+                      appInfoMap = appInfoMap.orEmpty(),
+                      searchQuery = searchQuery,
+                    )
                   }
                 }
+              }
+
+              suspend fun onLogsChanged(logs: List<Log>) {
+                val (hitIndexMap, hits) = performSearch(logs)
+
+                searchHitIndexMap = hitIndexMap
+                searchHits = hits
+
+                if (!scrolled) {
+                  searchInProgress = false
+                  if (searchHits.isNotEmpty()) {
+                    snapToBottom = false
+                    // Give it some time to stop auto-scroll before trying to scroll to the
+                    // first hit.
+                    delay(50)
+                    currentSearchHitIndex = 0
+                    scrolled = true
+                  } else {
+                    currentSearchHitIndex = -1
+                  }
+                }
+              }
+
+              try {
+                // Poll every second to include newer logs in the search.
+                var prevLastLogId: Int = -1
+                while (isActive) {
+                  // Perform search only if new logs have been added.
+                  val lastLogId = logsState.lastOrNull()?.id ?: -1
+                  if (lastLogId != prevLastLogId) {
+                    try {
+                      // TODO(darshan): one optimization that we could here is instead of making
+                      // a copy of logsState on each poll, we can only consider the newly added
+                      // logs since the prevLastLogId, and search them instead.
+                      onLogsChanged(logsState.toList())
+                    } catch (_: OutOfMemoryError) {
+                      Logger.debug(TAG, "OOM when searching - attempting to GC and try again")
+                      searchHitIndexMap = emptyMap()
+                      searchHits = emptyList()
+                      currentSearchHitIndex = -1
+                    } finally {
+                      Runtime.getRuntime().gc()
+                    }
+                    prevLastLogId = lastLogId
+                  }
+                  delay(1.seconds)
+                }
+              } finally {
+                Runtime.getRuntime().gc()
+              }
             } else {
               searchRegexError = false
               searchInProgress = false
