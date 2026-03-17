@@ -589,7 +589,7 @@ fun DeviceLogsScreen(
         onClickSave = {
           saveLogsInProgress = true
           coroutineScope.launch {
-            val logs = logsState.buffer().toList() // Create a copy
+            val logs = logsState.toList() // Create a copy
             if (logs.isNotEmpty()) {
               when (val result = saveLogsToFile(context, logs)) {
                 is SaveResult.Failure -> {
@@ -707,7 +707,7 @@ fun DeviceLogsScreen(
               } else {
                 null
               }
-              snapshotFlow { logsState.buffer() }
+              snapshotFlow { logsState.toList() }
                 .collect { logs ->
                   val (hitIndexMap, hits) = when {
                     useRegex && searchRegex == null -> {
