@@ -753,32 +753,27 @@ fun DeviceLogsScreen(
                 }
               }
 
-              try {
-                // Poll every second to include newer logs in the search.
-                var prevLastLogId: Int = -1
-                while (isActive) {
-                  // Perform search only if new logs have been added.
-                  val lastLogId = logsState.lastOrNull()?.id ?: -1
-                  if (lastLogId != prevLastLogId) {
-                    try {
-                      // TODO(darshan): one optimization that we could here is instead of making
-                      // a copy of logsState on each poll, we can only consider the newly added
-                      // logs since the prevLastLogId, and search them instead.
-                      onLogsChanged(logsState.toList())
-                    } catch (_: OutOfMemoryError) {
-                      Logger.debug(TAG, "OOM when searching - attempting to GC and try again")
-                      searchHitIndexMap = emptyMap()
-                      searchHits = emptyList()
-                      currentSearchHitIndex = -1
-                    } finally {
-                      Runtime.getRuntime().gc()
-                    }
-                    prevLastLogId = lastLogId
+              // Poll every second to include newer logs in the search.
+              var prevLastLogId: Int = -1
+              while (isActive) {
+                // Perform search only if new logs have been added.
+                val lastLogId = logsState.lastOrNull()?.id ?: -1
+                if (lastLogId != prevLastLogId) {
+                  try {
+                    // TODO(darshan): one optimization that we could here is instead of making
+                    // a copy of logsState on each poll, we can only consider the newly added
+                    // logs since the prevLastLogId, and search them instead.
+                    onLogsChanged(logsState.toList())
+                  } catch (_: OutOfMemoryError) {
+                    Logger.debug(TAG, "OOM when searching - attempting to GC and try again")
+                    searchHitIndexMap = emptyMap()
+                    searchHits = emptyList()
+                    currentSearchHitIndex = -1
+                    Runtime.getRuntime().gc()
                   }
-                  delay(1.seconds)
+                  prevLastLogId = lastLogId
                 }
-              } finally {
-                Runtime.getRuntime().gc()
+                delay(1.seconds)
               }
             } else {
               searchRegexError = false
