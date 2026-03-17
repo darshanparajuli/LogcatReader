@@ -696,6 +696,13 @@ fun DeviceLogsScreen(
         snapshotFlow { Pair(searchQuery, useRegexForSearch) }
           .collectLatest { (searchQuery, useRegex) ->
             delay(100L)
+
+            // Reset search state on every new search
+            searchRegexError = false
+            searchInProgress = false
+            searchHitIndexMap = emptyMap()
+            searchHits = emptyList()
+            currentSearchHitIndex = -1
             showHitCount = searchQuery.isNotEmpty()
             if (searchQuery.isNotEmpty()) {
               searchInProgress = true
@@ -775,12 +782,6 @@ fun DeviceLogsScreen(
                 }
                 delay(1.seconds)
               }
-            } else {
-              searchRegexError = false
-              searchInProgress = false
-              searchHitIndexMap = emptyMap()
-              searchHits = emptyList()
-              currentSearchHitIndex = -1
             }
           }
       }
