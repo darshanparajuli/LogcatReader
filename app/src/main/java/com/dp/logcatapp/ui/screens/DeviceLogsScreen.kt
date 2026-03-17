@@ -901,7 +901,7 @@ fun DeviceLogsScreen(
         modifier = Modifier
           .fillMaxSize()
           .consumeWindowInsets(innerPadding)
-          .pointerInput(Unit) {
+          .pointerInput(lifecycle, focusManager) {
             lifecycle.currentStateFlow.collectLatest { state ->
               if (state.isAtLeast(Lifecycle.State.RESUMED)) {
                 awaitPointerEventScope {
