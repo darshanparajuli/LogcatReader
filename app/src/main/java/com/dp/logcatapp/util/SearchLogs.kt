@@ -4,7 +4,6 @@ import com.dp.logcat.Log
 import com.dp.logcatapp.util.SearchHitKey.LogComponent
 import com.dp.logcatapp.util.SearchResult.SearchHit
 import com.dp.logcatapp.util.SearchResult.SearchHitSpan
-import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -68,12 +67,11 @@ suspend fun searchLogs(
   if (logs.size > CHUNKED_SEARCH_THRESHOLD) {
     val chunkSize = logs.size / (Runtime.getRuntime().availableProcessors() - 1)
       .coerceAtLeast(1)
-    val deferred = mutableListOf<Deferred<Unit>>()
     logs.asSequence()
       .withIndex()
       .chunked(chunkSize)
-      .forEach { logs ->
-        deferred += async {
+      .map { logs ->
+        async {
           logs.forEach { (index, log) ->
             ensureActive()
             performSearch(
@@ -86,8 +84,8 @@ suspend fun searchLogs(
             )
           }
         }
-      }
-    deferred.awaitAll()
+      }.toList()
+      .awaitAll()
   } else {
     logs.forEachIndexed { index, log ->
       ensureActive()
