@@ -8,6 +8,7 @@ import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
 
@@ -17,12 +18,18 @@ suspend fun searchLogs(
   logs: List<Log>,
   appInfoMap: Map<String, AppInfo>,
   searchRegex: Regex,
-): SearchResult {
-  return searchLogs(
+): SearchResult = coroutineScope {
+  searchLogs(
     logs = logs,
     appInfoMap = appInfoMap,
     searchFunction = { target ->
-      search(target = target, query = searchRegex)
+      search(
+        target = target,
+        query = searchRegex,
+        cancellationChecker = {
+          ensureActive()
+        }
+      )
     }
   )
 }
@@ -31,12 +38,18 @@ suspend fun searchLogs(
   logs: List<Log>,
   appInfoMap: Map<String, AppInfo>,
   searchQuery: String,
-): SearchResult {
-  return searchLogs(
+): SearchResult = coroutineScope {
+  searchLogs(
     logs = logs,
     appInfoMap = appInfoMap,
     searchFunction = { target ->
-      search(target = target, query = searchQuery)
+      search(
+        target = target,
+        query = searchQuery,
+        cancellationChecker = {
+          ensureActive()
+        }
+      )
     }
   )
 }
@@ -70,7 +83,6 @@ suspend fun searchLogs(
               searchFunction = searchFunction,
               hits = hits,
               map = map,
-              ensureActive = { ensureActive() },
             )
           }
         }
@@ -86,7 +98,6 @@ suspend fun searchLogs(
         searchFunction = searchFunction,
         hits = hits,
         map = map,
-        ensureActive = { ensureActive() },
       )
     }
   }
@@ -103,7 +114,6 @@ private fun performSearch(
   searchFunction: (String) -> Sequence<SearchHitSpan>,
   hits: MutableList<SearchHit>,
   map: MutableMap<SearchHitKey, List<HitIndex>>,
-  ensureActive: () -> Unit,
 ) {
   val tagSearchResult = searchFunction(log.tag)
   val msgSearchResult = searchFunction(log.msg)
@@ -126,7 +136,6 @@ private fun performSearch(
   ) {
     val hitIndices = mutableListOf<HitIndex>()
     spans.forEach { span ->
-      ensureActive()
       hitIndices += HitIndex(hits.size)
       hits += SearchHit(
         logId = log.id,
@@ -149,6 +158,7 @@ private fun performSearch(
 private fun search(
   target: String,
   query: String,
+  cancellationChecker: () -> Unit,
 ): Sequence<SearchHitSpan> {
   fun nextSearchHit(
     startIndex: Int = 0,
@@ -162,6 +172,7 @@ private fun search(
   return generateSequence(
     seedFunction = ::nextSearchHit,
     nextFunction = { span ->
+      cancellationChecker()
       nextSearchHit(startIndex = span.end)
     }
   )
@@ -170,9 +181,11 @@ private fun search(
 private fun search(
   target: String,
   query: Regex,
+  cancellationChecker: () -> Unit,
 ): Sequence<SearchHitSpan> {
   return query.findAll(target).map { result ->
-    SearchHitSpan(start = result.range.start, end = result.range.endInclusive + 1)
+    cancellationChecker()
+    SearchHitSpan(start = result.range.first, end = result.range.last + 1)
   }
 }
 
