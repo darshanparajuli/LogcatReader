@@ -859,7 +859,7 @@ fun DeviceLogsScreen(
             // different.
             logsState.size to logsState.lastOrNull()
           }
-            .collect { (count) ->
+            .collect { (count, _) ->
               if (count > 0) {
                 lazyListState.scrollToItem(count)
               }
