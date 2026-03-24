@@ -2,6 +2,7 @@ package com.logcat.collections
 
 import kotlin.math.min
 
+// Not thread-safe, do not access/modify concurrently.
 class FixedCircularBuffer<E>(
   val capacity: Int,
   initialSize: Int = INITIAL_SIZE
@@ -278,7 +279,7 @@ class FixedCircularBuffer<E>(
       )
     }
 
-    // TODO(darshan): add concurrent modification checks.
+    // NOTE(darshan): This does not perform concurrent modification checks.
     private class SubListIterator<E>(
       private val subList: SubList<E>,
       private var index: Int = 0
@@ -311,7 +312,7 @@ class FixedCircularBuffer<E>(
     }
   }
 
-  // TODO(darshan): add concurrent modification checks.
+  // NOTE(darshan): This does not perform concurrent modification checks.
   private class FixedCircularBufferIterator<E>(
     private val buffer: FixedCircularBuffer<E>,
     private var index: Int = 0
