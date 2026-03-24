@@ -65,9 +65,9 @@ suspend fun searchLogs(
   // Use HashMap since insertion-order does not matter and indexing is slightly faster.
   val map = HashMap<SearchHitKey, List<HitIndex>>()
   val hits = mutableListOf<SearchHit>()
-  val chunkSize = logs.size / (Runtime.getRuntime().availableProcessors() - 1)
-    .coerceAtLeast(1)
   if (logs.size > CHUNKED_SEARCH_THRESHOLD) {
+    val chunkSize = logs.size / (Runtime.getRuntime().availableProcessors() - 1)
+      .coerceAtLeast(1)
     val deferred = mutableListOf<Deferred<Unit>>()
     logs.asSequence()
       .withIndex()
