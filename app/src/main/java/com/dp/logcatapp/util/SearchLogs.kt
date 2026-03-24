@@ -136,7 +136,6 @@ private fun performSearch(
     spans.forEach { span ->
       hitIndices += HitIndex(hits.size)
       hits += SearchHit(
-        logId = log.id,
         index = index,
         span = span,
       )
@@ -199,7 +198,6 @@ data class SearchResult(
   )
 
   data class SearchHit(
-    val logId: Int,
     val index: Int,
     val span: SearchHitSpan,
   )
