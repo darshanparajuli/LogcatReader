@@ -141,7 +141,9 @@ private fun performSearch(
         span = span,
       )
     }
-    map[SearchHitKey(logId = log.id, component = component)] = hitIndices
+    if (hitIndices.isNotEmpty()) {
+      map[SearchHitKey(logId = log.id, component = component)] = hitIndices
+    }
   }
 
   addSpans(tagSearchResult, LogComponent.Tag)
