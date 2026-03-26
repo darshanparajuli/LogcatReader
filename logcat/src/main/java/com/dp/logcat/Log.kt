@@ -1,7 +1,6 @@
 package com.dp.logcat
 
 import android.os.Parcelable
-import androidx.core.text.isDigitsOnly
 import kotlinx.parcelize.IgnoredOnParcel
 import kotlinx.parcelize.Parcelize
 
@@ -23,7 +22,7 @@ data class Log(
     val value: String,
   ) : Parcelable {
     @IgnoredOnParcel
-    val isNum = value.isDigitsOnly()
+    val isNum = value.all { it.isDigit() }
   }
 
   fun metadataToString() = "[$date $time $uid:$pid:$tid $priority/$tag]"
