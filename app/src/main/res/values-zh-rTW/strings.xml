@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+  <string name="app_name">Logcat 讀取器</string>
+  <string name="device_logs">裝置日誌</string>
+  <string name="buffer_full">緩衝區已滿</string>
+  <string name="saved_logs">已儲存的日誌</string>
+  <string name="saved_logs_action">已儲存的日誌</string>
+  <string name="settings">設定</string>
+  <string name="start_recording">開始錄製</string>
+  <string name="stop_recording">停止錄製</string>
+  <string name="logcat_service_channel_name">Logcat 服務</string>
+  <string name="logcat_service">Logcat 服務</string>
+  <string name="press_back_again_to_exit">再按一次返回鍵以退出</string>
+  <string name="pref_cat_general">一般</string>
+  <string name="pref_general_keep_screen_on">保持螢幕開啟</string>
+  <string name="pref_general_filter_on_search">搜尋時篩選</string>
+  <string name="pref_general_filter_on_search_desc">僅顯示符合的結果</string>
+  <string name="pref_dynamic_color">動態色彩</string>
+  <string name="pref_cat_appearance">外觀</string>
+  <string name="pref_theme_title">佈景主題</string>
+  <string name="pref_theme_black_theme">極致黑主題</string>
+  <string name="exit">退出</string>
+  <string name="search">搜尋</string>
+  <string name="pause">暫停</string>
+  <string name="resume">繼續</string>
+  <string name="about">關於</string>
+  <string name="copy_adb_command">複製 ADB 指令</string>
+  <string name="copy_to_clipboard">複製到剪貼簿</string>
+  <string name="sort_by">排序方式</string>
+  <string name="sort_order">排序順序</string>
+  <string name="copied_to_clipboard">已複製</string>
+  <string name="save_to_file">儲存</string>
+  <string name="export">匯出</string>
+  <string name="logcat">Logcat</string>
+  <string name="pref_poll_interval_title">輪詢間隔</string>
+  <string name="view_log">檢視</string>
+  <string name="could_not_open_log_file">無法開啟日誌檔案</string>
+  <string name="failed_to_save_logs">儲存日誌失敗</string>
+  <string name="nothing_to_save">沒有可儲存的內容</string>
+  <string name="open_with">選擇開啟方式</string>
+  <string name="read_logs_permission_required">需要權限</string>
+  <string name="grant_read_logs_permission_instruction">若要檢視所有日誌，必須授予 READ_LOGS 權限。\n\n
+        1. 請透過 USB 將裝置連線至電腦\n
+        2. 執行以下指令：\n\n
+        adb shell pm grant com.dp.logcatapp android.permission.READ_LOGS\n\n
+        3. 關閉應用程式（連續按兩次返回鍵），並從最近使用應用程式中將其滑除。\n\n
+        若有任何問題，請回報，謝謝！
+    </string>
+  <string name="grant_read_logs_permission_action_using_root">授予</string>
+  <string name="failed">失敗</string>
+  <string name="pref_logcat_buffer_title">緩衝區</string>
+  <string name="restarting_logcat">正在重新啟動 Logcat</string>
+  <string name="saved_as_filename">已儲存為 %s</string>
+  <string name="kill">強制停止</string>
+  <string name="app_kill_reason">權限已授予。Logcat 讀取器需要被強制停止並重新手動開啟，因為一般的應用程式重啟方式在此情況下無效。此步驟僅需執行一次。</string>
+  <string name="started_recording">已開始錄製</string>
+  <string name="log_priority">日誌優先度</string>
+  <string name="pref_key_about_github_repo_title">GitHub 儲存庫</string>
+  <string name="pref_key_about_github_repo_summary">檢視原始碼、建立問題回報等</string>
+  <string name="filter">篩選器</string>
+  <string name="empty">清空</string>
+  <string name="delete">刪除</string>
+  <string name="share">分享</string>
+  <string name="save">儲存</string>
+  <string name="done">完成</string>
+  <string name="error">錯誤</string>
+  <string name="saved">已儲存</string>
+  <string name="waiting_for_logs" tools:ignore="TypographyEllipsis">正在等待日誌…</string>
+  <string name="error_saving">儲存時發生錯誤</string>
+  <string name="external_storage_not_mounted_error">外部儲存空間未掛載</string>
+  <string name="pref_logcat_max_recent_logs_to_keep_in_memory">
+        記憶體中保留的近期日誌最大數量
+    </string>
+  <string name="not_a_valid_number">不是有效的數字</string>
+  <string name="cannot_be_less_than_1000">不能小於 1000</string>
+  <string name="value_must_be_greater_than_0">數值必須大於 0</string>
+  <string name="value_must_be_a_positive_integer">數值必須是正整數</string>
+  <string name="rename">重新命名</string>
+  <string name="log_count_fmt">%d 筆日誌</string>
+  <string name="log_count_fmt_plural">%d 筆日誌</string>
+  <string name="select_all">全選</string>
+  <string name="saving">正在儲存…</string>
+  <string name="save_location">儲存位置</string>
+  <string name="save_location_internal">內部儲存空間</string>
+  <string name="save_location_custom">自訂</string>
+  <string name="err_msg_external_storage_not_writable">外部儲存空間無法寫入</string>
+  <string name="select">選擇</string>
+  <string name="filters">篩選器</string>
+  <string name="add">新增</string>
+  <string name="keyword">關鍵字</string>
+  <string name="tag">標籤</string>
+  <string name="exclude">排除</string>
+  <string name="exclusions">排除項目</string>
+  <string name="restart_logcat">重新啟動 Logcat</string>
+  <string name="restart">重新啟動</string>
+  <string name="exclusion">排除項目</string>
+  <string name="clear">清除</string>
+  <string name="process_id" translatable="false">PID</string>
+  <string name="thread_id" translatable="false">TID</string>
+  <string name="package_name">套件名稱</string>
+  <string name="log">日誌</string>
+  <string name="log_level">日誌層級</string>
+  <string name="message">訊息</string>
+  <string name="date">日期</string>
+  <string name="time">時間</string>
+  <string name="unable_to_share">無法分享</string>
+  <string name="permission_instruction0">請依照下列步驟授予 READ_LOGS 權限（僅需執行一次）：</string>
+  <string name="permission_instruction1">1. 將手機連接至安裝有 ADB 工具的電腦。</string>
+  <string name="permission_instruction2">2. 執行以下指令（單行）：</string>
+  <string name="permission_instruction3" translatable="false">adb shell "pm grant com.dp.logcatapp android.permission.READ_LOGS &amp;&amp; am force-stop com.dp.logcatapp"</string>
+  <string name="permission_instruction4">3. 連續按兩次返回鍵以關閉應用程式，並從最近使用應用程式中將其滑除。</string>
+  <string name="permission_instruction5">4. 再次啟動應用程式，現在您應該可以看到所有日誌了。</string>
+  <string name="permission_instruction6">若有任何問題，請回報，謝謝！</string>
+  <string name="success">成功</string>
+  <string name="fail">失敗</string>
+  <string name="manual_method">手動方式</string>
+  <string name="read_logs_permission_required_msg">需要 READ_LOGS 權限。\n\n若您的裝置已取得 Root 權限，請選擇「Root 方式」；否則，請選擇「手動方式」以透過 ADB 手動授予權限。\n\n此步驟僅需執行一次！</string>
+  <string name="root_method">Root 方式</string>
+  <string name="asking_permission_for_root_access">正在請求 Root 存取權限…</string>
+  <string name="app_restart_dialog_title">需要重啟應用程式</string>
+  <string name="app_restart_dialog_msg_body">點選「確定」將會強制停止應用程式。之後您應能看到完整的日誌列表。</string>
+  <string name="permission_granted_info_title">已授予 READ_LOGS 權限</string>
+  <string name="permission_granted_info_body">請注意，如果您沒有立即看到所有日誌，您可能需要等待系統再次要求授予存取日誌的權限，並予以允許。這是由於較新版 Android 系統限制較嚴格所致。</string>
+  <string name="select_export_format">選擇匯出格式</string>
+  <string name="export_format_default">預設</string>
+  <string name="export_format_single_line">單行</string>
+  <string name="error_opening_source">開啟來源時發生錯誤</string>
+  <string name="unsupported_source">不支援的來源</string>
+  <string name="version_fmt">版本 %s</string>
+  <string name="unable_to_start_logcat_error_msg">無法啟動 Logcat 程式並讀取日誌</string>
+  <string name="starting_logcat_session">正在啟動 Logcat 工作階段</string>
+  <string name="compact_view">精簡檢視</string>
+  <string name="name">名稱</string>
+  <string name="timestamp">時間戳記</string>
+  <string name="log_count">日誌數量</string>
+  <string name="size">大小</string>
+  <string name="ascending">遞增</string>
+  <string name="descending">遞減</string>
+  <string name="read_logs_permission_not_granted">未授予 READ_LOGS 權限</string>
+  <string name="read_logs_permission_granted">已授予 READ_LOGS 權限</string>
+  <string name="display_options">顯示選項</string>
+  <string name="select_apps_to_filter">選擇要篩選的應用程式</string>
+  <string name="filter_by_apps">依應用程式篩選</string>
+  <string name="saving_recorded_logs">正在儲存錄製的日誌</string>
+  <string name="more_options">更多選項</string>
+  <string name="close">關閉</string>
+  <string name="previous">上一頁</string>
+  <string name="next">下一頁</string>
+  <string name="navigate_up">向上導覽</string>
+  <string name="sort">排序</string>
+  <string name="system_app">系統應用程式</string>
+  <string name="enable">啟用</string>
+  <string name="disable">停用</string>
+  <string name="regex" translatable="false">Regex</string>
+  <string name="select_date_and_time">選擇日期與時間</string>
+  <string name="start_date">開始日期</string>
+  <string name="start_time">開始時間</string>
+  <string name="end_time">結束時間</string>
+  <string name="end_date">結束日期</string>
+  <string name="enabled">已啟用</string>
+</resources>
