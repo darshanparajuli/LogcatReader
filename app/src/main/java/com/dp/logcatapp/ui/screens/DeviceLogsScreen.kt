@@ -16,6 +16,10 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.WorkerThread
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.VisibilityThreshold
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
@@ -112,6 +116,7 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
 import androidx.core.net.toFile
@@ -1377,6 +1382,12 @@ private fun AppBar(
       Column(
         modifier = Modifier
           .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Start))
+          .animateContentSize(
+            animationSpec = spring(
+              stiffness = Spring.StiffnessMedium,
+              visibilityThreshold = IntSize.VisibilityThreshold,
+            )
+          )
       ) {
         Text(
           text = title,
