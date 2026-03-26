@@ -591,7 +591,7 @@ fun DeviceLogsScreen(
         onClickSave = {
           saveLogsInProgress = true
           coroutineScope.launch {
-            val logs = logsState.toList() // Create a copy
+            val logs = logsState.buffer().clone() // Create a copy
             if (logs.isNotEmpty()) {
               when (val result = saveLogsToFile(context, logs)) {
                 is SaveResult.Failure -> {
@@ -770,7 +770,7 @@ fun DeviceLogsScreen(
                     // TODO(darshan): one optimization that we could here is instead of making
                     // a copy of logsState on each poll, we can only consider the newly added
                     // logs since the prevLastLogId, and search them instead.
-                    onLogsChanged(logsState.toList())
+                    onLogsChanged(logsState.buffer().clone())
                   } catch (_: OutOfMemoryError) {
                     Logger.debug(TAG, "OOM when searching - attempting to GC and try again")
                     searchHitIndexMap = emptyMap()

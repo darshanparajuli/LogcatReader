@@ -132,6 +132,8 @@ class SnapshotFixedCircularBuffer<E> internal constructor(
     return readableBuffer.indexOf(element)
   }
 
+  fun buffer(): FixedCircularBuffer<E> = readableBuffer
+
   private class FixedCircularBufferStateRecord<T>(
     var buffer: FixedCircularBuffer<T>,
   ) : StateRecord() {
