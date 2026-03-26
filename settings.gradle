@@ -3,3 +3,5 @@ plugins {
 }
 include ':app', ':logcat', ':logger', ':collections'
 include ':microbenchmark'
+include ':searchlogs'
+include ':util'

@@ -6,11 +6,8 @@ import android.content.ContentResolver
 import android.content.Context
 import android.content.ContextWrapper
 import android.content.SharedPreferences
-import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
-import android.content.pm.PackageManager.GET_META_DATA
 import android.content.res.Configuration
-import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.os.Build.VERSION.SDK_INT
 import android.provider.OpenableColumns
@@ -19,7 +16,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
 import android.widget.Toast
-import androidx.annotation.WorkerThread
 import androidx.core.content.ContextCompat
 import androidx.core.net.toFile
 import androidx.preference.PreferenceManager
@@ -159,30 +155,4 @@ fun Context.isReadLogsPermissionGranted(): Boolean {
     this,
     Manifest.permission.READ_LOGS
   ) == PackageManager.PERMISSION_GRANTED
-}
-
-data class AppInfo(
-  val uid: String,
-  val packageName: String,
-  val name: String,
-  // This is 0 if not available.
-  val enabled: Boolean,
-  val icon: Drawable,
-  val isSystem: Boolean,
-)
-
-@WorkerThread
-fun Context.getAppInfo(): Map<String, AppInfo> {
-  val map = mutableMapOf<String, AppInfo>()
-  packageManager.getInstalledApplications(GET_META_DATA).forEach { info ->
-    map[info.uid.toString()] = AppInfo(
-      uid = info.uid.toString(),
-      packageName = info.packageName,
-      name = info.loadLabel(packageManager).toString(),
-      enabled = info.enabled,
-      icon = info.loadIcon(packageManager),
-      isSystem = (info.flags and ApplicationInfo.FLAG_SYSTEM) != 0,
-    )
-  }
-  return map
 }

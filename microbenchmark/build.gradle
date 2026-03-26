@@ -9,7 +9,7 @@ android {
   compileSdk = 36
 
   defaultConfig {
-    minSdk = 29
+    minSdkVersion 23
 
     testInstrumentationRunner 'androidx.benchmark.junit4.AndroidBenchmarkRunner'
   }
@@ -33,17 +33,20 @@ android {
     }
   }
   compileOptions {
-    sourceCompatibility JavaVersion.VERSION_11
-    targetCompatibility JavaVersion.VERSION_11
+    sourceCompatibility JavaVersion.VERSION_17
+    targetCompatibility JavaVersion.VERSION_17
   }
   kotlin {
     compilerOptions {
-      jvmTarget = JvmTarget.JVM_11
+      jvmTarget = JvmTarget.JVM_17
     }
   }
 }
 
 dependencies {
+  androidTestImplementation project(":util")
+  androidTestImplementation project(":logcat")
+  androidTestImplementation project(":searchlogs")
   androidTestImplementation libs.runner
   androidTestImplementation libs.ext.junit
   androidTestImplementation libs.junit

@@ -1,0 +1,45 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+
+android {
+  namespace 'com.dp.logcatapp.searchlogs'
+  compileSdk {
+    version = release(36)
+  }
+
+  defaultConfig {
+    minSdkVersion 23
+
+    testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    consumerProguardFiles "consumer-rules.pro"
+  }
+
+  buildTypes {
+    release {
+      minifyEnabled false
+      proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+    }
+  }
+  compileOptions {
+    sourceCompatibility JavaVersion.VERSION_17
+    targetCompatibility JavaVersion.VERSION_17
+  }
+  kotlin {
+    compilerOptions {
+      jvmTarget = JvmTarget.JVM_17
+    }
+  }
+}
+
+dependencies {
+  implementation project(":logcat")
+  implementation project(":util")
+  implementation libs.core.ktx
+  implementation libs.appcompat
+  implementation libs.material
+  testImplementation libs.junit
+  androidTestImplementation libs.ext.junit
+  androidTestImplementation libs.espresso.core
+}

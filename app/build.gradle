@@ -83,6 +83,8 @@ dependencies {
   implementation fileTree(include: ['*.jar'], dir: 'libs')
   implementation project(':collections')
   implementation project(':logcat')
+  implementation project(':util')
+  implementation project(':searchlogs')
   implementation project(':logger')
   implementation libs.core.ktx
   implementation libs.appcompat

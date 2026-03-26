@@ -64,3 +64,4 @@ benchmark-junit4 = { group = "androidx.benchmark", name = "benchmark-junit4", ve
 [plugins]
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlinVersion" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "kspVersion" }
+android-library = { id = "com.android.library", version.ref = "gradleVersion" }
