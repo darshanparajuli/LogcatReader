@@ -3,7 +3,7 @@ package com.dp.logcat
 import android.net.Uri
 import android.os.Build
 import com.dp.logger.Logger
-import com.logcat.collections.FixedCircularBuffer
+import com.dp.logcat.collections.FixedCircularBuffer
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope

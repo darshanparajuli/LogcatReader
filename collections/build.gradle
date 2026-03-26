@@ -19,7 +19,7 @@ android {
       jvmTarget = JvmTarget.JVM_17
     }
   }
-  namespace = 'com.logcat.collections'
+  namespace = 'com.dp.logcat.collections'
 }
 
 dependencies {

@@ -4,7 +4,7 @@ import androidx.compose.runtime.snapshots.StateObject
 import androidx.compose.runtime.snapshots.StateRecord
 import androidx.compose.runtime.snapshots.readable
 import androidx.compose.runtime.snapshots.writable
-import com.logcat.collections.FixedCircularBuffer
+import com.dp.logcat.collections.FixedCircularBuffer
 
 class SnapshotFixedCircularBuffer<E> internal constructor(
   buffer: FixedCircularBuffer<E>,

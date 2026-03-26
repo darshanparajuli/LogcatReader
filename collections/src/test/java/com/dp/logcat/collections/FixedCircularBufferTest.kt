@@ -1,4 +1,4 @@
-package com.logcat.collections
+package com.dp.logcat.collections
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
