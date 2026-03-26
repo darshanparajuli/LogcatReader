@@ -8,7 +8,6 @@ import com.dp.logcatapp.util.AppInfo
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
 
@@ -18,19 +17,16 @@ suspend fun searchLogs(
   logs: List<Log>,
   appInfoMap: Map<String, AppInfo>,
   searchRegex: Regex,
-): SearchResult = coroutineScope {
-  searchLogs(
+): SearchResult {
+  return searchLogs(
     logs = logs,
     appInfoMap = appInfoMap,
     searchFunction = { target ->
       search(
         target = target,
         query = searchRegex,
-        cancellationChecker = {
-          ensureActive()
-        }
       )
-    }
+    },
   )
 }
 
@@ -38,19 +34,16 @@ suspend fun searchLogs(
   logs: List<Log>,
   appInfoMap: Map<String, AppInfo>,
   searchQuery: String,
-): SearchResult = coroutineScope {
-  searchLogs(
+): SearchResult {
+  return searchLogs(
     logs = logs,
     appInfoMap = appInfoMap,
     searchFunction = { target ->
       search(
         target = target,
         query = searchQuery,
-        cancellationChecker = {
-          ensureActive()
-        }
       )
-    }
+    },
   )
 }
 
@@ -73,6 +66,7 @@ suspend fun searchLogs(
       .withIndex()
       .chunked(chunkSize)
       .map { logs ->
+        ensureActive()
         async {
           logs.map { (index, log) ->
             ensureActive()
@@ -250,7 +244,6 @@ private fun addSpans(
 private fun search(
   target: String,
   query: String,
-  cancellationChecker: () -> Unit,
 ): Sequence<SearchHitSpan> {
   fun nextSearchHit(
     startIndex: Int = 0,
@@ -264,7 +257,6 @@ private fun search(
   return generateSequence(
     seedFunction = ::nextSearchHit,
     nextFunction = { span ->
-      cancellationChecker()
       nextSearchHit(startIndex = span.end)
     }
   )
@@ -273,10 +265,8 @@ private fun search(
 private fun search(
   target: String,
   query: Regex,
-  cancellationChecker: () -> Unit,
 ): Sequence<SearchHitSpan> {
   return query.findAll(target).map { result ->
-    cancellationChecker()
     SearchHitSpan(start = result.range.first, end = result.range.last + 1)
   }
 }
