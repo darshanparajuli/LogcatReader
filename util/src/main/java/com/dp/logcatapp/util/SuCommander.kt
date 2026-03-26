@@ -20,7 +20,7 @@ class SuCommander(private val cmd: String) {
   }
 
   suspend fun run(): Boolean = coroutineScope {
-    var dispatcher = Executors.newFixedThreadPool(2).asCoroutineDispatcher()
+    val dispatcher = Executors.newFixedThreadPool(2).asCoroutineDispatcher()
     try {
       val processBuilder = ProcessBuilder("su")
       val process = withContext(dispatcher) { processBuilder.start() }
