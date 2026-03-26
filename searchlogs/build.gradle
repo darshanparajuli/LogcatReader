@@ -22,6 +22,9 @@ android {
       jvmTarget = JvmTarget.JVM_17
     }
   }
+  testOptions {
+    unitTests.includeAndroidResources = true
+  }
 }
 
 dependencies {
@@ -31,4 +34,6 @@ dependencies {
   implementation libs.appcompat
   implementation libs.material
   testImplementation libs.junit
+  testImplementation libs.kotlinx.coroutines.test
+  testImplementation libs.robolectric
 }
