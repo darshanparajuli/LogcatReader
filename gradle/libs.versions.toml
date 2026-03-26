@@ -53,6 +53,7 @@ room-runtime = { module = "androidx.room:room-runtime", version.ref = "roomVersi
 room-ktx = { module = "androidx.room:room-ktx", version.ref = "roomVersion" }
 room-compiler = { module = "androidx.room:room-compiler", version.ref = "roomVersion" }
 runner = { module = "androidx.test:runner", version.ref = "testRunnerVersion" }
+compose-runtime = { module = "androidx.compose.runtime:runtime" }
 ui-test-manifest = { module = "androidx.compose.ui:ui-test-manifest" }
 ui-test-junit4 = { module = "androidx.compose.ui:ui-test-junit4" }
 ui-tooling = { module = "androidx.compose.ui:ui-tooling" }

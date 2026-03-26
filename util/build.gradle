@@ -27,9 +27,8 @@ dependencies {
   implementation project(':collections')
   implementation libs.kotlinx.coroutines.core
 
-  def composeBom = platform(libs.compose.bom)
-  implementation composeBom
-  implementation 'androidx.compose.runtime:runtime'
+  implementation platform(libs.compose.bom)
+  implementation libs.compose.runtime
 
   testImplementation libs.junit
 }
