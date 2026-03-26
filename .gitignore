@@ -7,3 +7,4 @@
 .externalNativeBuild
 /.idea
 keystore.properties
+/.kotlin
