@@ -138,6 +138,11 @@ import com.dp.logcatapp.db.FilterInfo
 import com.dp.logcatapp.db.LogcatReaderDatabase
 import com.dp.logcatapp.db.RegexEnabledFilterType
 import com.dp.logcatapp.db.SavedLogInfo
+import com.dp.logcatapp.searchlogs.HitIndex
+import com.dp.logcatapp.searchlogs.SearchHitKey
+import com.dp.logcatapp.searchlogs.SearchResult
+import com.dp.logcatapp.searchlogs.SearchResult.SearchHit
+import com.dp.logcatapp.searchlogs.searchLogs
 import com.dp.logcatapp.services.LogcatService
 import com.dp.logcatapp.services.LogcatService.LogcatSessionStatus
 import com.dp.logcatapp.services.getService
@@ -151,10 +156,6 @@ import com.dp.logcatapp.ui.common.ToggleableLogItem
 import com.dp.logcatapp.ui.common.WithTooltip
 import com.dp.logcatapp.ui.theme.AppTypography
 import com.dp.logcatapp.util.AppInfo
-import com.dp.logcatapp.util.HitIndex
-import com.dp.logcatapp.util.SearchHitKey
-import com.dp.logcatapp.util.SearchResult
-import com.dp.logcatapp.util.SearchResult.SearchHit
 import com.dp.logcatapp.util.SettingsPrefKeys
 import com.dp.logcatapp.util.ShareUtils
 import com.dp.logcatapp.util.getDefaultSharedPreferences
@@ -163,7 +164,6 @@ import com.dp.logcatapp.util.rememberAppInfoByUidMap
 import com.dp.logcatapp.util.rememberBooleanSharedPreference
 import com.dp.logcatapp.util.rememberIntSharedPreference
 import com.dp.logcatapp.util.rememberStringSetSharedPreference
-import com.dp.logcatapp.util.searchLogs
 import com.dp.logcatapp.util.showToast
 import com.dp.logcatapp.util.toRegexOrNull
 import com.dp.logger.Logger
