@@ -32,10 +32,6 @@ class SnapshotFixedCircularBuffer<E> internal constructor(
     return (firstStateRecord as FixedCircularBufferStateRecord<E>).writable(this, block)
   }
 
-  private fun <R> writableBuffer(block: FixedCircularBuffer<E>.() -> R): R {
-    return writable { buffer.block() }
-  }
-
   // Note: do not solely rely on observing this value for whatever logic as it won't change after
   // it reaches the capacity.
   override val size: Int
@@ -43,25 +39,34 @@ class SnapshotFixedCircularBuffer<E> internal constructor(
 
   fun add(e: E) {
     writable {
-      buffer.add(e)
+      // TODO: this can be an expensive operation. One thing we can explore is to use linked array
+      // buffers of small fixed size arrays instead, so that we would only need to copy/replace a
+      // small array (size 32 maybe?) instead of the whole array.
+      buffer = buffer.clone().also { it.add(e) }
     }
   }
 
   fun add(list: Iterable<E>) {
-    writableBuffer {
-      add(list)
+    writable {
+      buffer = buffer.clone().also { it.add(list) }
     }
   }
 
   fun remove(e: E): E? {
-    return writableBuffer {
-      remove(e)
+    return writable {
+      val clone = buffer.clone()
+      val removed = clone.remove(e)
+      buffer = clone
+      removed
     }
   }
 
   fun removeAt(index: Int): E {
-    return writableBuffer {
-      removeAt(index)
+    return writable {
+      val clone = buffer.clone()
+      val removed = clone.removeAt(index)
+      buffer = clone
+      removed
     }
   }
 
@@ -100,8 +105,8 @@ class SnapshotFixedCircularBuffer<E> internal constructor(
   operator fun plusAssign(list: FixedCircularBuffer<E>) = add(list)
 
   fun clear() {
-    writableBuffer {
-      clear()
+    writable {
+      buffer = buffer.clone().also { it.clear() }
     }
   }
 

@@ -5,7 +5,7 @@ import kotlin.math.min
 // Not thread-safe, do not access/modify concurrently.
 class FixedCircularBuffer<E>(
   val capacity: Int,
-  initialSize: Int = INITIAL_SIZE
+  private val initialSize: Int = INITIAL_SIZE
 ) : List<E> {
 
   companion object {
@@ -160,6 +160,17 @@ class FixedCircularBuffer<E>(
   override fun isEmpty() = size == 0
 
   fun isFull() = size == capacity
+
+  fun clone(): FixedCircularBuffer<E> {
+    return FixedCircularBuffer<E>(
+      capacity = this.capacity,
+      initialSize = this.initialSize,
+    ).also { clone ->
+      clone.array = this.array.copyOf()
+      clone.head = this.head
+      clone.next = this.next
+    }
+  }
 
   override operator fun contains(element: E): Boolean {
     for (i in 0 until size) {
