@@ -23,6 +23,9 @@ kotlinVersion = "2.3.20"
 # KSP2 (2.3.0+) is no longer tied to a specific Kotlin version.
 kspVersion = "2.3.6"
 
+benchmarkVersion = "1.4.1"
+extJunitVersion = "1.3.0"
+
 [libraries]
 activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activityComposeVersion" }
 adaptive = { module = "androidx.compose.material3.adaptive:adaptive" }
@@ -54,6 +57,9 @@ ui-test-manifest = { module = "androidx.compose.ui:ui-test-manifest" }
 ui-test-junit4 = { module = "androidx.compose.ui:ui-test-junit4" }
 ui-tooling = { module = "androidx.compose.ui:ui-tooling" }
 ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview" }
+ext-junit = { group = "androidx.test.ext", name = "junit", version.ref = "extJunitVersion" }
+benchmark-gradle-plugin = { module = "androidx.benchmark:benchmark-gradle-plugin", version.ref = "benchmarkVersion" }
+benchmark-junit4 = { group = "androidx.benchmark", name = "benchmark-junit4", version.ref = "benchmarkVersion" }
 
 [plugins]
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlinVersion" }
