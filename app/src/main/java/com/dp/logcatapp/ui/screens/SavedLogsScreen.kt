@@ -114,7 +114,7 @@ import com.dp.logcatapp.ui.common.WithTooltip
 import com.dp.logcatapp.ui.theme.AppTypography
 import com.dp.logcatapp.ui.theme.Shapes
 import com.dp.logcatapp.util.ShareUtils
-import com.dp.logcatapp.util.Utils
+import com.dp.logcatapp.util.ByteUnitFormatter
 import com.dp.logcatapp.util.closeQuietly
 import com.dp.logcatapp.util.rememberIntSharedPreference
 import com.dp.logcatapp.util.showToast
@@ -960,7 +960,7 @@ private suspend fun savedLogs(context: Context, db: LogcatReaderDatabase): Flow<
               LogFileInfo(
                 info = info,
                 size = size,
-                sizeStr = Utils.bytesToString(size),
+                sizeStr = ByteUnitFormatter.format(size),
                 count = count,
                 timestamp = info.timestamp ?: file.lastModified(),
               )
@@ -972,7 +972,7 @@ private suspend fun savedLogs(context: Context, db: LogcatReaderDatabase): Flow<
               LogFileInfo(
                 info = info,
                 size = size,
-                sizeStr = Utils.bytesToString(size),
+                sizeStr = ByteUnitFormatter.format(size),
                 count = count,
                 timestamp = info.timestamp ?: file.lastModified(),
               )
@@ -988,7 +988,7 @@ private suspend fun savedLogs(context: Context, db: LogcatReaderDatabase): Flow<
       val totalSize = logFiles.sumOf { it.size }
       SavedLogsResult(
         totalSize = if (totalSize > 0) {
-          Utils.bytesToString(totalSize)
+          ByteUnitFormatter.format(totalSize)
         } else "",
         totalLogCount = totalLogCount,
         logFiles = logFiles,

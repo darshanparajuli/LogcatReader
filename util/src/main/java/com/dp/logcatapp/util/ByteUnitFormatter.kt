@@ -1,7 +1,7 @@
 package com.dp.logcatapp.util
 
-object Utils {
-  fun bytesToString(bytes: Long): String {
+object ByteUnitFormatter {
+  fun format(bytes: Long): String {
     val units = arrayOf("B", "KB", "MB", "GB", "TB")
     var unit = units[0]
     var totalSize = bytes.toDouble()
