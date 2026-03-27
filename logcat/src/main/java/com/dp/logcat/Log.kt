@@ -22,7 +22,7 @@ data class Log(
     val value: String,
   ) : Parcelable {
     @IgnoredOnParcel
-    val isNum = value.all { it.isDigit() }
+    val isNum = value.isNotEmpty() && value.all { it.isDigit() }
   }
 
   fun metadataToString() = "[$date $time $uid:$pid:$tid $priority/$tag]"
