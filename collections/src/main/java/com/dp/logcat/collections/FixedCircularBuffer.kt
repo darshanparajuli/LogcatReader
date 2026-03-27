@@ -2,17 +2,24 @@ package com.dp.logcat.collections
 
 import kotlin.math.min
 
+private const val INITIAL_SIZE = 16
+
 // Not thread-safe, do not access/modify concurrently.
-class FixedCircularBuffer<E>(
+class FixedCircularBuffer<E> private constructor(
   val capacity: Int,
-  private val initialSize: Int = INITIAL_SIZE
+  private val initialSize: Int = INITIAL_SIZE,
+  private var array: Array<Any?> = arrayOfNulls(min(capacity, initialSize)),
 ) : List<E> {
 
-  companion object {
-    private const val INITIAL_SIZE = 16
-  }
+  constructor(
+    capacity: Int,
+    initialSize: Int = INITIAL_SIZE,
+  ) : this(
+    capacity = capacity,
+    initialSize = initialSize,
+    array = arrayOfNulls(min(capacity, initialSize))
+  )
 
-  private var array = arrayOfNulls<Any>(min(capacity, initialSize))
   private var head = 0
   private var next = 0
 
@@ -165,8 +172,8 @@ class FixedCircularBuffer<E>(
     return FixedCircularBuffer<E>(
       capacity = this.capacity,
       initialSize = this.initialSize,
+      array = array.copyOf()
     ).also { clone ->
-      clone.array = this.array.copyOf()
       clone.head = this.head
       clone.next = this.next
     }
