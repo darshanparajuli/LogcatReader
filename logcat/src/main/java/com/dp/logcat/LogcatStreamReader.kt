@@ -45,7 +45,7 @@ class LogcatStreamReader(inputStream: InputStream) : Iterator<Log>, Closeable {
   }
 
   override fun next(): Log {
-    val result = log!!
+    val result = log ?: throw NoSuchElementException("did you forget to call hasNext() first?")
     log = null
     return result
   }

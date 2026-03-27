@@ -141,7 +141,7 @@ class LogcatStreamReaderTest {
     }
   }
 
-  @Test(expected = NullPointerException::class)
+  @Test(expected = NoSuchElementException::class)
   fun `next without hasNext throws`() {
     readerOf("").use { reader ->
       reader.next()
