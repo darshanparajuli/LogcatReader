@@ -545,6 +545,7 @@ fun DeviceLogsScreen(
         },
         filtered = appliedFilters,
         isPaused = logcatPaused,
+        searchEnabled = logcatSessionStarted,
         pauseEnabled = viewModel.recordStatus.isIdle() && logcatSessionStarted,
         recordEnabled = !logcatPaused &&
           viewModel.recordStatus != RecordStatus.SaveRecordedLogs && logcatSessionStarted,
@@ -1355,6 +1356,7 @@ private fun FloatingActionButtons(
 private fun AppBar(
   title: String,
   subtitle: String?,
+  searchEnabled: Boolean,
   filtered: Boolean,
   isPaused: Boolean,
   pauseEnabled: Boolean,
@@ -1427,6 +1429,7 @@ private fun AppBar(
         ) {
           IconButton(
             onClick = onClickSearch,
+            enabled = searchEnabled,
             colors = IconButtonDefaults.iconButtonColors(
               contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
             ),
