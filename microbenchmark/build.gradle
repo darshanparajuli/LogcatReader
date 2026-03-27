@@ -46,6 +46,7 @@ android {
 dependencies {
   androidTestImplementation project(":util")
   androidTestImplementation project(":logcat")
+  androidTestImplementation project(":collections")
   androidTestImplementation project(":searchlogs")
   androidTestImplementation libs.runner
   androidTestImplementation libs.ext.junit
