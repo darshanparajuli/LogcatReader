@@ -16,31 +16,31 @@ class LogcatStreamReader(inputStream: InputStream) : Iterator<Log>, Closeable {
     // Prevent reading and parsing the subsequent logs if we've already parsed one but have not
     // consumed it.
     if (log != null) return true
-    while (true) {
-      val metadata = reader.readLine()?.trim() ?: return false
-      if (metadata.startsWith("[")) {
-        var msg = reader.readLine() ?: return false
-        msgBuffer.append(msg)
+    var metadata = reader.readLine()?.trim() ?: return false
+    while (!metadata.startsWith("[")) {
+      metadata = reader.readLine()?.trim() ?: return false
+    }
 
-        msg = reader.readLine() ?: return false
-        while (msg.isNotEmpty()) {
-          msgBuffer.append("\n")
-            .append(msg)
+    var msg = reader.readLine() ?: return false
+    msgBuffer.append(msg)
 
-          msg = reader.readLine() ?: return false
-        }
+    msg = reader.readLine() ?: return false
+    while (msg.isNotEmpty()) {
+      msgBuffer.append("\n")
+        .append(msg)
 
-        return try {
-          log = Log.parse(id = id, metadata = metadata, msg = msgBuffer.toString())
-          id += 1
-          true
-        } catch (_: Exception) {
-          // Logger.debug(Logcat::class, "${e.message}: $metadata")
-          false
-        } finally {
-          msgBuffer.setLength(0)
-        }
-      }
+      msg = reader.readLine() ?: return false
+    }
+
+    return try {
+      log = Log.parse(id = id, metadata = metadata, msg = msgBuffer.toString())
+      id += 1
+      true
+    } catch (_: Exception) {
+      // Logger.debug(Logcat::class, "${e.message}: $metadata")
+      false
+    } finally {
+      msgBuffer.setLength(0)
     }
   }
 
