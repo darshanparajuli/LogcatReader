@@ -28,7 +28,6 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.getAndUpdate
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -74,7 +73,7 @@ class LogcatService : BaseService() {
 
   private suspend fun startNewLogcatSession() {
     val logcatSession = newLogcatSession()
-    if (logcatSession.start().first().success) {
+    if (logcatSession.start()) {
       _logcatSession.value = LogcatSessionStatus.Started(logcatSession)
     } else {
       _logcatSession.value = LogcatSessionStatus.FailedToStart

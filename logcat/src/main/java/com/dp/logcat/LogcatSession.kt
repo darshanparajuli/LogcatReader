@@ -2,15 +2,16 @@ package com.dp.logcat
 
 import android.net.Uri
 import android.os.Build
-import com.dp.logger.Logger
 import com.dp.logcat.collections.FixedCircularBuffer
+import com.dp.logcatapp.util.DefaultProcessStarter
+import com.dp.logcatapp.util.ProcessStarter
+import com.dp.logger.Logger
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.channels.BufferOverflow.DROP_OLDEST
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.ensureActive
@@ -19,11 +20,11 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.channelFlow
-import kotlinx.coroutines.flow.consumeAsFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import java.io.BufferedWriter
@@ -32,6 +33,7 @@ import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.thread
 import kotlin.concurrent.withLock
+import kotlin.coroutines.resume
 import kotlin.time.Duration.Companion.seconds
 
 private const val THREAD_JOIN_TIMEOUT = 5_000L // 5 seconds
@@ -41,6 +43,7 @@ class LogcatSession(
   private val buffers: Set<String>,
   @Volatile
   var pollIntervalMs: Long = 250,
+  private val processStarter: ProcessStarter = DefaultProcessStarter(),
 ) {
 
   @Volatile private var record = false
@@ -71,6 +74,9 @@ class LogcatSession(
 
   @Suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN")
   private val pauseWaiter = Object()
+
+  val isActive: Boolean
+    get() = active
 
   var isPaused: Boolean
     get() = paused
@@ -103,34 +109,37 @@ class LogcatSession(
     }
   }.buffer(capacity, onBufferOverflow = DROP_OLDEST)
 
-  @JvmInline
-  value class Status(val success: Boolean)
-
-  fun start(): Flow<Status> {
-    Logger.debug(LogcatSession::class, "starting")
-    check(!stopped) { "LogcatSession was stopped, it cannot be re-started" }
-    check(!active) { "LogcatSession is already active!" }
-    active = true
-    val status = Channel<Status>(capacity = 1)
-    logcatThread = thread {
-      // calling runBlocking is fine here since this function runs a separate non-ui thread, and not
-      // in a coroutine.
-      val capabilities = runBlocking { logcatCapabilities() }
-      val process = startLogcatProcess(
-        uidSupported = capabilities.uidSupported,
-        yearSupported = capabilities.yearSupported,
-      )
-      status.trySend(Status(process != null))
-      if (process != null) {
-        readLogs(process)
+  suspend fun start(): Boolean {
+    val started = suspendCancellableCoroutine { cont ->
+      Logger.debug(LogcatSession::class, "starting")
+      check(!stopped) { "LogcatSession was stopped, it cannot be re-started" }
+      check(!active) { "LogcatSession is already active!" }
+      active = true
+      logcatThread = thread {
+        // calling runBlocking is fine here since this function runs a separate non-ui thread, and not
+        // in a coroutine.
+        val capabilities = runBlocking { logcatCapabilities() }
+        val process = startLogcatProcess(
+          uidSupported = capabilities.uidSupported,
+          yearSupported = capabilities.yearSupported,
+        )
+        cont.resume(process != null)
+        if (process != null) {
+          readLogs(process)
+        }
+        Logger.debug(LogcatSession::class, "stopped logcat thread")
       }
-      Logger.debug(LogcatSession::class, "stopped logcat thread")
+      cont.invokeOnCancellation {
+        stop()
+      }
     }
-    pollerThread = thread {
-      poll()
-      Logger.debug(LogcatSession::class, "stopped polling thread")
+    if (started) {
+      pollerThread = thread {
+        poll()
+        Logger.debug(LogcatSession::class, "stopped polling thread")
+      }
     }
-    return status.consumeAsFlow()
+    return started
   }
 
   private fun Iterable<Log>.filtered(): List<Log> {
@@ -159,11 +168,10 @@ class LogcatSession(
       }
     }
     return try {
-      ProcessBuilder(cmd).start().also { process ->
+      processStarter.start(cmd).also { process ->
         logcatProcess = process
       }
-    } catch (e: IOException) {
-      e.printStackTrace()
+    } catch (_: IOException) {
       Logger.debug(LogcatSession::class, "error starting logcat process")
       null
     }
