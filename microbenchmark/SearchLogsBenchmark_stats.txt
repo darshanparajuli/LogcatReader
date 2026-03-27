@@ -1,0 +1,3 @@
+Device: Samsung S21 Ultra
+
+  120,061,876   ns      628620 allocs    SearchLogsBenchmark.benchmarkSearch_10000_logs

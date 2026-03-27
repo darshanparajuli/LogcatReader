@@ -1,12 +1,9 @@
 package com.dp.logcatapp.microbenchmark
 
 import androidx.benchmark.junit4.BenchmarkRule
-import androidx.benchmark.junit4.measureRepeated
 import com.dp.logcat.Log
 import com.dp.logcat.LogPriority
-import com.dp.logcatapp.searchlogs.SearchResult
 import com.dp.logcatapp.searchlogs.searchLogs
-import kotlinx.coroutines.runBlocking
 import org.junit.Rule
 import org.junit.Test
 
@@ -16,9 +13,9 @@ class SearchLogsBenchmark {
   val benchmarkRule = BenchmarkRule()
 
   @Test
-  fun benchmarkSearch() {
+  fun benchmarkSearch_10000_logs() {
     val logs = mutableListOf<Log>()
-    repeat(MAX_LOGS) { index ->
+    repeat(10_000) { index ->
       val log = Log(
         id = index,
         date = "some-date",
@@ -32,17 +29,16 @@ class SearchLogsBenchmark {
       )
       logs += log
     }
-    lateinit var result: SearchResult
-    benchmarkRule.measureRepeated {
-      result = runBlocking {
-        searchLogs(
-          logs = logs,
-          appInfoMap = emptyMap(),
-          searchQuery = "b"
-        )
+    benchmarkRule.measureRepeatedSuspend {
+      val result = searchLogs(
+        logs = logs,
+        appInfoMap = emptyMap(),
+        searchQuery = "b"
+      )
+      runWithMeasurementDisabled {
+        check(result.hits.isNotEmpty())
       }
     }
-    println(result)
   }
 
   companion object {
@@ -57,6 +53,5 @@ class SearchLogsBenchmark {
       vehicula pulvinar, nibh risus scelerisque orci, non fermentum urna tellus et purus. 
       Sed aliquet dapibus fringilla. Duis ut finibus nunc.
       """.trimIndent()
-    private const val MAX_LOGS = 100_000
   }
 }
