@@ -20,7 +20,7 @@ object CommandUtils {
       val stderrStream = process.errorStream
       val stdoutStream = process.inputStream
 
-      val stdoutThread = thread {
+      val stdoutThread = thread(name = "run-cmd-stdout-reader") {
         try {
           BufferedReader(InputStreamReader(stdoutStream)).use {
             while (true) {
@@ -31,7 +31,7 @@ object CommandUtils {
         } catch (_: Exception) {
         }
       }
-      val stderrThread = thread {
+      val stderrThread = thread(name = "run-cmd-stderr-reader") {
         try {
           BufferedReader(InputStreamReader(stderrStream)).use {
             while (true) {

@@ -115,7 +115,7 @@ class LogcatSession(
       check(!stopped) { "LogcatSession was stopped, it cannot be re-started" }
       check(!active) { "LogcatSession is already active!" }
       active = true
-      logcatThread = thread {
+      logcatThread = thread(name = "logcat-process-starter") {
         // calling runBlocking is fine here since this function runs a separate non-ui thread, and not
         // in a coroutine.
         val capabilities = runBlocking { logcatCapabilities() }
@@ -134,7 +134,7 @@ class LogcatSession(
       }
     }
     if (started) {
-      pollerThread = thread {
+      pollerThread = thread(name = "logcat-poller") {
         poll()
         Logger.debug(LogcatSession::class, "stopped polling thread")
       }
@@ -180,7 +180,7 @@ class LogcatSession(
   private fun readLogs(process: Process) {
     try {
       val inputStream = process.inputStream
-      val stdoutReaderThread = thread {
+      val stdoutReaderThread = thread(name = "logcat-stdout-reader") {
         try {
           runBlocking {
             try {
@@ -313,7 +313,7 @@ class LogcatSession(
     lock.withLock {
       this.recordingFileInfo = recordingFileInfo
       record = true
-      recordThread = thread {
+      recordThread = thread(name = "logcat-recorder") {
         while (record) {
           val logs = try {
             recordBuffer.take()
@@ -423,31 +423,12 @@ class LogcatSession(
       vararg options: String
     ): Boolean {
       check(options.isNotEmpty())
-      return try {
-        // Using brief outputs less lines, which improves the speed of consumption. Nevertheless,
-        // it will still exit with non-zero value if the given options are not valid.
-        val process = ProcessBuilder(
-          "logcat", "-v", "brief", *options, "-d",
-        ).let { builder ->
-          builder.redirectErrorStream(true)
-          builder.start()
-        }
-        val stdoutReaderThread = thread {
-          try {
-            // Consume stdout. Without this, the process waits forever on some
-            // devices/os versions.
-            process.inputStream.bufferedReader().use { reader ->
-              reader.readLines()
-            }
-          } catch (_: Throwable) {
-          }
-        }
-        val exitValue = process.waitFor()
-        stdoutReaderThread.join(THREAD_JOIN_TIMEOUT)
-        exitValue == 0
-      } catch (_: Exception) {
-        false
-      }
+      // Using brief outputs less lines, which improves the speed of consumption. Nevertheless,
+      // it will still exit with non-zero value if the given options are not valid.
+      return CommandUtils.runCmd(
+        cmd = listOf("logcat", "-v", "brief", *options, "-d"),
+        redirectStderr = true,
+      ) == 0
     }
   }
 }
