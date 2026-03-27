@@ -27,8 +27,10 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
+import java.io.BufferedReader
 import java.io.BufferedWriter
 import java.io.IOException
+import java.io.InputStreamReader
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.thread
@@ -180,6 +182,7 @@ class LogcatSession(
   private fun readLogs(process: Process) {
     try {
       val inputStream = process.inputStream
+      val errorStream = process.errorStream
       val stdoutReaderThread = thread(name = "logcat-stdout-reader") {
         try {
           runBlocking {
@@ -213,11 +216,24 @@ class LogcatSession(
         }
         Logger.debug(LogcatSession::class, "stopped logcat reader thread")
       }
+      val stderrReaderThread = thread(name = "logcat-stderr-reader") {
+        try {
+          BufferedReader(InputStreamReader(errorStream)).use {
+            val buffer = CharArray(8192)
+            while (it.read(buffer) != -1) {
+              // Just consume it, do nothing.
+            }
+          }
+        } catch (_: Exception) {
+        }
+      }
 
       // We don't care about the exit value as the process doesn't exit normally.
       process.waitFor()
       inputStream.close()
+      errorStream.close()
       stdoutReaderThread.join(THREAD_JOIN_TIMEOUT)
+      stderrReaderThread.join(THREAD_JOIN_TIMEOUT)
     } catch (_: Exception) {
       Logger.debug(LogcatSession::class, "error reading logs")
     }
