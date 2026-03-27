@@ -1,8 +1,8 @@
 package com.dp.logcat
 
+import com.dp.logcatapp.util.closeQuietly
 import java.io.BufferedReader
 import java.io.Closeable
-import java.io.IOException
 import java.io.InputStream
 import java.io.InputStreamReader
 
@@ -51,9 +51,6 @@ class LogcatStreamReader(inputStream: InputStream) : Iterator<Log>, Closeable {
   }
 
   override fun close() {
-    try {
-      reader.close()
-    } catch (ignored: IOException) {
-    }
+    reader.closeQuietly()
   }
 }
