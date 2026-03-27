@@ -2,3 +2,8 @@ Device: Samsung S21 Ultra
 
            12.6 ns           1 allocs    FixedCircularArrayBufferBenchmark.benchmarkAdd
        47,508   ns           4 allocs    FixedCircularArrayBufferBenchmark.benchmarkCloneAdd
+
+Device: Pixel 8
+
+           11.3 ns           1 allocs    FixedCircularArrayBufferBenchmark.benchmarkAdd
+       45,742   ns           4 allocs    FixedCircularArrayBufferBenchmark.benchmarkCloneAdd

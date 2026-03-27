@@ -1,3 +1,7 @@
 Device: Samsung S21 Ultra
 
   120,061,876   ns      628620 allocs    SearchLogsBenchmark.benchmarkSearch_10000_logs
+
+Device: Pixel 8
+
+   79,567,667   ns      607227 allocs    SearchLogsBenchmark.benchmarkSearch_10000_logs
