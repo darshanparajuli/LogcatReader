@@ -9,10 +9,13 @@ import java.io.InputStreamReader
 class LogcatStreamReader(inputStream: InputStream) : Iterator<Log>, Closeable {
   private val reader: BufferedReader = BufferedReader(InputStreamReader(inputStream))
   private val msgBuffer = StringBuilder()
-  private lateinit var log: Log
+  private var log: Log? = null
   private var id = 0
 
   override fun hasNext(): Boolean {
+    // Prevent reading and parsing the subsequent logs if we've already parsed one but have not
+    // consumed it.
+    if (log != null) return true
     while (true) {
       val metadata = reader.readLine()?.trim() ?: return false
       if (metadata.startsWith("[")) {
@@ -41,7 +44,11 @@ class LogcatStreamReader(inputStream: InputStream) : Iterator<Log>, Closeable {
     }
   }
 
-  override fun next() = log
+  override fun next(): Log {
+    val result = log!!
+    log = null
+    return result
+  }
 
   override fun close() {
     try {
