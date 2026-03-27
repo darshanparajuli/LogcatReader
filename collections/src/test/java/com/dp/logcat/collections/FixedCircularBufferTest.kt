@@ -464,4 +464,92 @@ class FixedCircularBufferTest {
     assertEquals(1, buffer[0])
     assertEquals(100, buffer[7])
   }
+
+  @Test
+  fun testCloneBasic() {
+    val buffer = FixedCircularBuffer<Int>(5)
+    buffer.add(listOf(1, 2, 3))
+    val clone = buffer.clone()
+    assertEquals(buffer.size, clone.size)
+    for (i in 0 until buffer.size) {
+      assertEquals(buffer[i], clone[i])
+    }
+  }
+
+  @Test
+  fun testCloneIsIndependent() {
+    val buffer = FixedCircularBuffer<Int>(5)
+    buffer.add(listOf(1, 2, 3))
+    val clone = buffer.clone()
+
+    buffer.add(4)
+    assertEquals(3, clone.size)
+    assertEquals(listOf(1, 2, 3), clone.toList())
+
+    clone.add(99)
+    assertEquals(4, buffer.size)
+    assertEquals(listOf(1, 2, 3, 4), buffer.toList())
+  }
+
+  @Test
+  fun testCloneEmpty() {
+    val buffer = FixedCircularBuffer<Int>(5)
+    val clone = buffer.clone()
+    assertTrue(clone.isEmpty())
+    assertEquals(0, clone.size)
+  }
+
+  @Test
+  fun testCloneWrappedAround() {
+    val buffer = FixedCircularBuffer<Int>(5)
+    for (i in 0 until 8) {
+      buffer.add(i)
+    }
+    // Buffer now contains [3, 4, 5, 6, 7] with head wrapped
+    val clone = buffer.clone()
+    assertEquals(buffer.size, clone.size)
+    assertEquals(buffer.toList(), clone.toList())
+  }
+
+  @Test
+  fun testClonePreservesCapacity() {
+    val buffer = FixedCircularBuffer<Int>(10)
+    buffer.add(listOf(1, 2, 3))
+    val clone = buffer.clone()
+    assertEquals(buffer.capacity, clone.capacity)
+
+    // Fill clone to capacity to verify it respects the same limit
+    for (i in 0 until 10) {
+      clone.add(i)
+    }
+    assertTrue(clone.isFull())
+  }
+
+  @Test
+  fun testEqualsIdenticalBuffers() {
+    val a = FixedCircularBuffer<Int>(5)
+    val b = FixedCircularBuffer<Int>(5)
+    a.add(listOf(1, 2, 3))
+    b.add(listOf(1, 2, 3))
+    assertEquals(a, b)
+  }
+
+  @Test
+  fun testEqualsSameContentDifferentCapacity() {
+    val a = FixedCircularBuffer<Int>(5)
+    val b = FixedCircularBuffer<Int>(10)
+    a.add(listOf(1, 2, 3))
+    b.add(listOf(1, 2, 3))
+    assertFalse(a == b)
+  }
+
+  @Test
+  fun testHashCodeConsistentWithEquals() {
+    val a = FixedCircularBuffer<Int>(5)
+    val b = FixedCircularBuffer<Int>(5)
+    a.add(listOf(1, 2, 3))
+    b.add(listOf(1, 2, 3))
+    assertEquals(a, b)
+    assertEquals(a.hashCode(), b.hashCode())
+  }
 }
