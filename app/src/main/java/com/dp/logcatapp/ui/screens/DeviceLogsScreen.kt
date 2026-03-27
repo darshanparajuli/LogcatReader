@@ -2050,7 +2050,6 @@ class DeviceLogsViewModel(
       .collectLatest { service ->
         if (service != null) {
           service.logcatSessionStatus
-            .filterNotNull()
             .collectLatest { status ->
               _logcatSessionStatus.value = status
             }
