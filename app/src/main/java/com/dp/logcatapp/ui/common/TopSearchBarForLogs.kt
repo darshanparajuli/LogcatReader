@@ -2,6 +2,9 @@ package com.dp.logcatapp.ui.common
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.VisibilityThreshold
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -53,6 +56,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.AndroidUiModes
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.dp.logcatapp.R
@@ -145,8 +149,12 @@ fun SearchLogsTopBar(
         supportingText = {
           AnimatedVisibility(
             visible = showHitCount,
-            enter = fadeIn(),
-            exit = fadeOut(),
+            enter = fadeIn(
+              animationSpec = spring(stiffness = Spring.StiffnessMedium)
+            ),
+            exit = fadeOut(
+              animationSpec = spring(stiffness = Spring.StiffnessMedium)
+            ),
             modifier = Modifier.fillMaxWidth(),
           ) {
             val current = currentHitIndex.takeIf { it != -1 }?.let { it + 1 } ?: 0
@@ -273,7 +281,12 @@ private fun SearchTextField(
         Column(
           modifier = Modifier
             .weight(1f)
-            .animateContentSize()
+            .animateContentSize(
+              animationSpec = spring(
+                stiffness = Spring.StiffnessMedium,
+                visibilityThreshold = IntSize.VisibilityThreshold,
+              )
+            )
         ) {
           Box {
             if (value.isEmpty() && placeholder != null) {
