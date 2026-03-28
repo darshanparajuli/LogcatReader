@@ -29,7 +29,7 @@ When opening a pull request, include the following information:
 
 ```
 
-# Release
+# Release guide
 
 1. Suggest a version name based on recent changes (use semantics versioning) and confirm with the user
 2. Bump the version and versioncode numbers, and commit the change
