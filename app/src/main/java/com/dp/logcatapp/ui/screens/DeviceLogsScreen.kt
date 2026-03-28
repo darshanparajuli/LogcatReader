@@ -22,8 +22,6 @@ import androidx.compose.animation.core.VisibilityThreshold
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -60,8 +58,6 @@ import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.FiberManualRecord
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Folder
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
@@ -78,7 +74,6 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
@@ -157,6 +152,7 @@ import com.dp.logcatapp.ui.common.LogsList
 import com.dp.logcatapp.ui.common.LogsListStyle
 import com.dp.logcatapp.ui.common.MaybeShowPermissionRequiredDialog
 import com.dp.logcatapp.ui.common.SearchLogsTopBar
+import com.dp.logcatapp.ui.common.SnapScrollFab
 import com.dp.logcatapp.ui.common.ToggleableLogItem
 import com.dp.logcatapp.ui.common.WithTooltip
 import com.dp.logcatapp.ui.theme.AppTypography
@@ -671,7 +667,7 @@ fun DeviceLogsScreen(
       }
     },
     floatingActionButton = {
-      FloatingActionButtons(
+      SnapScrollFab(
         visible = showScrollSnapperFabs,
         scrollToTopInteractionSource = snapToTopInteractionSource,
         scrollToBottomInteractionSource = snapToBottomInteractionSource,
@@ -1303,48 +1299,6 @@ private fun SavedLogsBottomSheet(
           containerColor = MaterialTheme.colorScheme.surfaceContainer,
         ),
       )
-    }
-  }
-}
-
-@Composable
-private fun FloatingActionButtons(
-  visible: Boolean,
-  scrollToTopInteractionSource: MutableInteractionSource,
-  scrollToBottomInteractionSource: MutableInteractionSource,
-  onClickScrollToTop: () -> Unit,
-  onClickScrollToBottom: () -> Unit,
-) {
-  AnimatedVisibility(
-    visible = visible,
-    enter = fadeIn() + slideInHorizontally(initialOffsetX = { it }),
-    exit = fadeOut() + slideOutHorizontally(targetOffsetX = { it }),
-  ) {
-    Column(
-      modifier = Modifier
-        .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal))
-    ) {
-      FloatingActionButton(
-        modifier = Modifier.size(48.dp),
-        onClick = onClickScrollToTop,
-        interactionSource = scrollToTopInteractionSource,
-      ) {
-        Icon(
-          imageVector = Icons.Filled.KeyboardArrowUp,
-          contentDescription = null
-        )
-      }
-      Spacer(modifier = Modifier.height(12.dp))
-      FloatingActionButton(
-        modifier = Modifier.size(48.dp),
-        onClick = onClickScrollToBottom,
-        interactionSource = scrollToBottomInteractionSource,
-      ) {
-        Icon(
-          imageVector = Icons.Filled.KeyboardArrowDown,
-          contentDescription = null
-        )
-      }
     }
   }
 }

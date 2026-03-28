@@ -2,6 +2,7 @@ package com.dp.logcatapp.ui.common
 
 import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ContentTransform
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
@@ -10,12 +11,17 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.VisibilityThreshold
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideIn
+import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOut
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.ScrollIndicatorState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -33,6 +39,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.wrapContentHeight
@@ -40,7 +47,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.text.selection.LocalTextSelectionColors
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -320,6 +332,50 @@ fun LogsList(
             )
           },
           priorityColor = item.priority.toColor(),
+        )
+      }
+    }
+  }
+}
+
+@Composable
+fun SnapScrollFab(
+  visible: Boolean,
+  scrollToTopInteractionSource: MutableInteractionSource,
+  scrollToBottomInteractionSource: MutableInteractionSource,
+  onClickScrollToTop: () -> Unit,
+  onClickScrollToBottom: () -> Unit,
+  modifier: Modifier = Modifier,
+) {
+  AnimatedVisibility(
+    visible = visible,
+    enter = fadeIn() + slideInHorizontally(initialOffsetX = { it }),
+    exit = fadeOut() + slideOutHorizontally(targetOffsetX = { it }),
+    modifier = modifier,
+  ) {
+    Column(
+      modifier = Modifier
+        .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal))
+    ) {
+      FloatingActionButton(
+        modifier = Modifier.size(48.dp),
+        onClick = onClickScrollToTop,
+        interactionSource = scrollToTopInteractionSource,
+      ) {
+        Icon(
+          imageVector = Icons.Filled.KeyboardArrowUp,
+          contentDescription = null
+        )
+      }
+      Spacer(modifier = Modifier.height(12.dp))
+      FloatingActionButton(
+        modifier = Modifier.size(48.dp),
+        onClick = onClickScrollToBottom,
+        interactionSource = scrollToBottomInteractionSource,
+      ) {
+        Icon(
+          imageVector = Icons.Filled.KeyboardArrowDown,
+          contentDescription = null
         )
       }
     }

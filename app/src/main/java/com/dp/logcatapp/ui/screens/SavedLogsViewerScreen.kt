@@ -78,6 +78,7 @@ import com.dp.logcatapp.ui.common.CopyLogClipboardBottomSheet
 import com.dp.logcatapp.ui.common.LogsList
 import com.dp.logcatapp.ui.common.LogsListStyle
 import com.dp.logcatapp.ui.common.SearchLogsTopBar
+import com.dp.logcatapp.ui.common.SnapScrollFab
 import com.dp.logcatapp.ui.common.WithTooltip
 import com.dp.logcatapp.ui.theme.AppTypography
 import com.dp.logcatapp.util.closeQuietly
@@ -257,7 +258,7 @@ fun SavedLogsViewerScreen(
     },
     floatingActionButton = {
       val coroutineScope = rememberCoroutineScope()
-      FloatingActionButtons(
+      SnapScrollFab(
         visible = scrollSnapperVisible,
         scrollToBottomInteractionSource = scrollToBottomInteractionSource,
         scrollToTopInteractionSource = scrollToTopInteractionSource,
@@ -513,48 +514,6 @@ private fun AppBar(
       titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
     ),
   )
-}
-
-@Composable
-private fun FloatingActionButtons(
-  visible: Boolean,
-  scrollToTopInteractionSource: MutableInteractionSource,
-  scrollToBottomInteractionSource: MutableInteractionSource,
-  onClickScrollToTop: () -> Unit,
-  onClickScrollToBottom: () -> Unit,
-) {
-  AnimatedVisibility(
-    visible = visible,
-    enter = fadeIn() + slideInHorizontally(initialOffsetX = { it }),
-    exit = fadeOut() + slideOutHorizontally(targetOffsetX = { it }),
-  ) {
-    Column(
-      modifier = Modifier
-        .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal))
-    ) {
-      FloatingActionButton(
-        modifier = Modifier.size(48.dp),
-        onClick = onClickScrollToTop,
-        interactionSource = scrollToTopInteractionSource,
-      ) {
-        Icon(
-          imageVector = Icons.Filled.ArrowUpward,
-          contentDescription = null
-        )
-      }
-      Spacer(modifier = Modifier.height(12.dp))
-      FloatingActionButton(
-        modifier = Modifier.size(48.dp),
-        onClick = onClickScrollToBottom,
-        interactionSource = scrollToBottomInteractionSource,
-      ) {
-        Icon(
-          imageVector = Icons.Filled.ArrowDownward,
-          contentDescription = null
-        )
-      }
-    }
-  }
 }
 
 private suspend fun loadLogs(
