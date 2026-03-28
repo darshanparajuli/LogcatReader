@@ -51,6 +51,7 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.tooling.preview.AndroidUiModes
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -319,9 +320,51 @@ private fun SearchLogsTopBarPreview() {
   }
 }
 
+@Preview(showBackground = true, uiMode = AndroidUiModes.UI_MODE_NIGHT_YES)
+@Composable
+private fun SearchLogsTopBarDarkModePreview() {
+  LogcatReaderTheme {
+    SearchLogsTopBar(
+      searchQuery = "",
+      searchInProgress = false,
+      showHitCount = true,
+      hitCount = 42,
+      currentHitIndex = 5,
+      onQueryChange = {},
+      onClose = {},
+      onPrevious = {},
+      onNext = {},
+      regexEnabled = false,
+      regexError = false,
+      onClickRegex = {},
+    )
+  }
+}
+
 @Preview(showBackground = true)
 @Composable
 private fun SearchLogsTopBarSearchInProgressPreview() {
+  LogcatReaderTheme {
+    SearchLogsTopBar(
+      searchQuery = "searching...",
+      searchInProgress = true,
+      showHitCount = false,
+      hitCount = 0,
+      currentHitIndex = -1,
+      onQueryChange = {},
+      onClose = {},
+      onPrevious = {},
+      onNext = {},
+      regexEnabled = true,
+      regexError = false,
+      onClickRegex = {},
+    )
+  }
+}
+
+@Preview(showBackground = true, uiMode = AndroidUiModes.UI_MODE_NIGHT_YES)
+@Composable
+private fun SearchLogsTopBarSearchInProgressDarkModePreview() {
   LogcatReaderTheme {
     SearchLogsTopBar(
       searchQuery = "searching...",

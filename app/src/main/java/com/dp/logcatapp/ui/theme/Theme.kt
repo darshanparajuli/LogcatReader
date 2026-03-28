@@ -102,7 +102,7 @@ private val darkScheme = darkColorScheme(
 @Composable
 fun LogcatReaderTheme(
   darkTheme: Boolean = isSystemInDarkTheme(),
-  content: @Composable() () -> Unit
+  content: @Composable () -> Unit
 ) {
 
   val context = LocalContext.current
