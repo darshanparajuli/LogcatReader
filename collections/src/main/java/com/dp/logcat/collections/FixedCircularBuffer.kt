@@ -7,8 +7,7 @@ private const val INITIAL_SIZE = 16
 // Not thread-safe, do not access/modify concurrently.
 class FixedCircularBuffer<E> private constructor(
   val capacity: Int,
-  private val initialSize: Int = INITIAL_SIZE,
-  private var array: Array<Any?> = arrayOfNulls(min(capacity, initialSize)),
+  private var array: Array<Any?>,
 ) : List<E> {
 
   constructor(
@@ -16,7 +15,6 @@ class FixedCircularBuffer<E> private constructor(
     initialSize: Int = INITIAL_SIZE,
   ) : this(
     capacity = capacity,
-    initialSize = initialSize,
     array = arrayOfNulls(min(capacity, initialSize))
   )
 
@@ -171,7 +169,6 @@ class FixedCircularBuffer<E> private constructor(
   fun clone(): FixedCircularBuffer<E> {
     return FixedCircularBuffer<E>(
       capacity = this.capacity,
-      initialSize = this.initialSize,
       array = array.copyOf()
     ).also { clone ->
       clone.head = this.head
