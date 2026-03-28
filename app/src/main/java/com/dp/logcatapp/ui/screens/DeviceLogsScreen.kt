@@ -183,7 +183,6 @@ import kotlinx.coroutines.flow.SharingStarted.Companion.Eagerly
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterIsInstance
@@ -792,10 +791,9 @@ fun DeviceLogsScreen(
           }
       }
       if (searchQuery.isNotEmpty()) {
-        LaunchedEffect(lazyListState, searchQuery) {
+        LaunchedEffect(lazyListState) {
           snapshotFlow { searchHits to currentSearchHitIndex }
             .filter { (_, hitIndex) -> hitIndex != -1 }
-            .distinctUntilChangedBy { (_, index) -> index }
             .collectLatest { (hits, hitIndex) ->
               if (hitIndex < hits.size) {
                 val scrollIndex = hits[hitIndex].index
