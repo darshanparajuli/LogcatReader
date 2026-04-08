@@ -1123,7 +1123,7 @@ private fun DisplayOptionsSheet(
       ) {
         ToggleableLogItem.entries
           .filter { item ->
-            if (logcatCapabilities?.uidSupported == true) {
+            if (logcatCapabilities.uidSupported) {
               true
             } else {
               item != ToggleableLogItem.PackageName

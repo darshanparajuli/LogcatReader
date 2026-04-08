@@ -20,7 +20,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.channelFlow
-import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -405,7 +405,10 @@ class LogcatSession(
       val yearSupported: Boolean,
     )
 
-    private val _capabilities = MutableStateFlow<LogcatCapabilities?>(null)
+    private val LogcatCapabilitiesPlaceholder =
+      LogcatCapabilities(uidSupported = false, yearSupported = false)
+
+    private val _capabilities = MutableStateFlow<LogcatCapabilities>(LogcatCapabilitiesPlaceholder)
     val capabilities = _capabilities.asStateFlow()
 
     init {
@@ -432,7 +435,7 @@ class LogcatSession(
     }
 
     suspend fun logcatCapabilities(): LogcatCapabilities {
-      return capabilities.filterNotNull().first()
+      return capabilities.filter { it !== LogcatCapabilitiesPlaceholder }.first()
     }
 
     private fun dumpLogcatLogWithOptions(

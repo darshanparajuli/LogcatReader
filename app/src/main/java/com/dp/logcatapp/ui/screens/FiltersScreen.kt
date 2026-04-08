@@ -206,7 +206,7 @@ fun FiltersScreen(
             modifier = Modifier.padding(insetPadding)
           ) {
             val logcatCapabilities by LogcatSession.capabilities.collectAsState()
-            if (logcatCapabilities?.uidSupported == true) {
+            if (logcatCapabilities.uidSupported) {
               FilterByAppsButton(
                 onClick = { showPackageSelector = true },
               )
@@ -809,7 +809,7 @@ private fun AddOrEditFilterSheet(
       )
       Spacer(modifier = Modifier.height(16.dp))
       val logcatCapabilities by LogcatSession.capabilities.collectAsState()
-      if (logcatCapabilities?.uidSupported == true) {
+      if (logcatCapabilities.uidSupported) {
         val packageNameRegexEnabled = RegexEnabledFilterType.PackageName in regexEnabledTypes
         Row(
           modifier = Modifier
