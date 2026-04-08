@@ -815,7 +815,8 @@ private fun AddOrEditFilterSheet(
           modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp),
-          horizontalArrangement = Arrangement.spacedBy(8.dp)
+          horizontalArrangement = Arrangement.spacedBy(8.dp),
+          verticalAlignment = Alignment.CenterVertically,
         ) {
           InputField(
             modifier = Modifier
