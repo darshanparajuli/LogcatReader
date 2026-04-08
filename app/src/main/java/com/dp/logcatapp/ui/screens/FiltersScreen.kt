@@ -207,18 +207,9 @@ fun FiltersScreen(
           ) {
             val logcatCapabilities by LogcatSession.capabilities.collectAsState()
             if (logcatCapabilities?.uidSupported == true) {
-              WithTooltip(
-                text = stringResource(R.string.filter_by_apps)
-              ) {
-                IconButton(
-                  onClick = { showPackageSelector = true },
-                  colors = IconButtonDefaults.iconButtonColors(
-                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                  ),
-                ) {
-                  Icon(Icons.Default.Apps, contentDescription = null)
-                }
-              }
+              FilterByAppsButton(
+                onClick = { showPackageSelector = true },
+              )
             }
             WithTooltip(
               text = stringResource(R.string.more_options)
@@ -347,6 +338,7 @@ fun FiltersScreen(
         initialEnabled = filterInfo.enabled,
         initialRegexEnabledTypes = filterInfo.regexEnabledFilterTypes.orEmpty(),
         initialDateRange = filterInfo.dateRange,
+        appInfoMap = appInfoMap,
         onDismiss = { viewModel.showEditFilterDialog = null },
         onSave = { data ->
           viewModel.showEditFilterDialog = null
@@ -394,6 +386,7 @@ fun FiltersScreen(
             setOf(level)
           }
         }.orEmpty(),
+        appInfoMap = appInfoMap,
         onDismiss = { showAddFilterDialog = false },
         onSave = { data ->
           showAddFilterDialog = false
@@ -685,6 +678,7 @@ private fun AddOrEditFilterSheet(
   initialLogLevels: Set<LogLevel> = emptySet(),
   initialEnabled: Boolean? = null,
   initialRegexEnabledTypes: Set<RegexEnabledFilterType> = emptySet(),
+  appInfoMap: Map<String, AppInfo>? = null,
 ) {
   var selectedLogLevels by rememberSaveable {
     mutableStateOf(
@@ -817,30 +811,59 @@ private fun AddOrEditFilterSheet(
       val logcatCapabilities by LogcatSession.capabilities.collectAsState()
       if (logcatCapabilities?.uidSupported == true) {
         val packageNameRegexEnabled = RegexEnabledFilterType.PackageName in regexEnabledTypes
-        InputField(
+        Row(
           modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp),
-          label = stringResource(R.string.package_name),
-          value = packageName,
-          onValueChange = {
-            packageName = it
-            if (packageNameRegexEnabled) {
-              packageNameRegexError = packageName.toRegexOrNull() == null
-            }
-          },
-          regexEnabled = packageNameRegexEnabled,
-          onClickRegex = {
-            if (packageNameRegexEnabled) {
-              regexEnabledTypes -= RegexEnabledFilterType.PackageName
-              packageNameRegexError = false
-            } else {
-              regexEnabledTypes += RegexEnabledFilterType.PackageName
-              packageNameRegexError = packageName.toRegexOrNull() == null
-            }
-          },
-          isError = packageNameRegexError,
-        )
+          horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+          InputField(
+            modifier = Modifier
+              .weight(1f),
+            label = stringResource(R.string.package_name),
+            value = packageName,
+            maxLines = 1,
+            onValueChange = {
+              packageName = it
+              if (packageNameRegexEnabled) {
+                packageNameRegexError = packageName.toRegexOrNull() == null
+              }
+            },
+            regexEnabled = packageNameRegexEnabled,
+            onClickRegex = {
+              if (packageNameRegexEnabled) {
+                regexEnabledTypes -= RegexEnabledFilterType.PackageName
+                packageNameRegexError = false
+              } else {
+                regexEnabledTypes += RegexEnabledFilterType.PackageName
+                packageNameRegexError = packageName.toRegexOrNull() == null
+              }
+            },
+            isError = packageNameRegexError,
+          )
+
+          var showPackageSelectorSheet by remember { mutableStateOf(false) }
+          FilterByAppsButton(
+            onClick = {
+              showPackageSelectorSheet = true
+            },
+          )
+
+          if (showPackageSelectorSheet) {
+            PackageSelectorSheet(
+              installedApps = appInfoMap?.values?.toList().orEmpty(),
+              onDismiss = {
+                showPackageSelectorSheet = false
+              },
+              singleSelect = true,
+              onSelected = { selected ->
+                // Guaranteed to have one (and only one) element.
+                packageName = selected.first()
+                showPackageSelectorSheet = false
+              }
+            )
+          }
+        }
         Spacer(modifier = Modifier.height(16.dp))
       }
       InputField(
@@ -1184,6 +1207,7 @@ private fun PackageSelectorSheet(
   onDismiss: () -> Unit,
   onSelected: (Set<String>) -> Unit,
   modifier: Modifier = Modifier,
+  singleSelect: Boolean = false,
   savingInProgress: Boolean = false,
 ) {
   var selectedPackageNames by remember { mutableStateOf<Set<String>>(emptySet()) }
@@ -1224,22 +1248,24 @@ private fun PackageSelectorSheet(
         text = stringResource(R.string.select_apps_to_filter),
         style = AppTypography.headlineMedium,
       )
-      Button(
-        onClick = {
-          onSelected(selectedPackageNames)
-        },
-        enabled = selectedPackageNames.isNotEmpty() && !savingInProgress,
-      ) {
-        if (savingInProgress) {
-          CircularProgressIndicator(
-            modifier = Modifier.size(16.dp),
-            strokeWidth = 2.dp,
-          )
-        } else {
-          Text(
-            stringResource(R.string.done),
-            style = AppTypography.titleMedium,
-          )
+      if (!singleSelect) {
+        Button(
+          onClick = {
+            onSelected(selectedPackageNames)
+          },
+          enabled = selectedPackageNames.isNotEmpty() && !savingInProgress,
+        ) {
+          if (savingInProgress) {
+            CircularProgressIndicator(
+              modifier = Modifier.size(16.dp),
+              strokeWidth = 2.dp,
+            )
+          } else {
+            Text(
+              stringResource(R.string.done),
+              style = AppTypography.titleMedium,
+            )
+          }
         }
       }
     }
@@ -1268,10 +1294,14 @@ private fun PackageSelectorSheet(
           modifier = Modifier
             .fillMaxWidth()
             .clickable {
-              if (app.packageName in selectedPackageNames) {
-                selectedPackageNames -= app.packageName
+              if (singleSelect) {
+                onSelected(setOf(app.packageName))
               } else {
-                selectedPackageNames += app.packageName
+                if (app.packageName in selectedPackageNames) {
+                  selectedPackageNames -= app.packageName
+                } else {
+                  selectedPackageNames += app.packageName
+                }
               }
             },
           overlineContent = if (app.isSystem) {
@@ -1294,12 +1324,14 @@ private fun PackageSelectorSheet(
               Text(app.packageName)
             }
           } else null,
-          trailingContent = {
-            Checkbox(
-              checked = app.packageName in selectedPackageNames,
-              onCheckedChange = null,
-            )
-          },
+          trailingContent = if (!singleSelect) {
+            {
+              Checkbox(
+                checked = app.packageName in selectedPackageNames,
+                onCheckedChange = null,
+              )
+            }
+          } else null,
           colors = ListItemDefaults.colors(
             containerColor = MaterialTheme.colorScheme.surfaceContainer,
           )
@@ -1541,6 +1573,26 @@ private fun InputField(
       }
     } else null,
   )
+}
+
+@Composable
+private fun FilterByAppsButton(
+  onClick: () -> Unit,
+  modifier: Modifier = Modifier,
+) {
+  WithTooltip(
+    text = stringResource(R.string.filter_by_apps),
+    modifier = modifier,
+  ) {
+    IconButton(
+      onClick = onClick,
+      colors = IconButtonDefaults.iconButtonColors(
+        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+      ),
+    ) {
+      Icon(Icons.Default.Apps, contentDescription = null)
+    }
+  }
 }
 
 data class PrepopulateFilterInfo(
