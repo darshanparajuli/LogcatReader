@@ -5,6 +5,7 @@ import android.os.Build
 import android.os.Parcelable
 
 inline fun <reified T : Parcelable> Intent.getParcelableExtraSafe(name: String): T? {
+  extras?.classLoader ?: return null
   return if (Build.VERSION.SDK_INT >= 33) {
     getParcelableExtra<T>(name, T::class.java)
   } else {
