@@ -411,5 +411,14 @@ class SnapshotFixedCircularBufferTest {
     }
   }
 
+  @Test
+  fun `changeCapacity on empty buffer then add does not crash`() {
+    val buffer = mutableFixedCircularBuffer<Int>(3)
+    buffer.changeCapacity(5)
+    buffer.add(1)
+    assertEquals(1, buffer.size)
+    assertEquals(1, buffer[0])
+  }
+
   // endregion
 }

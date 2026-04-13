@@ -552,4 +552,16 @@ class FixedCircularBufferTest {
     assertEquals(a, b)
     assertEquals(a.hashCode(), b.hashCode())
   }
+
+  @Test
+  fun testAddWithZeroInitialSize() {
+    val buffer = FixedCircularBuffer<Int>(capacity = 5, initialSize = 0)
+    buffer.add(1)
+    assertEquals(1, buffer.size)
+    assertEquals(1, buffer[0])
+
+    buffer.add(listOf(2, 3, 4, 5))
+    assertEquals(5, buffer.size)
+    assertEquals(listOf(1, 2, 3, 4, 5), buffer.toList())
+  }
 }

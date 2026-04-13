@@ -142,7 +142,7 @@ class FixedCircularBuffer<E> private constructor(
       return
     }
 
-    val newSize = min(array.size * 2, capacity)
+    val newSize = min(maxOf(array.size * 2, INITIAL_SIZE), capacity)
     val newArray = arrayOfNulls<Any>(newSize)
     System.arraycopy(array, 0, newArray, 0, array.size)
     array = newArray
