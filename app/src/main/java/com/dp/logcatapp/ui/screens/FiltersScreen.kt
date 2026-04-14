@@ -857,6 +857,7 @@ private fun AddOrEditFilterSheet(
                 showPackageSelectorSheet = false
               },
               singleSelect = true,
+              showTitle = false,
               onSelected = { selected ->
                 // Guaranteed to have one (and only one) element.
                 packageName = selected.first()
@@ -1210,6 +1211,7 @@ private fun PackageSelectorSheet(
   modifier: Modifier = Modifier,
   singleSelect: Boolean = false,
   savingInProgress: Boolean = false,
+  showTitle: Boolean = true,
 ) {
   var selectedPackageNames by remember { mutableStateOf<Set<String>>(emptySet()) }
   ModalBottomSheet(
@@ -1244,11 +1246,13 @@ private fun PackageSelectorSheet(
       modifier = Modifier.padding(horizontal = 16.dp),
       verticalAlignment = Alignment.CenterVertically,
     ) {
-      Text(
-        modifier = Modifier.weight(1f),
-        text = stringResource(R.string.select_apps_to_filter),
-        style = AppTypography.headlineMedium,
-      )
+      if (showTitle) {
+        Text(
+          modifier = Modifier.weight(1f),
+          text = stringResource(R.string.select_apps_to_filter),
+          style = AppTypography.headlineMedium,
+        )
+      }
       if (!singleSelect) {
         Button(
           onClick = {
