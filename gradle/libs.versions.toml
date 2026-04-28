@@ -17,7 +17,7 @@ materialVersion = "1.13.0"
 preferenceKtxVersion = "1.2.1"
 roomVersion = "2.8.4"
 testRunnerVersion = "1.7.0"
-kotlinVersion = "2.3.20"
+kotlinVersion = "2.3.21"
 
 # https://github.com/google/ksp/releases
 # KSP2 (2.3.0+) is no longer tied to a specific Kotlin version.
